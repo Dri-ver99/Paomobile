@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>บริการซ่อม iPhone — Paomobile</title>
+  <meta name="description" content="บริการซ่อม iPhone ครบวงจร ซ่อมจอ เปลี่ยนแบต ซ่อมบอร์ด ทุกรุ่น ราคาถูก Paomobile" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="service-page.css" />
+</head>
+
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar scrolled" id="navbar">
+    <div class="container">
+      <a href="index.html" class="logo">
+        <img src="logo.png" alt="Paomobile" class="logo-img" />
+        Pao<span class="accent">mobile</span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html">หน้าหลัก</a></li>
+        <li><a href="index.html#services">บริการ</a></li>
+        <li><a href="index.html#why-us">ทำไมต้องเรา</a></li>
+        <li><a href="index.html#reviews">รีวิว</a></li>
+        <li><a href="index.html#branches">สาขา</a></li>
+        <li><a href="index.html#contact">ติดต่อ</a></li>
+      </ul>
+      <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary nav-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        แอดไลน์
+      </a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu-overlay" id="mobileOverlay"></div>
+  <aside class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" id="mobileClose" aria-label="Close">✕</button>
+    <div class="mobile-menu-inner">
+      <a href="index.html#services">บริการ</a>
+      <a href="index.html#why-us">ทำไมต้องเรา</a>
+      <a href="index.html#reviews">รีวิว</a>
+      <a href="index.html#branches">สาขา</a>
+      <a href="index.html#contact">ติดต่อ</a>
+      <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary mobile-cta">
+        💬 แอดไลน์ @pao789
+      </a>
+    </div>
+  </aside>
+
+  <!-- ===== PAGE HEADER ===== -->
+  <section class="page-header">
+    <div class="container">
+      <a href="index.html" class="back-link">← กลับหน้าหลัก</a>
+      <div class="page-header-content">
+        <span class="label">iPhone</span>
+        <h1>บริการซ่อม <span class="accent">iPhone</span><br />ครบวงจร</h1>
+        <p>เลือกบริการที่ต้องการ ช่างผู้เชี่ยวชาญพร้อมดูแล iPhone ของคุณ อะไหล่แท้ รับประกันทุกชิ้น</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SERVICE SELECTION ===== -->
+  <section class="price-section">
+    <div class="container">
+      <div class="service-select-grid">
+
+        <!-- ซ่อมจอ -->
+        <a href="screen-repair.html" class="service-select-card" data-animate="fade-up" data-delay="100">
+          <div class="ssc-icon">🔧</div>
+          <div class="ssc-content">
+            <h3>ซ่อมจอ / เปลี่ยนจอ</h3>
+            <p>จอแตก จอลาย ทัชไม่ได้ เปลี่ยนจอแท้ทุกรุ่น สีสดใสเหมือนใหม่</p>
+            <div class="ssc-price">เริ่มต้น <strong>฿1,200</strong></div>
+          </div>
+          <div class="ssc-arrow">→</div>
+        </a>
+
+        <!-- เปลี่ยนแบต -->
+        <a href="battery-replacement.html" class="service-select-card" data-animate="fade-up" data-delay="200">
+          <div class="ssc-icon">🔋</div>
+          <div class="ssc-content">
+            <h3>เปลี่ยนแบตเตอรี่</h3>
+            <p>แบตหมดเร็ว แบตบวม เครื่องดับเอง เปลี่ยนแบตแท้จากศูนย์ รับประกัน</p>
+            <div class="ssc-price">เริ่มต้น <strong>฿790</strong></div>
+          </div>
+          <div class="ssc-arrow">→</div>
+        </a>
+
+        <!-- ซ่อมบอร์ด -->
+        <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="service-select-card" data-animate="fade-up" data-delay="300">
+          <div class="ssc-icon">🔬</div>
+          <div class="ssc-content">
+            <h3>ซ่อมบอร์ด / เมนบอร์ด</h3>
+            <p>เปิดไม่ติด ค้าง รีสตาร์ทเอง ตกน้ำ งาน Micro Soldering โดยช่างเชี่ยวชาญ</p>
+            <div class="ssc-price">เริ่มต้น <strong>฿2,500</strong></div>
+          </div>
+          <div class="ssc-arrow">→</div>
+        </a>
+
+        <!-- ซ่อมลำโพง / ไมค์ -->
+        <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="service-select-card" data-animate="fade-up" data-delay="400">
+          <div class="ssc-icon">🔊</div>
+          <div class="ssc-content">
+            <h3>ซ่อมลำโพง / ไมค์</h3>
+            <p>เสียงเบา เสียงแตก ไมค์ไม่ทำงาน คู่สายไม่ได้ยิน ซ่อมได้ทุกอาการ</p>
+            <div class="ssc-price">เริ่มต้น <strong>฿800</strong></div>
+          </div>
+          <div class="ssc-arrow">→</div>
+        </a>
+
+        <!-- เปลี่ยนกล้อง -->
+        <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="service-select-card" data-animate="fade-up" data-delay="500">
+          <div class="ssc-icon">📸</div>
+          <div class="ssc-content">
+            <h3>ซ่อมกล้อง / เปลี่ยนกล้อง</h3>
+            <p>กล้องไม่โฟกัส กล้องสั่น กล้องมืด กระจกกล้องแตก เปลี่ยนได้ทุกรุ่น</p>
+            <div class="ssc-price">เริ่มต้น <strong>฿1,500</strong></div>
+          </div>
+          <div class="ssc-arrow">→</div>
+        </a>
+
+        <!-- เปลี่ยนชุดชาร์จ -->
+        <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="service-select-card" data-animate="fade-up" data-delay="600">
+          <div class="ssc-icon">🔌</div>
+          <div class="ssc-content">
+            <h3>เปลี่ยนชุดชาร์จ</h3>
+            <p>ชาร์จไม่เข้า ชาร์จช้า พอร์ตหลวม เปลี่ยนชุดชาร์จแท้ ใช้ได้ทุกสาย</p>
+            <div class="ssc-price">เริ่มต้น <strong>฿900</strong></div>
+          </div>
+          <div class="ssc-arrow">→</div>
+        </a>
+
+        <!-- Face ID / Touch ID -->
+        <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="service-select-card" data-animate="fade-up" data-delay="700">
+          <div class="ssc-icon">🔓</div>
+          <div class="ssc-content">
+            <h3>ซ่อม Face ID / Touch ID</h3>
+            <p>Face ID ไม่ทำงาน สแกนหน้าไม่ได้ สแกนนิ้วไม่ได้ ซ่อมได้โดยไม่ต้องเปลี่ยนเครื่อง</p>
+            <div class="ssc-price">เริ่มต้น <strong>฿2,000</strong></div>
+          </div>
+          <div class="ssc-arrow">→</div>
+        </a>
+
+        <!-- เปลี่ยนฝาหลัง -->
+        <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="service-select-card" data-animate="fade-up" data-delay="800">
+          <div class="ssc-icon">📱</div>
+          <div class="ssc-content">
+            <h3>เปลี่ยนฝาหลัง / บอดี้</h3>
+            <p>ฝาหลังแตก บอดี้บุบ เฟรมงอ เปลี่ยนใหม่สวยเหมือนเครื่องใหม่</p>
+            <div class="ssc-price">เริ่มต้น <strong>฿1,500</strong></div>
+          </div>
+          <div class="ssc-arrow">→</div>
+        </a>
+
+      </div>
+
+      <!-- CTA -->
+      <div class="service-cta" data-animate="fade-up">
+        <div class="cta-card">
+          <div class="cta-glow"></div>
+          <h2>ไม่แน่ใจว่าเสียอะไร?<br />ปรึกษาเราฟรี!</h2>
+          <p>แอดไลน์ส่งรูปอาการเสียมาได้เลย ประเมินราคาฟรี ไม่มีค่าใช้จ่ายแอบแฝง</p>
+          <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-white btn-lg">
+            💬 แอดไลน์ @pao789
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom" style="padding-top: 32px;">
+        <span>© 2026 Paomobile. All rights reserved.</span>
+        <span>Made with 🧡 in Thailand</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
