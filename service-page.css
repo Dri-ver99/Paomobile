@@ -256,6 +256,12 @@
   transition: var(--transition);
 }
 
+.brand-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .service-select-card:hover .ssc-icon {
   background: transparent;
   transform: scale(1.05);
@@ -302,10 +308,14 @@
 
 /* Brand Link (index.html) */
 .brand-link {
-  font-size: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text-muted);
-  opacity: 0.45;
+  opacity: 0.65;
   transition: var(--transition);
   cursor: pointer;
   letter-spacing: 0.02em;
