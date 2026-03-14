@@ -222,6 +222,17 @@ document.addEventListener("DOMContentLoaded", function() {
          branchItems[0].classList.add('active');
       }
     }
+    
+    // Make standard #branches links trigger the first branch map marker
+    document.querySelectorAll('a[href="#branches"], a[href="index.html#branches"]').forEach(link => {
+       link.addEventListener('click', () => {
+         if(markers.length > 0 && mapElement.offsetParent !== null) {
+            setTimeout(() => {
+                branchItems[0].click();
+            }, 600);
+         }
+       });
+    });
   }
 
   // Handle nav-branch-link clicks for smooth scrolling and map triggering
@@ -241,6 +252,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
         
         // click branch
+        const branchItems = document.querySelectorAll('.branch-item');
         if (branchItems[branchIndex]) {
           branchItems[branchIndex].click();
         }
