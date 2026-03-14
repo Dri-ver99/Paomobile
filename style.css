@@ -1194,7 +1194,7 @@ p  { color: var(--text-soft); line-height: 1.7; }
   .hero-buttons { justify-content: center; }
   .hero-content { order: 2; margin-top: 24px; }
   .hero-visual { order: 1; margin-top: 0; width: 100%; }
-  .hero-card { width: 100%; max-width: 500px; }
+  .hero-card { width: 100%; max-width: 500px; margin: 0 auto; }
   .hero-card img { max-width: 100%; aspect-ratio: 16/9; max-height: unset; }
   .fb-1 { left: 5%; }
   .fb-2 { right: 5%; }
