@@ -146,3 +146,110 @@ document.querySelectorAll('.service-card .btn-outline').forEach(btn => {
     btn.style.background = '';
   });
 });
+
+/* ── Branches Interactive Map ── */
+document.addEventListener("DOMContentLoaded", function() {
+  const mapElement = document.getElementById('branch-map');
+  const branchItems = document.querySelectorAll('.branch-item');
+
+  if (mapElement && typeof L !== 'undefined') {
+    const map = L.map('branch-map', { 
+      scrollWheelZoom: true,
+      zoomControl: false 
+    }).setView([13.1, 100.95], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const customIcon = L.icon({
+      iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+
+    const markers = [];
+
+    branchItems.forEach((item, index) => {
+      const lat = parseFloat(item.dataset.lat);
+      const lng = parseFloat(item.dataset.lng);
+      const zoom = parseInt(item.dataset.zoom) || 16;
+      const detailsText = item.querySelector('.branch-item-details').innerHTML;
+      const mapLink = item.querySelector('h3 a')?.href;
+
+      const marker = L.marker([lat, lng], {icon: customIcon}).addTo(map)
+        .bindPopup(`<div class="map-popup">${detailsText}</div>`);
+      
+      markers.push(marker);
+
+      marker.on('click', () => {
+        if (mapLink) {
+          window.open(mapLink, '_blank');
+        }
+      });
+
+      item.addEventListener('click', () => {
+        branchItems.forEach(b => b.classList.remove('active'));
+        item.classList.add('active');
+        map.flyTo([lat, lng], zoom);
+        setTimeout(() => marker.openPopup(), 400);
+      });
+    });
+
+    // Get branch from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    let initialBranch = 0;
+    if (urlParams.has('branch')) {
+      initialBranch = parseInt(urlParams.get('branch'));
+      if (isNaN(initialBranch) || initialBranch < 0 || initialBranch >= branchItems.length) {
+        initialBranch = 0;
+      }
+    }
+
+    // Fit map bounds to show all markers initially
+    if (markers.length > 0) {
+      const group = new L.featureGroup(markers);
+      map.fitBounds(group.getBounds().pad(0.1));
+      
+      if (initialBranch !== 0 && branchItems[initialBranch]) {
+         setTimeout(() => {
+           branchItems[initialBranch].click();
+         }, 500); 
+      } else {
+         branchItems[0].classList.add('active');
+      }
+    }
+  }
+
+  // Handle nav-branch-link clicks for smooth scrolling and map triggering
+  document.querySelectorAll('.nav-branch-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const isIndex = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/');
+      if (isIndex && document.getElementById('branch-map')) {
+        e.preventDefault();
+        const branchIndex = parseInt(link.getAttribute('data-branch'));
+        
+        // scroll to branches section
+        const target = document.querySelector('#branches');
+        if (target) {
+          const offset = 80;
+          const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+        
+        // click branch
+        if (branchItems[branchIndex]) {
+          branchItems[branchIndex].click();
+        }
+
+        // Close mobile menu if open
+        if (typeof closeMenu === 'function') {
+           closeMenu();
+        }
+      }
+    });
+  });
+});

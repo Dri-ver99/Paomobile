@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -16,6 +16,8 @@
     rel="stylesheet" />
 
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
 
 <body>
@@ -23,16 +25,44 @@
   <!-- ===== NAVBAR ===== -->
   <nav class="navbar" id="navbar">
     <div class="container">
-      <a href="#" class="logo">
+      <a href="index.html" class="logo">
         <img src="logo.png" alt="Paomobile" class="logo-img" />
         Pao<span class="accent">mobile</span>
       </a>
       <ul class="nav-links" id="navLinks">
         <li><a href="index.html">หน้าหลัก</a></li>
-        <li><a href="#services">บริการ</a></li>
+        <li class="has-mega-menu">
+          <a href="#services">บริการ</a>
+          <div class="mega-menu">
+            <div class="mega-menu-inner">
+              <div class="mega-column">
+                <a href="select-screen-repair.html" class="mega-link">เปลี่ยนจอ / ซ่อมจอแตก</a>
+                <a href="select-battery.html" class="mega-link">เปลี่ยนแบตเตอรี่</a>
+                <a href="select-board-repair.html" class="mega-link">ซ่อมบอร์ด / เมนบอร์ด</a>
+                <a href="select-speaker-repair.html" class="mega-link">ซ่อมลำโพง / ไมค์</a>
+              </div>
+            </div>
+          </div>
+        </li>
         <li><a href="#why-us">ทำไมต้องเรา</a></li>
         <li><a href="#reviews">รีวิว</a></li>
-        <li><a href="#branches">สาขา</a></li>
+        <li class="has-mega-menu">
+          <a href="#branches">สาขา</a>
+          <div class="mega-menu">
+            <div class="mega-menu-inner">
+              <div class="mega-column">
+                <a href="index.html?branch=0#branches" class="mega-link nav-branch-link" data-branch="0">สาขาตึกคอม</a>
+                <a href="index.html?branch=1#branches" class="mega-link nav-branch-link" data-branch="1">สาขานาเกลือ</a>
+                <a href="index.html?branch=2#branches" class="mega-link nav-branch-link" data-branch="2">สาขาซอยสยาม</a>
+              </div>
+              <div class="mega-column">
+                <a href="index.html?branch=3#branches" class="mega-link nav-branch-link" data-branch="3">สาขาตลาดมหาชล</a>
+                <a href="index.html?branch=4#branches" class="mega-link nav-branch-link" data-branch="4">สาขาแหลมฉบัง</a>
+                <a href="index.html?branch=5#branches" class="mega-link nav-branch-link" data-branch="5">สาขาพรประภานิมิตร</a>
+              </div>
+            </div>
+          </div>
+        </li>
         <li><a href="#contact">ติดต่อ</a></li>
         <li><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 สั่งของ</a></li>
       </ul>
@@ -269,6 +299,28 @@
     </div>
   </section>
 
+  <!-- ===== WORK SHOWCASE ===== -->
+  <section class="work-showcase" id="showcase">
+    <div class="container">
+      <div class="section-head" data-animate="fade-up">
+        <span class="label">ผลงานของเรา</span>
+        <h2>งานซ่อมมือถือ</h2>
+        <p>เรารับประกันความใส่ใจในทุกขั้นตอนการซ่อม เครื่องมือทันสมัย มาตรฐานศูนย์</p>
+      </div>
+
+      <!-- Swiper -->
+      <div class="swiper showcaseSwiper" data-animate="fade-up" data-delay="200">
+        <div class="swiper-wrapper">
+          <div class="swiper-slide"><img src="work-1.jpg" alt="ผลงานซ่อม 1" class="showcase-img" /></div>
+          <div class="swiper-slide"><img src="work-2.jpg" alt="ผลงานซ่อม 2" class="showcase-img" /></div>
+          <div class="swiper-slide"><img src="work-3.jpg" alt="ผลงานซ่อม 3" class="showcase-img" /></div>
+          <div class="swiper-slide"><img src="work-4.jpg" alt="ผลงานซ่อม 4" class="showcase-img" /></div>
+          <div class="swiper-slide"><img src="work-5.jpg" alt="ผลงานซ่อม 5" class="showcase-img" /></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== REVIEWS ===== -->
   <section class="reviews" id="reviews">
     <div class="container">
@@ -362,53 +414,62 @@
         <p>เลือกสาขาที่สะดวก แล้วแวะมาหาเราได้เลย</p>
       </div>
 
-      <div class="branches-grid">
-        <div class="branch-card" data-animate="fade-up" data-delay="100">
-          <div class="branch-number">1</div>
-          <h3>สาขาตึกคอม</h3>
-          <a href="tel:0815888151" class="branch-phone">📞 081-588-8151</a>
-          <a href="https://maps.app.goo.gl/yrRMQLWgLSpkqERY8" target="_blank" class="btn btn-outline btn-sm">📍
-            ดูแผนที่</a>
+      <div class="branches-container">
+        <!-- Branch List (Left Column) -->
+        <div class="branch-list">
+          <div class="branch-item" data-lat="12.9239609" data-lng="100.8787837" data-zoom="16">
+            <div class="branch-item-icon">📍</div>
+            <div class="branch-item-details">
+              <h3><a href="https://maps.app.goo.gl/g59hx9xJgtVUxReJ8" target="_blank" style="color:inherit;text-decoration:none;">สาขาตึกคอม</a></h3>
+              <p>📞 <a href="tel:0815888151" class="branch-phone-link">081-588-8151</a></p>
+              <p>🕒 10:30 - 20:00 น.</p>
+            </div>
+          </div>
+          <div class="branch-item" data-lat="12.9694698" data-lng="100.9019119" data-zoom="16">
+            <div class="branch-item-icon">📍</div>
+            <div class="branch-item-details">
+              <h3><a href="https://maps.app.goo.gl/bmgghhnoP5RbJtB38" target="_blank" style="color:inherit;text-decoration:none;">สาขานาเกลือ</a></h3>
+              <p>📞 <a href="tel:0830106624" class="branch-phone-link">083-010-6624</a></p>
+              <p>🕒 09:00 - 22:00 น.</p>
+            </div>
+          </div>
+          <div class="branch-item" data-lat="12.9408855" data-lng="100.9218404" data-zoom="16">
+            <div class="branch-item-icon">📍</div>
+            <div class="branch-item-details">
+              <h3><a href="https://maps.app.goo.gl/T5E1ZPEUWQD9J7Kv5" target="_blank" style="color:inherit;text-decoration:none;">สาขาซอยสยาม</a></h3>
+              <p>📞 <a href="tel:0898261567" class="branch-phone-link">089-826-1567</a></p>
+              <p>🕒 09:00 - 21:00 น.</p>
+            </div>
+          </div>
+          <div class="branch-item" data-lat="12.9642841" data-lng="100.9190754" data-zoom="16">
+            <div class="branch-item-icon">📍</div>
+            <div class="branch-item-details">
+              <h3><a href="https://maps.app.goo.gl/6jMNahYJNBTU5qNQ8" target="_blank" style="color:inherit;text-decoration:none;">สาขาตลาดมหาชล</a></h3>
+              <p>📞 <a href="tel:0925552355" class="branch-phone-link">092-555-2355</a></p>
+              <p>🕒 09:00 - 21:00 น.</p>
+            </div>
+          </div>
+          <div class="branch-item" data-lat="13.0822734" data-lng="100.9974912" data-zoom="16">
+            <div class="branch-item-icon">📍</div>
+            <div class="branch-item-details">
+              <h3><a href="https://maps.app.goo.gl/3D7td5P8cdemKnm77" target="_blank" style="color:inherit;text-decoration:none;">สาขาแหลมฉบัง</a></h3>
+              <p>📞 <a href="tel:0952839789" class="branch-phone-link">095-283-9789</a></p>
+              <p>🕒 08:30 - 20:30 น.</p>
+            </div>
+          </div>
+          <div class="branch-item" data-lat="12.9342116" data-lng="100.9354131" data-zoom="16">
+            <div class="branch-item-icon">📍</div>
+            <div class="branch-item-details">
+              <h3><a href="https://maps.app.goo.gl/M9ybSf5wqKxP84Ud9" target="_blank" style="color:inherit;text-decoration:none;">สาขาพรประภานิมิตร</a></h3>
+              <p>📞 <a href="tel:0611193562" class="branch-phone-link">061-119-3562</a></p>
+              <p>🕒 09:00 - 21:00 น.</p>
+            </div>
+          </div>
         </div>
 
-        <div class="branch-card" data-animate="fade-up" data-delay="200">
-          <div class="branch-number">2</div>
-          <h3>สาขานาเกลือ</h3>
-          <a href="tel:0830106624" class="branch-phone">📞 083-010-6624</a>
-          <a href="https://maps.app.goo.gl/TpTViveacSdHyveh9" target="_blank" class="btn btn-outline btn-sm">📍
-            ดูแผนที่</a>
-        </div>
-
-        <div class="branch-card" data-animate="fade-up" data-delay="300">
-          <div class="branch-number">3</div>
-          <h3>สาขาซอยสยาม</h3>
-          <a href="tel:0898261567" class="branch-phone">📞 089-826-1567</a>
-          <a href="https://maps.app.goo.gl/xytRKfXtF5w444FM6" target="_blank" class="btn btn-outline btn-sm">📍
-            ดูแผนที่</a>
-        </div>
-
-        <div class="branch-card" data-animate="fade-up" data-delay="100">
-          <div class="branch-number">4</div>
-          <h3>สาขาตลาดมหาชล</h3>
-          <a href="tel:0925552355" class="branch-phone">📞 092-555-2355</a>
-          <a href="https://maps.app.goo.gl/aLxgTmRGFSRiMKGZ7" target="_blank" class="btn btn-outline btn-sm">📍
-            ดูแผนที่</a>
-        </div>
-
-        <div class="branch-card" data-animate="fade-up" data-delay="200">
-          <div class="branch-number">5</div>
-          <h3>สาขาแหลมฉบัง</h3>
-          <a href="tel:0952839789" class="branch-phone">📞 095-283-9789</a>
-          <a href="https://maps.app.goo.gl/JKbW2fbQt4rgxsS98" target="_blank" class="btn btn-outline btn-sm">📍
-            ดูแผนที่</a>
-        </div>
-
-        <div class="branch-card" data-animate="fade-up" data-delay="300">
-          <div class="branch-number">6</div>
-          <h3>สาขาพรประภานิมิตร</h3>
-          <a href="tel:0611193562" class="branch-phone">📞 061-119-3562</a>
-          <a href="https://maps.app.goo.gl/rmQGu9RUYHXtPQFe6" target="_blank" class="btn btn-outline btn-sm">📍
-            ดูแผนที่</a>
+        <!-- Interactive Map (Right Column) -->
+        <div class="branch-map-wrapper">
+          <div id="branch-map"></div>
         </div>
       </div>
     </div>
@@ -493,12 +554,12 @@
 
         <div class="footer-col">
           <h4>ติดต่อเรา</h4>
-          <a href="#branches">📍 6 สาขาทั่วชลบุรี</a>
-          <a href="tel:0815888151">📞 081-588-8151 (ตึกคอม)</a>
+          <a href="index.html#branches">📍 6 สาขาทั่วชลบุรี</a>
           <a href="https://line.me/R/ti/p/@pao789">💬 LINE: @pao789</a>
           <a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank">📘 Facebook</a>
+          <a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr" target="_blank">📷 Instagram</a>
           <a href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a>
-          <a href="#">🕐 เปิดทุกวัน 09:00 — 21:00</a>
+
         </div>
       </div>
 
@@ -509,7 +570,30 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      if(typeof Swiper !== 'undefined') {
+        const swiper = new Swiper('.showcaseSwiper', {
+          slidesPerView: 1,
+          spaceBetween: 20,
+          loop: true,
+          speed: 1500, // เลื่อนช้าๆ
+          autoplay: {
+            delay: 2500,
+            disableOnInteraction: false,
+          },
+          breakpoints: {
+            768: { slidesPerView: 2, spaceBetween: 24 },
+            1024: { slidesPerView: 3, spaceBetween: 30 } // โชว์ 3 รูปในหน้าจอใหญ่
+          }
+        });
+      }
+    });
+  </script>
 </body>
 
 </html>
+
