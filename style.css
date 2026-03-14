@@ -1414,3 +1414,81 @@ p  { color: var(--text-soft); line-height: 1.7; }
 @media (max-width: 900px) {
   .mega-menu { display: none !important; }
 }
+
+/* Mobile Dropdown Acordion Styles */
+.mobile-dropdown {
+  margin-bottom: 0px;
+}
+.mobile-dropdown summary {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  padding: 12px 24px;
+  cursor: pointer;
+  position: relative;
+  list-style: none; /* Hide default arrow */
+}
+.mobile-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+.mobile-dropdown summary::after {
+  content: 'โ–ผ';
+  font-size: 0.7rem;
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gold-600);
+  transition: transform 0.3s ease;
+}
+.mobile-dropdown[open] summary::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+.mobile-dropdown-content {
+  background: var(--bg-warm);
+  padding: 8px 0;
+  border-left: 3px solid var(--gold-400);
+  margin-left: 24px;
+  margin-right: 24px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.mobile-dropdown-content a {
+  padding: 10px 20px !important;
+  font-size: 0.95rem !important;
+  color: var(--text-soft) !important;
+  border-bottom: none !important;
+  display: block;
+}
+.mobile-dropdown-content a:hover {
+  color: var(--gold-600) !important;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Branch Status Badge */
+.branch-hours {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+.status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+.status-badge.open {
+  background: rgba(46, 213, 115, 0.15);
+  color: #2ed573;
+}
+.status-badge.closing-soon {
+  background: rgba(255, 165, 2, 0.15);
+  color: #ffa502;
+}
+.status-badge.closed {
+  background: rgba(255, 71, 87, 0.15);
+  color: #ff4757;
+}

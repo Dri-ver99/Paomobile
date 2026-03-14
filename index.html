@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -45,7 +45,17 @@
           </div>
         </li>
         <li><a href="#why-us">ทำไมต้องเรา</a></li>
-        <li><a href="#reviews">รีวิว</a></li>
+        <li class="has-mega-menu">
+          <a href="#reviews">รีวิว</a>
+          <div class="mega-menu">
+            <div class="mega-menu-inner" style="min-width: 200px;">
+              <div class="mega-column">
+                <a href="#reviews" class="mega-link">รีวิวลูกค้า</a>
+                <a href="#showcase" class="mega-link">รีวิวงานซ่อม</a>
+              </div>
+            </div>
+          </div>
+        </li>
         <li class="has-mega-menu">
           <a href="#branches">สาขา</a>
           <div class="mega-menu">
@@ -63,7 +73,19 @@
             </div>
           </div>
         </li>
-        <li><a href="#contact">ติดต่อ</a></li>
+        <li class="has-mega-menu">
+          <a href="#contact">ติดต่อ</a>
+          <div class="mega-menu">
+            <div class="mega-menu-inner" style="min-width: 200px;">
+              <div class="mega-column">
+                <a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank" class="mega-link">Facebook</a>
+                <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="mega-link">Line</a>
+                <a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr" target="_blank" class="mega-link">Instagram</a>
+              <a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP" target="_blank" class="mega-link">Tiktok</a>
+                </div>
+            </div>
+          </div>
+        </li>
         <li><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 สั่งของ</a></li>
       </ul>
       <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary nav-btn" id="navCta">
@@ -71,7 +93,7 @@
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
-        แอดไลน์
+        สอบถามเพิ่มเติม
       </a>
       <button class="menu-toggle" id="menuToggle" aria-label="Menu">
         <span></span><span></span><span></span>
@@ -86,12 +108,26 @@
     <div class="mobile-menu-inner">
       <a href="#services">บริการ</a>
       <a href="#why-us">ทำไมต้องเรา</a>
-      <a href="#reviews">รีวิว</a>
+      <details class="mobile-dropdown">
+        <summary>รีวิว</summary>
+        <div class="mobile-dropdown-content">
+          <a href="#reviews">รีวิวลูกค้า</a>
+          <a href="#showcase">รีวิวงานซ่อม</a>
+        </div>
+      </details>
       <a href="#branches">สาขา</a>
-      <a href="#contact">ติดต่อ</a>
+      <details class="mobile-dropdown">
+        <summary>ติดต่อ</summary>
+        <div class="mobile-dropdown-content">
+          <a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank">Facebook</a>
+          <a href="https://line.me/R/ti/p/@pao789" target="_blank">Line</a>
+          <a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr" target="_blank">Instagram</a>
+          <a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP" target="_blank">Tiktok</a>
+        </div>
+      </details>
       <a href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 สั่งของ</a>
       <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary mobile-cta">
-        💬 แอดไลน์ @pao789
+        💬 สอบถามเพิ่มเติม @pao789
       </a>
     </div>
   </aside>
@@ -125,7 +161,17 @@
       <div class="hero-visual" data-animate="fade-up" data-delay="200">
         <div class="hero-card">
           <div class="hero-card-glow"></div>
-          <img src="hero-phone.png" alt="Paomobile ซ่อมมือถือ" />
+          <div class="swiper heroSwiper" style="width: 100%; max-width: 420px; overflow: hidden; border-radius: calc(var(--radius-xl) - 8px);">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide"><img src="ร้าน 7.jpg" alt="ร้าน 7" style="aspect-ratio: 420/480; width: 100%; height: 100%; object-fit: cover;" /></div>
+              <div class="swiper-slide"><img src="ร้าน 1.jpg" alt="ร้าน 1" style="aspect-ratio: 420/480; width: 100%; height: 100%; object-fit: cover;" /></div>
+              <div class="swiper-slide"><img src="ร้าน 2.jpg" alt="ร้าน 2" style="aspect-ratio: 420/480; width: 100%; height: 100%; object-fit: cover;" /></div>
+              <div class="swiper-slide"><img src="ร้าน 3.jpg" alt="ร้าน 3" style="aspect-ratio: 420/480; width: 100%; height: 100%; object-fit: cover;" /></div>
+              <div class="swiper-slide"><img src="ร้าน 4.jpg" alt="ร้าน 4" style="aspect-ratio: 420/480; width: 100%; height: 100%; object-fit: cover;" /></div>
+              <div class="swiper-slide"><img src="ร้าน 5.jpg" alt="ร้าน 5" style="aspect-ratio: 420/480; width: 100%; height: 100%; object-fit: cover;" /></div>
+              <div class="swiper-slide"><img src="ร้าน 6.jpg" alt="ร้าน 6" style="aspect-ratio: 420/480; width: 100%; height: 100%; object-fit: cover;" /></div>
+            </div>
+          </div>
         </div>
         <div class="floating-badge fb-1" data-animate="pop" data-delay="600">
           <span class="fb-emoji">⚡</span>
@@ -422,7 +468,7 @@
             <div class="branch-item-details">
               <h3><a href="https://maps.app.goo.gl/g59hx9xJgtVUxReJ8" target="_blank" style="color:inherit;text-decoration:none;">สาขาตึกคอม</a></h3>
               <p>📞 <a href="tel:0815888151" class="branch-phone-link">081-588-8151</a></p>
-              <p>🕒 10:30 - 20:00 น.</p>
+              <p class="branch-hours" data-open="10:30" data-close="20:00">🕒 10:30 - 20:00 น. <span class="status-badge"></span></p>
             </div>
           </div>
           <div class="branch-item" data-lat="12.9694698" data-lng="100.9019119" data-zoom="16">
@@ -430,7 +476,7 @@
             <div class="branch-item-details">
               <h3><a href="https://maps.app.goo.gl/bmgghhnoP5RbJtB38" target="_blank" style="color:inherit;text-decoration:none;">สาขานาเกลือ</a></h3>
               <p>📞 <a href="tel:0830106624" class="branch-phone-link">083-010-6624</a></p>
-              <p>🕒 09:00 - 22:00 น.</p>
+              <p class="branch-hours" data-open="09:00" data-close="22:00">🕒 09:00 - 22:00 น. <span class="status-badge"></span></p>
             </div>
           </div>
           <div class="branch-item" data-lat="12.9408855" data-lng="100.9218404" data-zoom="16">
@@ -438,7 +484,7 @@
             <div class="branch-item-details">
               <h3><a href="https://maps.app.goo.gl/T5E1ZPEUWQD9J7Kv5" target="_blank" style="color:inherit;text-decoration:none;">สาขาซอยสยาม</a></h3>
               <p>📞 <a href="tel:0898261567" class="branch-phone-link">089-826-1567</a></p>
-              <p>🕒 09:00 - 21:00 น.</p>
+              <p class="branch-hours" data-open="09:00" data-close="21:00">🕒 09:00 - 21:00 น. <span class="status-badge"></span></p>
             </div>
           </div>
           <div class="branch-item" data-lat="12.9642841" data-lng="100.9190754" data-zoom="16">
@@ -446,7 +492,7 @@
             <div class="branch-item-details">
               <h3><a href="https://maps.app.goo.gl/6jMNahYJNBTU5qNQ8" target="_blank" style="color:inherit;text-decoration:none;">สาขาตลาดมหาชล</a></h3>
               <p>📞 <a href="tel:0925552355" class="branch-phone-link">092-555-2355</a></p>
-              <p>🕒 09:00 - 21:00 น.</p>
+              <p class="branch-hours" data-open="09:00" data-close="21:00">🕒 09:00 - 21:00 น. <span class="status-badge"></span></p>
             </div>
           </div>
           <div class="branch-item" data-lat="13.0822734" data-lng="100.9974912" data-zoom="16">
@@ -454,7 +500,7 @@
             <div class="branch-item-details">
               <h3><a href="https://maps.app.goo.gl/3D7td5P8cdemKnm77" target="_blank" style="color:inherit;text-decoration:none;">สาขาแหลมฉบัง</a></h3>
               <p>📞 <a href="tel:0952839789" class="branch-phone-link">095-283-9789</a></p>
-              <p>🕒 08:30 - 20:30 น.</p>
+              <p class="branch-hours" data-open="08:30" data-close="20:30">🕒 08:30 - 20:30 น. <span class="status-badge"></span></p>
             </div>
           </div>
           <div class="branch-item" data-lat="12.9342116" data-lng="100.9354131" data-zoom="16">
@@ -462,7 +508,7 @@
             <div class="branch-item-details">
               <h3><a href="https://maps.app.goo.gl/M9ybSf5wqKxP84Ud9" target="_blank" style="color:inherit;text-decoration:none;">สาขาพรประภานิมิตร</a></h3>
               <p>📞 <a href="tel:0611193562" class="branch-phone-link">061-119-3562</a></p>
-              <p>🕒 09:00 - 21:00 น.</p>
+              <p class="branch-hours" data-open="09:00" data-close="21:00">🕒 09:00 - 21:00 น. <span class="status-badge"></span></p>
             </div>
           </div>
         </div>
@@ -481,9 +527,9 @@
       <div class="cta-card" data-animate="fade-up">
         <div class="cta-glow"></div>
         <h2>มือถือมีปัญหา?<br />ปรึกษาเราฟรี!</h2>
-        <p>แอดไลน์ <strong>@pao789</strong> ส่งรูปอาการเสียมาได้เลย เราประเมินราคาให้ฟรี ไม่มีค่าใช้จ่ายแอบแฝง</p>
+        <p>สอบถามเพิ่มเติม <strong>@pao789</strong> ส่งรูปอาการเสียมาได้เลย เราประเมินราคาให้ฟรี ไม่มีค่าใช้จ่ายแอบแฝง</p>
         <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-white btn-lg">
-          💬 แอดไลน์ @pao789
+          💬 สอบถามเพิ่มเติม @pao789
         </a>
       </div>
     </div>
@@ -576,6 +622,14 @@
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       if(typeof Swiper !== 'undefined') {
+        const heroSwiper = new Swiper('.heroSwiper', {
+          slidesPerView: 1,
+          loop: true,
+          effect: 'fade',
+          fadeEffect: { crossFade: true },
+          speed: 1500,
+          autoplay: { delay: 3500, disableOnInteraction: false }
+        });
         const swiper = new Swiper('.showcaseSwiper', {
           slidesPerView: 1,
           spaceBetween: 20,

@@ -155,11 +155,11 @@ document.addEventListener("DOMContentLoaded", function() {
   if (mapElement && typeof L !== 'undefined') {
     const map = L.map('branch-map', { 
       scrollWheelZoom: true,
-      zoomControl: false 
+      zoomControl: false,
+      attributionControl: false
     }).setView([13.1, 100.95], 10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap contributors'
+      maxZoom: 19
     }).addTo(map);
 
     const customIcon = L.icon({
@@ -264,4 +264,50 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
   });
+});
+
+/* โ”€โ”€ Branch Status Logic โ”€โ”€ */
+document.addEventListener('DOMContentLoaded', () => {
+  const branchHoursElements = document.querySelectorAll('.branch-hours');
+  
+  function updateBranchStatus() {
+    const now = new Date();
+    // UTC offset for Thailand is +7
+    const thailandTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+    const currentHour = thailandTime.getHours();
+    const currentMin = thailandTime.getMinutes();
+    const currentTotalMin = currentHour * 60 + currentMin;
+
+    branchHoursElements.forEach(el => {
+      const openTime = el.getAttribute('data-open');
+      const closeTime = el.getAttribute('data-close');
+      const badge = el.querySelector('.status-badge');
+      
+      if (openTime && closeTime && badge) {
+        const [openH, openM] = openTime.split(':').map(Number);
+        const [closeH, closeM] = closeTime.split(':').map(Number);
+        
+        const openTotalMin = openH * 60 + openM;
+        const closeTotalMin = closeH * 60 + closeM;
+        
+        if (currentTotalMin >= openTotalMin && currentTotalMin < closeTotalMin) {
+          // Check if within 60 minutes of closing
+          const minutesUntilClose = closeTotalMin - currentTotalMin;
+          if (minutesUntilClose <= 60) {
+            badge.className = 'status-badge closing-soon';
+            badge.textContent = '⚫ ใกล้ปิดให้บริการ';
+          } else {
+            badge.className = 'status-badge open';
+            badge.textContent = '⚫ เปิดให้บริการ';
+          }
+        } else {
+          badge.className = 'status-badge closed';
+          badge.textContent = '⚫ ปิดให้บริการ';
+        }
+      }
+    });
+  }
+
+  updateBranchStatus();
+  setInterval(updateBranchStatus, 60000);
 });
