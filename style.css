@@ -1210,6 +1210,7 @@ p  { color: var(--text-soft); line-height: 1.7; }
 @media (max-width: 768px) {
   .nav-links, .nav-btn { display: none; }
   .menu-toggle { display: flex; }
+  .hero-card img { aspect-ratio: 1 / 1; object-fit: cover; }
   .services-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
   .reviews-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
   .branches-container { max-width: 100%; margin: 0 auto; }
