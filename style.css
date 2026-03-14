@@ -1191,7 +1191,8 @@ p  { color: var(--text-soft); line-height: 1.7; }
   .hero-container { grid-template-columns: 1fr; text-align: center; }
   .hero-sub { margin-left: auto; margin-right: auto; }
   .hero-buttons { justify-content: center; }
-  .hero-visual { margin-top: 48px; }
+  .hero-content { order: 2; margin-top: 24px; }
+  .hero-visual { order: 1; margin-top: 0; }
   .fb-1 { left: 5%; }
   .fb-2 { right: 5%; }
   .services-grid { grid-template-columns: repeat(2, 1fr); }
