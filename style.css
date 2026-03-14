@@ -392,6 +392,7 @@ p  { color: var(--text-soft); line-height: 1.7; }
   width: 100%;
   max-width: 420px;
   max-height: 480px;
+  aspect-ratio: 420/480;
   object-fit: cover;
   border-radius: calc(var(--radius-xl) - 8px);
   filter: drop-shadow(0 20px 40px rgba(140,120,80,0.15));
@@ -1192,7 +1193,9 @@ p  { color: var(--text-soft); line-height: 1.7; }
   .hero-sub { margin-left: auto; margin-right: auto; }
   .hero-buttons { justify-content: center; }
   .hero-content { order: 2; margin-top: 24px; }
-  .hero-visual { order: 1; margin-top: 0; }
+  .hero-visual { order: 1; margin-top: 0; width: 100%; }
+  .hero-card { width: 100%; max-width: 500px; }
+  .hero-card img { max-width: 100%; aspect-ratio: 16/9; max-height: unset; }
   .fb-1 { left: 5%; }
   .fb-2 { right: 5%; }
   .services-grid { grid-template-columns: repeat(2, 1fr); }
