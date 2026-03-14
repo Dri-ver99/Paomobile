@@ -1195,7 +1195,7 @@ p  { color: var(--text-soft); line-height: 1.7; }
   .hero-content { order: 2; margin-top: 24px; }
   .hero-visual { order: 1; margin-top: 0; width: 100%; }
   .hero-card { width: 100%; max-width: 500px; margin: 0 auto; }
-  .hero-card img { max-width: 100%; aspect-ratio: 16/9; max-height: unset; }
+  .hero-card img { width: 100%; height: auto; max-width: 100%; aspect-ratio: auto; object-fit: contain; border-radius: calc(var(--radius-xl) - 8px); }
   .fb-1 { left: 5%; }
   .fb-2 { right: 5%; }
   .services-grid { grid-template-columns: repeat(2, 1fr); }
