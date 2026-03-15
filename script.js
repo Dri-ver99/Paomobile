@@ -21,12 +21,14 @@ const subMenuContent = document.getElementById('subMenuContent');
 function openMenu() {
   mobileMenu.classList.add('active');
   if (menuToggle) menuToggle.classList.add('active');
+  document.body.classList.add('menu-open');
   document.body.style.overflow = 'hidden';
 }
 
 function closeMenu() {
   mobileMenu.classList.remove('active');
   if (menuToggle) menuToggle.classList.remove('active');
+  document.body.classList.remove('menu-open');
   document.body.style.overflow = '';
   // Reset panels after animation ends
   setTimeout(() => {

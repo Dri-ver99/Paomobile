@@ -60,7 +60,7 @@
 html { scroll-behavior: smooth; font-size: 16px; }
 
 body {
-  font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
+  font-family: 'Noto Sans Thai', 'Outfit', sans-serif;
   color: var(--text);
   background: var(--bg);
   line-height: 1.65;
@@ -1173,10 +1173,14 @@ p  { color: var(--text-soft); line-height: 1.7; }
 .menu-toggle {
   z-index: 1200; /* Ensure toggle is above the full screen menu */
   position: relative;
+  background: transparent;
+  border: none;
+  outline: none;
 }
 
 .menu-toggle span {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--gold-500);
 }
 
 .menu-toggle.active span {
@@ -1196,30 +1200,56 @@ p  { color: var(--text-soft); line-height: 1.7; }
   transform: translateY(-8px) rotate(-45deg);
 }
 
+/* Ensure navbar stays on top when mobile menu is active */
+body.menu-open .navbar {
+  z-index: 1201;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
 .mobile-panel-header {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 25px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  justify-content: flex-start;
+  padding: 0 0 15px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  position: relative;
 }
 
 .mobile-back-btn {
   background: none;
   border: none;
-  font-size: 24px;
-  color: #0066cc;
+  font-size: 16px;
+  font-weight: 500;
+  color: #007aff;
   cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 0;
+  gap: 4px;
+  padding: 8px 0;
+  transition: opacity 0.2s;
+}
+
+.mobile-back-btn:active {
+  opacity: 0.6;
+}
+
+.mobile-back-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
 }
 
 .mobile-panel-title {
-  font-size: 20px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 17px;
   font-weight: 600;
   color: #1d1d1f;
+  white-space: nowrap;
 }
 
 .mobile-close {
@@ -1240,13 +1270,13 @@ p  { color: var(--text-soft); line-height: 1.7; }
 .mobile-menu-inner {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 8px;
 }
 
 .mobile-menu-inner > a, 
 .mobile-menu-inner .menu-item-parent {
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 500;
   color: #1d1d1f;
   text-decoration: none;
   display: block;
@@ -1274,10 +1304,12 @@ p  { color: var(--text-soft); line-height: 1.7; }
 
 .mobile-menu-inner .menu-item-parent::after {
   content: '❯';
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
-  opacity: 0.3;
+  color: #1d1d1f;
+  opacity: 0.7;
   transition: transform 0.3s ease;
+  margin-right: 5px;
 }
 
 .mobile-menu-inner .menu-item-parent.expanded::after {
