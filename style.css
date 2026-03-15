@@ -1497,3 +1497,82 @@ p  { color: var(--text-soft); line-height: 1.7; }
   background: rgba(255, 71, 87, 0.15);
   color: #ff4757;
 }
+/* Ensure Search and Cart icons display properly next to each other */
+.cart-icon-btn, .search-icon-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+  .nav-btn { display: none !important; } /* Hide text btn on mobile */
+  
+  .search-icon-btn {
+    margin-right: -10px; /* Pull it slightly closer to cart */
+  }
+}
+/* Force SVGs to render properly */
+.search-icon-btn svg, .cart-icon-btn svg {
+  width: 22px !important;
+  height: 22px !important;
+  display: block;
+}
+/* Account Icon Button Styles */
+.account-icon-btn {
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(245, 237, 224, 0.65) !important;
+  padding: 8px 10px;
+  border-radius: var(--radius-md, 8px);
+  transition: color 0.2s;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.account-icon-btn:hover {
+  color: var(--gold-400) !important;
+}
+
+.account-icon-btn svg {
+  width: 22px !important;
+  height: 22px !important;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .account-icon-btn {
+    margin-right: -10px; /* Pull it closer for mobile layout */
+  }
+}
+/* Adjust spacing for navbar icons (Search, Account, Cart) */
+.search-icon-btn, .account-icon-btn, .cart-icon-btn {
+  padding: 8px 4px !important; /* Reduce horizontal padding */
+  margin: 0 !important; /* Remove any margins causing extra space */
+}
+
+/* On mobile, ensure they are still close but tappable */
+@media (max-width: 768px) {
+  .search-icon-btn, .account-icon-btn, .cart-icon-btn {
+    padding: 8px 2px !important;
+  }
+}
+
+/* Exact 30px icon spacing */
+.search-icon-btn, .account-icon-btn, .cart-icon-btn {
+  padding: 8px 0 !important; 
+  margin: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .search-icon-btn, .account-icon-btn, .cart-icon-btn {
+    padding: 8px 0 !important;
+    margin: 0 !important;
+  }
+}
