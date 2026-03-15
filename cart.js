@@ -57,7 +57,7 @@ btn.classList.add('cart-flash');
 setTimeout(() => btn.classList.remove('cart-flash'), 600);
 });
 },
-open()  { document.getElementById('cartSidebar')?.classList.add('open'); document.getElementById('cartOverlay')?.classList.add('open'); CartUI.renderSidebar(); },
+open()  { if (typeof closeMenu === 'function') closeMenu(); document.getElementById('cartSidebar')?.classList.add('open'); document.getElementById('cartOverlay')?.classList.add('open'); CartUI.renderSidebar(); },
 close() { document.getElementById('cartSidebar')?.classList.remove('open'); document.getElementById('cartOverlay')?.classList.remove('open'); },
 renderSidebar() {
 const list = document.getElementById('cartItemList');

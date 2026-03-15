@@ -10,10 +10,11 @@ const mobileBackBtn = document.getElementById('mobileBackBtn');
 const subMenuTitle = document.getElementById('subMenuTitle');
 const subMenuContent = document.getElementById('subMenuContent');
 function openMenu() {
-mobileMenu.classList.add('active');
-if (menuToggle) menuToggle.classList.add('active');
-document.body.classList.add('menu-open');
-document.body.style.overflow = 'hidden';
+  if (typeof CartUI !== 'undefined') CartUI.close();
+  mobileMenu.classList.add('active');
+  if (menuToggle) menuToggle.classList.add('active');
+  document.body.classList.add('menu-open');
+  document.body.style.overflow = 'hidden';
 }
 function closeMenu() {
 mobileMenu.classList.remove('active');
