@@ -17,22 +17,35 @@ const mobileClose = document.getElementById('mobileClose');
 
 function openMenu() {
   mobileMenu.classList.add('active');
-  mobileOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
 function closeMenu() {
   mobileMenu.classList.remove('active');
-  mobileOverlay.classList.remove('active');
   document.body.style.overflow = '';
+  // Reset sub-menus
+  mobileMenu.querySelectorAll('.mobile-sub-menu').forEach(sub => sub.classList.remove('active'));
 }
 
 menuToggle.addEventListener('click', openMenu);
 mobileClose.addEventListener('click', closeMenu);
-mobileOverlay.addEventListener('click', closeMenu);
 
 mobileMenu.querySelectorAll('a').forEach(link => {
-  link.addEventListener('click', closeMenu);
+  if (!link.classList.contains('menu-item-parent')) {
+    link.addEventListener('click', closeMenu);
+  }
+});
+
+/* -- Mobile Sub-menu Logic -- */
+mobileMenu.addEventListener('click', (e) => {
+  const parent = e.target.closest('.menu-item-parent');
+  if (parent) {
+    const subMenu = parent.nextElementSibling;
+    if (subMenu && subMenu.classList.contains('mobile-sub-menu')) {
+      subMenu.classList.toggle('active');
+      parent.classList.toggle('expanded');
+    }
+  }
 });
 
 /* ── Scroll Reveal Animations ── */
