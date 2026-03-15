@@ -20,11 +20,13 @@ const subMenuContent = document.getElementById('subMenuContent');
 
 function openMenu() {
   mobileMenu.classList.add('active');
+  if (menuToggle) menuToggle.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
 function closeMenu() {
   mobileMenu.classList.remove('active');
+  if (menuToggle) menuToggle.classList.remove('active');
   document.body.style.overflow = '';
   // Reset panels after animation ends
   setTimeout(() => {
@@ -32,7 +34,15 @@ function closeMenu() {
   }, 400);
 }
 
-if (menuToggle) menuToggle.addEventListener('click', openMenu);
+if (menuToggle) {
+  menuToggle.addEventListener('click', () => {
+    if (mobileMenu.classList.contains('active')) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  });
+}
 if (mobileClose) mobileClose.addEventListener('click', closeMenu);
 if (mobileBackBtn) {
   mobileBackBtn.addEventListener('click', () => {

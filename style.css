@@ -1163,10 +1163,37 @@ p  { color: var(--text-soft); line-height: 1.7; }
 .mobile-panel {
   min-width: 100%;
   height: 100%;
-  padding: 80px 40px 40px 40px;
+  padding: 100px 40px 40px 40px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+
+/* Menu Toggle Animation */
+.menu-toggle {
+  z-index: 1200; /* Ensure toggle is above the full screen menu */
+  position: relative;
+}
+
+.menu-toggle span {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-toggle.active span {
+  background-color: #1d1d1f; /* Dark color for visibility on white bg */
+}
+
+.menu-toggle.active span:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.menu-toggle.active span:nth-child(2) {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.menu-toggle.active span:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
 }
 
 .mobile-panel-header {
@@ -1232,7 +1259,7 @@ p  { color: var(--text-soft); line-height: 1.7; }
 
 /* Staggered Reveal Animation */
 /* Reveal Animation for BOTH panels */
-.mobile-menu.active .mobile-panel #mainPanel .mobile-menu-inner > *,
+.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *,
 .mobile-menu.active .mobile-menu-panels.showing-sub #subMenuContent > * {
   opacity: 1;
   transform: translateY(0);
@@ -1259,12 +1286,14 @@ p  { color: var(--text-soft); line-height: 1.7; }
 
 /* Staggered Reveal - Main Panel */
 .mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(1) { transition-delay: 0.1s; }
-.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(2) { transition-delay: 0.15s; }
-.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(3) { transition-delay: 0.2s; }
-.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(4) { transition-delay: 0.25s; }
-.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(5) { transition-delay: 0.3s; }
-.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(6) { transition-delay: 0.35s; }
-.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(7) { transition-delay: 0.4s; }
+.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(2) { transition-delay: 0.1s; }
+.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(3) { transition-delay: 0.1s; }
+.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(4) { transition-delay: 0.1s; }
+.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(5) { transition-delay: 0.1s; }
+.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(6) { transition-delay: 0.1s; }
+.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(7) { transition-delay: 0.1s; }
+.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(8) { transition-delay: 0.1s; }
+.mobile-menu.active .mobile-panel#mainPanel .mobile-menu-inner > *:nth-child(9) { transition-delay: 0.1s; }
 
 /* Staggered Reveal - Sub Panel (When open) */
 .mobile-menu-panels.showing-sub #subMenuContent > *:nth-child(1) { transition-delay: 0.1s; }
