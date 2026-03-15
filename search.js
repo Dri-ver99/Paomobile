@@ -1,8 +1,3 @@
-
-/* ================================================================
-   SEARCH SYSTEM LOGIC
-   ================================================================ */
-
 document.addEventListener('DOMContentLoaded', () => {
   const searchBtn = document.getElementById('searchBtn');
   const searchOverlay = document.getElementById('searchOverlay');
@@ -10,10 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('searchInput');
   const searchResults = document.getElementById('searchResults');
   const searchClear = document.getElementById('searchClear');
-
-  // Search Data Index
   const searchData = [
-    // Phones & Tablets (Brand Pages)
     { title: "ซ่อม iPhone / iPad", url: "iphone.html", tags: ["apple", "ไอโฟน", "ไอแพด", "แอปเปิล", "ซ่อมจอไอโฟน", "เปลี่ยนแบตไอโฟน"] },
     { title: "ซ่อม Samsung", url: "samsung.html", tags: ["ซัมซุง", "galaxy", "กาแล็คซี่", "s24", "s23", "z fold", "z flip"] },
     { title: "ซ่อม Xiaomi / POCO", url: "xiaomi.html", tags: ["เสียวหมี่", "เรดหมี่", "redmi", "mi", "poco", "เสียวมี่"] },
@@ -23,25 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
     { title: "ซ่อม Realme", url: "realme.html", tags: ["เรียลมี", "gt"] },
     { title: "ซ่อม OnePlus", url: "oneplus.html", tags: ["วันพลัส", "nord"] },
     { title: "ซ่อม Nokia", url: "nokia.html", tags: ["โนเกีย"] },
-
-    // Services
     { title: "เปลี่ยนจอ / ซ่อมจอแตก", url: "select-screen-repair.html", tags: ["ซ่อมจอ", "เปลี่ยนจอ", "จอทัชไม่ได้", "จอแตก", "จอลาย", "จอดำ", "ลอกจอ"] },
     { title: "เปลี่ยนแบตเตอรี่", url: "select-battery.html", tags: ["เปลี่ยนแบต", "แบตเสื่อม", "แบตบวม", "แบตหมดไว", "เปอร์เซ็นต์แบต"] },
     { title: "ซ่อมบอร์ด / เมนบอร์ด", url: "select-board-repair.html", tags: ["ซ่อมบอร์ด", "เมนบอร์ด", "เปิดไม่ติด", "ชาร์จไม่เข้า", "ตกน้ำ", "เครื่องดับ"] },
     { title: "ซ่อมลำโพง / ไมค์", url: "select-speaker-repair.html", tags: ["ลำโพงไม่ดัง", "ไมค์ช็อต", "ไมค์เบา", "ไม่ได้ยินเสียง", "ซ่อมไมค์", "ซ่อมลำโพง"] },
-
-    // Shop / Products
     { title: "สั่งสินค้ามือ 1", url: "new-products.html", tags: ["เครื่องมือ 1", "เครื่องมือ1", "เครื่อง1", "มือ 1", "สั่งของ", "ซื้อเครื่องใหม่", "โทรศัพท์ใหม่", "สินค้าใหม่"] },
     { title: "สั่งสินค้ามือ 2", url: "used-products.html", tags: ["เครื่องมือ 2", "เครื่องมือ2", "เครื่อง2", "มือ 2", "สั่งของ", "มือสอง", "โทรศัพท์มือสอง", "เครื่องมือสอง"] },
     { title: "ร้าน Shopee", url: "https://s.shopee.co.th/qejQcQeWI", tags: ["shopee", "ช้อปปี้", "สั่งออนไลน์"] },
-
-    // Info
     { title: "สาขา / แผนที่ร้าน", url: "index.html#branches", tags: ["สาขา", "ติดต่อ", "ร้านอยู่ไหน", "แผนที่", "ตึกคอม", "นาเกลือ", "สยาม", "แหลมฉบัง", "มหาชล"] },
     { title: "ติดต่อสอบถาม (LINE)", url: "https://line.me/R/ti/p/@pao789", tags: ["line", "ไลน์", "ติดต่อ", "สอบถาม", "แชท"] },
     { title: "รีวิวลูกค้า", url: "index.html#reviews", tags: ["รีวิว", "pantip", "ดีไหม", "ผลงาน", "รีวิวซ่อม"] }
   ];
-
-  // Open Search
   if (searchBtn) {
     searchBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -51,30 +35,22 @@ document.addEventListener('DOMContentLoaded', () => {
       renderResults(''); // Show all/initial state
     });
   }
-
-  // Close Search
   const closeSearch = () => {
     searchOverlay.classList.remove('open');
     searchInput.value = '';
     document.body.style.overflow = '';
   };
-
   if (searchClose) searchClose.addEventListener('click', closeSearch);
-  
   if (searchOverlay) {
     searchOverlay.addEventListener('click', (e) => {
       if (e.target === searchOverlay) closeSearch();
     });
   }
-
-  // Escape key to close
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && searchOverlay && searchOverlay.classList.contains('open')) {
       closeSearch();
     }
   });
-
-  // Clear Input
   if (searchClear) {
     searchClear.addEventListener('click', () => {
       searchInput.value = '';
@@ -82,20 +58,14 @@ document.addEventListener('DOMContentLoaded', () => {
       renderResults('');
     });
   }
-
-  // Handle Input
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       renderResults(e.target.value.trim().toLowerCase());
     });
   }
-
-  // Render Results
   function renderResults(query) {
     if (!searchResults) return;
-    
     searchResults.innerHTML = '';
-
     if (!query) {
       searchResults.innerHTML = `
         <div class="search-empty">
@@ -111,13 +81,11 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       return;
     }
-
     const filtered = searchData.filter(item => {
       const titleMatch = item.title.toLowerCase().includes(query);
       const tagMatch = item.tags.some(tag => tag.toLowerCase().includes(query));
       return titleMatch || tagMatch;
     });
-
     if (filtered.length === 0) {
       searchResults.innerHTML = `
         <div class="search-empty">
@@ -129,12 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       return;
     }
-
     filtered.forEach(item => {
       const a = document.createElement('a');
       a.href = item.url;
       a.className = 'search-result-item';
-      
       let icon = '📱';
       if (item.title.includes('แบต')) icon = '🔋';
       else if (item.title.includes('จอ')) icon = '🔧';
@@ -143,7 +109,6 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (item.title.includes('มือ 1') || item.title.includes('มือ 2')) icon = '📦';
       else if (item.title.includes('LINE') || item.title.includes('ติดต่อ')) icon = '💬';
       else if (item.title.includes('สาขา')) icon = '📍';
-
       a.innerHTML = `
         <span class="sr-icon">${icon}</span>
         <div class="sr-content">
@@ -152,14 +117,11 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <span class="sr-arrow">→</span>
       `;
-      
-      // If clicking inside the overlay, close it
       a.addEventListener('click', () => {
         if (!item.url.startsWith('http')) { // Only close for local links, new tabs let it stay
           closeSearch();
         }
       });
-
       searchResults.appendChild(a);
     });
   }

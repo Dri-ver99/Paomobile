@@ -1,8 +1,5 @@
-/* ===== PAOMOBILE CART SYSTEM ===== */
 (function () {
   const CART_KEY = 'pao_cart';
-
-  /* ── Storage helpers ── */
   function loadCart() {
     try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; }
     catch { return []; }
@@ -10,11 +7,8 @@
   function saveCart(cart) {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
   }
-
-  /* ── Cart operations ── */
   window.CartAPI = {
     getAll() { return loadCart(); },
-
     add(product) {
       const cart = loadCart();
       const idx = cart.findIndex(i => i.id === product.id);
@@ -27,13 +21,11 @@
       CartUI.update();
       CartUI.flash();
     },
-
     remove(id) {
       saveCart(loadCart().filter(i => i.id !== id));
       CartUI.update();
       CartUI.renderSidebar();
     },
-
     setQty(id, qty) {
       const cart = loadCart();
       const idx = cart.findIndex(i => i.id === id);
@@ -44,17 +36,13 @@
       CartUI.update();
       CartUI.renderSidebar();
     },
-
     total() {
       return loadCart().reduce((s, i) => s + i.price * i.qty, 0);
     },
-
     count() {
       return loadCart().reduce((s, i) => s + i.qty, 0);
     }
   };
-
-  /* ── UI helpers ── */
   window.CartUI = {
     update() {
       const n = CartAPI.count();
@@ -63,23 +51,19 @@
         el.style.display = n > 0 ? 'flex' : 'none';
       });
     },
-
     flash() {
       document.querySelectorAll('.cart-icon-btn').forEach(btn => {
         btn.classList.add('cart-flash');
         setTimeout(() => btn.classList.remove('cart-flash'), 600);
       });
     },
-
     open()  { document.getElementById('cartSidebar')?.classList.add('open'); document.getElementById('cartOverlay')?.classList.add('open'); CartUI.renderSidebar(); },
     close() { document.getElementById('cartSidebar')?.classList.remove('open'); document.getElementById('cartOverlay')?.classList.remove('open'); },
-
     renderSidebar() {
       const list = document.getElementById('cartItemList');
       const totalEl = document.getElementById('cartTotal');
       const countEl = document.getElementById('cartCount');
       if (!list) return;
-
       const cart = CartAPI.getAll();
       if (cart.length === 0) {
         list.innerHTML = '<div class="cart-empty"><span>🛒</span><p>ตะกร้าว่างเปล่า</p></div>';
@@ -101,28 +85,19 @@
           </div>
         `).join('');
       }
-
       const total = CartAPI.total();
       const count = CartAPI.count();
       if (totalEl) totalEl.textContent = '฿' + total.toLocaleString();
       if (countEl) countEl.textContent = count + ' ชิ้น';
     }
   };
-
-  /* ── Init on DOM ready ── */
   document.addEventListener('DOMContentLoaded', () => {
     CartUI.update();
-
-    // Cart icon buttons
     document.querySelectorAll('.cart-icon-btn').forEach(btn => {
       btn.addEventListener('click', CartUI.open);
     });
-
-    // Overlay close
     document.getElementById('cartOverlay')?.addEventListener('click', CartUI.close);
     document.getElementById('cartCloseBtn')?.addEventListener('click', CartUI.close);
-
-    // Search
     const searchInput = document.getElementById('productSearch');
     if (searchInput) {
       searchInput.addEventListener('input', () => {
