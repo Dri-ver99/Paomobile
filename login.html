@@ -234,81 +234,113 @@
   import { signInWithRedirect, getRedirectResult, GoogleAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
   import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
+  // --- Resilience State ---
+  let isNavigating = false;
+  let isCheckingRedirect = true;
+
   const overlay = document.getElementById('loadingOverlay');
   const showLoading = () => overlay.style.display = 'flex';
-  const hideLoading = () => overlay.style.display = 'none';
+  const hideLoading = () => {
+      // Never hide loading if we are already transitioning to the home page
+      if (isNavigating) return;
+      overlay.style.display = 'none';
+  };
 
-  // --- Proactive Detection ---
-  if (auth) {
-      // 1. Initial check for redirect payload (The standard way)
-      checkRedirectResult();
+  // --- Auth Initializer (Sequenced Flow) ---
+  async function initAuth() {
+      if (!auth) return;
+
+      // 1. Handle actual logout request (Wait for it to finish)
+      if (localStorage.getItem('pao_logout_pending')) {
+          console.log("[Auth] Logout signal detected. Forcing signOut...");
+          showLoading(); // Ensure spinner is up
+          localStorage.removeItem('pao_logout_pending');
+          await auth.signOut();
+          console.log("[Auth] Cloud sign-out complete.");
+          hideLoading();
+      }
+
+      // 2. Check for Google Redirect Result
+      await checkRedirectResult();
       
-      // 2. Observer (The robust catch-all)
-      onAuthStateChanged(auth, async (user) => {
-          if (user) {
-              console.log("[Auth] User found via Observer. Checking local session...");
-              const currentData = localStorage.getItem('paomobile_user');
-              let needsUpdate = true;
-              
-              if (currentData) {
-                  try {
-                      const parsed = JSON.parse(currentData);
-                      if (parsed.uid === user.uid) needsUpdate = false;
-                  } catch(e) {}
-              }
+      // 3. Release redirect lock (Observer can now handle UI)
+      isCheckingRedirect = false;
+      console.log("[Auth] Redirect check finished. Observer active.");
+  }
 
-              // Even if session is "correct", let's force a finishLogin to move them along
-              if (needsUpdate) {
-                  console.log("[Auth] Local session missing or wrong. Saving...");
-                  showLoading();
-                  await saveUserToFirestore(user, 'observer_sync');
-              }
-              
-              console.log("[Auth] Pushing user to homepage...");
-              await finishLogin(user.displayName || user.email);
-          } else {
-              // Not logged in - clear any partial state to be safe for next attempt
+  // --- Start the flow ---
+  initAuth();
+
+  // --- Observer (The persistent sentry) ---
+  onAuthStateChanged(auth, async (user) => {
+      // If we are currently logging out or already moving to home, ignore observer
+      if (localStorage.getItem('pao_logout_pending') || isNavigating) return;
+
+      if (user) {
+          console.log("[Auth] User detected. Checking session status...");
+          const currentData = localStorage.getItem('paomobile_user');
+          let needsSync = true;
+          
+          if (currentData) {
+              try {
+                  const parsed = JSON.parse(currentData);
+                  if (parsed.uid === user.uid) needsSync = false;
+              } catch(e) {}
+          }
+
+          if (needsSync) {
+              console.log("[Auth] New or mismatched session. Syncing...");
+              showLoading();
+              await saveUserToFirestore(user, 'observer_sync');
+          }
+          
+          await finishLogin(user.displayName || user.email);
+      } else {
+          // No user found AND we are done checking for Google redirects
+          if (!isCheckingRedirect) {
+              console.log("[Auth] No session found. Cleaning up.");
               localStorage.removeItem('paomobile_user');
               localStorage.removeItem('pao_cart_owner');
               hideLoading();
           }
-      });
-  }
+      }
+  });
 
-  // --- Handle Redirect Result (Standard Firebase Flow) ---
+  // --- Handle Redirect Result (The Google Path) ---
   async function checkRedirectResult() {
-      if (!auth) return;
       try {
           const result = await getRedirectResult(auth);
           if (result && result.user) {
-              console.log("[Auth] Redirect Success: Finalizing user data...");
+              console.log("[Auth] Google Redirect Success!");
+              isNavigating = true; // LOCK NAVIGATION
               showLoading();
               await saveUserToFirestore(result.user, 'google_redirect');
               
               if (window.CartAPI && typeof window.CartAPI.forceSync === 'function') {
-                  try {
-                      await window.CartAPI.forceSync();
-                  } catch (syncErr) { console.error("[Auth] Sync err:", syncErr); }
+                  try { await window.CartAPI.forceSync(); } catch(e) {}
               }
               
               await finishLogin(result.user.displayName);
           }
       } catch (error) {
           console.error("[Auth] Redirect Error:", error);
-          hideLoading();
           if (error.code !== 'auth/web-storage-unsupported') {
               alert("การเข้าระบบล้มเหลว: " + error.message);
           }
       }
   }
 
-  // The "Go to Home" function (With safety delay for storage flush)
+  // Final Redirection Sequence (With Lock)
   async function finishLogin(name) {
+      if (isNavigating && overlay.style.display !== 'flex') return; // Prevent double trigger
+      
+      isNavigating = true; // ACTIVATE LOCK
       showLoading();
-      console.log("[Auth] Navigation sequence started for:", name);
-      // Wait long enough for both localStorage and Firestore's internal states to settle
-      await wait(1000); 
-      window.location.replace("index.html"); // .replace prevents "back to login" loops
+      
+      console.log("[Auth] Navigation Lock Engaged. Destination: index.html");
+      // Safety delay to ensure localStorage flush
+      await wait(1200); 
+      window.location.replace("index.html");
   }
 
   // --- Save user data to Firestore ---

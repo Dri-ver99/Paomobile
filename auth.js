@@ -47,9 +47,10 @@
             logoutLink.style.cssText = 'color: #e53e3e !important; font-size: 0.9em; padding-top: 4px;';
             logoutLink.textContent = '← ออกจากระบบ';
             logoutLink.addEventListener('click', function () {
+                localStorage.setItem('pao_logout_pending', 'true'); // Flag for login.html to signOut from Firebase
                 localStorage.removeItem('paomobile_user');
                 localStorage.removeItem('pao_cart'); 
-                localStorage.removeItem('pao_cart_owner'); // CRITICAL: Clear owner tracking
+                localStorage.removeItem('pao_cart_owner'); 
                 window.location.href = 'login.html';
             });
             loginLink.parentNode.insertBefore(logoutLink, loginLink.nextSibling);
