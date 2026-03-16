@@ -5,15 +5,29 @@
 (function () {
     function updateNavForUser() {
         const userData = localStorage.getItem('paomobile_user');
+        console.log("[Auth] Checking user session...", userData ? "Found" : "Not Found");
         if (!userData) return;
 
         let user;
-        try { user = JSON.parse(userData); } catch (e) { return; }
-        if (!user || !user.name) return;
+        try { 
+            user = JSON.parse(userData); 
+            console.log("[Auth] Session data:", user);
+        } catch (e) { 
+            console.error("[Auth] Session Corrupted:", e);
+            return; 
+        }
+        
+        if (!user || !user.name) {
+            console.warn("[Auth] Incomplete user object found.");
+            return;
+        }
 
         // Find the login link
         const loginLink = document.querySelector('.account-dropdown a.dropdown-item[href="login.html"]');
-        if (!loginLink) return;
+        if (!loginLink) {
+            console.warn("[Auth] Navbar login link not found on this page.");
+            return;
+        }
 
         // Replace text with first name only (looks cleaner on menu)
         const firstName = user.name.split(' ')[0];
