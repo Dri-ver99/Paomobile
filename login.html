@@ -184,12 +184,7 @@
 
     <div class="divider" style="margin-top: 32px;">หรือ</div>
 
-    <button id="btnFacebookLogin" class="btn-social btn-facebook" style="border: 1px solid #e5e7eb; cursor: pointer;">
-        <span class="social-icon">
-            <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="currentColor"/></svg>
-        </span>
-        เข้าสู่ระบบด้วยบัญชี Facebook
-    </button>
+
 
     <button id="btnGoogleLogin" class="btn-social btn-google" style="border: 1px solid #e5e7eb; cursor: pointer;">
         <span class="social-icon">
@@ -204,7 +199,7 @@
 <!-- Firebase SDK Implementation -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-  import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
   import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
   // TODO: ใส่ค่าคอนฟิก Firebase ของคุณลงตรงนี้
@@ -232,6 +227,13 @@
 
   // --- Save user data to Firestore ---
   async function saveUserToFirestore(user, provider) {
+      // Save locally for UI updates across all pages
+      localStorage.setItem('paomobile_user', JSON.stringify({
+          name: user.displayName || user.email.split('@')[0],
+          email: user.email,
+          photo: user.photoURL || ""
+      }));
+
       if (!db) return;
       try {
           const userRef = doc(db, "users", user.uid);
@@ -262,19 +264,7 @@
     });
   });
 
-  // --- Facebook Sign-in ---
-  document.getElementById("btnFacebookLogin").addEventListener("click", () => {
-    if(!auth){ alert("กรุณาใส่ค่า Firebase Config ในไฟล์ login.html ก่อนการใช้งานครับ! (ดูคำอธิบายที่ได้แจ้งไว้)"); return; }
-    const provider = new FacebookAuthProvider();
-    signInWithPopup(auth, provider).then((result) => {
-      saveUserToFirestore(result.user, 'facebook');
-      alert("เข้าสู่ระบบด้วย Facebook สำเร็จ! ยินดีต้อนรับ " + result.user.displayName);
-      window.location.href = "index.html";
-    }).catch((error) => {
-      console.error(error);
-      alert("เกิดข้อผิดพลาดในการล็อกอิน: " + error.message);
-    });
-  });
+
 
   // --- Email Flow ---
   let isPasswordPhase = false;
