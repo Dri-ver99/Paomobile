@@ -6,19 +6,37 @@
 
     function updateNavForUser() {
         const userData = localStorage.getItem(AUTH_KEY);
-        const user = userData ? JSON.parse(userData) : null;
-        
-        // 1. SELECTORS
-        // - Desktop dropdown links
-        // - Mobile menu links
-        // - Any link pointing to login.html
-        const allLinks = document.querySelectorAll('a[href*="login.html"], .account-dropdown .dropdown-item.bold');
         const mobileMenu = document.querySelector('.mobile-menu-inner');
-        const accountIcon = document.querySelector('.account-icon-btn');
+        
+        if (!userData) {
+            console.log("[Auth] No local session found (Guest Mode).");
+            // Add Login link to Mobile Menu if missing for guest
+            if (mobileMenu && !mobileMenu.querySelector('a[href*="login.html"]')) {
+                const loginLink = document.createElement('a');
+                loginLink.href = 'login.html';
+                loginLink.innerHTML = '👤 เข้าสู่ระบบ / สมัครสมาชิก';
+                loginLink.style.cssText = 'font-weight: 600; color: var(--gold-primary); border-top: 1px solid #f1f5f9; margin-top: 10px; padding-top: 15px; display: block;';
+                mobileMenu.appendChild(loginLink);
+            }
+            return;
+        }
+
+        let user;
+        try {
+            user = JSON.parse(userData);
+        } catch (e) {
+            console.error("[Auth] Session data corrupt.");
+            return;
+        }
 
         if (user && user.name) {
             const firstName = user.name.split(' ')[0];
             console.log("[Auth] Active Session:", firstName);
+
+            // 1. SELECTORS
+            const allLinks = document.querySelectorAll('a[href*="login.html"], .account-dropdown .dropdown-item.bold, .mobile-menu a[href*="login.html"]');
+            const mobileMenu = document.querySelector('.mobile-menu-inner');
+            const accountIcon = document.querySelector('.account-icon-btn');
 
             // A. Update Account Icon (Disable link redirect)
             if (accountIcon) {
@@ -28,6 +46,8 @@
 
             // B. Update/Replace Login Links
             allLinks.forEach(el => {
+                if (el.classList.contains('is-logged-in')) return;
+
                 const text = el.textContent || "";
                 if (text.includes('เข้าสู่ระบบ') || text.includes('สมัครสมาชิก') || el.classList.contains('bold')) {
                     el.removeAttribute('href');
@@ -37,14 +57,15 @@
                     el.classList.add('is-logged-in');
 
                     // Add Logout button if sibling doesn't exist
-                    if (!el.parentNode.querySelector('.dynamic-logout')) {
+                    let parent = el.parentNode;
+                    if (!parent.querySelector('.dynamic-logout')) {
                         const logoutBtn = document.createElement('a');
                         logoutBtn.href = 'javascript:void(0)';
                         logoutBtn.className = 'dropdown-item dynamic-logout';
                         logoutBtn.style.cssText = 'color: #ef4444 !important; font-size: 0.9em; margin-top: 4px; display: block; border-top: 1px solid #eee; padding-top: 8px;';
                         logoutBtn.textContent = '← ออกจากระบบ';
                         logoutBtn.addEventListener('click', handleLogout);
-                        el.parentNode.insertBefore(logoutBtn, el.nextSibling);
+                        parent.insertBefore(logoutBtn, el.nextSibling);
                     }
                 }
             });
@@ -65,24 +86,14 @@
                     <button id="btnMobileLogout" style="background:none; border:none; color: #ef4444; font-size: 0.85em; font-weight: 500; cursor: pointer;">ออกจากระบบ</button>
                 `;
                 mobileMenu.prepend(header);
-                document.getElementById('btnMobileLogout').addEventListener('click', handleLogout);
-            }
-        } else {
-            // GUEST MODE
-            console.log("[Auth] Guest Mode");
-            
-            // Add Login link to Mobile Menu if missing
-            if (mobileMenu && !mobileMenu.querySelector('a[href*="login.html"]')) {
-                const loginLink = document.createElement('a');
-                loginLink.href = 'login.html';
-                loginLink.innerHTML = '👤 เข้าสู่ระบบ / สมัครสมาชิก';
-                loginLink.style.cssText = 'font-weight: 600; color: var(--gold-primary); border-top: 1px solid #f1f5f9; margin-top: 10px; padding-top: 15px;';
-                mobileMenu.appendChild(loginLink);
+                const mobileLogout = document.getElementById('btnMobileLogout');
+                if (mobileLogout) mobileLogout.addEventListener('click', handleLogout);
             }
         }
     }
 
     function handleLogout() {
+        console.log("[Auth] Logging out...");
         localStorage.setItem('pao_logout_pending', 'true');
         localStorage.removeItem('paomobile_user');
         localStorage.removeItem('pao_cart');
@@ -91,7 +102,6 @@
     }
 
     // --- AGGRESSIVE DETECTION (MutationObserver) ---
-    // This catches elements that appear late or are added by other scripts
     const observer = new MutationObserver(() => {
         updateNavForUser();
     });
@@ -103,5 +113,9 @@
     });
 
     // Immediate check
-    updateNavForUser();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateNavForUser);
+    } else {
+        updateNavForUser();
+    }
 })();
