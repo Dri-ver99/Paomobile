@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงชื่อเข้าใช้ - Paomobile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans Thai', 'Outfit', sans-serif;
+            background-color: #f7f7f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #111;
+        }
+        .login-card {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 460px;
+            padding: 48px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            height: auto;
+            margin: 0 auto 32px auto;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: left;
+            letter-spacing: -0.02em;
+        }
+        .subtitle {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .btn-social {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            border: 1px solid #e5e7eb;
+            background-color: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: background-color 0.2s;
+            font-family: inherit;
+        }
+        .btn-google {
+            color: #4b5563;
+        }
+        .btn-google:hover {
+            background-color: #f9fafb;
+        }
+        .btn-facebook {
+            color: #1877f2;
+        }
+        .btn-facebook:hover {
+            background-color: #f0f8ff;
+        }
+        .social-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        .divider:not(:empty)::before {
+            margin-right: 16px;
+        }
+        .divider:not(:empty)::after {
+            margin-left: 16px;
+        }
+        .input-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #0b5edd; /* Blue border as shown in mockup */
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            color: #111;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input::placeholder {
+            color: #888;
+        }
+        .input-group input:focus {
+            border-color: #094eb8;
+            box-shadow: 0 0 0 3px rgba(11, 94, 221, 0.1);
+        }
+        .btn-continue {
+            display: block;
+            width: 100%;
+            background-color: #0b5edd; /* Blue */
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-family: inherit;
+        }
+        .btn-continue:hover {
+            background-color: #094eb8;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 24px;
+            color: #555;
+            font-size: 14px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: #111;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            body {
+                background-color: #ffffff;
+            }
+            .login-card {
+                padding: 32px 24px;
+                box-shadow: none;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <a href="index.html">
+        <img src="logo.png" alt="Paomobile Logo" class="logo" onerror="this.onerror=null; this.src='https://placehold.co/80x80?text=Logo';">
+    </a>
+    <h1>ลงชื่อเข้าใช้</h1>
+    <p class="subtitle">ลงชื่อเข้าใช้หรือสร้างบัญชีผู้ใช้</p>
+    
+    <div class="input-group">
+        <input type="email" placeholder="อีเมล">
+    </div>
+    
+    <button class="btn-continue">ดำเนินการต่อ</button>
+
+    <div class="divider" style="margin-top: 32px;">หรือ</div>
+
+    <a href="https://www.facebook.com/login" class="btn-social btn-facebook" style="text-decoration: none;">
+        <span class="social-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="currentColor"/></svg>
+        </span>
+        เข้าสู่ระบบด้วยบัญชี Facebook
+    </a>
+
+    <a href="https://accounts.google.com/signin" class="btn-social btn-google" style="text-decoration: none;">
+        <span class="social-icon">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="24" height="24">
+        </span>
+        เข้าสู่ระบบด้วยบัญชี Google
+    </a>
+
+    <a href="index.html" class="back-link">← กลับสู่หน้าหลัก</a>
+</div>
+
+</body>
+</html>

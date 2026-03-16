@@ -42,3 +42,141 @@
     .hero-sub { font-size: 1rem !important; margin-bottom: 30px !important; }
     .hero-buttons { flex-direction: column !important; gap: 12px !important; align-items: stretch !important; padding: 0 20px !important; }
 }
+/* Account Hover Menu */
+.account-menu-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.account-icon-btn {
+    position: relative;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(245, 237, 224, 0.65) !important;
+    padding: 8px 0 !important;
+    border-radius: var(--radius-md, 8px);
+    transition: color 0.2s;
+    text-decoration: none;
+    vertical-align: middle;
+    margin: 0 !important;
+}
+
+.account-icon-btn:hover, .account-menu-wrapper:hover .account-icon-btn {
+    color: var(--gold-400) !important;
+}
+
+.account-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 10px;
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    min-width: 280px;
+    padding: 16px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 200;
+}
+
+.account-menu-wrapper:hover .account-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Invisible bridge so mouse doesn't lose hover */
+.account-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    right: 0;
+    width: 100%;
+    height: 15px;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    color: var(--text) !important;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-warm);
+    color: var(--gold-600) !important;
+}
+
+.dropdown-item.bold {
+    font-weight: 700;
+    color: var(--text-dark) !important;
+}
+
+.dropdown-item.bold:hover {
+    color: var(--gold-600) !important;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: var(--border);
+    margin: 8px 24px;
+}
+
+.dropdown-item .arrow {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    font-weight: 300;
+}
+
+@media (max-width: 768px) {
+    .account-dropdown {
+        right: -50px; /* Adjust for mobile so it doesn't go off screen */
+    }
+}
+
+/* Account Hover Menu - Fix */
+.account-menu-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.account-icon-btn {
+    pointer-events: auto !important;
+}
+
+.account-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 10px;
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    min-width: 280px;
+    padding: 16px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1000 !important;
+}
+
+.account-menu-wrapper:hover .account-dropdown,
+.account-icon-btn:hover + .account-dropdown,
+.account-dropdown:hover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
