@@ -191,6 +191,41 @@
                 max-width: 100%;
             }
         }
+
+        /* In-App Browser Warning */
+        #webviewNotice {
+            display: none;
+            background: #fff9db;
+            border: 1px solid #fcc419;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: left;
+            animation: fadeIn 0.5s ease;
+        }
+        #webviewNotice h3 {
+            font-size: 18px;
+            color: #d9480f;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #webviewNotice p {
+            font-size: 14px;
+            color: #444;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .browser-guide-img {
+            width: 100%;
+            max-width: 280px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            margin: 10px 0;
+            display: block;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -206,31 +241,42 @@
     </a>
     <h1>ลงชื่อเข้าใช้</h1>
     <p class="subtitle">ลงชื่อเข้าใช้หรือสร้างบัญชีผู้ใช้</p>
+
+    <!-- In-App Browser Guide -->
+    <div id="webviewNotice">
+        <h3>⚠️ พบข้อจำกัดในการเข้าใช้งาน</h3>
+        <p>เนื่องจากคุณเปิดผ่านแอป (เช่น LINE, Facebook) ทำให้ Google ปล็อกการเข้าสู่ระบบเพื่อความปลอดภัย</p>
+        <p><strong>วิธีการแก้ไข:</strong></p>
+        <p>1. กดที่ไอคอน <b>สามจุด (...)</b> หรือ <b>ลูกศร</b> ที่มุมจอ<br>
+           2. เลือก <b>"เปิดด้วยเบราว์เซอร์อื่น"</b> หรือ <b>"Open in Safari/Chrome"</b></p>
+    </div>
     
-    <div class="input-group">
-        <input type="email" id="emailInput" placeholder="อีเมล">
+    <div id="loginFormArea">
+        <div class="input-group">
+            <input type="email" id="emailInput" placeholder="อีเมล">
+        </div>
+        <div class="input-group" style="display: none;" id="passwordGroup">
+            <input type="password" id="passwordInput" placeholder="รหัสผ่าน">
+        </div>
+        
+        <button class="btn-continue" id="btnEmailLogin">ดำเนินการต่อ</button>
+
+        <div class="divider" style="margin-top: 32px;">หรือ</div>
+
+        <button id="btnGoogleLogin" class="btn-social btn-google" style="border: 1px solid #e5e7eb; cursor: pointer;">
+            <span class="social-icon">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="24" height="24">
+            </span>
+            เข้าสู่ระบบด้วยบัญชี Google
+        </button>
+
+        <div id="emergencyRedirect" style="display: none; margin-top: 15px; text-align: center;">
+            <p style="font-size: 0.85em; color: #64748b; margin-bottom: 8px;">หากระบบไม่เปลี่ยนหน้าอัตโนมัติ:</p>
+            <a href="index.html" class="btn-continue" style="background: #e2e8f0; color: #1e293b; padding: 10px 20px; font-size: 0.9em;">ไปหน้าหลักด้วยบัญชีนี้</a>
+        </div>
+
+        <a href="index.html" class="back-link">← กลับสู่หน้าหลัก</a>
     </div>
-    <div class="input-group" style="display: none;" id="passwordGroup">
-        <input type="password" id="passwordInput" placeholder="รหัสผ่าน">
-    </div>
-    
-    <button class="btn-continue" id="btnEmailLogin">ดำเนินการต่อ</button>
-
-    <div class="divider" style="margin-top: 32px;">หรือ</div>
-
-    <button id="btnGoogleLogin" class="btn-social btn-google" style="border: 1px solid #e5e7eb; cursor: pointer;">
-        <span class="social-icon">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="24" height="24">
-        </span>
-        เข้าสู่ระบบด้วยบัญชี Google
-    </button>
-
-    <div id="emergencyRedirect" style="display: none; margin-top: 15px; text-align: center;">
-        <p style="font-size: 0.85em; color: #64748b; margin-bottom: 8px;">หากระบบไม่เปลี่ยนหน้าอัตโนมัติ:</p>
-        <a href="index.html" class="btn-continue" style="background: #e2e8f0; color: #1e293b; padding: 10px 20px; font-size: 0.9em;">ไปหน้าหลักด้วยบัญชีนี้</a>
-    </div>
-
-    <a href="index.html" class="back-link">← กลับสู่หน้าหลัก</a>
 </div>
 
 <!-- Firebase SDK Implementation -->
@@ -246,10 +292,25 @@
   const overlay = document.getElementById('loadingOverlay');
   const showLoading = () => overlay.style.display = 'flex';
   const hideLoading = () => {
-      // Never hide loading if we are already transitioning to the home page
       if (isNavigating) return;
       overlay.style.display = 'none';
   };
+
+  // --- WebView Detection ---
+  function detectRestrictedBrowser() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      const isRestricted = /Line|FBAN|FBAV|Instagram|Messenger|WhatsApp|FB_IAB|FBSS/i.test(ua);
+      
+      if (isRestricted) {
+          console.warn("[Auth] Restricted WebView detected:", ua);
+          document.getElementById('webviewNotice').style.display = 'block';
+          // Optional: Dim the login buttons to emphasize the notice
+          document.getElementById('loginFormArea').style.opacity = '0.5';
+          document.getElementById('loginFormArea').style.pointerEvents = 'none';
+          return true;
+      }
+      return false;
+  }
 
   // --- Auth Initializer (Sequenced Flow) ---
   async function initAuth() {
@@ -274,6 +335,7 @@
   }
 
   // --- Start the flow ---
+  detectRestrictedBrowser();
   initAuth();
 
   // --- Observer (The persistent sentry) ---
