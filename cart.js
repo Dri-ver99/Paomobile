@@ -45,8 +45,14 @@
         catch { return []; }
     }
 
-    function saveLocalCart(cart) {
+    function saveLocalCart(cart, ownerUid = null) {
         localStorage.setItem(CART_KEY, JSON.stringify(cart));
+        if (ownerUid) {
+            localStorage.setItem('pao_cart_owner', ownerUid);
+        } else if (!localStorage.getItem('pao_cart_owner')) {
+            // If no owner is set, it's a guest cart
+            localStorage.setItem('pao_cart_owner', 'guest');
+        }
     }
 
     async function syncWithFirestore(uid) {
@@ -59,27 +65,37 @@
             let remoteCart = [];
             if (snap.exists()) {
                 remoteCart = snap.data().items || [];
-                console.log("[Cart] Cloud data found:", remoteCart.length, "items.");
-            } else {
-                console.log("[Cart] No cloud data. Starting with fresh sync.");
+                console.log("[Cart] Cloud data found for", uid, ":", remoteCart.length, "items.");
             }
 
             const localCart = getLocalCart();
+            const lastOwner = localStorage.getItem('pao_cart_owner') || 'guest';
             
-            // Merge logic: Keep cloud items, merge local ones if they don't exist or have higher qty
-            const merged = [...remoteCart];
-            localCart.forEach(lItem => {
-                const idx = merged.findIndex(rItem => rItem.id === lItem.id);
-                if (idx >= 0) {
-                    // Update qty if local has more (maybe user added while offline)
-                    merged[idx].qty = Math.max(merged[idx].qty, lItem.qty);
-                } else {
-                    merged.push(lItem);
-                }
-            });
+            let merged = [];
+            
+            // Logic: Only merge if the previous owner was a 'guest'.
+            // If the last owner was a DIFFERENT registered user, DISCARD THE LOCAL CART.
+            if (lastOwner === 'guest') {
+                console.log("[Cart] Merging guest cart into account...");
+                merged = [...remoteCart];
+                localCart.forEach(lItem => {
+                    const idx = merged.findIndex(rItem => rItem.id === lItem.id);
+                    if (idx >= 0) {
+                        merged[idx].qty = Math.max(merged[idx].qty, lItem.qty);
+                    } else {
+                        merged.push(lItem);
+                    }
+                });
+            } else if (lastOwner === uid) {
+                console.log("[Cart] Resuming session for same user.");
+                merged = remoteCart; // For same user, cloud is source of truth or we just continue
+            } else {
+                console.warn("[Auth] Detected account switch! Discarding previous user's local cart.");
+                merged = remoteCart; // Discard local (belongs to someone else)
+            }
 
-            console.log("[Cart] Sync complete. Total items:", merged.length);
-            saveLocalCart(merged);
+            console.log("[Cart] Sync complete. Isolation check passed.");
+            saveLocalCart(merged, uid);
             await setDoc(cartDoc, { items: merged, updatedAt: new Date().toISOString() });
             CartUI.update();
             CartUI.renderSidebar();

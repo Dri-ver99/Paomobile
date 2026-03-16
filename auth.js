@@ -48,7 +48,8 @@
             logoutLink.textContent = '← ออกจากระบบ';
             logoutLink.addEventListener('click', function () {
                 localStorage.removeItem('paomobile_user');
-                localStorage.removeItem('pao_cart'); // Clear cart on logout
+                localStorage.removeItem('pao_cart'); 
+                localStorage.removeItem('pao_cart_owner'); // CRITICAL: Clear owner tracking
                 window.location.href = 'login.html';
             });
             loginLink.parentNode.insertBefore(logoutLink, loginLink.nextSibling);

@@ -240,40 +240,55 @@
 
   // --- Proactive Detection ---
   if (auth) {
-      // 1. Initial check for redirect payload
+      // 1. Initial check for redirect payload (The standard way)
       checkRedirectResult();
       
-      // 2. Backup observer (Catches session as soon as Firebase is ready)
+      // 2. Observer (The robust catch-all)
       onAuthStateChanged(auth, async (user) => {
           if (user) {
-              const current = localStorage.getItem('paomobile_user');
-              // If we find a user but haven't saved their session locally yet, do it now.
-              if (!current) {
-                  console.log("[Auth] Session detected via Observer.");
-                  showLoading();
-                  await saveUserToFirestore(user, 'observer');
-                  await finishLogin(user.displayName || user.email);
+              console.log("[Auth] User found via Observer. Checking local session...");
+              const currentData = localStorage.getItem('paomobile_user');
+              let needsUpdate = true;
+              
+              if (currentData) {
+                  try {
+                      const parsed = JSON.parse(currentData);
+                      if (parsed.uid === user.uid) needsUpdate = false;
+                  } catch(e) {}
               }
+
+              // Even if session is "correct", let's force a finishLogin to move them along
+              if (needsUpdate) {
+                  console.log("[Auth] Local session missing or wrong. Saving...");
+                  showLoading();
+                  await saveUserToFirestore(user, 'observer_sync');
+              }
+              
+              console.log("[Auth] Pushing user to homepage...");
+              await finishLogin(user.displayName || user.email);
+          } else {
+              // Not logged in - clear any partial state to be safe for next attempt
+              localStorage.removeItem('paomobile_user');
+              localStorage.removeItem('pao_cart_owner');
+              hideLoading();
           }
       });
   }
 
-  // --- Handle Redirect Result (For Mobile Compatibility) ---
+  // --- Handle Redirect Result (Standard Firebase Flow) ---
   async function checkRedirectResult() {
       if (!auth) return;
       try {
           const result = await getRedirectResult(auth);
-          if (result) {
-              console.log("[Auth] Google Redirect Detect: Processing user...");
+          if (result && result.user) {
+              console.log("[Auth] Redirect Success: Finalizing user data...");
               showLoading();
-              await saveUserToFirestore(result.user, 'google');
+              await saveUserToFirestore(result.user, 'google_redirect');
               
               if (window.CartAPI && typeof window.CartAPI.forceSync === 'function') {
                   try {
                       await window.CartAPI.forceSync();
-                  } catch (syncErr) {
-                      console.error("[Auth] Cart sync error:", syncErr);
-                  }
+                  } catch (syncErr) { console.error("[Auth] Sync err:", syncErr); }
               }
               
               await finishLogin(result.user.displayName);
@@ -282,17 +297,19 @@
           console.error("[Auth] Redirect Error:", error);
           hideLoading();
           if (error.code !== 'auth/web-storage-unsupported') {
-              alert("เกิดข้อผิดพลาดในการดึงข้อมูลเข้าระบบ: " + error.message);
+              alert("การเข้าระบบล้มเหลว: " + error.message);
           }
       }
   }
 
-  // Final Redirection Sequence
+  // The "Go to Home" function (With safety delay for storage flush)
   async function finishLogin(name) {
       showLoading();
-      console.log("[Auth] Finalizing session for", name);
-      await wait(800); // Aesthetic delay for smoothness
-      window.location.href = "index.html";
+      console.log("[Auth] Navigation sequence started for:", name);
+      // Wait long enough for both localStorage and Firestore's internal states to settle
+      await wait(1000); 
+      window.location.replace("index.html"); // .replace prevents "back to login" loops
+  }
   }
 
   // --- Save user data to Firestore ---
