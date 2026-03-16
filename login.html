@@ -349,8 +349,23 @@
       }, 4000);
 
       console.log("[Auth] Fast Redirect Initialized for:", name);
+      
+      // CRITICAL: Double-check localStorage before leaving
+      if (!localStorage.getItem('paomobile_user')) {
+          console.warn("[Auth] Session missing in localStorage! Re-saving...");
+          const user = auth.currentUser;
+          if (user) {
+              localStorage.setItem('paomobile_user', JSON.stringify({
+                  uid: user.uid,
+                  name: user.displayName || user.email.split('@')[0] || 'Member',
+                  email: user.email || '',
+                  photo: user.photoURL || ""
+              }));
+          }
+      }
+
       // Minimal delay for storage safety
-      await wait(600); 
+      await wait(800); 
       window.location.replace("index.html");
   }
 
@@ -395,6 +410,9 @@
     if(!auth){ alert("Firebase Auth not initialized"); return; }
     showLoading(); 
     const provider = new GoogleAuthProvider();
+    // Force Google to show account selection every time
+    provider.setCustomParameters({ prompt: 'select_account' });
+    
     signInWithRedirect(auth, provider).catch((error) => {
       console.error(error);
       hideLoading();
