@@ -225,6 +225,11 @@
         เข้าสู่ระบบด้วยบัญชี Google
     </button>
 
+    <div id="emergencyRedirect" style="display: none; margin-top: 15px; text-align: center;">
+        <p style="font-size: 0.85em; color: #64748b; margin-bottom: 8px;">หากระบบไม่เปลี่ยนหน้าอัตโนมัติ:</p>
+        <a href="index.html" class="btn-continue" style="background: #e2e8f0; color: #1e293b; padding: 10px 20px; font-size: 0.9em;">ไปหน้าหลักด้วยบัญชีนี้</a>
+    </div>
+
     <a href="index.html" class="back-link">← กลับสู่หน้าหลัก</a>
 </div>
 
@@ -314,7 +319,7 @@
               console.log("[Auth] Google Redirect Success!");
               isNavigating = true; // LOCK NAVIGATION
               showLoading();
-              await saveUserToFirestore(result.user, 'google_redirect');
+              saveUserToFirestore(result.user, 'google_redirect'); // Non-blocking
               
               if (window.CartAPI && typeof window.CartAPI.forceSync === 'function') {
                   try { await window.CartAPI.forceSync(); } catch(e) {}
@@ -337,36 +342,49 @@
       isNavigating = true; // ACTIVATE LOCK
       showLoading();
       
-      console.log("[Auth] Navigation Lock Engaged. Destination: index.html");
-      // Safety delay to ensure localStorage flush
-      await wait(1200); 
+      // If it takes more than 4 seconds, show the emergency button
+      setTimeout(() => {
+          const emergency = document.getElementById('emergencyRedirect');
+          if (emergency) emergency.style.display = 'block';
+      }, 4000);
+
+      console.log("[Auth] Fast Redirect Initialized for:", name);
+      // Minimal delay for storage safety
+      await wait(600); 
       window.location.replace("index.html");
   }
 
-  // --- Save user data to Firestore ---
+  // --- Save user data to Firestore (Optimistic & Non-blocking) ---
   async function saveUserToFirestore(user, provider) {
-      console.log("[Auth] Saving user session...");
+      console.log("[Auth] Saving local session...");
       const userData = {
           uid: user.uid,
           name: user.displayName || user.email.split('@')[0],
           email: user.email,
           photo: user.photoURL || ""
       };
+      
+      // 1. SAVE LOCALLY FIRST (Immediate)
       localStorage.setItem('paomobile_user', JSON.stringify(userData));
-
-      if (!db) return;
-      try {
+      
+      // 2. BACKGROUND CLOUD SYNC (Don't 'await' the result)
+      if (db) {
+          console.log("[Auth] Triggering background cloud sync...");
           const userRef = doc(db, "users", user.uid);
-          await setDoc(userRef, {
+          setDoc(userRef, {
               ...userData,
               photoURL: userData.photo,
               provider: provider,
               lastLogin: new Date()
-          }, { merge: true });
-          console.log("[Auth] User data synced to cloud.");
-      } catch (e) {
-          console.error("[Auth] Error saving user data: ", e);
+          }, { merge: true }).then(() => {
+              console.log("[Auth] Cloud sync completed in background.");
+          }).catch(e => {
+              console.warn("[Auth] Background cloud sync failed:", e);
+          });
       }
+      
+      // 3. Resolve immediately
+      return Promise.resolve();
   }
 
   // Helper for small delay
