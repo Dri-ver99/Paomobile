@@ -415,33 +415,37 @@
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     
-    // Check if we should use Popup (Desktop) or Redirect (Mobile)
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
-    
-    if (!isMobile) {
-        // DESKTOP: Use Popup for better reliability and storage sync
-        try {
-            const result = await signInWithPopup(auth, provider);
-            if (result.user) {
-                console.log("[Auth] Google Popup Success!");
-                isNavigating = true;
-                await saveUserToFirestore(result.user, 'google_popup');
-                await finishLogin(result.user.displayName);
-            }
-        } catch (error) {
-            console.error("[Auth] Popup Error:", error);
-            hideLoading();
-            if (error.code !== 'auth/popup-closed-by-user') {
-                alert("การเข้าระบบล้มเหลว: " + error.message);
+    // Attempt signInWithPopup FIRST (Better reliability on all devices if allowed)
+    try {
+        console.log("[Auth] Attempting Popup Login...");
+        const result = await signInWithPopup(auth, provider);
+        if (result.user) {
+            console.log("[Auth] Google Popup Success!");
+            isNavigating = true;
+            await saveUserToFirestore(result.user, 'google_popup');
+            await finishLogin(result.user.displayName);
+        }
+    } catch (error) {
+        console.warn("[Auth] Popup Login Error:", error.code, error.message);
+        
+        // If popup is blocked or fails on mobile, FALLBACK to Redirect
+        if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+            if (isMobile) {
+                console.log("[Auth] Falling back to Redirect Login (Mobile)...");
+                signInWithRedirect(auth, provider).catch((err) => {
+                    console.error("[Auth] Redirect Fallback Error:", err);
+                    hideLoading();
+                    alert("การเข้าระบบล้มเหลว: " + err.message);
+                });
+                return; // Redirect started, don't hide loading
             }
         }
-    } else {
-        // MOBILE: Use Redirect
-        signInWithRedirect(auth, provider).catch((error) => {
-            console.error(error);
-            hideLoading();
-            alert("Error starting login: " + error.message);
-        });
+        
+        hideLoading();
+        if (error.code !== 'auth/popup-closed-by-user') {
+            alert("การเข้าระบบล้มเหลว: " + error.message);
+        }
     }
   });
 
