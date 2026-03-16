@@ -359,8 +359,8 @@
       console.log("[Auth] Saving local session...");
       const userData = {
           uid: user.uid,
-          name: user.displayName || user.email.split('@')[0],
-          email: user.email,
+          name: user.displayName || user.email.split('@')[0] || 'Member',
+          email: user.email || '',
           photo: user.photoURL || ""
       };
       
