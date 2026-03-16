@@ -211,16 +211,27 @@
       try {
           const result = await getRedirectResult(auth);
           if (result) {
+              console.log("[Auth] Google Redirect Detect: Processing user...");
               await saveUserToFirestore(result.user, 'google');
+              
               // Force cart sync after login
               if (window.CartAPI && typeof window.CartAPI.forceSync === 'function') {
-                  await window.CartAPI.forceSync();
+                  try {
+                      console.log("[Auth] Google Syncing cart...");
+                      await window.CartAPI.forceSync();
+                  } catch (syncErr) {
+                      console.error("[Auth] Cart sync minor error:", syncErr);
+                  }
               }
+              
               alert("เข้าสู่ระบบด้วย Google สำเร็จ! ยินดีต้อนรับ " + result.user.displayName);
+              
+              console.log("[Auth] Google Redirect: Finishing up...");
+              await wait(500); // Small delay to ensure localStorage is flushed
               window.location.href = "index.html";
           }
       } catch (error) {
-          console.error("Redirect Error:", error);
+          console.error("[Auth] Redirect Error:", error);
           if (error.code !== 'auth/web-storage-unsupported') {
               alert("เกิดข้อผิดพลาดในการดึงข้อมูลเข้าระบบ: " + error.message);
           }
