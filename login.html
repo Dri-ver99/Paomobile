@@ -174,29 +174,143 @@
     <p class="subtitle">ลงชื่อเข้าใช้หรือสร้างบัญชีผู้ใช้</p>
     
     <div class="input-group">
-        <input type="email" placeholder="อีเมล">
+        <input type="email" id="emailInput" placeholder="อีเมล">
+    </div>
+    <div class="input-group" style="display: none;" id="passwordGroup">
+        <input type="password" id="passwordInput" placeholder="รหัสผ่าน">
     </div>
     
-    <button class="btn-continue">ดำเนินการต่อ</button>
+    <button class="btn-continue" id="btnEmailLogin">ดำเนินการต่อ</button>
 
     <div class="divider" style="margin-top: 32px;">หรือ</div>
 
-    <a href="https://www.facebook.com/login" class="btn-social btn-facebook" style="text-decoration: none;">
+    <button id="btnFacebookLogin" class="btn-social btn-facebook" style="border: 1px solid #e5e7eb; cursor: pointer;">
         <span class="social-icon">
             <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="currentColor"/></svg>
         </span>
         เข้าสู่ระบบด้วยบัญชี Facebook
-    </a>
+    </button>
 
-    <a href="https://accounts.google.com/signin" class="btn-social btn-google" style="text-decoration: none;">
+    <button id="btnGoogleLogin" class="btn-social btn-google" style="border: 1px solid #e5e7eb; cursor: pointer;">
         <span class="social-icon">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="24" height="24">
         </span>
         เข้าสู่ระบบด้วยบัญชี Google
-    </a>
+    </button>
 
     <a href="index.html" class="back-link">← กลับสู่หน้าหลัก</a>
 </div>
 
+<!-- Firebase SDK Implementation -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+  // TODO: ใส่ค่าคอนฟิก Firebase ของคุณลงตรงนี้
+  const firebaseConfig = {
+    apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+    authDomain: "paomobile-85e39.firebaseapp.com",
+    projectId: "paomobile-85e39",
+    storageBucket: "paomobile-85e39.firebasestorage.app",
+    messagingSenderId: "844151679424",
+    appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+    measurementId: "G-BZYNZ9B9LQ"
+  };
+
+  // Initialize Firebase
+  let app, auth, db;
+  try {
+      if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+      }
+  } catch (error) {
+      console.warn("Firebase initialization skipped because config is missing.");
+  }
+
+  // --- Save user data to Firestore ---
+  async function saveUserToFirestore(user, provider) {
+      if (!db) return;
+      try {
+          const userRef = doc(db, "users", user.uid);
+          await setDoc(userRef, {
+              uid: user.uid,
+              name: user.displayName || user.email.split('@')[0],
+              email: user.email,
+              photoURL: user.photoURL || "",
+              provider: provider,
+              lastLogin: new Date()
+          }, { merge: true }); // Use merge to update existing but not overwrite everything
+      } catch (e) {
+          console.error("Error saving user data: ", e);
+      }
+  }
+
+  // --- Google Sign-in ---
+  document.getElementById("btnGoogleLogin").addEventListener("click", () => {
+    if(!auth){ alert("กรุณาใส่ค่า Firebase Config ในไฟล์ login.html ก่อนการใช้งานครับ! (ดูคำอธิบายที่ได้แจ้งไว้)"); return; }
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider).then((result) => {
+      saveUserToFirestore(result.user, 'google');
+      alert("เข้าสู่ระบบด้วย Google สำเร็จ! ยินดีต้อนรับ " + result.user.displayName);
+      window.location.href = "index.html";
+    }).catch((error) => {
+      console.error(error);
+      alert("เกิดข้อผิดพลาดในการล็อกอิน: " + error.message);
+    });
+  });
+
+  // --- Facebook Sign-in ---
+  document.getElementById("btnFacebookLogin").addEventListener("click", () => {
+    if(!auth){ alert("กรุณาใส่ค่า Firebase Config ในไฟล์ login.html ก่อนการใช้งานครับ! (ดูคำอธิบายที่ได้แจ้งไว้)"); return; }
+    const provider = new FacebookAuthProvider();
+    signInWithPopup(auth, provider).then((result) => {
+      saveUserToFirestore(result.user, 'facebook');
+      alert("เข้าสู่ระบบด้วย Facebook สำเร็จ! ยินดีต้อนรับ " + result.user.displayName);
+      window.location.href = "index.html";
+    }).catch((error) => {
+      console.error(error);
+      alert("เกิดข้อผิดพลาดในการล็อกอิน: " + error.message);
+    });
+  });
+
+  // --- Email Flow ---
+  let isPasswordPhase = false;
+  document.getElementById("btnEmailLogin").addEventListener("click", () => {
+     if(!auth){ alert("กรุณาใส่ค่า Firebase Config ในไฟล์ login.html ก่อนการใช้งานครับ! (ดูคำอธิบายที่ได้แจ้งไว้)"); return; }
+     const email = document.getElementById("emailInput").value;
+     if(!email) { alert("กรุณากรอกอีเมล"); return; }
+     
+     if(!isPasswordPhase) {
+         // Check if user exists
+         fetchSignInMethodsForEmail(auth, email).then((methods) => {
+             document.getElementById("passwordGroup").style.display = "block";
+             document.getElementById("btnEmailLogin").innerText = methods.length > 0 ? "เข้าสู่ระบบ" : "สมัครสมาชิก";
+             isPasswordPhase = true;
+         }).catch(err => {
+             alert(err.message);
+         });
+     } else {
+         const password = document.getElementById("passwordInput").value;
+         if(!password) { alert("กรุณากรอกรหัสผ่าน"); return; }
+         
+         if(document.getElementById("btnEmailLogin").innerText === "เข้าสู่ระบบ") {
+             signInWithEmailAndPassword(auth, email, password).then((cred) => {
+                 saveUserToFirestore(cred.user, 'password');
+                 alert("เข้าสู่ระบบสำเร็จ!");
+                 window.location.href = "index.html";
+             }).catch(err => alert("อีเมลหรือรหัสผ่านไม่ถูกต้อง"));
+         } else {
+             createUserWithEmailAndPassword(auth, email, password).then((cred) => {
+                 saveUserToFirestore(cred.user, 'password');
+                 alert("สมัครสมาชิกสำเร็จ!");
+                 window.location.href = "index.html";
+             }).catch(err => alert("เกิดข้อผิดพลาด: "+err.message));
+         }
+     }
+  });
+</script>
 </body>
 </html>
