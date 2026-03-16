@@ -19,10 +19,10 @@
         .login-card {
             background-color: #ffffff;
             width: 100%;
-            max-width: 460px;
-            padding: 48px 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+            max-width: 480px;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
             text-align: center;
         }
         .logo {
@@ -61,26 +61,24 @@
             transition: background-color 0.2s;
             font-family: inherit;
         }
-        .btn-google {
-            color: #4b5563;
+        .btn-continue {
+            display: block;
+            width: 100%;
+            background-color: #7fa9ee; /* Light blue as per mockup */
+            color: #fff;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            font-family: inherit;
         }
-        .btn-google:hover {
-            background-color: #f9fafb;
+        .btn-continue:hover {
+            opacity: 0.9;
         }
-        .btn-facebook {
-            color: #1877f2;
-        }
-        .btn-facebook:hover {
-            background-color: #f0f8ff;
-        }
-        .social-icon {
-            width: 24px;
-            height: 24px;
-            margin-right: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+
         .divider {
             display: flex;
             align-items: center;
@@ -94,64 +92,135 @@
             flex: 1;
             border-bottom: 1px solid #e5e5e5;
         }
-        .divider:not(:empty)::before {
-            margin-right: 16px;
-        }
-        .divider:not(:empty)::after {
-            margin-left: 16px;
-        }
+        .divider:not(:empty)::before { margin-right: 16px; }
+        .divider:not(:empty)::after { margin-left: 16px; }
+
         .input-group {
-            margin-bottom: 16px;
+            margin-bottom: 18px;
             text-align: left;
+        }
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #111;
         }
         .input-group input {
             width: 100%;
             padding: 14px 16px;
-            border: 2px solid #0b5edd; /* Blue border as shown in mockup */
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15px;
             font-family: inherit;
             color: #111;
             outline: none;
             transition: border-color 0.2s;
         }
-        .input-group input::placeholder {
-            color: #888;
-        }
         .input-group input:focus {
-            border-color: #094eb8;
-            box-shadow: 0 0 0 3px rgba(11, 94, 221, 0.1);
-        }
-        .btn-continue {
-            display: block;
-            width: 100%;
-            background-color: #0b5edd; /* Blue */
-            color: #fff;
-            border: none;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-family: inherit;
-        }
-        .btn-continue:hover {
-            background-color: #094eb8;
-        }
-        .back-link {
-            display: inline-block;
-            margin-top: 24px;
-            color: #555;
-            font-size: 14px;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        .back-link:hover {
-            color: #111;
+            border-color: #7fa9ee;
         }
 
-        /* Loading Overlay */
+        /* Registration Specific Styles */
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 32px;
+            position: relative;
+        }
+        .btn-back {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            color: #555;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .btn-back:hover { color: #111; }
+        
+        .toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    user-select: none;
+    z-index: 10;
+}
+
+.toggle-password:hover {
+    color: #64748b;
+}
+
+.toggle-password svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+}
+        .reg-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 26px;
+            font-weight: 700;
+            color: #1e293b;
+            white-space: nowrap;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+        .consent-group {
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .consent-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+        .consent-item input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            margin-top: 1px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #fff;
+            position: relative;
+        }
+        .consent-item input[type="checkbox"]:checked {
+            background-color: #fff;
+            border-color: #d1d5db;
+        }
+        .consent-item input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            left: 5px;
+            top: -1px;
+            color: #4b5563;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .consent-item span a {
+            color: #7fa9ee;
+            text-decoration: underline;
+        }
+
         #loadingOverlay {
             position: fixed;
             top: 0; left: 0;
@@ -163,69 +232,88 @@
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            transition: opacity 0.3s;
         }
         .spinner {
             width: 48px; height: 48px;
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #0b5edd;
+            border-top: 4px solid #7fa9ee;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-text {
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: 500;
-            color: #111;
-        }
 
-        /* Mobile Adjustments */
         @media (max-width: 480px) {
-            body {
-                background-color: #ffffff;
-            }
             .login-card {
                 padding: 32px 24px;
                 box-shadow: none;
-                max-width: 100%;
+                border-radius: 0;
+                min-height: 100vh;
             }
         }
-
-        /* In-App Browser Warning */
-        #webviewNotice {
-            display: none;
-            background: #fff9db;
-            border: 1px solid #fcc419;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            text-align: left;
-            animation: fadeIn 0.5s ease;
+        .auth-extra-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
         }
-        #webviewNotice h3 {
-            font-size: 18px;
-            color: #d9480f;
-            margin-bottom: 8px;
+        .auth-extra-links a {
+            font-size: 14px;
+            color: #7fa9ee !important;
+            text-decoration: underline !important;
+            font-weight: 500;
+        }
+
+        /* Success View Styling */
+        #successView {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #ecfdf5;
+            color: #10b981;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            margin: 0 auto 24px;
         }
-        #webviewNotice p {
-            font-size: 14px;
-            color: #444;
-            line-height: 1.5;
+        .success-icon svg {
+            width: 48px;
+            height: 48px;
+            stroke-width: 3;
+        }
+        .success-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
             margin-bottom: 12px;
         }
-        .browser-guide-img {
-            width: 100%;
-            max-width: 280px;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-            margin: 10px 0;
-            display: block;
+        .success-text {
+            color: #64748b;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 32px;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-success-finish {
+            width: 100%;
+            background: #0b5edd;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-success-finish:hover {
+            background: #094db3;
+        }
     </style>
 </head>
 <body>
@@ -236,54 +324,217 @@
 </div>
 
 <div class="login-card">
-    <a href="index.html">
-        <img src="logo.png" alt="Paomobile Logo" class="logo" onerror="this.onerror=null; this.src='https://placehold.co/80x80?text=Logo';">
-    </a>
-    <h1>ลงชื่อเข้าใช้</h1>
-    <p class="subtitle">ลงชื่อเข้าใช้หรือสร้างบัญชีผู้ใช้</p>
+    <!-- Login View -->
+    <div id="loginView">
+        <a href="index.html">
+            <img src="logo.png" alt="Paomobile Logo" class="logo" onerror="this.onerror=null; this.src='https://placehold.co/80x80?text=Logo';">
+        </a>
+        <h1>ลงชื่อเข้าใช้</h1>
+        <p class="subtitle">ลงชื่อเข้าใช้หรือสร้างบัญชีผู้ใช้</p>
 
-    <!-- In-App Browser Guide -->
-    <div id="webviewNotice">
-        <h3>⚠️ พบข้อจำกัดในการเข้าใช้งาน</h3>
-        <p>เนื่องจากคุณเปิดผ่านแอป (เช่น LINE, Facebook) ทำให้ Google ปล็อกการเข้าสู่ระบบเพื่อความปลอดภัย</p>
-        <p><strong>วิธีการแก้ไข:</strong></p>
-        <p>1. กดที่ไอคอน <b>สามจุด (...)</b> หรือ <b>ลูกศร</b> ที่มุมจอ<br>
-           2. เลือก <b>"เปิดด้วยเบราว์เซอร์อื่น"</b> หรือ <b>"Open in Safari/Chrome"</b></p>
-    </div>
-    
-    <div id="loginFormArea">
-        <div class="input-group">
-            <input type="email" id="emailInput" placeholder="อีเมล">
-        </div>
-        <div class="input-group" style="display: none;" id="passwordGroup">
-            <input type="password" id="passwordInput" placeholder="รหัสผ่าน">
+        <!-- In-App Browser Guide -->
+        <div id="webviewNotice" style="display: none; background: #fff9db; border: 1px solid #fcc419; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; font-size: 14px;">
+            <p>⚠️ <b>พบข้อจำกัด:</b> หากเปิดผ่านแอป (LINE/FB) โปรดเลือก "เปิดด้วยเบราว์เซอร์หลัก" เพื่อใช้งาน Google Login</p>
         </div>
         
-        <button class="btn-continue" id="btnEmailLogin">ดำเนินการต่อ</button>
+        <div id="loginFormArea">
+            <div class="input-group">
+                <input type="email" id="emailInput" placeholder="อีเมล">
+            </div>
+            <div class="input-group" style="display: none;" id="passwordGroup">
+                <label for="passwordInput">รหัสผ่าน</label>
+                <div style="position: relative;">
+                    <input type="password" id="passwordInput" placeholder="••••••••">
+                    <span class="toggle-password" data-target="passwordInput" title="แสดง/ซ่อนรหัสผ่าน">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                    </span>
+                </div>
+            </div>
+            
+            <button class="btn-continue" id="btnEmailLogin" style="background-color: #0b5edd;">ดำเนินการต่อ</button>
 
-        <div class="divider" style="margin-top: 32px;">หรือ</div>
+            <div class="auth-extra-links">
+                <a id="btnShowCreateAccount" href="javascript:void(0)">สร้างบัญชี</a>
+                <a id="btnForgotPassword" href="javascript:void(0)">ลืมรหัสผ่าน?</a>
+            </div>
 
-        <button id="btnGoogleLogin" class="btn-social btn-google" style="border: 1px solid #e5e7eb; cursor: pointer;">
-            <span class="social-icon">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="24" height="24">
-            </span>
-            เข้าสู่ระบบด้วยบัญชี Google
-        </button>
+            <div class="divider" style="margin-top: 32px;">หรือ</div>
 
-        <div id="emergencyRedirect" style="display: none; margin-top: 15px; text-align: center;">
-            <p style="font-size: 0.85em; color: #64748b; margin-bottom: 8px;">หากระบบไม่เปลี่ยนหน้าอัตโนมัติ:</p>
-            <a href="index.html" class="btn-continue" style="background: #e2e8f0; color: #1e293b; padding: 10px 20px; font-size: 0.9em;">ไปหน้าหลักด้วยบัญชีนี้</a>
+            <button id="btnGoogleLogin" class="btn-social btn-google">
+                <span class="social-icon" style="margin-right: 12px;">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="24" height="24">
+                </span>
+                เข้าสู่ระบบด้วยบัญชี Google
+            </button>
+
+            <a href="index.html" style="display: block; margin-top: 24px; color: #64748b; font-size: 14px;">← กลับสู่หน้าหลัก</a>
+        </div>
+    </div>
+
+    <!-- Registration View -->
+    <div id="registerView" style="display: none;">
+        <div class="card-header">
+            <button class="btn-back" id="btnBackToLogin">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <span class="reg-title">สร้างบัญชี paomobile</span>
         </div>
 
-        <a href="index.html" class="back-link">← กลับสู่หน้าหลัก</a>
+        <div class="input-group">
+            <label>อีเมลที่ติดต่อได้</label>
+            <input type="email" id="regEmail" placeholder="ระบุอีเมล">
+        </div>
+
+        <div class="input-group">
+            <label>รหัสผ่าน</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="regPassword" placeholder="ระบุรหัสผ่าน">
+                <span class="toggle-password" data-target="regPassword">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                </span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>ยืนยันรหัสผ่าน</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="regConfirmPassword" placeholder="ระบุยืนยันรหัสผ่าน">
+                <span class="toggle-password" data-target="regConfirmPassword">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                </span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>เบอร์โทรที่ติดต่อได้ (ถ้ามี)</label>
+            <input type="tel" id="regPhone" placeholder="ระบุเบอร์โทร">
+        </div>
+
+        <div class="consent-group">
+            <label class="consent-item">
+                <input type="checkbox" id="checkTerms" required>
+                <span>ฉันได้อ่านและยอมรับ <a href="#">เงื่อนไขข้อตกลงการใช้บริการ*</a></span>
+            </label>
+            <label class="consent-item">
+                <input type="checkbox" id="checkPrivacy" required>
+                <span>ฉันได้อ่านและยอมรับ <a href="#">นโยบายคุ้มครองความเป็นส่วนตัว*</a></span>
+            </label>
+            <label class="consent-item">
+                <input type="checkbox" id="checkMarketing">
+                <span>ฉันสนใจรับข้อมูลข่าวสาร ส่วนลดและโปรโมชั่นผ่านทางอีเมล</span>
+            </label>
+        </div>
+
+        <button class="btn-continue" id="btnContinueRegister">สร้างบัญชี</button>
+    </div>
+
+    <!-- Success View -->
+    <div id="successView" style="display: none;">
+        <div class="success-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h2 class="success-title">สร้างบัญชีสำเร็จแล้ว!</h2>
+        <p class="success-text">บัญชี paomobile ของคุณพร้อมใช้งานแล้ว<br>กรุณาลงชื่อเข้าใช้ด้วยบัญชีใหม่ของคุณครับ</p>
+        
+        <button class="btn-success-finish" id="btnSuccessFinish">
+            ไปที่หน้าลงชื่อเข้าใช้
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
     </div>
 </div>
 
-<!-- Firebase SDK Implementation -->
+<!-- UI Interactivity Script (Standard - Works on local file://) -->
+<script>
+   // --- UI State & Transitions ---
+   function initExtraActions() {
+       console.log("[UI] Initializing view transitions...");
+       
+       const showCreateBtn = document.getElementById("btnShowCreateAccount");
+       if (showCreateBtn) {
+           showCreateBtn.addEventListener("click", function(e) {
+               e.preventDefault();
+               console.log("[UI] Switching to Register View");
+               document.getElementById("loginView").style.display = "none";
+               document.getElementById("registerView").style.display = "block";
+               window.scrollTo({ top: 0, behavior: 'smooth' });
+           });
+       }
+
+       const backBtn = document.getElementById("btnBackToLogin");
+       if (backBtn) {
+           backBtn.addEventListener("click", function(e) {
+               e.preventDefault();
+               console.log("[UI] Returning to Login View");
+               document.getElementById("registerView").style.display = "none";
+               document.getElementById("loginView").style.display = "block";
+               window.scrollTo({ top: 0, behavior: 'smooth' });
+           });
+       }
+
+        const successFinishBtn = document.getElementById("btnSuccessFinish");
+        if (successFinishBtn) {
+            successFinishBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                console.log("[UI] Success complete. Returning to Login.");
+                document.getElementById("successView").style.display = "none";
+                document.getElementById("loginView").style.display = "block";
+                // Reset login view phase
+                isPasswordPhase = false;
+                const passField = document.getElementById("passwordGroup");
+                if(passField) passField.style.display = "none";
+                const loginBtn = document.getElementById("btnEmailLogin");
+                if(loginBtn) loginBtn.innerText = "ดำเนินการต่อ";
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // Password Visibility Toggle
+       const eyeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+       const eyeOffIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+       document.querySelectorAll(".toggle-password").forEach(btn => {
+           btn.addEventListener("click", function() {
+               const targetId = this.getAttribute("data-target");
+               const input = document.getElementById(targetId);
+               if (input.type === "password") {
+                   input.type = "text";
+                   this.innerHTML = eyeIcon;
+               } else {
+                   input.type = "password";
+                   this.innerHTML = eyeOffIcon;
+               }
+           });
+       });
+   }
+
+   // Initialize UI immediately
+   if (document.readyState === 'loading') {
+       document.addEventListener('DOMContentLoaded', initExtraActions);
+   } else {
+       initExtraActions();
+   }
+</script>
+
+<!-- Firebase SDK Implementation (Module) -->
 <script type="module">
-  import { auth, db } from "./firebase-config.js";
-  import { signInWithRedirect, signInWithPopup, getRedirectResult, GoogleAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-  import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getAuth, signInWithRedirect, signInWithPopup, getRedirectResult, GoogleAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+  // Inlined Config for reliability on local files
+  const firebaseConfig = {
+    apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+    authDomain: "paomobile-85e39.firebaseapp.com",
+    projectId: "paomobile-85e39",
+    storageBucket: "paomobile-85e39.firebasestorage.app",
+    messagingSenderId: "844151679424",
+    appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+    measurementId: "G-BZYNZ9B9LQ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
   // --- Resilience State ---
   let isNavigating = false;
@@ -303,10 +554,11 @@
       
       if (isRestricted) {
           console.warn("[Auth] Restricted WebView detected:", ua);
-          document.getElementById('webviewNotice').style.display = 'block';
-          // Optional: Dim the login buttons to emphasize the notice
-          document.getElementById('loginFormArea').style.opacity = '0.5';
-          document.getElementById('loginFormArea').style.pointerEvents = 'none';
+          const notice = document.getElementById('webviewNotice');
+          if (notice) notice.style.display = 'block';
+          
+          const formArea = document.getElementById('loginFormArea');
+          if (formArea) formArea.style.opacity = '0.7';
           return true;
       }
       return false;
@@ -515,16 +767,24 @@
   let isPasswordPhase = false;
   document.getElementById("btnEmailLogin").addEventListener("click", async () => {
      if(!auth){ alert("Firebase Auth not initialized"); return; }
-     const email = document.getElementById("emailInput").value;
+     const email = document.getElementById("emailInput").value.trim();
      if(!email) { alert("กรุณากรอกอีเมล"); return; }
      
      if(!isPasswordPhase) {
+         showLoading();
          fetchSignInMethodsForEmail(auth, email).then((methods) => {
+             hideLoading();
+             if (methods.length === 0) {
+                 alert("ไม่พบบัญชีนี้ในระบบครับ กรุณาสร้างบัญชีก่อนเข้าสู่ระบบ");
+                 return;
+             }
              document.getElementById("passwordGroup").style.display = "block";
-             document.getElementById("btnEmailLogin").innerText = methods.length > 0 ? "เข้าสู่ระบบ" : "สมัครสมาชิก";
+             document.getElementById("btnEmailLogin").innerText = "เข้าสู่ระบบ";
              isPasswordPhase = true;
          }).catch(err => {
-             alert(err.message);
+             hideLoading();
+             console.error("[Auth] Check Email Error:", err);
+             alert("เกิดข้อผิดพลาด: " + err.message);
          });
      } else {
          const password = document.getElementById("passwordInput").value;
@@ -532,12 +792,8 @@
          
          try {
              showLoading();
-             let cred;
-             if(document.getElementById("btnEmailLogin").innerText === "เข้าสู่ระบบ") {
-                 cred = await signInWithEmailAndPassword(auth, email, password);
-             } else {
-                 cred = await createUserWithEmailAndPassword(auth, email, password);
-             }
+             // Since we blocked non-existent accounts, this is always a sign-in now
+             const cred = await signInWithEmailAndPassword(auth, email, password);
              
              await saveUserToFirestore(cred.user, 'password');
              
@@ -554,6 +810,95 @@
          }
      }
   });
+
+   // --- Forgot Password Logic ---
+   const forgotBtn = document.getElementById("btnForgotPassword");
+   if (forgotBtn) {
+       forgotBtn.addEventListener("click", async function(e) {
+           e.preventDefault();
+           const emailInput = document.getElementById("emailInput");
+           const email = emailInput ? emailInput.value.trim() : "";
+           
+           if (!email) {
+               alert("กรุณากรอกอีเมลที่ต้องการรีเซ็ตรหัสผ่านครับ");
+               if(emailInput) emailInput.focus();
+               return;
+           }
+           if (confirm(`ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง ${email} ใช่หรือไม่?`)) {
+               showLoading();
+               try {
+                   await sendPasswordResetEmail(auth, email);
+                   hideLoading();
+                   alert("ส่งลิงก์รีเซ็ตรหัสผ่านเรียบร้อยแล้วครับ! โปรดเช็คอีเมลของคุณ");
+               } catch (error) {
+                   hideLoading();
+                   alert("เกิดข้อผิดพลาด: " + error.message);
+               }
+           }
+       });
+       forgotBtn.style.cursor = "pointer";
+   }
+
+   // --- Registration Logic ---
+   const btnContinueReg = document.getElementById("btnContinueRegister");
+   if (btnContinueReg) {
+       btnContinueReg.addEventListener("click", async () => {
+           const email = document.getElementById("regEmail").value.trim();
+           const password = document.getElementById("regPassword").value;
+           const confirmPassword = document.getElementById("regConfirmPassword").value;
+           const phone = document.getElementById("regPhone").value.trim();
+           const terms = document.getElementById("checkTerms").checked;
+           const privacy = document.getElementById("checkPrivacy").checked;
+
+           if (!email || !password || !confirmPassword) {
+               alert("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วนครับ"); return;
+           }
+           if (password !== confirmPassword) {
+               alert("รหัสผ่านไม่ตรงกันครับ"); return;
+           }
+           if (password.length < 6) {
+               alert("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษรครับ"); return;
+           }
+           if (!terms || !privacy) {
+               alert("กรุณายอมรับเงื่อนไขและนโยบายความเป็นส่วนตัวก่อนครับ"); return;
+           }
+
+           showLoading();
+           try {
+               const cred = await createUserWithEmailAndPassword(auth, email, password);
+               
+               // Use email prefix as default name since name field was removed for UI match
+               const name = email.split('@')[0];
+               
+               const userRef = doc(db, "users", cred.user.uid);
+               await setDoc(userRef, {
+                   uid: cred.user.uid,
+                   name: name,
+                   email: email,
+                   phone: phone,
+                   marketing: document.getElementById("checkMarketing").checked,
+                   provider: 'email_registration',
+                   createdAt: new Date()
+               }, { merge: true });
+
+               // Instead of finishing login, show SUCCESS screen
+               hideLoading();
+               console.log("[Auth] Registration Successful. Showing Success View.");
+               document.getElementById("registerView").style.display = "none";
+               document.getElementById("successView").style.display = "block";
+               
+               // Perform a sign-out immediately to ensure they have to log in manually
+               await auth.signOut();
+               localStorage.removeItem('paomobile_user'); 
+           } catch (error) {
+               hideLoading();
+               console.error("[Auth] Registration Error:", error);
+               let msg = "การสมัครสมาชิกล้มเหลว: " + error.message;
+               if (error.code === 'auth/email-already-in-use') msg = "อีเมลนี้มีผู้ใช้งานแล้วครับ";
+               alert(msg);
+           }
+       });
+   }
 </script>
 <script src="cart.js"></script>
 </body>
