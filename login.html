@@ -151,6 +151,35 @@
             color: #111;
         }
 
+        /* Loading Overlay */
+        #loadingOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s;
+        }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0b5edd;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #111;
+        }
+
         /* Mobile Adjustments */
         @media (max-width: 480px) {
             body {
@@ -165,6 +194,11 @@
     </style>
 </head>
 <body>
+
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">กำลังประมวลผล...</div>
+</div>
 
 <div class="login-card">
     <a href="index.html">
@@ -197,12 +231,31 @@
 <!-- Firebase SDK Implementation -->
 <script type="module">
   import { auth, db } from "./firebase-config.js";
-  import { signInWithRedirect, getRedirectResult, GoogleAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  import { signInWithRedirect, getRedirectResult, GoogleAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
   import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-  // Handle Redirect Result after page reload
+  const overlay = document.getElementById('loadingOverlay');
+  const showLoading = () => overlay.style.display = 'flex';
+  const hideLoading = () => overlay.style.display = 'none';
+
+  // --- Proactive Detection ---
   if (auth) {
+      // 1. Initial check for redirect payload
       checkRedirectResult();
+      
+      // 2. Backup observer (Catches session as soon as Firebase is ready)
+      onAuthStateChanged(auth, async (user) => {
+          if (user) {
+              const current = localStorage.getItem('paomobile_user');
+              // If we find a user but haven't saved their session locally yet, do it now.
+              if (!current) {
+                  console.log("[Auth] Session detected via Observer.");
+                  showLoading();
+                  await saveUserToFirestore(user, 'observer');
+                  await finishLogin(user.displayName || user.email);
+              }
+          }
+      });
   }
 
   // --- Handle Redirect Result (For Mobile Compatibility) ---
@@ -212,36 +265,39 @@
           const result = await getRedirectResult(auth);
           if (result) {
               console.log("[Auth] Google Redirect Detect: Processing user...");
+              showLoading();
               await saveUserToFirestore(result.user, 'google');
               
-              // Force cart sync after login
               if (window.CartAPI && typeof window.CartAPI.forceSync === 'function') {
                   try {
-                      console.log("[Auth] Google Syncing cart...");
                       await window.CartAPI.forceSync();
                   } catch (syncErr) {
-                      console.error("[Auth] Cart sync minor error:", syncErr);
+                      console.error("[Auth] Cart sync error:", syncErr);
                   }
               }
               
-              alert("เข้าสู่ระบบด้วย Google สำเร็จ! ยินดีต้อนรับ " + result.user.displayName);
-              
-              console.log("[Auth] Google Redirect: Finishing up...");
-              await wait(500); // Small delay to ensure localStorage is flushed
-              window.location.href = "index.html";
+              await finishLogin(result.user.displayName);
           }
       } catch (error) {
           console.error("[Auth] Redirect Error:", error);
+          hideLoading();
           if (error.code !== 'auth/web-storage-unsupported') {
               alert("เกิดข้อผิดพลาดในการดึงข้อมูลเข้าระบบ: " + error.message);
           }
       }
   }
 
+  // Final Redirection Sequence
+  async function finishLogin(name) {
+      showLoading();
+      console.log("[Auth] Finalizing session for", name);
+      await wait(800); // Aesthetic delay for smoothness
+      window.location.href = "index.html";
+  }
+
   // --- Save user data to Firestore ---
   async function saveUserToFirestore(user, provider) {
       console.log("[Auth] Saving user session...");
-      // Save locally for UI updates across all pages
       const userData = {
           uid: user.uid,
           name: user.displayName || user.email.split('@')[0],
@@ -271,9 +327,11 @@
   // --- Google Sign-in ---
   document.getElementById("btnGoogleLogin").addEventListener("click", () => {
     if(!auth){ alert("Firebase Auth not initialized"); return; }
+    showLoading(); 
     const provider = new GoogleAuthProvider();
     signInWithRedirect(auth, provider).catch((error) => {
       console.error(error);
+      hideLoading();
       alert("Error starting login: " + error.message);
     });
   });
@@ -298,29 +356,25 @@
          if(!password) { alert("กรุณากรอกรหัสผ่าน"); return; }
          
          try {
+             showLoading();
              let cred;
              if(document.getElementById("btnEmailLogin").innerText === "เข้าสู่ระบบ") {
                  cred = await signInWithEmailAndPassword(auth, email, password);
-                 alert("เข้าสู่ระบบสำเร็จ!");
              } else {
                  cred = await createUserWithEmailAndPassword(auth, email, password);
-                 alert("สมัครสมาชิกสำเร็จ!");
              }
              
              await saveUserToFirestore(cred.user, 'password');
              
-             // Sync cart before moving
              if (window.CartAPI && typeof window.CartAPI.forceSync === 'function') {
-                 console.log("[Auth] Syncing cart before redirect...");
                  await window.CartAPI.forceSync();
              }
              
-             console.log("[Auth] Finishing session setup...");
-             await wait(500); // Small delay to ensure localStorage is flushed
-             window.location.href = "index.html";
+             await finishLogin(cred.user.displayName || cred.user.email);
              
          } catch(err) {
              console.error("[Auth] Login error:", err);
+             hideLoading();
              alert(err.code === 'auth/wrong-password' ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง" : "เกิดข้อผิดพลาด: " + err.message);
          }
      }
