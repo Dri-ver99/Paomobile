@@ -92,7 +92,11 @@
         }
     }
 
-    function handleLogout() {
+    function handleLogout(e) {
+        if (e && typeof e.preventDefault === 'function') {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         console.log("[Auth] Logging out...");
         localStorage.setItem('pao_logout_pending', 'true');
         localStorage.removeItem('paomobile_user');

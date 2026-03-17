@@ -481,6 +481,16 @@
            showCreateBtn.addEventListener("click", function(e) {
                e.preventDefault();
                console.log("[UI] Switching to Register View");
+               
+               // Sync identifier from login to register
+               const loginVal = document.getElementById("emailInput").value.trim();
+               if (loginVal) {
+                   document.getElementById("regEmail").value = loginVal;
+                   // Trigger validation on the new field
+                   const event = new Event('input', { bubbles: true });
+                   document.getElementById("regEmail").dispatchEvent(event);
+               }
+
                document.getElementById("loginView").style.display = "none";
                document.getElementById("registerView").style.display = "block";
                window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -492,6 +502,13 @@
            backBtn.addEventListener("click", function(e) {
                e.preventDefault();
                console.log("[UI] Returning to Login View");
+
+               // Sync identifier from register back to login
+               const regVal = document.getElementById("regEmail").value.trim();
+               if (regVal) {
+                   document.getElementById("emailInput").value = regVal;
+               }
+
                document.getElementById("registerView").style.display = "none";
                document.getElementById("loginView").style.display = "block";
                window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -534,13 +551,13 @@
             const pass = regPassword.value;
             const confirmPass = regConfirmPassword.value;
             
-            // 1. Password Complexity Check
+            // 1. Password Complexity Check (Allow symbols)
             const hasUpper = /[A-Z]/.test(pass);
             const hasLower = /[a-z]/.test(pass);
             const hasNumber = /[0-9]/.test(pass);
-            const onlyEnglish = /^[A-Za-z0-9]*$/.test(pass);
+            const validChars = /^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/.test(pass);
             const isLongEnough = pass.length >= 8;
-            const isPassValid = hasUpper && hasLower && hasNumber && onlyEnglish && isLongEnough;
+            const isPassValid = hasUpper && hasLower && hasNumber && validChars && isLongEnough;
 
             // 2. Confirm Password Match
             const isMatch = pass === confirmPass && pass !== "";
@@ -584,7 +601,12 @@
         // Email Availability Check (Debounced)
         if (regEmail) {
             regEmail.addEventListener("input", () => {
-                const identifier = regEmail.value.trim();
+                let identifier = regEmail.value.trim();
+                // Real-time normalization for existence check
+                if (!identifier.includes("@")) {
+                    identifier = identifier.replace(/\D/g, "");
+                }
+                
                 if (emailError) emailError.style.display = "none";
                 isEmailAvailable = true; 
                 
@@ -596,8 +618,8 @@
                 if (emailFormatValid || phoneFormatValid) {
                     emailDebounceTimer = setTimeout(() => {
                         if (window.checkIdentifierExists) {
-                            window.checkIdentifierExists(identifier).then(exists => {
-                                if (exists) {
+                            window.checkIdentifierExists(identifier).then(res => {
+                                if (res.exists) {
                                     if (emailError) emailError.style.display = "block";
                                     isEmailAvailable = false;
                                 } else {
@@ -673,26 +695,43 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // Expose checkEmailExists for the UI script
-  window.checkIdentifierExists = async (identifier) => {
+  // IMPROVED: Returns {exists: boolean, email?: string}
+  window.checkIdentifierExists = async (rawIdentifier) => {
     try {
+        const identifier = normalizeIdentifier(rawIdentifier);
         const isEmail = identifier.includes("@");
-        if (isEmail) {
-            // Check direct Firebase Auth
-            const methods = await fetchSignInMethodsForEmail(auth, identifier);
-            if (methods.length > 0) return true;
-        }
-
-        // Check Firestore for both email and phone
+        
+        // 1. Check Firestore first (Universal Lookup)
         const q = query(
             collection(db, "users"), 
             where(isEmail ? "email" : "phone", "==", identifier)
         );
         const querySnapshot = await getDocs(q);
-        return !querySnapshot.empty;
+        
+        if (!querySnapshot.empty) {
+            const userData = querySnapshot.docs[0].data();
+            return { exists: true, email: userData.email || (isEmail ? identifier : `${identifier}@paomobile.auth`) };
+        }
+
+        // 2. Fallback to direct Firebase Auth for emails not yet in Firestore
+        if (isEmail) {
+            const methods = await fetchSignInMethodsForEmail(auth, identifier);
+            if (methods.length > 0) return { exists: true, email: identifier };
+        }
+
+        // 3. Fallback to Virtual Email for phone numbers not yet in Firestore
+        if (!isEmail && identifier.length === 10) {
+            const virtualEmail = `${identifier}@paomobile.auth`;
+            try {
+                const methods = await fetchSignInMethodsForEmail(auth, virtualEmail);
+                if (methods.length > 0) return { exists: true, email: virtualEmail };
+            } catch(e) {}
+        }
+
+        return { exists: false };
     } catch (e) {
         console.warn("[Auth] Identifier check error:", e);
-        return false;
+        return { exists: false };
     }
   };
 
@@ -724,6 +763,14 @@
       return false;
   }
 
+  // --- Normalization Helper ---
+  const normalizeIdentifier = (val) => {
+      const trimmed = val.trim();
+      if (trimmed.includes("@")) return trimmed.toLowerCase();
+      // Remove all non-digits for phone numbers
+      return trimmed.replace(/\D/g, "");
+  };
+
   // --- Auth Initializer (Sequenced Flow) ---
   async function initAuth() {
       if (!auth) return;
@@ -732,8 +779,8 @@
       if (localStorage.getItem('pao_logout_pending')) {
           console.log("[Auth] Logout signal detected. Forcing signOut...");
           showLoading(); // Ensure spinner is up
-          localStorage.removeItem('pao_logout_pending');
           await auth.signOut();
+          localStorage.removeItem('pao_logout_pending');
           console.log("[Auth] Cloud sign-out complete.");
           hideLoading();
       }
@@ -927,38 +974,37 @@
   let isPasswordPhase = false;
   document.getElementById("btnEmailLogin").addEventListener("click", async () => {
      if(!auth){ alert("Firebase Auth not initialized"); return; }
-     let identifier = document.getElementById("emailInput").value.trim();
-     if(!identifier) { alert("กรุณากรอกอีเมลหรือเบอร์โทรศัพท์"); return; }
+     let rawIdentifier = document.getElementById("emailInput").value.trim();
+     if(!rawIdentifier) { alert("กรุณากรอกอีเมลหรือเบอร์โทรศัพท์"); return; }
 
+     const identifier = normalizeIdentifier(rawIdentifier);
      const isEmail = identifier.includes("@");
-     let email = identifier;
-     if (!isEmail && /^[0-9]{10}$/.test(identifier)) {
-         email = `${identifier}@paomobile.auth`;
-     }
      
      if(!isPasswordPhase) {
          showLoading();
-         fetchSignInMethodsForEmail(auth, email).then((methods) => {
-             hideLoading();
-             if (methods.length === 0) {
-                 alert("ไม่พบบัญชีนี้ในระบบครับ กรุณาสร้างบัญชีก่อนเข้าสู่ระบบ");
-                 return;
-             }
-             document.getElementById("passwordGroup").style.display = "block";
-             document.getElementById("btnEmailLogin").innerText = "เข้าสู่ระบบ";
-             isPasswordPhase = true;
-         }).catch(err => {
-             hideLoading();
-             console.error("[Auth] Check Email Error:", err);
-             alert("เกิดข้อผิดพลาด: " + err.message);
-         });
+         // RESOLVE: Get the actual registration email (real or virtual)
+         const res = await window.checkIdentifierExists(identifier);
+         hideLoading();
+         
+         if (!res.exists) {
+             alert("ไม่พบบัญชีนี้ในระบบครับ กรุณาสร้างบัญชีก่อนเข้าสู่ระบบ");
+             return;
+         }
+         
+         // Use the resolved email for the next phase
+         window._resolvedEmail = res.email;
+         
+         document.getElementById("passwordGroup").style.display = "block";
+         document.getElementById("btnEmailLogin").innerText = "เข้าสู่ระบบ";
+         isPasswordPhase = true;
      } else {
+         const authEmail = window._resolvedEmail || (isEmail ? identifier : `${identifier}@paomobile.auth`);
          const password = document.getElementById("passwordInput").value;
          if(!password) { alert("กรุณากรอกรหัสผ่าน"); return; }
          
          try {
              showLoading();
-             const cred = await signInWithEmailAndPassword(auth, email, password);
+             const cred = await signInWithEmailAndPassword(auth, authEmail, password);
              
              await saveUserToFirestore(cred.user, 'password');
              
@@ -966,7 +1012,9 @@
                  await window.CartAPI.forceSync();
              }
              
-             await finishLogin(cred.user.displayName || cred.user.email);
+             // Mask the internal domain for final login message
+             const displayName = cred.user.displayName || (cred.user.email ? cred.user.email.split('@')[0] : 'Member');
+             await finishLogin(displayName);
              
          } catch(err) {
              console.error("[Auth] Login error:", err);
@@ -989,10 +1037,25 @@
                if(emailInput) emailInput.focus();
                return;
            }
-           if (confirm(`ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง ${email} ใช่หรือไม่?`)) {
+
+           // Resolve the actual email if identifier is a phone number
+           let resolvedEmailForReset = email;
+           if (!email.includes("@") && /^[0-9]{10}$/.test(email)) {
+               showLoading();
+               const res = await window.checkIdentifierExists(email);
+               hideLoading();
+               if (res.exists && res.email) {
+                   resolvedEmailForReset = res.email;
+               } else {
+                   alert("ไม่พบบัญชีนี้ในระบบครับ");
+                   return;
+               }
+           }
+           
+           if (confirm(`ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง ${resolvedEmailForReset.replace('@paomobile.auth', '(เบอร์โทรศัพท์)')} ใช่หรือไม่?`)) {
                showLoading();
                try {
-                   await sendPasswordResetEmail(auth, email);
+                   await sendPasswordResetEmail(auth, resolvedEmailForReset);
                    hideLoading();
                    alert("ส่งลิงก์รีเซ็ตรหัสผ่านเรียบร้อยแล้วครับ! โปรดเช็คอีเมลของคุณ");
                } catch (error) {
@@ -1008,7 +1071,8 @@
    const btnContinueReg = document.getElementById("btnContinueRegister");
    if (btnContinueReg) {
        btnContinueReg.addEventListener("click", async () => {
-           const identifier = document.getElementById("regEmail").value.trim();
+           let identifier = document.getElementById("regEmail").value.trim();
+           identifier = normalizeIdentifier(identifier);
            const password = document.getElementById("regPassword").value;
            const confirmPassword = document.getElementById("regConfirmPassword").value;
            const terms = document.getElementById("checkTerms").checked;
@@ -1032,8 +1096,11 @@
            let email = identifier;
            let phone = "";
 
-           if (!isEmail) {
-               phone = identifier;
+            if (!isEmail) {
+                if (!/^[0-9]{10}$/.test(identifier)) {
+                    alert("กรุณากรอกเบอร์โทรศัพท์ 10 หลักให้ถูกต้องครับ"); return;
+                }
+                phone = identifier;
                // Generate a virtual email for phone-based registration
                email = `${phone}@paomobile.auth`;
            }
@@ -1041,15 +1108,14 @@
            showLoading();
            try {
                const cred = await createUserWithEmailAndPassword(auth, email, password);
-               
-               const name = isEmail ? email.split('@')[0] : `User ${phone.slice(-4)}`;
-               
-               const userRef = doc(db, "users", cred.user.uid);
-               await setDoc(userRef, {
-                   uid: cred.user.uid,
-                   name: name,
-                   email: isEmail ? email : "",
-                   phone: phone,
+                              const name = isEmail ? email.split('@')[0] : `คุณ ${phone.slice(-3)}`;
+                
+                const userRef = doc(db, "users", cred.user.uid);
+                await setDoc(userRef, {
+                    uid: cred.user.uid,
+                    name: name,
+                    email: email, // ALWAYS SAVE THE AUTH EMAIL (virtual or real)
+                    phone: phone,
                    marketing: document.getElementById("checkMarketing").checked,
                    provider: isEmail ? 'email_registration' : 'phone_registration',
                    createdAt: new Date()
