@@ -965,6 +965,15 @@
       document.getElementById("btnSuccessFinish").style.display = "block";
       document.getElementById("verifyArea").style.display = "none";
       
+      // Sync verified status to local session
+      const userDataStr = localStorage.getItem('paomobile_user');
+      if (userDataStr) {
+          const userData = JSON.parse(userDataStr);
+          userData.isVerified = true;
+          localStorage.setItem('paomobile_user', JSON.stringify(userData));
+          console.log("[Auth] Local session sync: Marked as verified");
+      }
+      
       // Auto-redirect for verified users
       setTimeout(() => {
           if (document.getElementById("successView").style.display === "block") {
@@ -986,7 +995,7 @@
   }
 
   let lastEmailSentTime = 0;
-  const RESEND_COOLDOWN = 30000; // 30 seconds
+  const RESEND_COOLDOWN = 60000; // Increased to 60 seconds to match Firebase
 
   window.checkVerificationState = async (auto = false) => {
       const user = auth.currentUser;
@@ -1039,7 +1048,7 @@
           const remaining = Math.ceil((RESEND_COOLDOWN - (now - lastEmailSentTime)) / 1000);
           
           if (remaining > 0) {
-              btn.textContent = `ส่งอีเมลอีกครั้งได้ใน (${remaining}ส)`;
+              btn.textContent = `(${remaining})`;
               setTimeout(updateBtn, 1000);
           } else {
               btn.disabled = false;
@@ -1145,7 +1154,9 @@
       } catch (error) {
           console.error("[Auth] Verification error:", error);
           if (error.code === 'auth/too-many-requests') {
-              alert("กรุณารออีกสักครู่ก่อนกดส่งใหม่อีกครั้งครับ");
+              lastEmailSentTime = Date.now(); // Reset timer to force wait
+              startResendCountdown();
+              alert("ระบบส่งอีเมลยืนยันชั่วคราวเกินขีดจำกัดแล้วครับ กรุณารอประมาณ 60 วินาทีตามตัวเลขบนปุ่ม แล้วค่อยกดยืนยันใหม่อีกครั้งนะครับ");
           } else {
               alert("เกิดข้อผิดพลาด: " + error.message);
           }
@@ -1296,11 +1307,18 @@
           name = email.split('@')[0];
       }
       
+      const originalEmail = user.email || '';
+      const isVerified = user.emailVerified || 
+                         originalEmail.endsWith('@paomobile.auth') || 
+                         provider.includes('google') ||
+                         user.providerData.some(p => p.providerId === 'google.com');
+
       const userData = {
           uid: user.uid,
           name: name || 'Member',
           email: email,
-          photo: user.photoURL || ""
+          photo: user.photoURL || "",
+          isVerified: !!isVerified
       };
       
       localStorage.setItem('paomobile_user', JSON.stringify(userData));
@@ -1319,11 +1337,36 @@
   // Handle Google Login
   const btnGoogle = document.getElementById('btnGoogleLogin');
   if (btnGoogle) {
-      btnGoogle.addEventListener('click', () => {
+      btnGoogle.addEventListener('click', async () => {
           if (detectRestrictedBrowser()) return;
-          showLoading();
+          
+          showLoading("Google Auth Start");
           const provider = new GoogleAuthProvider();
-          signInWithRedirect(auth, provider);
+          
+          try {
+              // Try Popup first as it's more reliable and better UX on desktop
+              console.log("[Auth] Attempting Google Popup...");
+              const result = await signInWithPopup(auth, provider);
+              if (result.user) {
+                  console.log("[Auth] Popup Success:", result.user.email);
+                  await saveUserToFirestore(result.user, 'google_popup');
+                  finishLogin(result.user.displayName || result.user.email.split('@')[0]);
+              }
+          } catch (error) {
+              console.warn("[Auth] Popup failed or blocked, falling back to Redirect:", error.code);
+              if (error.code === 'auth/popup-closed-by-user') {
+                  hideLoading();
+                  return;
+              }
+              // Fallback to Redirect for mobile/webviews where popups are often blocked
+              try {
+                  await signInWithRedirect(auth, provider);
+              } catch (redirectError) {
+                  console.error("[Auth] Redirect failed:", redirectError);
+                  hideLoading();
+                  alert("ไม่สามารถเชื่อมต่อกับ Google ได้ในขณะนี้ครับ: " + redirectError.message);
+              }
+          }
       });
   }
 

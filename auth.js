@@ -5,11 +5,30 @@
     const AUTH_KEY = 'paomobile_user';
 
     function updateNavForUser() {
-        const userData = localStorage.getItem(AUTH_KEY);
+        const userDataString = localStorage.getItem(AUTH_KEY);
         const mobileMenu = document.querySelector('.mobile-menu-inner');
         
-        if (!userData) {
-            console.log("[Auth] No local session found (Guest Mode).");
+        let user;
+        try {
+            user = userDataString ? JSON.parse(userDataString) : null;
+        } catch (e) {
+            console.error("[Auth] Session data corrupt.");
+            user = null;
+        }
+
+        // Only show member UI if verified (or non-email login usually implies verified here)
+        const isFullyLoggedIn = user && user.name && user.isVerified;
+
+        if (!isFullyLoggedIn) {
+            console.log("[Auth] No verified session (Guest Mode).");
+            
+            // Cleanup: remove dynamic logout or greeting if present (e.g. after logout or verification lost)
+            document.querySelectorAll('.is-logged-in, .dynamic-logout, #mobile-auth-header').forEach(el => el.remove());
+            document.querySelectorAll('.account-icon-btn').forEach(el => {
+                el.setAttribute('href', 'login.html');
+                el.style.cursor = 'pointer';
+            });
+
             // Add Login link to Mobile Menu if missing for guest
             if (mobileMenu && !mobileMenu.querySelector('a[href*="login.html"]')) {
                 const loginLink = document.createElement('a');
@@ -21,75 +40,64 @@
             return;
         }
 
-        let user;
-        try {
-            user = JSON.parse(userData);
-        } catch (e) {
-            console.error("[Auth] Session data corrupt.");
-            return;
+        // --- Verified User UI Injection ---
+        const firstName = (user.name.includes('@')) ? user.name.split(' ')[0] : user.name;
+        console.log("[Auth] Active Session:", firstName);
+
+        // 1. SELECTORS
+        const allLinks = document.querySelectorAll('a[href*="login.html"], .account-dropdown .dropdown-item.bold, .mobile-menu a[href*="login.html"]');
+        const accountIcon = document.querySelector('.account-icon-btn');
+
+        // A. Update Account Icon (Disable link redirect)
+        if (accountIcon) {
+            accountIcon.setAttribute('href', 'javascript:void(0)');
+            accountIcon.style.cursor = 'default';
         }
 
-        if (user && user.name) {
-            // If it's an email-based name, we can split. If it's a phone, keep it whole.
-            const firstName = (user.name.includes('@')) ? user.name.split(' ')[0] : user.name;
-            console.log("[Auth] Active Session:", firstName);
+        // B. Update/Replace Login Links
+        allLinks.forEach(el => {
+            if (el.classList.contains('is-logged-in')) return;
 
-            // 1. SELECTORS
-            const allLinks = document.querySelectorAll('a[href*="login.html"], .account-dropdown .dropdown-item.bold, .mobile-menu a[href*="login.html"]');
-            const mobileMenu = document.querySelector('.mobile-menu-inner');
-            const accountIcon = document.querySelector('.account-icon-btn');
+            const text = el.textContent || "";
+            if (text.includes('เข้าสู่ระบบ') || text.includes('สมัครสมาชิก') || el.classList.contains('bold')) {
+                el.removeAttribute('href');
+                el.style.cursor = 'default';
+                el.style.color = 'var(--text-main, #111)';
+                el.innerHTML = `<span class="user-greeting">👤 ${firstName}</span>`;
+                el.classList.add('is-logged-in');
 
-            // A. Update Account Icon (Disable link redirect)
-            if (accountIcon) {
-                accountIcon.setAttribute('href', 'javascript:void(0)');
-                accountIcon.style.cursor = 'default';
-            }
-
-            // B. Update/Replace Login Links
-            allLinks.forEach(el => {
-                if (el.classList.contains('is-logged-in')) return;
-
-                const text = el.textContent || "";
-                if (text.includes('เข้าสู่ระบบ') || text.includes('สมัครสมาชิก') || el.classList.contains('bold')) {
-                    el.removeAttribute('href');
-                    el.style.cursor = 'default';
-                    el.style.color = 'var(--text-main, #111)';
-                    el.innerHTML = `<span class="user-greeting">👤 ${firstName}</span>`;
-                    el.classList.add('is-logged-in');
-
-                    // Add Logout button if sibling doesn't exist
-                    let parent = el.parentNode;
-                    if (!parent.querySelector('.dynamic-logout')) {
-                        const logoutBtn = document.createElement('a');
-                        logoutBtn.href = 'javascript:void(0)';
-                        logoutBtn.className = 'dropdown-item dynamic-logout';
-                        logoutBtn.style.cssText = 'color: #ef4444 !important; font-size: 0.9em; margin-top: 4px; display: block; border-top: 1px solid #eee; padding-top: 8px;';
-                        logoutBtn.textContent = '← ออกจากระบบ';
-                        logoutBtn.addEventListener('click', handleLogout);
-                        parent.insertBefore(logoutBtn, el.nextSibling);
-                    }
+                // Add Logout button if sibling doesn't exist
+                let parent = el.parentNode;
+                if (!parent.querySelector('.dynamic-logout')) {
+                    const logoutBtn = document.createElement('a');
+                    logoutBtn.href = 'javascript:void(0)';
+                    logoutBtn.className = 'dropdown-item dynamic-logout';
+                    logoutBtn.style.cssText = 'color: #ef4444 !important; font-size: 0.9em; margin-top: 4px; display: block; border-top: 1px solid #eee; padding-top: 8px;';
+                    logoutBtn.textContent = '← ออกจากระบบ';
+                    logoutBtn.addEventListener('click', handleLogout);
+                    parent.insertBefore(logoutBtn, el.nextSibling);
                 }
-            });
-
-            // C. Inject User Profile into Mobile Menu
-            if (mobileMenu && !document.getElementById('mobile-auth-header')) {
-                const header = document.createElement('div');
-                header.id = 'mobile-auth-header';
-                header.style.cssText = 'padding: 20px; background: #f8fafc; border-radius: 12px; margin: 5px 15px 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px;';
-                header.innerHTML = `
-                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);">
-                        ${firstName.charAt(0).toUpperCase()}
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="font-size: 0.85em; color: #64748b;">สวัสดีคุณ</div>
-                        <div style="font-weight: 600; color: #1e293b; font-size: 1rem;">${firstName}</div>
-                    </div>
-                    <button id="btnMobileLogout" style="background:none; border:none; color: #ef4444; font-size: 0.85em; font-weight: 500; cursor: pointer;">ออกจากระบบ</button>
-                `;
-                mobileMenu.prepend(header);
-                const mobileLogout = document.getElementById('btnMobileLogout');
-                if (mobileLogout) mobileLogout.addEventListener('click', handleLogout);
             }
+        });
+
+        // C. Inject User Profile into Mobile Menu
+        if (mobileMenu && !document.getElementById('mobile-auth-header')) {
+            const header = document.createElement('div');
+            header.id = 'mobile-auth-header';
+            header.style.cssText = 'padding: 20px; background: #f8fafc; border-radius: 12px; margin: 5px 15px 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px;';
+            header.innerHTML = `
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);">
+                    ${firstName.charAt(0).toUpperCase()}
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.85em; color: #64748b;">สวัสดีคุณ</div>
+                    <div style="font-weight: 600; color: #1e293b; font-size: 1rem;">${firstName}</div>
+                </div>
+                <button id="btnMobileLogout" style="background:none; border:none; color: #ef4444; font-size: 0.85em; font-weight: 500; cursor: pointer;">ออกจากระบบ</button>
+            `;
+            mobileMenu.prepend(header);
+            const mobileLogout = document.getElementById('btnMobileLogout');
+            if (mobileLogout) mobileLogout.addEventListener('click', handleLogout);
         }
     }
 
