@@ -908,6 +908,7 @@
   let isNavigating = false;
   let isCheckingRedirect = true;
   let isRegistering = false;
+  let verificationInterval;
 
   const overlay = document.getElementById('loadingOverlay');
   const showLoading = (reason = "") => {
@@ -974,12 +975,8 @@
           console.log("[Auth] Local session sync: Marked as verified");
       }
       
-      // Auto-redirect for verified users
-      setTimeout(() => {
-          if (document.getElementById("successView").style.display === "block") {
-              window.finishLoginWithUser();
-          }
-      }, 5000);
+      // Removed auto-redirect to allow user to see success state
+      console.log("[Auth] Verification successful. Success view is active.");
   }
 
   function updateUIForUnverified() {
@@ -1491,9 +1488,11 @@
                   hideLoading(true, "Registration error alert");
                   if (error.code === 'auth/email-already-in-use') {
                       alert("อีเมลหรือเบอร์โทรนี้ถูกใช้งานไปแล้วครับ");
-                  } else {
-                      alert("การลงทะเบียนผิดพลาด: " + error.message);
-                  }
+                   } else {
+                       // Only alert if it's NOT a reference error we just fixed, 
+                       // but better yet, just show the error if it's actually an auth error.
+                       alert("การลงทะเบียนผิดพลาด: " + error.message);
+                   }
               }
       });
   }
