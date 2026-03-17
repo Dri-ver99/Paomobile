@@ -30,7 +30,8 @@
         }
 
         if (user && user.name) {
-            const firstName = user.name.split(' ')[0];
+            // If it's an email-based name, we can split. If it's a phone, keep it whole.
+            const firstName = (user.name.includes('@')) ? user.name.split(' ')[0] : user.name;
             console.log("[Auth] Active Session:", firstName);
 
             // 1. SELECTORS
