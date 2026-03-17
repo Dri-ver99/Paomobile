@@ -798,6 +798,13 @@
                     console.error("[Auth] sendResetEmailAction not found");
                 }
             });
+
+            forgotIdentifier.addEventListener("keypress", (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    btnSendReset.click();
+                }
+            });
         }
     }
 
@@ -999,13 +1006,6 @@
       if (!user) return;
       
       if (!auto) {
-          const now = Date.now();
-          const timeToWait = Math.ceil((RESEND_COOLDOWN - (now - lastEmailSentTime)) / 1000);
-          
-          if (now - lastEmailSentTime < RESEND_COOLDOWN) {
-              alert(`กรุณาลองใหม่ในอีก ${timeToWait} วินาทีค่ะ เพื่อป้องกันการส่งเมลซ้ำซ้อน`);
-              return;
-          }
           showLoading("Checking status...");
       }
 
@@ -1017,16 +1017,8 @@
           if (!auto) hideLoading(true, "Verified");
       } else {
           if (!auto) {
-              console.log("[Auth] Still unverified. Triggering resend as requested.");
-              try {
-                  await sendEmailVerification(user);
-                  lastEmailSentTime = Date.now();
-                  startResendCountdown();
-                  alert("อีเมลของคุณยังไม่ได้รับการยืนยันครับ เราได้ส่งลิงก์ยืนยันไปให้ใหม่อีกครั้งแล้ว กรุณาตรวจสอบในกล่องจดหมายของคุณ (หรือใน Junk/Spam/จดหมายขยะ) นะครับ");
-              } catch (sendErr) {
-                  console.error("[Auth] Auto-resend error:", sendErr);
-                  alert("อีเมลของคุณยังไม่ได้รับการยืนยันครับ (และขออภัยที่ไม่สามารถส่งอีเมลซ้ำได้ในขณะนี้ กรุณารอสักครู่นะครับ)");
-              }
+              console.log("[Auth] Still unverified.");
+              alert("ขออภัยครับ บัญชีของคุณยังไม่ได้รับการยืนยันครับ รบกวนตรวจสอบลิงก์ในอีเมลอีกครั้งนะครับ\n\n(หากไม่พบในกล่องขาเข้า กรุณาลองเช็คใน 'จดหมายขยะ', 'ถังขยะ' หรือ 'โปรโมชัน' ดูนะครับ)");
               hideLoading(true, "Still unverified");
           }
       }
@@ -1107,7 +1099,7 @@
           if (isPhone) {
               alert("เราได้ส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปให้คุณทาง SMS เรียบร้อยแล้วครับ กรุณาตรวจสอบและดำเนินการตามขั้นตอน");
           } else {
-              alert("เราได้ส่งอีเมลสำหรับตั้งรหัสผ่านใหม่ไปให้คุณแล้วครับ กรุณาตรวจสอบในกล่องจดหมายของคุณ (หรือใน Junk/Spam/จดหมายขยะ)");
+              alert("เราได้ส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปให้คุณทางอีเมลเรียบร้อยแล้วครับ\n\n(หากไม่พบในกล่องขาเข้า กรุณาลองเช็คในหน้า 'จดหมายขยะ (Spam)', 'ถังขยะ' หรือ 'โปรโมชัน' ดูนะครับ)");
           }
           
           // Return to login
@@ -1147,7 +1139,7 @@
           await sendEmailVerification(user);
           lastEmailSentTime = Date.now();
           startResendCountdown();
-          alert("เราได้ส่งอีเมลยืนยันบัญชีไปให้คุณแล้วครับ กรุณาตรวจสอบในกล่องจดหมาย (หรือใน Junk/Spam/จดหมายขยะ)");
+          alert("เราได้ส่งลิงก์ยืนยันบัญชีไปให้คุณอีกครั้งแล้วครับ กรุณาตรวจสอบในกล่องจดหมาย (หรือในหน้า 'จดหมายขยะ', 'ถังขยะ' หรือ 'โปรโมชัน') นะครับ");
       } catch (error) {
           console.error("[Auth] Verification error:", error);
           if (error.code === 'auth/too-many-requests') {
@@ -1438,6 +1430,18 @@
               }
           }
       });
+
+      // Support Enter key for Login
+      [emailInput, passwordInput].forEach(input => {
+          if (input) {
+              input.addEventListener('keypress', (e) => {
+                  if (e.key === 'Enter') {
+                      e.preventDefault();
+                      btnLogin.click();
+                  }
+              });
+          }
+      });
   }
 
   // Handle Registration
@@ -1494,6 +1498,19 @@
                        alert("การลงทะเบียนผิดพลาด: " + error.message);
                    }
               }
+      });
+
+      // Support Enter key for Registration
+      ['regEmail', 'regPassword', 'regConfirmPassword', 'regPhone'].forEach(id => {
+          const input = document.getElementById(id);
+          if (input) {
+              input.addEventListener('keypress', (e) => {
+                  if (e.key === 'Enter' && !btnRegContinue.disabled) {
+                      e.preventDefault();
+                      btnRegContinue.click();
+                  }
+              });
+          }
       });
   }
 
