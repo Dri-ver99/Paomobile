@@ -245,6 +245,31 @@
             font-weight: 500;
         }
 
+        /* Forgot Password Specific Styles */
+        .forgot-pass-desc {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .btn-link {
+            background: none;
+            border: none;
+            color: #0b5edd;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 24px;
+            font-family: inherit;
+        }
+        .btn-link:hover {
+            color: #094db3;
+            text-decoration: underline;
+        }
+
         /* Success View Styling */
         #successView {
             text-align: center;
@@ -366,7 +391,8 @@
         
         <div id="loginFormArea">
             <div class="input-group">
-                <input type="text" id="emailInput" placeholder="อีเมลหรือเบอร์โทรศัพท์">
+                <label>อีเมล</label>
+                <input type="email" id="emailInput" placeholder="ระบุอีเมลผู้ใช้งาน">
             </div>
             <div class="input-group" style="display: none;" id="passwordGroup">
                 <label for="passwordInput">รหัสผ่าน</label>
@@ -404,14 +430,14 @@
             <button class="btn-back" id="btnBackToLogin">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </button>
-            <span class="reg-title">สร้างบัญชี paomobile</span>
+            <span class="reg-title">สร้างบัญชีด้วยอีเมล</span>
         </div>
 
         <div class="input-group">
-            <label>อีเมลหรือเบอร์โทรศัพท์</label>
-            <input type="text" id="regEmail" placeholder="ระบุอีเมลหรือเบอร์โทรศัพท์">
-            <div id="regEmailError" class="error-message">อีเมลหรือเบอร์โทรนี้มีผู้ใช้งานแล้ว</div>
-            <div id="regEmailHint" class="error-message">*กรุณาระบุอีเมลหรือเบอร์โทรให้ถูกต้อง (เช่น 0830106624 หรือ Paomobile@gmail.com)</div>
+            <label>อีเมล</label>
+            <input type="email" id="regEmail" placeholder="ระบุอีเมลสำหรับสมัครสมาชิก">
+            <div id="regEmailError" class="error-message">อีเมลนี้มีผู้ใช้งานแล้ว</div>
+            <div id="regEmailHint" class="error-message">*กรุณาระบุอีเมลให้ถูกต้อง (เช่น Paomobile@gmail.com)</div>
         </div>
 
         <div class="input-group">
@@ -453,20 +479,59 @@
         <button class="btn-continue" id="btnContinueRegister" disabled>สร้างบัญชี</button>
     </div>
 
-    <!-- Success View -->
+    <!-- Success / Verification View -->
     <div id="successView" style="display: none;">
-        <div class="success-icon">
+        <div class="success-icon" id="successIcon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12" fill="none" style="stroke-dasharray: 100;"></polyline>
             </svg>
         </div>
-        <h2 class="success-title">สมัครเสร็จสิ้น</h2>
-        <p class="success-text">ยินดีด้วยค่ะ! บัญชี paomobile ของคุณ<br>พร้อมใช้งานเรียบร้อยแล้วค่ะ</p>
+        <div class="success-icon" id="verifyIcon" style="display: none; background: #e0f2fe; color: #0ea5e9;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17.002V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"></path><path d="M5.45 5.11 12 12l6.55-6.89"></path><path d="m15 19 2 2 4-4"></path></svg>
+        </div>
+
+        <h2 class="success-title" id="statusTitle">กรุณายืนยันตัวตน</h2>
+        <p class="success-text" id="statusText">เราได้ส่งลิ้งค์ยืนยันตัวตนไปที่อีเมลของคุณแล้ว<br>โปรดคลิกลิ้งค์เพื่อเข้าใช้งานบัญชี Paomobile ค่ะ</p>
         
-        <button class="btn-success-finish" id="btnSuccessFinish">
-            ไปที่หน้าหลัก
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-        </button>
+        <div id="actionArea">
+            <button class="btn-success-finish" id="btnCheckVerify" style="background: #0ea5e9; margin-bottom: 12px; font-weight: 600;">
+                ตรวจสถานะการยืนยัน
+            </button>
+            <button class="btn-success-finish" id="btnSuccessFinish" style="display: none;">
+                ไปที่หน้าหลัก
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+            <button class="btn-link" id="btnLogoutOnVerify" style="margin-top: 10px; font-size: 14px; color: #94a3b8;">ออกจากระบบ</button>
+        </div>
+
+        <div id="verifyArea" style="margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+            <p style="font-size: 14px; color: #64748b; margin-bottom: 8px;">ยังไม่ได้รับอีเมลยืนยัน?</p>
+            <button class="btn-link" id="btnResendVerify" style="margin-top: 0; font-size: 15px; color: #0b5edd; font-weight: bold;">ส่งอีเมลยืนยันอีกครั้ง</button>
+        </div>
+    </div>
+
+    <!-- Forgot Password View -->
+    <div id="forgotPasswordView" style="display: none;">
+        <div class="card-header">
+            <button class="btn-back" id="btnBackFromForgot">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <span class="reg-title">ลืมรหัสผ่าน</span>
+        </div>
+
+        <p class="forgot-pass-desc">
+            Paomobile จะทำการส่งลิงก์ตั้งรหัสผ่านใหม่ไปยังอีเมลของคุณ เพื่อยืนยันความเป็นเจ้าของบัญชี
+        </p>
+
+        <div class="input-group">
+            <label>อีเมล</label>
+            <input type="email" id="forgotIdentifier" placeholder="ระบุอีเมลที่ใช้สมัครสมาชิก">
+            <div id="forgotError" class="error-message">ไม่พบบัญชีผู้ใช้งานในระบบ</div>
+        </div>
+
+        <button class="btn-continue active" id="btnSendReset" style="margin-top: 24px;">ส่งรหัสยืนยัน</button>
+        
+        <button class="btn-link" id="lnkBackToLogin">เข้าสู่ระบบ</button>
     </div>
 </div>
 
@@ -515,6 +580,30 @@
            });
        }
 
+        const checkVerifyBtn = document.getElementById("btnCheckVerify");
+        if (checkVerifyBtn) {
+            checkVerifyBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                console.log("[UI] Checking verification status...");
+                if (window.checkVerificationState) {
+                    window.checkVerificationState();
+                }
+            });
+        }
+
+        const logoutVerifyBtn = document.getElementById("btnLogoutOnVerify");
+        if (logoutVerifyBtn) {
+            logoutVerifyBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                console.log("[UI] Logout from verification requested.");
+                if (window.handleForceLogout) {
+                    window.handleForceLogout();
+                } else {
+                    window.location.reload();
+                }
+            });
+        }
+
         const successFinishBtn = document.getElementById("btnSuccessFinish");
         if (successFinishBtn) {
             successFinishBtn.addEventListener("click", function(e) {
@@ -527,6 +616,55 @@
                 }
             });
         }
+ 
+        const resendVerifyBtn = document.getElementById("btnResendVerify");
+        if (resendVerifyBtn) {
+            resendVerifyBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                console.log("[UI] Requesting verification email...");
+                if (window.sendVerificationEmail) {
+                    window.sendVerificationEmail();
+                }
+            });
+        }
+ 
+        const forgotPassBtn = document.getElementById("btnForgotPassword");
+        if (forgotPassBtn) {
+            forgotPassBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                console.log("[UI] Switching to Forgot Password View");
+                
+                // Sync identifier
+                const loginVal = document.getElementById("emailInput").value.trim();
+                if (loginVal) {
+                    document.getElementById("forgotIdentifier").value = loginVal;
+                }
+
+                document.getElementById("loginView").style.display = "none";
+                document.getElementById("forgotPasswordView").style.display = "block";
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        const backFromForgotBtn = document.getElementById("btnBackFromForgot");
+        const lnkBackToLogin = document.getElementById("lnkBackToLogin");
+        [backFromForgotBtn, lnkBackToLogin].forEach(btn => {
+            if (btn) {
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    console.log("[UI] Returning to Login from Forgot Password");
+                    
+                    const forgotVal = document.getElementById("forgotIdentifier").value.trim();
+                    if (forgotVal) {
+                        document.getElementById("emailInput").value = forgotVal;
+                    }
+
+                    document.getElementById("forgotPasswordView").style.display = "none";
+                    document.getElementById("loginView").style.display = "block";
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+        });
 
         // --- Registration Logic & Validation ---
         const regEmail = document.getElementById("regEmail");
@@ -562,19 +700,17 @@
             // 2. Confirm Password Match
             const isMatch = pass === confirmPass && pass !== "";
 
-            // 3. Identifier Check (Email or Phone)
-            const emailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-            const phoneFormatValid = /^[0-9]{10}$/.test(identifier);
-            const isIdentifierFormatValid = emailFormatValid || phoneFormatValid;
-            const isIdentifierValid = isIdentifierFormatValid && isEmailAvailable;
+            // 3. Identifier Check (Email Only)
+            const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+            const isIdentifierValid = isEmailFormatValid && isEmailAvailable;
 
-            // 4. Checkboxes (Terms, Privacy, and Marketing)
+            // 4. Checkboxes (All 3 are REQUIRED)
             const isChecked = (checkTerms && checkTerms.checked) && 
-                              (checkPrivacy && checkPrivacy.checked) && 
+                              (checkPrivacy && checkPrivacy.checked) &&
                               (checkMarketing && checkMarketing.checked);
 
             // Toggle Hints
-            if (identifier.length > 0 && !isIdentifierFormatValid) {
+            if (identifier.length > 0 && !isEmailFormatValid) {
                 if (emailHint) emailHint.style.display = "block";
             } else {
                 if (emailHint) emailHint.style.display = "none";
@@ -602,20 +738,17 @@
         if (regEmail) {
             regEmail.addEventListener("input", () => {
                 let identifier = regEmail.value.trim();
-                // Real-time normalization for existence check
-                if (!identifier.includes("@")) {
-                    identifier = identifier.replace(/\D/g, "");
-                }
+                // Real-time normalization
+                identifier = identifier.toLowerCase();
                 
                 if (emailError) emailError.style.display = "none";
                 isEmailAvailable = true; 
                 
                 clearTimeout(emailDebounceTimer);
                 
-                const emailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-                const phoneFormatValid = /^[0-9]{10}$/.test(identifier);
+                const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
 
-                if (emailFormatValid || phoneFormatValid) {
+                if (isEmailFormatValid) {
                     emailDebounceTimer = setTimeout(() => {
                         if (window.checkIdentifierExists) {
                             window.checkIdentifierExists(identifier).then(res => {
@@ -640,8 +773,32 @@
                 if (el.type === "checkbox") el.addEventListener("change", validateForm);
             }
         });
-
+        
         initPasswordVisibility();
+        initForgotPasswordLogic();
+    }
+
+    function initForgotPasswordLogic() {
+        const btnSendReset = document.getElementById("btnSendReset");
+        const forgotIdentifier = document.getElementById("forgotIdentifier");
+        const forgotError = document.getElementById("forgotError");
+
+        if (btnSendReset) {
+            btnSendReset.addEventListener("click", async () => {
+                const identifier = forgotIdentifier.value.trim();
+                if (!identifier) {
+                    alert("กรุณาระบุอีเมลหรือเบอร์โทรศัพท์ครับ");
+                    return;
+                }
+
+                if (window.sendResetEmailAction) {
+                    window.sendResetEmailAction(identifier);
+                } else {
+                    alert("ระบบกำลังเชื่อมต่อกับเซิร์ฟเวอร์ กรุณารอสักครู่แล้วลองใหม่ครับ (Authentication module not ready)");
+                    console.error("[Auth] sendResetEmailAction not found");
+                }
+            });
+        }
     }
 
     function initPasswordVisibility() {
@@ -677,7 +834,7 @@
 <!-- Firebase SDK Implementation (Module) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-  import { getAuth, signInWithRedirect, signInWithPopup, getRedirectResult, GoogleAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  import { getAuth, signInWithRedirect, signInWithPopup, getRedirectResult, GoogleAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
   import { getFirestore, doc, setDoc, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
   // Inlined Config for reliability on local files
@@ -697,19 +854,29 @@
 
   // IMPROVED: Returns {exists: boolean, email?: string}
   window.checkIdentifierExists = async (rawIdentifier) => {
+    console.log("[Auth] Checking existence for:", rawIdentifier);
     try {
         const identifier = normalizeIdentifier(rawIdentifier);
         const isEmail = identifier.includes("@");
+        console.log("[Auth] Normalized:", identifier, "(isEmail:", isEmail, ")");
         
         // 1. Check Firestore first (Universal Lookup)
-        const q = query(
-            collection(db, "users"), 
-            where(isEmail ? "email" : "phone", "==", identifier)
-        );
-        const querySnapshot = await getDocs(q);
+        let querySnapshot;
+        try {
+            const q = query(
+                collection(db, "users"), 
+                where(isEmail ? "email" : "phone", "==", identifier)
+            );
+            querySnapshot = await getDocs(q);
+        } catch (firestoreErr) {
+            console.warn("[Auth] Firestore query failed (likely permission rules):", firestoreErr.message);
+            // Fallback to null snapshot to continue with step 2/3
+            querySnapshot = { empty: true };
+        }
         
         if (!querySnapshot.empty) {
             const userData = querySnapshot.docs[0].data();
+            console.log("[Auth] Found in Firestore:", userData);
             let resolvedEmail = userData.email || (isEmail ? identifier : `${identifier}@paomobile.auth`);
             if (/^[0-9]{10}$/.test(resolvedEmail)) resolvedEmail = `${resolvedEmail}@paomobile.auth`;
             return { exists: true, email: resolvedEmail };
@@ -756,9 +923,9 @@
       if (overlay) overlay.style.display = 'none';
   };
 
-  window.transitionToSuccess = (name) => {
-      console.log("[Auth] ---> transitionToSuccess triggered for:", name);
-      isRegistering = true; // Still keep this lock
+  window.transitionToVerification = (name) => {
+      console.log("[Auth] ---> transitionToVerification triggered for:", name);
+      isRegistering = true; 
       
       const loginView = document.getElementById("loginView");
       const registerView = document.getElementById("registerView");
@@ -768,7 +935,15 @@
       if (registerView) registerView.style.display = "none";
       if (successView) {
           successView.style.display = "block";
-          console.log("[Auth] successView is now BLOCK");
+          
+          // Check if user is already verified (e.g. Google users)
+          const user = auth.currentUser;
+          if (user && user.emailVerified) {
+              updateUIForVerified(name);
+          } else {
+              updateUIForUnverified();
+              startVerificationCheck(); // Start auto-reloading
+          }
       }
 
       hideLoading(true, "Success view transition");
@@ -779,16 +954,206 @@
           isNavigating = false;
           finishLogin(name);
       };
+  };
 
-      // Auto-redirect after 5 seconds to give user more time
+  function updateUIForVerified(name) {
+      document.getElementById("successIcon").style.display = "flex";
+      document.getElementById("verifyIcon").style.display = "none";
+      document.getElementById("statusTitle").textContent = "สมัครเสร็จสิ้น";
+      document.getElementById("statusText").innerHTML = `ยินดีด้วยค่ะ! บัญชี ${name} ของคุณ<br>พร้อมใช้งานเรียบร้อยแล้วค่ะ`;
+      document.getElementById("btnCheckVerify").style.display = "none";
+      document.getElementById("btnSuccessFinish").style.display = "block";
+      document.getElementById("verifyArea").style.display = "none";
+      
+      // Auto-redirect for verified users
       setTimeout(() => {
-          if (successView && successView.style.display === "block") {
-              console.log("[Auth] Auto-redirecting after success delay...");
+          if (document.getElementById("successView").style.display === "block") {
               window.finishLoginWithUser();
           }
       }, 5000);
+  }
+
+  function updateUIForUnverified() {
+      document.getElementById("successIcon").style.display = "none";
+      document.getElementById("verifyIcon").style.display = "flex";
+      document.getElementById("statusTitle").textContent = "กรุณายืนยันอีเมล";
+      const user = auth.currentUser;
+      const emailStr = user ? user.email : "อีเมลของคุณ";
+      document.getElementById("statusText").innerHTML = `เราได้ส่งลิงก์ยืนยันไปที่ <b>${emailStr}</b> เรียบร้อยแล้วค่ะ<br>กรุณาคลิกลิงก์ในอีเมลเพื่อเปิดใช้งานบัญชีค่ะ`;
+      document.getElementById("btnCheckVerify").style.display = "block";
+      document.getElementById("btnSuccessFinish").style.display = "none";
+      document.getElementById("verifyArea").style.display = "block";
+  }
+
+  let lastEmailSentTime = 0;
+  const RESEND_COOLDOWN = 30000; // 30 seconds
+
+  window.checkVerificationState = async (auto = false) => {
+      const user = auth.currentUser;
+      if (!user) return;
+      
+      if (!auto) {
+          const now = Date.now();
+          const timeToWait = Math.ceil((RESEND_COOLDOWN - (now - lastEmailSentTime)) / 1000);
+          
+          if (now - lastEmailSentTime < RESEND_COOLDOWN) {
+              alert(`กรุณาลองใหม่ในอีก ${timeToWait} วินาทีค่ะ เพื่อป้องกันการส่งเมลซ้ำซ้อน`);
+              return;
+          }
+          showLoading("Checking status...");
+      }
+
+      await user.reload();
+      if (user.emailVerified) {
+          console.log("[Auth] User is now verified!");
+          if (verificationInterval) clearInterval(verificationInterval);
+          updateUIForVerified(user.displayName || user.email.split('@')[0]);
+          if (!auto) hideLoading(true, "Verified");
+      } else {
+          if (!auto) {
+              console.log("[Auth] Still unverified. Triggering resend as requested.");
+              try {
+                  await sendEmailVerification(user);
+                  lastEmailSentTime = Date.now();
+                  startResendCountdown();
+                  alert("อีเมลของคุณยังไม่ได้รับการยืนยันครับ เราได้ส่งลิงก์ยืนยันไปให้ใหม่อีกครั้งแล้ว กรุณาตรวจสอบในกล่องจดหมายของคุณ (หรือใน Junk/Spam/จดหมายขยะ) นะครับ");
+              } catch (sendErr) {
+                  console.error("[Auth] Auto-resend error:", sendErr);
+                  alert("อีเมลของคุณยังไม่ได้รับการยืนยันครับ (และขออภัยที่ไม่สามารถส่งอีเมลซ้ำได้ในขณะนี้ กรุณารอสักครู่นะครับ)");
+              }
+              hideLoading(true, "Still unverified");
+          }
+      }
   };
 
+  function startResendCountdown() {
+      const btn = document.getElementById("btnResendVerify");
+      if (!btn) return;
+      
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+      btn.style.cursor = "not-allowed";
+      
+      const updateBtn = () => {
+          const now = Date.now();
+          const remaining = Math.ceil((RESEND_COOLDOWN - (now - lastEmailSentTime)) / 1000);
+          
+          if (remaining > 0) {
+              btn.textContent = `ส่งอีเมลอีกครั้งได้ใน (${remaining}ส)`;
+              setTimeout(updateBtn, 1000);
+          } else {
+              btn.disabled = false;
+              btn.style.opacity = "1";
+              btn.style.cursor = "pointer";
+              btn.textContent = "ส่งอีเมลยืนยันอีกครั้ง";
+          }
+      };
+      
+      updateBtn();
+  }
+
+  function startVerificationCheck() {
+      if (verificationInterval) clearInterval(verificationInterval);
+      verificationInterval = setInterval(() => {
+          const successView = document.getElementById("successView");
+          if (successView && successView.style.display === "block") {
+              window.checkVerificationState(true);
+          } else {
+              clearInterval(verificationInterval);
+          }
+      }, 3000);
+  }
+
+  window.handleForceLogout = async () => {
+      showLoading("Signing out...");
+      try {
+          if (verificationInterval) clearInterval(verificationInterval);
+          await auth.signOut();
+          localStorage.clear();
+          window.location.replace("index.html");
+      } catch (err) {
+          console.error("Logout error:", err);
+          window.location.replace("index.html");
+      }
+  };
+
+  // --- Action Bindings ---
+  window.sendResetEmailAction = async (rawIdentifier) => {
+      showLoading("Sending reset email");
+      const errEl = document.getElementById("forgotError");
+      if (errEl) errEl.style.display = "none";
+
+      try {
+          const res = await window.checkIdentifierExists(rawIdentifier);
+          if (!res.exists) {
+              if (errEl) errEl.style.display = "block";
+              hideLoading(true, "Identifier not found");
+              return;
+          }
+
+          const targetEmail = res.email;
+          const isPhone = /^[0-9]{10}$/.test(rawIdentifier);
+          console.log("[Auth] Triggering Firebase Reset for:", targetEmail, "(isPhone:", isPhone, ")");
+          
+          await sendPasswordResetEmail(auth, targetEmail);
+          console.log("[Auth] Firebase Success: Reset email sent.");
+          
+          if (isPhone) {
+              alert("เราได้ส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปให้คุณทาง SMS เรียบร้อยแล้วครับ กรุณาตรวจสอบและดำเนินการตามขั้นตอน");
+          } else {
+              alert("เราได้ส่งอีเมลสำหรับตั้งรหัสผ่านใหม่ไปให้คุณแล้วครับ กรุณาตรวจสอบในกล่องจดหมายของคุณ (หรือใน Junk/Spam/จดหมายขยะ)");
+          }
+          
+          // Return to login
+          document.getElementById("forgotPasswordView").style.display = "none";
+          document.getElementById("loginView").style.display = "block";
+          
+      } catch (error) {
+          console.error("[Auth] Reset error:", error);
+          alert("เกิดข้อผิดพลาด: " + error.message);
+      } finally {
+          hideLoading(true, "Reset complete");
+      }
+  };
+ 
+  // --- Verification Email Action ---
+  window.sendVerificationEmail = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+          alert("กรุณาเข้าสู่ระบบก่อนขอยืนยันบัญชีครับ");
+          return;
+      }
+ 
+      if (user.email.endsWith('@paomobile.auth')) {
+          alert("ไม่สามารถส่งอีเมลยืนยันสำหรับบัญชีที่สมัครด้วยเบอร์โทรศัพท์ได้ครับ");
+          return;
+      }
+ 
+      const now = Date.now();
+      if (now - lastEmailSentTime < RESEND_COOLDOWN) {
+          const timeToWait = Math.ceil((RESEND_COOLDOWN - (now - lastEmailSentTime)) / 1000);
+          alert(`กรุณาลองใหม่ในอีก ${timeToWait} วินาทีค่ะ`);
+          return;
+      }
+
+      showLoading("Sending verification email");
+      try {
+          await sendEmailVerification(user);
+          lastEmailSentTime = Date.now();
+          startResendCountdown();
+          alert("เราได้ส่งอีเมลยืนยันบัญชีไปให้คุณแล้วครับ กรุณาตรวจสอบในกล่องจดหมาย (หรือใน Junk/Spam/จดหมายขยะ)");
+      } catch (error) {
+          console.error("[Auth] Verification error:", error);
+          if (error.code === 'auth/too-many-requests') {
+              alert("กรุณารออีกสักครู่ก่อนกดส่งใหม่อีกครั้งครับ");
+          } else {
+              alert("เกิดข้อผิดพลาด: " + error.message);
+          }
+      } finally {
+          hideLoading(true, "Verification complete");
+      }
+  };
+ 
   // --- WebView Detection ---
   function detectRestrictedBrowser() {
       const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -807,12 +1172,12 @@
   }
 
   // --- Normalization Helper ---
-  const normalizeIdentifier = (val) => {
+  function normalizeIdentifier(val) {
       const trimmed = val.trim();
       if (trimmed.includes("@")) return trimmed.toLowerCase();
       // Remove all non-digits for phone numbers
       return trimmed.replace(/\D/g, "");
-  };
+  }
 
   // --- Auth Initializer (Sequenced Flow) ---
   async function initAuth() {
@@ -849,7 +1214,14 @@
       }
       
       if (user && !isNavigating) {
-          console.log("[Auth] State: IN -> Initializing session for:", user.email);
+          console.log("[Auth] State: IN -> Initializing session for:", user.email, "Verified:", user.emailVerified);
+          
+          if (!user.emailVerified && !(user.email || '').endsWith('@paomobile.auth') && !user.providerData.some(p => p.providerId === 'google.com')) {
+              console.log("[Auth] User not verified. Forcing Verification View.");
+              window.transitionToVerification(user.displayName || user.email.split('@')[0]);
+              return;
+          }
+
           await saveUserToFirestore(user, 'state_change');
           
           // Only redirect if we are STILL on the login page
@@ -879,24 +1251,30 @@
 
   // Final Redirection Sequence (With Lock)
   async function finishLogin(name) {
-      console.log("[Auth] finishLogin triggered for:", name);
+      console.log("[Auth] finishLogin check triggered for:", name);
       if (isNavigating && (!overlay || overlay.style.display !== 'flex')) {
           console.warn("[Auth] finishLogin BLOCKED: Already navigating");
           return;
       }
+
+      const user = auth.currentUser;
+      // CRITICAL: Block finish if not verified (unless phone/google)
+      if (user && !user.emailVerified && !(user.email || '').endsWith('@paomobile.auth') && !user.providerData.some(p => p.providerId === 'google.com')) {
+          console.warn("[Auth] finishLogin BLOCKED: Email not verified");
+          isNavigating = false;
+          hideLoading();
+          window.transitionToVerification(name || user.displayName || user.email.split('@')[0]);
+          return;
+      }
+
       isNavigating = true; 
       showLoading("finishLogin init");
       
-      setTimeout(() => {
-          const emergency = document.getElementById('emergencyRedirect');
-          if (emergency) emergency.style.display = 'block';
-      }, 4000);
-
-      console.log("[Auth] Fast Redirect Initialized for:", name);
-      
       if (!localStorage.getItem('paomobile_user')) {
-          const user = auth.currentUser;
-          if (user) await saveUserToFirestore(user, 'recovery');
+          if (user) {
+              console.log("[Auth] Initializing session data...");
+              await saveUserToFirestore(user, 'recovery');
+          }
       }
 
       await wait(800); 
@@ -971,7 +1349,23 @@
           
           if (!res.exists) {
               hideLoading();
-              alert("ไม่พบบัญชีผู้ใช้ในระบบครับ กรุณาสร้างบัญชีใหม่");
+              if (confirm("ไม่พบบัญชีผู้ใช้ในระบบค่ะ ต้องการสร้างบัญชีใหม่ด้วยอีเมลนี้เลยไหมคะ?")) {
+                  console.log("[Auth] Seamless transition to Register View");
+                  const registerView = document.getElementById("registerView");
+                  const loginView = document.getElementById("loginView");
+                  if (registerView && loginView) {
+                      loginView.style.display = "none";
+                      registerView.style.display = "block";
+                      const regEmail = document.getElementById("regEmail");
+                      if (regEmail) {
+                          regEmail.value = emailInput.value;
+                          // Trigger validation
+                          const event = new Event('input', { bubbles: true });
+                          regEmail.dispatchEvent(event);
+                      }
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+              }
               return;
           }
 
@@ -1010,19 +1404,12 @@
   const btnRegContinue = document.getElementById('btnContinueRegister');
   if (btnRegContinue) {
       btnRegContinue.addEventListener('click', async () => {
-          const identifier = document.getElementById('regEmail').value.trim();
+          const email = document.getElementById('regEmail').value.trim().toLowerCase();
           const password = document.getElementById('regPassword').value;
           
-          const isEmail = identifier.includes("@");
-          let email, phone;
-
-          if (isEmail) {
-              email = identifier.toLowerCase();
-              phone = "";
-          } else {
-              phone = identifier.replace(/\D/g, "");
-              if (phone.length !== 10) { alert("กรุณาใช้เบอร์โทรศัพท์ 10 หลัก ให้ถูกต้อง"); return; }
-              email = `${phone}@paomobile.auth`;
+          if (!email.includes("@")) {
+              alert("กรุณาระบุอีเมลให้ถูกต้อง");
+              return;
           }
 
               showLoading("Registration begin");
@@ -1033,22 +1420,26 @@
                   const cred = await createUserWithEmailAndPassword(auth, email, password);
                   console.log("[Auth] Firebase User Created:", cred.user.uid);
                   
-                  const name = isEmail ? email.split('@')[0] : phone;
+                  const name = email.split('@')[0];
                   
                   // Background persistence (Non-blocking)
                   const userRef = doc(db, "users", cred.user.uid);
                   setDoc(userRef, {
                       uid: cred.user.uid,
                       name: name,
-                      email: isEmail ? email : phone, 
-                      phone: phone,
+                      email: email, 
+                      phone: "", // No phone during email registration
                       marketing: document.getElementById("checkMarketing").checked,
-                      provider: isEmail ? 'email_registration' : 'phone_registration',
+                      provider: 'email_registration',
                       createdAt: new Date()
                   }).then(() => console.log("[Auth] Firestore persistence complete."));
 
-                  // Switch to Success View
-                  window.transitionToSuccess(name);
+                   // Send Verification Email immediately
+                   await sendEmailVerification(cred.user);
+                   console.log("[Auth] Verification email sent automatically.");
+
+                   // Switch to Verification View
+                   window.transitionToVerification(name);
 
               } catch (error) {
                   console.error("[Auth] Registration caught error:", error);
@@ -1061,24 +1452,6 @@
                       alert("การลงทะเบียนผิดพลาด: " + error.message);
                   }
               }
-      });
-  }
-
-  // Forgotten Password
-  const btnForgot = document.getElementById('btnForgotPassword');
-  if (btnForgot) {
-      btnForgot.addEventListener('click', async () => {
-          const email = emailInput.value.trim();
-          if (!email || !email.includes("@")) {
-              alert("กรุณากรอกอีเมลของคุณเพื่อขอเปลี่ยนรหัสผ่านครับ (ระบบไม่รองรับการกู้คืนด้วยเบอร์โทรโดยตรง)");
-              return;
-          }
-          try {
-              await sendPasswordResetEmail(auth, email);
-              alert("ระบบส่งลิงก์เปลี่ยนรหัสผ่านไปยังอีเมลของคุณแล้วครับ");
-          } catch (e) {
-              alert("ผิดพลาด: " + e.message);
-          }
       });
   }
 
