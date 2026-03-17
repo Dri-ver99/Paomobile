@@ -15,7 +15,7 @@
                 const loginLink = document.createElement('a');
                 loginLink.href = 'login.html';
                 loginLink.innerHTML = '👤 เข้าสู่ระบบ / สมัครสมาชิก';
-                loginLink.style.cssText = 'font-weight: 600; color: var(--gold-primary); border-top: 1px solid #f1f5f9; margin-top: 10px; padding-top: 15px; display: block;';
+                loginLink.style.cssText = 'font-weight: 600; color: var(--gold-primary); border-top: 1px solid #f1f5f9; margin-top: 10px; padding-top: 15px; display: flex !important; justify-content: center; align-items: center; gap: 8px; width: 100%;';
                 mobileMenu.appendChild(loginLink);
             }
             return;
