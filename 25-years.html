@@ -195,6 +195,33 @@ color: #fff;
     z-index: 9999;
     padding: 20px;
 }
+.fullscreen-modal-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    transition: all 0.2s;
+}
+.fullscreen-modal-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+.fullscreen-modal-btn svg {
+    width: 20px;
+    height: 20px;
+}
 .modal-container {
     background: #fff;
     width: 100%;
@@ -307,6 +334,9 @@ Pao<span class="accent">mobile</span></a><ul class="nav-links" id="navLinks"><li
         <button class="close-modal" onclick="closeProductModal()">✕</button>
         <div class="modal-video-side">
             <video id="modalVideo" src="" controls muted autoplay playsinline></video>
+            <button class="fullscreen-modal-btn" onclick="toggleFullScreen()" aria-label="ขยายเต็มจอ">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            </button>
         </div>
         <div class="modal-info-side">
             <h2 class="modal-repair-title" id="repairTitle"></h2>
@@ -326,21 +356,43 @@ Pao<span class="accent">mobile</span></a><ul class="nav-links" id="navLinks"><li
         </div>
     </div>
 </div><footer class="footer"><div class="container"><div class="footer-bottom" style="padding-top: 32px; border-top: none;"><span>© 2026 Paomobile. All rights reserved.</span><span>Made with 🧡 in Thailand</span></div></div></footer><script src="script.js"></script><script src="cart.js"></script><div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose" aria-label="Close Search">&#x2715;</button><div class="search-modal-container"><div class="search-hero-input"><span class="search-hero-icon">&#x1F50D;</span><input type="text" id="searchInput" placeholder="&#x0E04;&#x0E49;&#x0E19;&#x0E2B;&#x0E32; &#x0E40;&#x0E04;&#x0E23;&#x0E37;&#x0E48;&#x0E2D;&#x0E07;&#x0E21;&#x0E37;&#x0E2D; 1, &#x0E40;&#x0E04;&#x0E23;&#x0E37;&#x0E48;&#x0E2D;&#x0E07;&#x0E21;&#x0E37;&#x0E2D; 2, &#x0E23;&#x0E38;&#x0E48;&#x0E19;&#x0E21;&#x0E37;&#x0E2D;&#x0E16;&#x0E37;&#x0E2D;..." autocomplete="off"><button class="search-clear-btn" id="searchClear" aria-label="Clear">&#x2715;</button></div><div class="search-results-area" id="searchResults"></div></div></div><script>
+    function toggleFullScreen() {
+        const video = document.getElementById('modalVideo');
+        if (video.requestFullscreen) {
+            video.requestFullscreen();
+        } else if (video.webkitEnterFullscreen) {
+            video.webkitEnterFullscreen();
+        } else if (video.msRequestFullscreen) {
+            video.msRequestFullscreen();
+        }
+    }
     function openProductModal(videoSrc, title) {
         const modal = document.getElementById('productModal');
         const video = document.getElementById('modalVideo');
         const repairTitle = document.getElementById('repairTitle');
         
-        video.src = videoSrc;
+        video.src = videoSrc + "#t=0.001";
         repairTitle.innerText = title;
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+
+        // Add tap to full screen
+        video.onclick = function() {
+            if (video.requestFullscreen) {
+                video.requestFullscreen();
+            } else if (video.webkitEnterFullscreen) {
+                video.webkitEnterFullscreen();
+            } else if (video.msRequestFullscreen) {
+                video.msRequestFullscreen();
+            }
+        };
     }
     function closeProductModal() {
         const modal = document.getElementById('productModal');
         const video = document.getElementById('modalVideo');
         
         video.pause();
+        video.src = ""; // Clear src to stop loading
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
     }

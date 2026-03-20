@@ -25,8 +25,8 @@
 }
 @media (max-width: 768px) {
     .why-image img, .why-slider-img {
-        aspect-ratio: auto;
-        object-fit: contain;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
         background: var(--bg-warm);
     }
 }
