@@ -94,6 +94,7 @@ if (target) {
 const offset = 80;
 const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
 window.scrollTo({ top, behavior: 'smooth' });
+if (typeof closeMenu === 'function') closeMenu();
 }
 });
 });
