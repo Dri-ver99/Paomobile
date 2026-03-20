@@ -201,7 +201,9 @@
             } else {
                 list.innerHTML = cart.map(item => `
                     <div class="cart-item" data-id="${item.id}">
-                        <div class="cart-item-img">${item.emoji || '📦'}</div>
+                        <div class="cart-item-img">
+                            ${item.img ? `<img src="${item.img}" alt="${item.name}">` : (item.emoji || '📦')}
+                        </div>
                         <div class="cart-item-info">
                             <div class="cart-item-name">${item.name}</div>
                             <div class="cart-item-price">฿${item.price.toLocaleString()}/ชิ้น</div>
