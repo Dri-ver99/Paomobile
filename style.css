@@ -23,6 +23,13 @@
     object-fit: cover;
     display: block;
 }
+@media (max-width: 768px) {
+    .why-image img, .why-slider-img {
+        aspect-ratio: auto;
+        object-fit: contain;
+        background: var(--bg-warm);
+    }
+}
 .why-content h2{margin-bottom:16px;}.why-desc{margin-bottom:36px;font-size:1rem;}.why-features{display:flex;flex-direction:column;gap:22px;}.wf-item{display:flex;gap:16px;align-items:flex-start;padding:16px;border-radius:var(--radius-md);transition:var(--transition);}.wf-item:hover{background:var(--bg-warm);}.wf-icon{width:44px;height:44px;min-width:44px;background:var(--bg-warm);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:var(--transition);}.wf-item:hover .wf-icon{background:linear-gradient(135deg, var(--orange-100), var(--gold-100));}.wf-item h4{margin-bottom:4px;font-size:0.95rem;}.wf-item p{font-size:0.85rem;line-height:1.5;}.work-showcase{padding:100px 0;background:var(--bg);overflow:hidden;}.showcaseSwiper{width:100%;padding-bottom:20px;}.showcase-img {
     width: 100%;
     aspect-ratio: 1 / 1;
