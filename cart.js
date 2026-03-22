@@ -1,6 +1,10 @@
 (async function () {
-    const CART_KEY = 'pao_cart';
     const USER_KEY = 'paomobile_user';
+    const getActiveUserId = () => {
+        try { const u = JSON.parse(localStorage.getItem(USER_KEY)); return u ? (u.uid || u.phone || 'default') : 'guest'; }
+        catch { return 'guest'; }
+    };
+    const getCartKey = () => 'pao_cart_' + getActiveUserId();
 
     let db = null;
     let auth = null;
@@ -41,18 +45,12 @@
     }
 
     function getLocalCart() {
-        try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; }
+        try { return JSON.parse(localStorage.getItem(getCartKey())) || []; }
         catch { return []; }
     }
 
-    function saveLocalCart(cart, ownerUid = null) {
-        localStorage.setItem(CART_KEY, JSON.stringify(cart));
-        if (ownerUid) {
-            localStorage.setItem('pao_cart_owner', ownerUid);
-        } else if (!localStorage.getItem('pao_cart_owner')) {
-            // If no owner is set, it's a guest cart
-            localStorage.setItem('pao_cart_owner', 'guest');
-        }
+    function saveLocalCart(cart) {
+        localStorage.setItem(getCartKey(), JSON.stringify(cart));
     }
 
     async function syncWithFirestore(uid) {
@@ -64,41 +62,29 @@
             const snap = await getDoc(cartDoc);
             let remoteCart = [];
             if (snap.exists()) {
-                remoteCart = snap.data().items || [];
+                remoteCart = snap.data().cart || [];
                 console.log("[Cart] Cloud data found for", uid, ":", remoteCart.length, "items.");
             }
 
             const localCart = getLocalCart();
-            const lastOwner = localStorage.getItem('pao_cart_owner') || 'guest';
+            let merged = [...remoteCart];
             
-            let merged = [];
-            
-            // Logic: Only merge if the previous owner was a 'guest'.
-            // If the last owner was a DIFFERENT registered user, DISCARD THE LOCAL CART.
-            if (lastOwner === 'guest') {
-                console.log("[Cart] Merging guest cart into account...");
-                merged = [...remoteCart];
-                localCart.forEach(lItem => {
-                    const idx = merged.findIndex(rItem => rItem.id === lItem.id);
-                    if (idx >= 0) {
-                        merged[idx].qty = Math.max(merged[idx].qty, lItem.qty);
-                    } else {
-                        merged.push(lItem);
-                    }
-                });
-            } else if (lastOwner === uid) {
-                console.log("[Cart] Resuming session for same user.");
-                merged = remoteCart; // For same user, cloud is source of truth or we just continue
-            } else {
-                console.warn("[Auth] Detected account switch! Discarding previous user's local cart.");
-                merged = remoteCart; // Discard local (belongs to someone else)
-            }
+            console.log("[Cart] Merging scoped cart data...");
+            localCart.forEach(lItem => {
+                const idx = merged.findIndex(rItem => rItem.id === lItem.id);
+                if (idx >= 0) {
+                    merged[idx].qty = Math.max(merged[idx].qty, lItem.qty);
+                } else {
+                    merged.push(lItem);
+                }
+            });
 
-            console.log("[Cart] Sync complete. Isolation check passed.");
-            saveLocalCart(merged, uid);
-            await setDoc(cartDoc, { items: merged, updatedAt: new Date().toISOString() });
+            console.log("[Cart] Sync complete.");
+            saveLocalCart(merged);
+            await setDoc(cartDoc, { cart: merged, cartUpdatedAt: new Date().toISOString() }, { merge: true });
             CartUI.update();
             CartUI.renderSidebar();
+            CartUI.renderFullPage();
         } catch (e) {
             console.error("[Cart] Firestore sync failed:", e);
         }
@@ -119,9 +105,9 @@
         const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js");
         try {
             await setDoc(doc(db, 'carts', uid), {
-                items: getLocalCart(),
-                updatedAt: new Date().toISOString()
-            });
+                cart: getLocalCart(),
+                cartUpdatedAt: new Date().toISOString()
+            }, { merge: true });
             console.log("[Cart] Saved to cloud.");
         } catch (e) {
             console.error("[Cart] Cloud save failed:", e);
@@ -135,36 +121,90 @@
             const idx = cart.findIndex(i => i.id === product.id);
             if (idx >= 0) {
                 cart[idx].qty += 1;
+                cart[idx].selected = true; // Ensure it's selected when added again
             } else {
-                cart.push({ ...product, qty: 1 });
+                cart.push({ ...product, qty: 1, selected: true });
             }
             saveLocalCart(cart);
             CartUI.update();
             CartUI.flash();
+            CartUI.renderFullPage();
             await pushToFirestore();
         },
         async remove(id) {
+            const cart = getLocalCart();
+            const item = cart.find(i => i.id === id);
+            if (item && document.getElementById('deleteConfirmModal')) {
+                CartUI.close(); // Close sidebar so modal is visible
+                CartUI.showDeleteConfirm(item.name, () => CartAPI._doRemove(id));
+                return;
+            }
+            await CartAPI._doRemove(id);
+        },
+        async _doRemove(id) {
             const cart = getLocalCart().filter(i => i.id !== id);
             saveLocalCart(cart);
             CartUI.update();
             CartUI.renderSidebar();
+            CartUI.renderFullPage();
+            await pushToFirestore();
+        },
+        async removeSelected() {
+            const cart = getLocalCart().filter(i => i.selected === false);
+            saveLocalCart(cart);
+            CartUI.update();
+            CartUI.renderSidebar();
+            CartUI.renderFullPage();
             await pushToFirestore();
         },
         async setQty(id, qty) {
             const cart = getLocalCart();
             const idx = cart.findIndex(i => i.id === id);
             if (idx < 0) return;
-            if (qty <= 0) { cart.splice(idx, 1); }
-            else { cart[idx].qty = qty; }
+            
+            if (qty <= 0) {
+                if (document.getElementById('deleteConfirmModal')) {
+                    CartUI.close(); // Close sidebar so modal is visible
+                    CartUI.showDeleteConfirm(cart[idx].name, () => CartAPI._doRemove(id));
+                    return;
+                }
+                await CartAPI._doRemove(id);
+                return;
+            }
+            
+            cart[idx].qty = qty;
             saveLocalCart(cart);
             CartUI.update();
             CartUI.renderSidebar();
+            CartUI.renderFullPage();
             await pushToFirestore();
         },
+        toggleSelect(id, state = null) {
+            const cart = getLocalCart();
+            const idx = cart.findIndex(i => i.id === id);
+            if (idx >= 0) {
+                cart[idx].selected = (state !== null) ? state : !cart[idx].selected;
+                saveLocalCart(cart);
+                CartUI.renderFullPage();
+                CartUI.renderSidebar();
+                pushToFirestore();
+            }
+        },
+        toggleSelectAll(state) {
+            const cart = getLocalCart();
+            cart.forEach(item => item.selected = state);
+            saveLocalCart(cart);
+            CartUI.renderFullPage();
+            CartUI.renderSidebar();
+            pushToFirestore();
+        },
         total() {
-            return getLocalCart().reduce((s, i) => s + i.price * i.qty, 0);
+            return getLocalCart().filter(i => i.selected !== false).reduce((s, i) => s + i.price * i.qty, 0);
         },
         count() {
+            return getLocalCart().filter(i => i.selected !== false).reduce((s, i) => s + i.qty, 0);
+        },
+        countAll() {
             return getLocalCart().reduce((s, i) => s + i.qty, 0);
         },
         async forceSync() {
@@ -176,7 +216,7 @@
 
     window.CartUI = {
         update() {
-            const n = CartAPI.count();
+            const n = CartAPI.countAll();
             document.querySelectorAll('.cart-badge').forEach(el => {
                 el.textContent = n;
                 el.style.display = n > 0 ? 'flex' : 'none';
@@ -222,6 +262,140 @@
             const count = CartAPI.count();
             if (totalEl) totalEl.textContent = '฿' + total.toLocaleString();
             if (countEl) countEl.textContent = count + ' ชิ้น';
+
+            // Ensure only "View Full Cart" button exists in sidebar footer (Remove LINE button)
+            const footer = document.querySelector('.cart-sidebar-footer');
+            if (footer) {
+                // Remove existing LINE button if present
+                const lineBtn = footer.querySelector('a[href*="line.me"]');
+                if (lineBtn) lineBtn.remove();
+                
+                // Check if cart link already exists, otherwise create it
+                let cartLink = footer.querySelector('a[href="cart.html"]');
+                if (!cartLink) {
+                    cartLink = document.createElement('a');
+                    cartLink.href = 'cart.html';
+                    cartLink.className = 'btn btn-outline';
+                    cartLink.style.width = '100%';
+                    cartLink.style.justifyContent = 'center';
+                    cartLink.style.marginTop = '12px';
+                    cartLink.innerHTML = '🛒 ดูตะกร้าสินค้าทั้งหมด';
+                    footer.appendChild(cartLink);
+                } else {
+                    // Ensure it's centered and has proper margin if it already exists
+                    cartLink.style.width = '100%';
+                    cartLink.style.justifyContent = 'center';
+                    cartLink.style.marginTop = '12px';
+                    cartLink.style.display = 'flex';
+                }
+            }
+        },
+        renderFullPage() {
+            const list = document.getElementById('cartPageList');
+            const totalEl = document.getElementById('cartPageTotal');
+            const countEl = document.getElementById('cartPageCount');
+            if (!list) return;
+
+            const cart = CartAPI.getAll();
+            if (cart.length === 0) {
+                list.innerHTML = `
+                    <div class="cart-items-group">
+                        <div class="cart-empty-message" style="padding: 100px; text-align: center; background: #fff;">
+                            <p style="font-size: 1.2rem; color: #757575;">ตะกร้าสินค้าของคุณว่างเปล่า</p>
+                            <a href="accessory.html" class="btn btn-primary" style="margin-top: 20px; display: inline-block;">ไปช้อปเลย</a>
+                        </div>
+                    </div>`;
+            } else {
+                const allSelected = cart.every(i => i.selected !== false);
+                list.innerHTML = `
+                    <div class="cart-items-group">
+                        <div class="cart-shop-header">
+                            <label class="shopee-checkbox">
+                                <input type="checkbox" id="selectAllHeader" ${allSelected ? 'checked' : ''} onchange="CartAPI.toggleSelectAll(this.checked)">
+                                <span class="checkbox-box"></span>
+                            </label>
+                            <span class="shop-badge">ร้านแนะนำ</span>
+                            <span>Paomobile Official Store</span>
+                        </div>
+                        ${cart.map(item => `
+                            <div class="cart-item-row" data-id="${item.id}">
+                                <div class="item-checkbox">
+                                    <label class="shopee-checkbox">
+                                        <input type="checkbox" ${item.selected !== false ? 'checked' : ''} onchange="CartAPI.toggleSelect('${item.id}', this.checked)">
+                                        <span class="checkbox-box"></span>
+                                    </label>
+                                </div>
+                                <div class="item-main">
+                                    <img src="${item.img || 'logo.png'}" alt="${item.name}" class="item-img">
+                                    <div class="item-info">
+                                        <div class="item-name">${item.name}</div>
+                                        <div class="item-variation">${item.variation || ''}</div>
+                                    </div>
+                                </div>
+                                <div class="item-price" data-label="ราคาต่อชิ้น">฿${item.price.toLocaleString()}</div>
+                                <div class="item-qty" data-label="จำนวน">
+                                    <div class="item-qty-selector">
+                                        <button class="item-qty-btn" onclick="CartAPI.setQty('${item.id}', ${item.qty - 1})">−</button>
+                                        <input type="text" class="item-qty-input" value="${item.qty}" readonly>
+                                        <button class="item-qty-btn" onclick="CartAPI.setQty('${item.id}', ${item.qty + 1})">+</button>
+                                    </div>
+                                </div>
+                                <div class="item-subtotal" data-label="ราคารวม">฿${(item.price * item.qty).toLocaleString()}</div>
+                                <div class="item-actions" data-label="แอคชั่น">
+                                    <button class="item-remove-btn" onclick="CartAPI.remove('${item.id}')">ลบออก</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                // Update footer selection state
+                const selectAllFooter = document.getElementById('selectAllFooter');
+                if (selectAllFooter) selectAllFooter.checked = allSelected;
+            }
+            const total = CartAPI.total();
+            const count = CartAPI.count();
+            const totalItemsCount = CartAPI.countAll();
+            
+            if (totalEl) totalEl.textContent = '฿' + total.toLocaleString();
+            if (countEl) countEl.textContent = count;
+            
+            // Update total summary count in footer if exists
+            const summaryCountEl = document.getElementById('cartSummaryCount');
+            if (summaryCountEl) summaryCountEl.textContent = totalItemsCount;
+        },
+        checkout() {
+            const cart = CartAPI.getAll();
+            if (cart.length === 0) {
+                alert('ตะกร้าสินค้าว่างเปล่า กรุณาเลือกสินค้าก่อนสั่งซื้อ');
+                return;
+            }
+            const hasSelected = cart.some(i => i.selected !== false);
+            if (!hasSelected) {
+                alert('กรุณาเลือกสินค้าที่ต้องการสั่งซื้ออย่างน้อย 1 ชิ้น');
+                return;
+            }
+            window.location.href = 'checkout.html';
+        },
+        showDeleteConfirm(name, onConfirm) {
+            const modal = document.getElementById('deleteConfirmModal');
+            const nameEl = document.getElementById('deleteItemName');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            
+            if (modal && nameEl && confirmBtn) {
+                nameEl.textContent = name;
+                confirmBtn.onclick = () => {
+                    onConfirm();
+                    this.hideDeleteConfirm();
+                };
+                modal.classList.add('open');
+            }
+        },
+        hideDeleteConfirm() {
+            const modal = document.getElementById('deleteConfirmModal');
+            if (modal) {
+                modal.classList.remove('open');
+            }
         }
     };
 

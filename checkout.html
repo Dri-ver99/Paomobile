@@ -1,0 +1,381 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>บริการสั่งซื้อ - Paomobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="products.css" />
+    <link rel="stylesheet" href="checkout.css" />
+</head>
+<body class="checkout-page">
+    <nav class="navbar" id="navbar"><div class="container"><a href="25-years.html" class="logo"><img src="logo.png" alt="Paomobile" class="logo-img" />
+Pao<span class="accent">mobile</span></a><ul class="nav-links" id="navLinks"><li><a href="index.html">หน้าหลัก</a></li><li class="has-mega-menu"><a href="index.html#services">บริการ</a><div class="mega-menu"><div class="mega-menu-inner"><div class="mega-column"><a href="select-screen-repair.html" class="mega-link">เปลี่ยนจอ / ซ่อมจอแตก</a><a href="select-battery.html" class="mega-link">เปลี่ยนแบตเตอรี่</a><a href="select-board-repair.html" class="mega-link">ซ่อมบอร์ด / เมนบอร์ด</a><a href="select-speaker-repair.html" class="mega-link">ซ่อมลำโพง / ไมค์</a></div></div></div></li><li><a href="index.html#why-us">ทำไมต้องเรา</a></li><li class="has-mega-menu"><a href="index.html#reviews">รีวิว</a><div class="mega-menu"><div class="mega-menu-inner" style="min-width: 200px;"><div class="mega-column"><a href="index.html#reviews" class="mega-link">รีวิวลูกค้า</a><a href="index.html#showcase" class="mega-link">รีวิวงานซ่อม</a></div></div></div></li><li class="has-mega-menu"><a href="index.html#branches">สาขา</a><div class="mega-menu"><div class="mega-menu-inner"><div class="mega-column"><a href="index.html?branch=0#branches" class="mega-link nav-branch-link" data-branch="0">สาขาตึกคอม</a><a href="index.html?branch=1#branches" class="mega-link nav-branch-link" data-branch="1">สาขานาเกลือ</a><a href="index.html?branch=2#branches" class="mega-link nav-branch-link" data-branch="2">สาขาซอยสยาม</a></div><div class="mega-column"><a href="index.html?branch=3#branches" class="mega-link nav-branch-link" data-branch="3">สาขาตลาดมหาชล</a><a href="index.html?branch=4#branches" class="mega-link nav-branch-link" data-branch="4">สาขาแหลมฉบัง</a><a href="index.html?branch=5#branches" class="mega-link nav-branch-link" data-branch="5">สาขาพรประภานิมิตร</a></div></div></div></li><li class="has-mega-menu"><a href="#contact">ติดต่อ</a><div class="mega-menu"><div class="mega-menu-inner" style="min-width: 200px;"><div class="mega-column"><a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank" class="mega-link">Facebook</a><a href="https://line.me/R/ti/p/@pao789" target="_blank" class="mega-link">Line</a><a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr" target="_blank" class="mega-link">Instagram</a><a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP" target="_blank" class="mega-link">Tiktok</a></div></div></div></li><li class="has-mega-menu"><a href="#">🛒 สั่งของ</a><div class="mega-menu"><div class="mega-menu-inner" style="min-width: 220px;"><div class="mega-column"><a href="new-products.html" class="mega-link">📱 สินค้ามือ 1</a><a href="used-products.html" class="mega-link">🔁 สินค้ามือ 2</a><a href="accessory.html" class="mega-link">&#x1F3A7; Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank" class="mega-link">🛒 Shopee</a></div></div></div></li></ul><a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary nav-btn" id="navCta"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+สอบถามเพิ่มเติม
+</a><div class="nav-icon-group" style="display:flex; align-items:center; gap: 30px;"><button class="search-icon-btn" id="searchBtn" aria-label="ค้นหา"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button><div class="account-menu-wrapper"><a href="javascript:void(0)" class="account-icon-btn" aria-label="บัญชีผู้ใช้"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></a><div class="account-dropdown"><a href="login.html" class="dropdown-item bold">เข้าสู่ระบบ/สมัครสมาชิก</a><div class="dropdown-divider"></div><a href="promotions.html" class="dropdown-item" style="padding-bottom: 8px;">รับสิทธิประโยชน์สุดพิเศษ <span class="arrow">›</span></a><a href="javascript:void(0)" class="dropdown-item" style="color: var(--text-soft) !important; font-size: 0.9em; padding-top: 6px;">Member</a></div></div><button class="cart-icon-btn" id="cartBtn" aria-label="ตะกร้าสินค้า"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg><span class="cart-badge" style="display:none">0</span></button></div><button class="menu-toggle" id="menuToggle" aria-label="Menu"><span></span><span></span><span></span></button></div></nav>
+    <div class="mobile-menu-overlay" id="mobileOverlay"></div><aside class="mobile-menu" id="mobileMenu"><div class="mobile-menu-panels" id="mobileMenuPanels"><div class="mobile-panel" id="mainPanel"><div class="mobile-menu-inner"><a href="index.html">หน้าหลัก</a><div class="menu-item-wrapper"><div class="menu-item-parent">บริการ</div><div class="mobile-sub-menu"><a href="select-screen-repair.html">เปลี่ยนจอ / ซ่อมจอแตก</a><a href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a href="select-board-repair.html">ซ่อมบอร์ด / เมนบอร์ด</a><a href="select-speaker-repair.html">ซ่อมลำโพง / ไมค์</a></div></div><a href="index.html#why-us">ทำไมต้องเรา</a><div class="menu-item-wrapper"><div class="menu-item-parent">รีวิว</div><div class="mobile-sub-menu"><a href="index.html#reviews">รีวิวลูกค้า</a><a href="index.html#showcase">รีวิวงานซ่อม</a></div></div><div class="menu-item-wrapper"><div class="menu-item-parent">สาขา</div><div class="mobile-sub-menu"><a href="index.html?branch=0#branches">สาขาตึกคอม</a><a href="index.html?branch=1#branches">สาขานาเกลือ</a><a href="index.html?branch=2#branches">สาขาซอยสยาม</a><a href="index.html?branch=4#branches">สาขาตลาดมหาชล</a><a href="index.html?branch=5#branches">สาขาแหลมฉบัง</a><a href="index.html?branch=6#branches">สาขาพรประภานิมิตร</a></div></div><div class="menu-item-wrapper"><div class="menu-item-parent">ติดต่อ</div><div class="mobile-sub-menu"><a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank">Facebook</a><a href="https://line.me/R/ti/p/@pao789" target="_blank">Line</a><a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr" target="_blank">Instagram</a><a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP" target="_blank">Tiktok</a></div></div><div class="menu-item-wrapper"><div class="menu-item-parent">🛒 สั่งของ</div><div class="mobile-sub-menu"><a href="new-products.html">📱 สินค้ามือ 1</a><a href="used-products.html">🔁 สินค้ามือ 2</a><a href="accessory.html">🎧 Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a></div></div><a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary mobile-cta"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px; flex-shrink: 0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>สอบถามเพิ่มเติม</span></a></div></div><div class="mobile-panel" id="subPanel"><div class="mobile-panel-header"><button class="mobile-back-btn" id="mobileBackBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg><span>กลับ</span></button><span class="mobile-panel-title" id="subMenuTitle"></span></div><div class="mobile-menu-inner" id="subMenuContent"></div></div></div></aside>
+    <div class="cart-overlay" id="cartOverlay"></div><aside class="cart-sidebar" id="cartSidebar"><div class="cart-sidebar-header"><h3>🛒 ตะกร้าสินค้า</h3><div class="cart-header-meta">จำนวน: <strong id="cartCount">0 ชิ้น</strong></div><button class="cart-close-btn" id="cartCloseBtn">✕</button></div><div class="cart-item-list" id="cartItemList"><div class="cart-empty"><span>🛒</span><p>ตะกร้าว่างเปล่า</p></div></div><div class="cart-sidebar-footer"><div class="cart-total-row"><span>ราคารวมทั้งหมด</span><strong id="cartTotal">฿0</strong></div></div></aside>
+    <div class="checkout-breadcrumb">
+        <div class="checkout-breadcrumb-inner">
+            <button class="back-btn" onclick="history.back()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                ย้อนกลับ
+            </button>
+            <span class="breadcrumb-label">
+                <a href="cart.html" style="color: var(--co-muted); text-decoration:none;">ตะกร้าสินค้า</a>
+                &nbsp;›&nbsp;
+                <span style="color:var(--co-orange); font-weight:600;">ทำการสั่งซื้อ</span>
+            </span>
+        </div>
+    </div>
+    <div class="checkout-container">
+        <div class="co-card" id="addressCard">
+            <div class="co-card-header">
+                <h2>📍 ที่อยู่ในการจัดส่ง</h2>
+                <button class="btn-edit-address" id="editAddressBtn" onclick="openAddrListModal()">เปลี่ยน / เพิ่มที่อยู่</button>
+            </div>
+            <div class="co-card-body" id="addressBody">
+                <div class="address-empty">กำลังโหลดข้อมูล...</div>
+            </div>
+        </div>
+        <div class="co-card">
+            <div class="co-card-header">
+                <h2>🛍️ สั่งซื้อสินค้าแล้ว</h2>
+            </div>
+            <div class="items-header">
+                <div>สินค้า</div>
+                <div>ราคาต่อชิ้น</div>
+                <div>จำนวน</div>
+                <div>ราคารวม</div>
+            </div>
+            <div id="checkoutItemsList">
+                <div style="padding:40px; text-align:center; color: #757575;">กำลังโหลดสินค้า...</div>
+            </div>
+            <div class="inline-shipping">
+                <div class="inline-shipping-label">ตัวเลือกการจัดส่ง</div>
+                <div class="inline-shipping-options">
+                    <label class="inline-ship-opt selected" id="s-pickup">
+                        <input type="radio" name="shipping" value="0" checked onchange="updateShipping(this)">
+                        <span>🎯 รับที่ร้าน Paomobile</span>
+                        <span class="ship-free">ฟรี</span>
+                    </label>
+                    <label class="inline-ship-opt" id="s-delivery">
+                        <input type="radio" name="shipping" value="50" onchange="updateShipping(this)">
+                        <span>🚚 ส่งพัสดุ (Kerry / Flash)</span>
+                        <span class="ship-cost">฿50</span>
+                    </label>
+                </div>
+                <div class="section-total-row">
+                    คำสั่งซื้อทั้งหมด (<span id="itemCount">0</span> ชิ้น):
+                    &nbsp;<strong id="sectionTotal" style="color: var(--co-orange); font-size: 1.2rem;">฿0</strong>
+                </div>
+            </div>
+            <div class="note-section">
+                <label class="note-label">หมายเหตุ (ถ้ามี)</label>
+                <input type="text" id="orderNote" class="note-input-inline" placeholder="(ไม่บังคับ) ฝากข้อความถึงผู้ขาย" />
+            </div>
+        </div>
+        <div class="co-card">
+            <div class="co-card-header">
+                <h2>💳 วิธีการชำระเงิน</h2>
+            </div>
+            <div class="co-card-body">
+                <div class="payment-tabs">
+                    <button class="pay-tab active" data-method="transfer" onclick="selectPayment(this, 'โอนเงินผ่านธนาคาร')">โอนเงินผ่านธนาคาร</button>
+                    <button class="pay-tab" data-method="promptpay" onclick="selectPayment(this, 'QR พร้อมเพย์')">QR พร้อมเพย์</button>
+                    <button class="pay-tab" data-method="cod" onclick="selectPayment(this, 'เก็บเงินปลายทาง')">เก็บเงินปลายทาง</button>
+                    <button class="pay-tab" data-method="line" onclick="selectPayment(this, 'ติดต่อผู้ขาย LINE')">ติดต่อผู้ขาย LINE</button>
+                </div>
+                <div class="pay-detail" id="detail-transfer">
+                    <div class="shopee-pay-info" style="margin-bottom: 20px; background: #fafafa; padding: 16px 32px;">
+                        <label class="shopee-sub-option" style="display: flex; align-items: center; gap: 16px; width: 100%;">
+                            <input type="radio" checked readonly style="accent-color: #ee4d2d; transform: scale(1.2);">
+                            <div class="sub-icon-box" style="width: 38px; height: 38px; border: 1px solid #e8e8e8; border-radius: 2px; display: flex; align-items: center; justify-content: center; background: #fff; color: #16a34a; font-weight: bold; font-family: sans-serif;">
+                                K
+                            </div>
+                            <span class="sub-text" style="font-size: 0.95rem; color: var(--co-text);">โอนเงิน (ธ.กสิกรไทย)</span>
+                        </label>
+                    </div>
+                    <div class="bank-info-card" style="padding: 24px 32px; background: #fafafa; border: 1px solid var(--co-border); border-radius: 4px; display: flex; align-items: center; gap: 20px;">
+                        <div class="bank-logo-kbank" style="font-size: 1.8rem; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; background: #16a34a; border-radius: 50%; color: white; font-weight: bold; flex-shrink: 0;">K</div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <div class="bank-name" style="font-weight: 600; font-size: 1rem; color: var(--co-text); margin-bottom: 0;">ธนาคารกสิกรไทย (KBank)</div>
+                            <div class="bank-account" style="font-size: 0.95rem; color: var(--co-text); margin-bottom: 0;">เลขบัญชี: <strong>092-3-99772-5</strong></div>
+                            <div class="bank-owner" style="font-size: 0.9rem; color: var(--co-muted);">ชื่อบัญชี: น.ส. ภรณ์ทิพย์ วินิจ</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pay-detail hidden" id="detail-promptpay">
+                    <div class="shopee-pay-info" style="margin-bottom: 20px; background: #fafafa; padding: 16px 32px; border: 1px solid var(--co-border); border-radius: 4px;">
+                        <label class="shopee-sub-option" style="display: flex; align-items: center; gap: 16px; width: 100%;">
+                            <input type="radio" checked readonly style="accent-color: #ee4d2d; transform: scale(1.2);">
+                            <div class="sub-icon-box" style="width: 38px; height: 38px; border: 1px solid #e8e8e8; border-radius: 2px; display: flex; align-items: center; justify-content: center; background: #fff;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2b5c77" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M12 11v2M11 12h2"/></svg>
+                            </div>
+                            <span class="sub-text" style="font-size: 0.95rem; color: var(--co-text);">QR พร้อมเพย์</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="pay-detail hidden" id="detail-cod">
+                    <div class="shopee-pay-info">
+                        <div class="shopee-pay-info-label">เก็บเงินปลายทาง</div>
+                    </div>
+                </div>
+                <div class="pay-detail hidden" id="detail-line">
+                    <div class="shopee-pay-info">
+                        <div class="shopee-pay-info-label">ติดต่อส่งสลิปโอนเงินทาง LINE</div>
+                        <div class="shopee-pay-info-value"><a href="https://line.me/R/ti/p/@pao789" target="_blank" style="color:var(--co-orange);">LINE: @pao789</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="co-card co-summary-card">
+            <div class="summary-grid">
+                <div class="summary-left">
+                    <p class="terms-text" style="font-size: 0.85rem; color: var(--co-muted);">
+                        โดยการคลิก &quot;สั่งสินค้า&quot; ฉันได้อ่านและยอมรับเงื่อนไขการให้บริการ Paomobile
+                        <a href="#" style="color:var(--co-orange); text-decoration:none;">นโยบายการคืนเงินและคืนสินค้า</a>
+                    </p>
+                </div>
+                <div class="summary-right">
+                    <div class="summary-rows">
+                        <div class="summary-row">
+                            <span>รวมการสั่งซื้อ</span>
+                            <span id="s-subtotal">฿0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>การจัดส่ง</span>
+                            <span id="s-shipping">฿0</span>
+                        </div>
+                        <div class="summary-row total-row">
+                            <span>ยอดชำระเงินทั้งหมด</span>
+                            <span id="s-total" class="big-total">฿0</span>
+                        </div>
+                    </div>
+                    <button class="btn-confirm-order" id="confirmOrderBtn" onclick="confirmOrder()" style="height: 48px; min-width: 200px; padding: 0 16px; background: #ee4d2d; color: #fff; border: none; font-size: 1.1rem; border-radius: 2px;">
+                        สั่งสินค้า
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="addr-modal-overlay" id="addrModal">
+        <div class="addr-modal" id="addressListView" style="padding: 0; display: flex; flex-direction: column; min-height: 400px; max-height: 80vh;">
+            <div style="padding: 24px 24px 0 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; padding-bottom: 16px;">
+                <h3 style="margin: 0; color: #333; font-size: 1.15rem; font-weight: 500;">ที่อยู่ของฉัน</h3>
+                <button onclick="closeAddrModal()" style="background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer; line-height: 1; padding: 0;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div id="builtInAddressList" class="built-in-address-list" style="flex: 1; overflow-y: auto; padding: 0 24px;">
+            </div>
+            <div class="addr-modal-footer" style="padding: 16px 24px; border-top: 1px solid #f0f0f0; margin-top: 0; display: flex; justify-content: flex-end;">
+                <button class="btn-save-addr" onclick="openAddrFormModal(-1)" style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; padding: 10px 24px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    เพิ่มที่อยู่ใหม่
+                </button>
+            </div>
+        </div>
+        <div class="addr-modal" id="addressFormView" style="padding: 0; display: none; flex-direction: column; max-height: 88vh;">
+            <div style="padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;">
+                <h3 style="margin: 0; color: #333; font-size: 1.15rem; font-weight: 500;" id="addrFormTitle">ที่อยู่ใหม่</h3>
+                <button onclick="closeAddrFormModal()" style="background: none; border: none; color: #999; cursor: pointer; padding: 0;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div style="flex: 1; overflow-y: auto; padding: 20px 24px;">
+                <div class="shopee-input-row" style="margin-bottom: 14px; display: flex; gap: 14px;">
+                    <fieldset style="border: 1px solid #e2e8f0; border-radius: 2px; padding: 0; margin: 0; background: #fff; flex: 1; min-height: 48px; position: relative;">
+                        <legend style="color: #aaa; font-size: 0.75rem; padding: 0 4px; margin-left: 10px;">ชื่อ-นามสกุล</legend>
+                        <input type="text" id="f-name" placeholder="" style="border: none; padding: 0 14px 12px 14px; outline: none; font-family: inherit; font-size: 0.95rem; width: 100%; box-sizing: border-box; background: transparent;" />
+                    </fieldset>
+                    <fieldset style="border: 1px solid #e2e8f0; border-radius: 2px; padding: 0; margin: 0; background: #fff; flex: 1; min-height: 48px; position: relative;">
+                        <legend style="color: #aaa; font-size: 0.75rem; padding: 0 4px; margin-left: 10px;">หมายเลขโทรศัพท์</legend>
+                        <input type="tel" id="f-phone" placeholder="" style="border: none; padding: 0 14px 12px 14px; outline: none; font-family: inherit; font-size: 0.95rem; width: 100%; box-sizing: border-box; background: transparent;" />
+                    </fieldset>
+                </div>
+                <div style="position: relative; margin-bottom: 14px;">
+                    <fieldset style="border: 1px solid #e2e8f0; border-radius: 2px; padding: 0; margin: 0; background: #fff; min-height: 48px; position: relative;">
+                        <legend style="color: #aaa; font-size: 0.75rem; padding: 0 4px; margin-left: 10px;">จังหวัด, เขต/อำเภอ, แขวง/ตำบล, รหัสไปรษณีย์</legend>
+                        <div id="locationPickerTrigger" onclick="toggleLocationPicker()" style="display: flex; align-items: center; cursor: pointer; background: transparent; padding: 4px 14px 12px 14px; gap: 10px; width: 100%; box-sizing: border-box;">
+                            <span id="locationPickerText" style="flex:1; color:#aaa; font-size:0.95rem; font-family:inherit; min-height: 22px;"></span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2" style="flex-shrink:0;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                    </fieldset>
+                    <div id="locationPickerPanel" style="display:none; border: 1px solid #e2e8f0; border-top: none; background: #fff; border-radius: 0 0 2px 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; position: absolute; width: 100%; top: 100%; left: 0;">
+                        <div style="padding: 10px 14px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <input type="text" id="locationSearchInput" placeholder="ค้นหา..." oninput="filterLocationList()" style="flex:1; border:none; outline:none; font-size:0.9rem; font-family:inherit; color:#333;" autocomplete="off" />
+                        </div>
+                        <div style="display: flex; border-bottom: 2px solid #f0f0f0;">
+                            <button class="loc-tab active" id="tab-province" onclick="switchLocTab('province')" style="flex:1; padding:10px 4px; border:none; background:none; font-size:0.85rem; font-family:inherit; cursor:pointer; color:#ee4d2d; border-bottom: 2px solid #ee4d2d; margin-bottom:-2px; font-weight:500;">จังหวัด</button>
+                            <button class="loc-tab" id="tab-amphoe" onclick="switchLocTab('amphoe')" style="flex:1; padding:10px 4px; border:none; background:none; font-size:0.85rem; font-family:inherit; cursor:pointer; color:#757575;" disabled>เขต/อำเภอ</button>
+                            <button class="loc-tab" id="tab-district" onclick="switchLocTab('district')" style="flex:1; padding:10px 4px; border:none; background:none; font-size:0.85rem; font-family:inherit; cursor:pointer; color:#757575;" disabled>แขวง/ตำบล</button>
+                            <button class="loc-tab" id="tab-zip" onclick="switchLocTab('zip')" style="flex:1; padding:10px 4px; border:none; background:none; font-size:0.85rem; font-family:inherit; cursor:pointer; color:#757575;" disabled>รหัสไปรษณีย์</button>
+                        </div>
+                        <div id="locationList" style="max-height: 220px; overflow-y: auto; font-size:0.95rem;">
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="f-province" />
+                <input type="hidden" id="f-amphoe" />
+                <input type="hidden" id="f-district" />
+                <input type="hidden" id="f-zip" />
+                <div style="margin-bottom: 20px; position: relative;">
+                    <fieldset style="border: 1px solid #e2e8f0; border-radius: 2px; padding: 0; margin: 0; background: #fff;">
+                        <legend style="color: #aaa; font-size: 0.75rem; padding: 0 4px; margin-left: 10px;">บ้านเลขที่, ซอย, หมู่, ถนน, แขวง/ตำบล</legend>
+                        <textarea id="f-addr1" style="width: 100%; box-sizing: border-box; resize: none; min-height: 60px; font-family: inherit; font-size: 0.95rem; color: #222; border: none; outline: none; padding: 4px 14px 12px 14px; background: transparent;" autocomplete="off"></textarea>
+                    </fieldset>
+                    <div id="addrAutocomplete" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: #fff; border: 1px solid #e2e8f0; border-top: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 99; max-height: 250px; overflow-y: auto;">
+                    </div>
+                </div>
+                <div style="font-size: 0.9rem; color: #555; margin-bottom: 10px;">ติดป้ายเป็น:</div>
+                <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                    <button type="button" class="tag-btn-new" onclick="selectTagNew(this, 'บ้าน')" style="padding: 6px 20px; border: 1px solid #ee4d2d; background: #fff; color: #ee4d2d; border-radius: 2px; cursor: pointer; font-family: inherit; font-size: 0.95rem;">บ้าน</button>
+                    <button type="button" class="tag-btn-new" onclick="selectTagNew(this, 'ที่ทำงาน')" style="padding: 6px 20px; border: 1px solid #e2e8f0; background: #fff; color: #555; border-radius: 2px; cursor: pointer; font-family: inherit; font-size: 0.95rem;">ที่ทำงาน</button>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #757575;">
+                        <input type="checkbox" id="f-isDefault" style="width: 18px; height: 18px; accent-color: #ee4d2d;" />
+                        เลือกเป็นที่อยู่ตั้งต้น
+                    </label>
+                </div>
+            </div>
+            <div style="padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+                <button type="button" id="btnDeleteAddr" onclick="deleteCurrentAddress()" style="border: none; background: none; color: #ff4d4f; font-weight: 500; font-size: 0.95rem; cursor: pointer; font-family: inherit; display: none;">ลบที่อยู่นี้</button>
+                <div style="display: flex; gap: 12px; margin-left: auto;">
+                    <button onclick="closeAddrFormModal()" style="border: none; background: none; color: #555; font-weight: 500; font-size: 1rem; cursor: pointer; font-family: inherit;">ยกเลิก</button>
+                    <button class="btn-save-addr" onclick="saveAddress()" style="min-width: 140px;">ยืนยัน</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="addr-modal-overlay" id="customConfirmModalOverlay" style="z-index: 1400;">
+        <div style="background: white; width: 90%; max-width: 320px; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.2);">
+            <div style="padding: 24px 20px; text-align: center; font-size: 1rem; color: #333; line-height: 1.5;">
+                คุณต้องการลบที่อยู่นี้ใช่หรือไม่?
+            </div>
+            <div style="display: flex; border-top: 1px solid #ebebeb;">
+                <button type="button" onclick="closeConfirmDelete()" style="flex: 1; padding: 14px 0; background: none; border: none; border-right: 1px solid #ebebeb; color: #555; cursor: pointer; font-size: 1rem; font-weight: 500; font-family: inherit;">ยกเลิก</button>
+                <button type="button" onclick="executeDeleteAddress()" style="flex: 1; padding: 14px 0; background: none; border: none; color: #ee4d2d; cursor: pointer; font-size: 1rem; font-weight: 500; font-family: inherit;">ลบ</button>
+            </div>
+        </div>
+    </div>
+    <div class="addr-modal-overlay" id="fullMapModalOverlay" style="z-index: 1300;">
+        <div class="addr-modal" style="width: 100%; max-width: 700px; height: 90vh; max-height: 800px; padding: 0; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="padding: 16px 24px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 16px;">
+                <svg onclick="closeFullMap()" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2" style="cursor:pointer"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                <div style="overflow: hidden;">
+                    <div style="font-size: 1.1rem; font-weight: 500; color: #333;">แก้ไขที่อยู่</div>
+                    <div id="mapModalAddressText" style="font-size: 0.85rem; color: #757575; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">คุณยังไม่ได้เลือกแผนที่</div>
+                </div>
+            </div>
+            <div id="interactiveMap" style="flex: 1; background: #e5e5e5; position: relative; overflow: hidden;">
+                <div id="fullMapGoogle" style="width:100%; height:100%; position:absolute; inset:0; z-index:1;"></div>
+                <div style="position: absolute; top:50%; left:50%; transform:translate(-50%,-100%); z-index:10; display:flex; flex-direction:column; align-items:center; pointer-events: none;">
+                    <div style="background:#ee4d2d; color:white; padding:8px 12px; border-radius:4px; font-size:0.85rem; font-weight:500; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.2); white-space:nowrap; position:relative; margin-bottom:-1px;">
+                        ทีอยู่ในการจัดส่ง<br><span style="font-size:0.75rem; font-weight:400;">กรุณายืนยันตำแหน่งของคุณ</span>
+                        <div style="position:absolute; bottom:-6px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:6px solid #ee4d2d;"></div>
+                    </div>
+                    <div style="width:24px; height:34px; margin-top:6px;">
+                        <svg viewBox="0 0 24 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 0C5.372 0 0 5.372 0 12C0 21 12 34 12 34C12 34 24 21 24 12C24 5.372 18.628 0 12 0ZM12 16C9.791 16 8 14.209 8 12C8 9.791 9.791 8 12 8C14.209 8 16 9.791 16 12C16 14.209 14.209 16 12 16Z" fill="#ee4d2d"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:16px 24px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; background:white;">
+                <div style="color: #666; font-size: 0.85rem; line-height: 1.4;">
+                    *สามารถเลื่อนและซูมแผนที่ด้านบน<br>เพื่อตรวจสอบตำแหน่งที่แน่ชัดได้
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <button onclick="closeFullMap()" style="background:none; border:none; font-size:1rem; color:#555; cursor:pointer; font-weight:500;">ยกเลิก</button>
+                    <button onclick="confirmMapLocation()" class="btn-save-addr" style="min-width:140px; padding:12px 24px;">ยืนยันตำแหน่ง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=places&callback=initGoogleMaps" async defer></script>
+    <script src="thai-address-data.js"></script>
+    <script src="checkout.js"></script>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <img src="logo.png" alt="Paomobile" class="logo-img" />
+                        Pao<span class="accent">mobile</span>
+                    </div>
+                    <p>ร้านซ่อมมือถือครบวงจร รับซ่อมทุกยี่ห้อ ทุกอาการ ด้วยอะไหล่แท้ รับประกันงานซ่อมทุกชิ้น</p>
+                    <div class="footer-social">
+                        <a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank" aria-label="Facebook">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                            </svg>
+                        </a>
+                        <a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr" target="_blank" aria-label="Instagram">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                            </svg>
+                        </a>
+                        <a href="https://line.me/R/ti/p/@pao789" target="_blank" aria-label="LINE">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19.365 9.864c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-2.05v.744h2.05c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-3.426a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h3.426zm-4.91 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108h-1.272a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zm-2.594 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H10.59a.106.106 0 01-.086-.044l-1.99-2.696v2.632c0 .06-.048.108-.108.108H7.134a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272c.034 0 .066.016.086.044l1.99 2.694V9.972c0-.06.048-.108.108-.108h1.272zm-5.648 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H4.941a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zM24 10.62C24 5.076 18.614 .573 12 .573S0 5.076 0 10.62c0 4.962 4.402 9.122 10.348 9.908.403.087.952.266 1.09.61.126.314.082.804.04 1.12l-.164 1.022c-.054.314-.248 1.228 1.076.67 1.324-.56 7.146-4.208 9.752-7.204C23.464 15.254 24 13.046 24 10.62z" />
+                            </svg>
+                        </a>
+                        <a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP" target="_blank" aria-label="TikTok">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+                            </svg>
+                        </a>
+                        <a href="https://s.shopee.co.th/qejQcQeWI" target="_blank" aria-label="Shopee">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 1a4 4 0 0 0-4 4h1.5a2.5 2.5 0 0 1 5 0H16a4 4 0 0 0-4-4z" />
+                                <path d="M4.5 6A1.5 1.5 0 0 0 3 7.5v13A1.5 1.5 0 0 0 4.5 22h15a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 19.5 6h-15zm7.5 4.5c-1.5 0-2.7.5-3.4 1.3-.5.5-.6 1.1-.6 1.5 0 .7.4 1.2.9 1.5.5.3 1.1.4 1.7.5.6.1 1.2.2 1.6.4.4.2.5.4.5.7 0 .3-.1.5-.4.7-.3.2-.8.4-1.5.4-.8 0-1.4-.2-1.8-.5-.3-.2-.5-.5-.6-.9H7.4c.1.8.5 1.5 1.1 1.9.7.5 1.7.8 2.8.8 1.5 0 2.7-.4 3.4-1.2.5-.5.7-1.2.7-1.7 0-.7-.3-1.2-.9-1.6-.5-.3-1.1-.5-1.7-.6-.6-.1-1.2-.2-1.6-.4-.4-.2-.5-.4-.5-.6 0-.3.2-.5.5-.7.3-.2.8-.3 1.3-.3.7 0 1.2.2 1.5.4.2.2.4.4.5.7h1.5c-.1-.7-.4-1.3-1-1.7-.6-.5-1.5-.8-2.5-.8z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>บริการ</h4>
+                    <a href="select-screen-repair.html">ซ่อมจอ / เปลี่ยนจอ</a>
+                    <a href="select-battery.html">เปลี่ยนแบตเตอรี่</a>
+                    <a href="select-board-repair.html">ซ่อมบอร์ด</a>
+                    <a href="select-speaker-repair.html">ซ่อมลำโพง / ไมค์</a>
+                </div>
+                <div class="footer-col">
+                    <h4>บริการเสริม</h4>
+                    <a href="#">ติดฟิล์มกระจก</a>
+                    <a href="#">ล้างเครื่อง / ลงโปรแกรม</a>
+                    <a href="#">กู้ข้อมูล</a>
+                    <a href="#">เคส / อุปกรณ์เสริม</a>
+                </div>
+                <div class="footer-col">
+                    <h4>ติดต่อเรา</h4>
+                    <a href="index.html#branches">📍 6 สาขาทั่วชลบุรี</a>
+                    <a href="https://line.me/R/ti/p/@pao789">💬 LINE: @pao789</a>
+                    <a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank">📘 Facebook</a>
+                    <a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr" target="_blank">📷 Instagram</a>
+                    <a href="accessory.html">🎧 Accessory</a>
+                    <a href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose" aria-label="Close Search">&#x2715;</button>
+        <div class="search-modal-container">
+            <div class="search-hero-input"><span class="search-hero-icon">&#x1F50D;</span><input type="text" id="searchInput" placeholder="&#x0E04;&#x0E49;&#x0E19;&#x0E2B;&#x0E32; &#x0E40;&#x0E04;&#x0E23;&#x0E37;&#x0E48;&#x0E2D;&#x0E07;&#x0E21;&#x0E37;&#x0E2D; 1, &#x0E40;&#x0E04;&#x0E23;&#x0E37;&#x0E48;&#x0E2D;&#x0E07;&#x0E21;&#x0E37;&#x0E2D; 2, &#x0E23;&#x0E38;&#x0E48;&#x0E19;&#x0E21;&#x0E37;&#x0E2D;&#x0E16;&#x0E37;&#x0E2D;..." autocomplete="off"><button class="search-clear-btn" id="searchClear" aria-label="Clear">&#x2715;</button></div>
+            <div class="search-results-area" id="searchResults"></div>
+        </div>
+    </div>
+    <script src="search.js"></script>
+    <script src="auth.js"></script>
+</body>
+</html>

@@ -109,8 +109,8 @@
         console.log("[Auth] Logging out...");
         localStorage.setItem('pao_logout_pending', 'true');
         localStorage.removeItem('paomobile_user');
-        localStorage.removeItem('pao_cart');
-        localStorage.removeItem('pao_cart_owner');
+        // Scoped cart data and owners remain preserved for this account
+
         window.location.href = 'login.html';
     }
 

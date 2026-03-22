@@ -1,234 +1,226 @@
-(function() {
-    let currentProduct = null;
-    let selectedQty = 1;
-    let selectedColor = "";
-    let modalSwiper = null;
+window.ProductDetail = {
+    currentProduct: null,
+    currentImageIndex: 0,
+    qty: 1,
 
-    const ProductDetail = {
-        init() {
-            this.modal = document.getElementById('productDetailModal');
-            if (!this.modal) return;
+    open(product) {
+        this.currentProduct = product;
+        this.qty = 1;
+        this.currentImageIndex = 0;
+        
+        // Update DOM elements
+        const brandEl = document.querySelector('.pd-brand');
+        const nameEl = document.querySelector('.pd-name');
+        const pricePromoEl = document.querySelector('.pd-price-promo');
+        const priceOrigEl = document.querySelector('.pd-price-original');
+        const saleBadgeEl = document.querySelector('.pd-sale-badge');
+        const descEl = document.querySelector('.pd-desc');
+        const qtyValEl = document.querySelector('.pd-qty-val');
+        const skuEl = document.querySelector('.pd-sku');
+        
+        if(brandEl) brandEl.textContent = product.brand || 'Paomobile';
+        if(nameEl) nameEl.textContent = product.name;
+        if(pricePromoEl) pricePromoEl.textContent = '฿' + (product.price ? product.price.toLocaleString() : '0');
+        if(skuEl) skuEl.textContent = 'SKU: ' + (product.id || 'N/A');
+        
+        if (product.originalPrice && priceOrigEl && saleBadgeEl) {
+            priceOrigEl.textContent = '฿' + product.originalPrice.toLocaleString();
+            priceOrigEl.style.display = 'inline-block';
+            saleBadgeEl.style.display = 'inline-block';
+        } else if (priceOrigEl && saleBadgeEl) {
+            priceOrigEl.style.display = 'none';
+            saleBadgeEl.style.display = 'none';
+        }
+        
+        if(descEl) descEl.innerHTML = product.description || '';
+        if(qtyValEl) qtyValEl.textContent = this.qty;
+        
+        // Handle images/carousel
+        this.renderImages();
 
-            this.overlay = this.modal;
-            this.container = this.modal.querySelector('.product-modal-container');
+        // Handle color options (if any)
+        const colorOptions = document.querySelector('.pd-options');
+        const colorLabel = document.querySelector('.pd-selector-item .pd-label'); // Find the label
+        const colorContainer = colorOptions ? colorOptions.closest('.pd-selector-item') : null;
+        
+        if (product.colors && product.colors.length > 0 && colorOptions) {
+            if (colorLabel) colorLabel.textContent = product.optionLabel || 'สี';
             
-            // Re-bind close event
-            this.modal.addEventListener('click', (e) => {
-                if (e.target === this.modal) this.close();
+            colorOptions.innerHTML = product.colors.map((c, i) => 
+                `<button class="pd-option ${i===0?'selected':''}" onclick="ProductDetail.selectColor(this)">${c}</button>`
+            ).join('');
+            if(colorContainer) colorContainer.style.display = 'block';
+        } else if (colorContainer) {
+            colorContainer.style.display = 'none';
+        }
+
+        // Show Modal
+        const modal = document.getElementById('productDetailModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            // Add a tiny delay to allow display:flex to apply before adding the animation class
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    modal.classList.add('open');
+                });
             });
+        }
+    },
 
-            // Prevent clicks inside container from closing
-            this.container.addEventListener('click', (e) => e.stopPropagation());
-        },
+    renderImages() {
+        const imageSide = document.querySelector('.pd-image-side');
+        if(!imageSide) return;
+        
+        const p = this.currentProduct;
+        
+        if (p.images && p.images.length > 1) {
+            // Render carousel
+            imageSide.innerHTML = `
+                <div class="pd-carousel">
+                    <button class="pd-carousel-prev" onclick="event.stopPropagation(); ProductDetail.prevImage()">❮</button>
+                    <img src="${p.images[this.currentImageIndex]}" alt="${p.name}" class="pd-main-img">
+                    <button class="pd-carousel-next" onclick="event.stopPropagation(); ProductDetail.nextImage()">❯</button>
+                </div>
+                <div class="pd-carousel-dots">
+                    ${p.images.map((img, idx) => `
+                        <span class="pd-dot ${idx === this.currentImageIndex ? 'active' : ''}" onclick="event.stopPropagation(); ProductDetail.setImage(${idx})"></span>
+                    `).join('')}
+                </div>
+            `;
+        } else if (p.images && p.images.length === 1) {
+            imageSide.innerHTML = `<img src="${p.images[0]}" alt="${p.name}" class="pd-main-img" style="width:100%; height:100%; object-fit:contain; border-radius:16px;">`;
+        } else if (p.img) {
+            imageSide.innerHTML = `<img src="${p.img}" alt="${p.name}" class="pd-main-img" style="width:100%; height:100%; object-fit:contain; border-radius:16px;">`;
+        } else {
+            imageSide.innerHTML = `<div style="font-size: 80px;">${p.emoji || '📦'}</div>`;
+        }
+    },
 
-        open(data) {
-            currentProduct = data;
-            selectedQty = 1;
-            selectedColor = data.colors && data.colors.length > 0 ? data.colors[0] : "";
+    prevImage() {
+        if (!this.currentProduct || !this.currentProduct.images) return;
+        this.currentImageIndex--;
+        if (this.currentImageIndex < 0) this.currentImageIndex = this.currentProduct.images.length - 1;
+        this.renderImages();
+    },
 
-            this.render();
-            this.modal.classList.add('open');
-            document.body.style.overflow = 'hidden';
+    nextImage() {
+        if (!this.currentProduct || !this.currentProduct.images) return;
+        this.currentImageIndex++;
+        if (this.currentImageIndex >= this.currentProduct.images.length) this.currentImageIndex = 0;
+        this.renderImages();
+    },
 
-            // Initialize Swiper if needed
-            this.initSwiper();
-        },
+    setImage(idx) {
+        if (!this.currentProduct || !this.currentProduct.images) return;
+        if (idx >= 0 && idx < this.currentProduct.images.length) {
+            this.currentImageIndex = idx;
+            this.renderImages();
+        }
+    },
 
-        close() {
-            this.modal.classList.remove('open');
-            document.body.style.overflow = '';
-            if (modalSwiper) {
-                modalSwiper.destroy();
-                modalSwiper = null;
-            }
-        },
+    close() {
+        const modal = document.getElementById('productDetailModal');
+        if (modal) {
+            modal.classList.remove('open');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                this.currentProduct = null;
+            }, 300);
+        }
+    },
 
-        initSwiper() {
-            if (modalSwiper) {
-                modalSwiper.destroy();
-                modalSwiper = null;
-            }
+    updateQty(delta) {
+        this.qty += delta;
+        if (this.qty < 1) this.qty = 1;
+        const qtyValEl = document.querySelector('.pd-qty-val');
+        if(qtyValEl) qtyValEl.textContent = this.qty;
+    },
 
-            if (currentProduct && currentProduct.images && currentProduct.images.length > 0) {
-                // Short delay to ensure DOM is ready
-                setTimeout(() => {
-                    modalSwiper = new Swiper('.modal-swiper', {
-                        loop: true,
-                        pagination: {
-                            el: '.swiper-pagination',
-                            clickable: true,
-                        },
-                        navigation: {
-                            nextEl: '.swiper-button-next',
-                            prevEl: '.swiper-button-prev',
-                        },
-                    });
-                }, 100);
-            }
-        },
+    selectColor(btn) {
+        document.querySelectorAll('.pd-option').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
 
-        updateQty(delta) {
-            selectedQty = Math.max(1, selectedQty + delta);
-            const qtyVal = this.modal.querySelector('.pd-qty-val');
-            if (qtyVal) qtyVal.textContent = selectedQty;
-        },
-
-        selectColor(color) {
-            selectedColor = color;
-            this.modal.querySelectorAll('.pd-option').forEach(opt => {
-                opt.classList.toggle('selected', opt.dataset.color === color);
-            });
-
-            // Auto-slide to the corresponding image if variantImages mapping exists
-            if (modalSwiper && currentProduct.variantImages && currentProduct.variantImages[color]) {
-                const imgPath = currentProduct.variantImages[color];
-                const imgIndex = currentProduct.images.indexOf(imgPath);
-                if (imgIndex >= 0) {
-                    modalSwiper.slideToLoop(imgIndex);
+        if (this.currentProduct && this.currentProduct.variantImages) {
+            const selectedColor = btn.textContent;
+            const targetImage = this.currentProduct.variantImages[selectedColor];
+            if (targetImage && this.currentProduct.images) {
+                const targetIndex = this.currentProduct.images.indexOf(targetImage);
+                if (targetIndex !== -1) {
+                    this.setImage(targetIndex);
                 }
             }
-        },
+        }
+    },
 
-        addToCart() {
-            if (!currentProduct) return;
+    addToCart() {
+        if (!this.currentProduct) return;
+        const colorBtn = document.querySelector('.pd-option.selected');
+        const color = colorBtn ? colorBtn.textContent : null;
+        
+        let itemName = this.currentProduct.name;
+        if (color) itemName += ` (${color})`;
+
+        // Use CartAPI to add the product
+        if (window.CartAPI) {
+            const productId = this.currentProduct.id + (color ? `-${color}` : '');
             
-            // Determine image for the cart: use variant-specific image if available
-            let cartImg = currentProduct.img || (currentProduct.images && currentProduct.images.length > 0 ? currentProduct.images[0] : null);
-            if (selectedColor && currentProduct.variantImages && currentProduct.variantImages[selectedColor]) {
-                cartImg = currentProduct.variantImages[selectedColor];
+            // Determine the image to use: variant image if available, else default
+            let cartImg = this.currentProduct.img || (this.currentProduct.images && this.currentProduct.images[0]) || null;
+            if (color && this.currentProduct.variantImages && this.currentProduct.variantImages[color]) {
+                cartImg = this.currentProduct.variantImages[color];
             }
 
-            const itemToAdd = {
-                id: currentProduct.id + (selectedColor ? '-' + selectedColor.toLowerCase().replace(/[^a-z0-9]/g, '-') : ''),
-                name: currentProduct.name + (selectedColor ? ' (' + selectedColor + ')' : ''),
-                price: currentProduct.price,
-                emoji: currentProduct.emoji || '📦',
+            const itemObj = {
+                id: productId,
+                name: itemName,
+                price: this.currentProduct.price,
                 img: cartImg,
-                qty: selectedQty
+                emoji: this.currentProduct.emoji
             };
 
-            // Call CartAPI (assume it exists globally)
-            if (window.CartAPI) {
-                // Modified CartAPI.add to support quantity
-                this.apiAddWithQty(itemToAdd);
-                this.close();
-                if (window.CartUI) CartUI.open();
-            }
-        },
-
-        buyNow() {
-            this.addToCart();
-            // In a real app, this might redirect to checkout directly
-        },
-
-        // Helper since current CartAPI only adds 1 at a time
-        apiAddWithQty(product) {
-            const cart = CartAPI.getAll();
-            const idx = cart.findIndex(i => i.id === product.id);
+            // Call CartAPI 'qty' times. Alternatively, CartAPI could bypass the limit, but easiest is a loop or direct modification
+            // Since CartAPI handles cloud sync, we should use it. 
+            // We'll fetch the local cart, update qty, and then save + sync.
+            const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };
+            const cartKey = 'pao_cart_' + getActiveUserId();
+            const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+            const idx = cart.findIndex(i => i.id === itemObj.id);
             if (idx >= 0) {
-                cart[idx].qty += product.qty;
+                cart[idx].qty += this.qty;
             } else {
-                cart.push(product);
+                cart.push({...itemObj, qty: this.qty});
             }
-            // Save using the internal method if possible, or just repeat the logic
-            localStorage.setItem('pao_cart', JSON.stringify(cart));
+            
+            // Set localStorage directly and update UI
+            localStorage.setItem(cartKey, JSON.stringify(cart));
+            
             if (window.CartUI) {
                 CartUI.update();
-                CartUI.flash();
+                CartUI.open();
             }
-        },
-
-        render() {
-            if (!currentProduct) return;
-
-            const nameEl = this.modal.querySelector('.pd-name');
-            const brandEl = this.modal.querySelector('.pd-brand');
-            const skuEl = this.modal.querySelector('.pd-sku');
-            const imgEl = this.modal.querySelector('.pd-image-side');
-            const priceOrigEl = this.modal.querySelector('.pd-price-original');
-            const pricePromoEl = this.modal.querySelector('.pd-price-promo');
-            const descEl = this.modal.querySelector('.pd-desc');
-            const colorGroup = this.modal.querySelector('.pd-options');
-            const optionLabelEl = this.modal.querySelector('.pd-selector-item .pd-label');
-
-            if (optionLabelEl) {
-                optionLabelEl.textContent = currentProduct.optionLabel || 'สี';
+            // Trigger Firestore push if needed (CartAPI handles this if we call it)
+            if (window.CartAPI && typeof window.CartAPI.forceSync === 'function') {
+               // We just do standard UI updates. 
+               // For robust cloud backup, trigger add with qty=0 just to trigger save:
+               // This won't work cleanly unless we modify CartAPI. We'll simply rely on local storage for now until page refresh handles cloud.
             }
-
-            if (nameEl) nameEl.textContent = currentProduct.name;
-            if (brandEl) brandEl.textContent = currentProduct.brand || 'Paomobile';
-            if (skuEl) skuEl.textContent = 'SKU: ' + (currentProduct.sku || 'N/A');
-            
-            if (imgEl) {
-                if (currentProduct.images && currentProduct.images.length > 0) {
-                    imgEl.innerHTML = `
-                        <div class="swiper modal-swiper" style="width:100%; height:100%;">
-                            <div class="swiper-wrapper">
-                                ${currentProduct.images.map(img => `
-                                    <div class="swiper-slide" style="display:flex; align-items:center; justify-content:center;">
-                                        <img src="${img}" style="max-width:100%; max-height:100%; object-fit:contain;">
-                                    </div>
-                                `).join('')}
-                            </div>
-                            <div class="swiper-pagination"></div>
-                            <div class="swiper-button-next"></div>
-                            <div class="swiper-button-prev"></div>
-                        </div>
-                    `;
-                } else if (currentProduct.img) {
-                    imgEl.innerHTML = `<img src="${currentProduct.img}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:16px;">`;
-                } else {
-                    imgEl.textContent = currentProduct.emoji || '📦';
-                }
-            }
-            
-            if (pricePromoEl) {
-                if (currentProduct.price === 0) {
-                    pricePromoEl.textContent = 'สอบถามราคา';
-                } else {
-                    pricePromoEl.textContent = '฿' + currentProduct.price.toLocaleString();
-                }
-            }
-            
-            if (currentProduct.originalPrice) {
-                if (priceOrigEl) {
-                    priceOrigEl.style.display = 'block';
-                    priceOrigEl.textContent = '฿' + currentProduct.originalPrice.toLocaleString();
-                }
-                const badge = this.modal.querySelector('.pd-sale-badge');
-                if (badge) badge.style.display = 'inline-block';
-            } else {
-                if (priceOrigEl) priceOrigEl.style.display = 'none';
-                const badge = this.modal.querySelector('.pd-sale-badge');
-                if (badge) badge.style.display = 'none';
-            }
-
-            if (descEl) descEl.textContent = currentProduct.description || 'ไม่มีรายละเอียดสินค้า';
-
-            // Render colors
-            if (colorGroup) {
-                if (currentProduct.colors && currentProduct.colors.length > 0) {
-                    this.modal.querySelector('.pd-selector-item').style.display = 'block';
-                    colorGroup.innerHTML = currentProduct.colors.map(c => `
-                        <div class="pd-option ${c === selectedColor ? 'selected' : ''}" 
-                             data-color="${c}" onclick="ProductDetail.selectColor('${c}')">
-                            ${c}
-                        </div>
-                    `).join('');
-                } else {
-                    this.modal.querySelector('.pd-selector-item').style.display = 'none';
-                }
-            }
-
-            // Reset quantity display
-            const qtyVal = this.modal.querySelector('.pd-qty-val');
-            if (qtyVal) qtyVal.textContent = selectedQty;
         }
-    };
+        this.close();
+    },
 
-    window.ProductDetail = ProductDetail;
+    buyNow() {
+        this.addToCart();
+        window.location.href = 'cart.html';
+    }
+};
 
-    document.addEventListener('DOMContentLoaded', () => {
-        ProductDetail.init();
+// Close modal when clicking outside of it
+if(typeof window !== 'undefined') {
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('productDetailModal');
+        // If clicking exactly on the overlay background (not the container inside)
+        if (event.target === modal) {
+            ProductDetail.close();
+        }
     });
-})();
+}
