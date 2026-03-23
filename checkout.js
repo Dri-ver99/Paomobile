@@ -130,7 +130,7 @@ const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem(
 
         const getOrdersKey = () => 'pao_orders_' + getActiveUserId();
 
-        async function confirmOrder() {
+        function confirmOrder() {
             if (!savedAddress) {
                 alert('กรุณาเพิ่มหรือเลือกที่อยู่จัดส่ง');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -167,31 +167,12 @@ const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem(
             };
 
             try {
-                // Save to Firestore (Global Sync)
-                if (window.db && window.firestore) {
-                    try {
-                        const { collection, addDoc } = window.firestore;
-                        await addDoc(collection(window.db, 'orders'), {
-                            ...newOrder,
-                            customer: getActiveUserId(),
-                            customerName: savedAddress ? savedAddress.name : 'N/A',
-                            customerPhone: savedAddress ? savedAddress.phone : 'N/A',
-                            customerAddress: savedAddress ? `${savedAddress.addr1} ตำบล${savedAddress.district} อำเภอ${savedAddress.amphoe} จังหวัด${savedAddress.province} ${savedAddress.zip}` : 'N/A',
-                            createdAt: new Date().toISOString()
-                        });
-                        console.log("Order saved to Firestore successfully");
-                    } catch (fsErr) {
-                        console.error("Firestore save failed:", fsErr);
-                        // Fallback to local only if necessary, but we want sync
-                    }
-                }
-
-                // Save to User Orders (Local for current device)
+                // Save to User Orders
                 const existingOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
                 existingOrders.unshift(newOrder);
                 localStorage.setItem(getOrdersKey(), JSON.stringify(existingOrders));
 
-                // Save to Global Orders (Local for current device - legacy)
+                // Save to Global Orders (for Seller Centre)
                 try {
                     const allOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
                     allOrders.unshift({
@@ -223,7 +204,6 @@ const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem(
                 alert('เกิดข้อผิดพลาดในการบันทึกคำสั่งซื้อ กรุณาลองใหม่อีกครั้ง');
             }
         }
-        window.confirmOrder = confirmOrder;
 
         let addressLookup = {};
 

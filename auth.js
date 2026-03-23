@@ -1,93 +1,40 @@
 // auth.js - Shared authentication state script
-// Synchronizes UI across pages for logged-in users using Firebase Auth + localStorage.
+// Synchronizes UI across pages for logged-in users using localStorage.
 
 (function () {
     const AUTH_KEY = 'paomobile_user';
     const SELLER_EMAIL = 'sattawat2560@gmail.com';
 
-    // 1. Initial UI setup from local storage (Fast)
-    function initUI() {
-        updateNavForUser();
-        
-        // 2. Setup Firebase Sentry (Wait for db.js to initialize)
-        const checkFirebase = setInterval(() => {
-            if (window.firebaseAuth && window.auth) {
-                clearInterval(checkFirebase);
-                setupFirebaseObserver();
-            }
-        }, 500);
-        
-        // Kill check after 10s if Firebase doesn't load (failsafe)
-        setTimeout(() => clearInterval(checkFirebase), 10000);
-    }
-
-    function setupFirebaseObserver() {
-        const { onAuthStateChanged } = window.firebaseAuth;
-        const auth = window.auth;
-
-        console.log("[Auth] Firebase Sentry Active.");
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                console.log("[Auth] Firebase: Logged In (" + user.email + ")");
-                
-                // Fetch/Sync profile from Firestore if needed
-                let displayName = user.displayName;
-                let email = user.email || "";
-                
-                // If it's a phone number masked as email
-                if (email.endsWith('@paomobile.auth')) {
-                    email = email.split('@')[0];
-                    displayName = email;
-                }
-
-                const userData = {
-                    uid: user.uid,
-                    name: displayName || email.split('@')[0] || 'Member',
-                    email: email,
-                    photo: user.photoURL || "",
-                    isVerified: user.emailVerified || user.providerData.some(p => p.providerId === 'google.com') || email.length === 10
-                };
-
-                // Only update and refresh if the data actually changed
-                const currentLocal = localStorage.getItem(AUTH_KEY);
-                if (currentLocal !== JSON.stringify(userData)) {
-                    localStorage.setItem(AUTH_KEY, JSON.stringify(userData));
-                    updateNavForUser();
-                }
-            } else {
-                console.log("[Auth] Firebase: Logged Out");
-                if (localStorage.getItem(AUTH_KEY)) {
-                    localStorage.removeItem(AUTH_KEY);
-                    updateNavForUser();
-                }
-            }
-        });
-    }
-
     function updateNavForUser() {
         const userDataString = localStorage.getItem(AUTH_KEY);
         const mobileMenu = document.querySelector('.mobile-menu-inner');
+        const navLinks = document.getElementById('navLinks');
         
         let user;
         try {
             user = userDataString ? JSON.parse(userDataString) : null;
         } catch (e) {
+            console.error("[Auth] Session data corrupt.");
             user = null;
         }
 
-        // Only show member UI if verified (or skip verification for guests)
+        // Cleanup: remove dynamic elements if state changed
+
+
+        // Only show member UI if verified
         const isFullyLoggedIn = user && user.name && user.isVerified;
 
         if (!isFullyLoggedIn) {
-            // Cleanup: remove dynamic elements if state changed
+            console.log("[Auth] No verified session (Guest Mode).");
+            
+            // Cleanup: remove dynamic logout or greeting if present
             document.querySelectorAll('.is-logged-in, .dynamic-logout, #mobile-auth-header').forEach(el => el.remove());
             document.querySelectorAll('.account-icon-btn').forEach(el => {
                 el.setAttribute('href', 'login.html');
                 el.style.cursor = 'pointer';
             });
 
-            // Add Login link to Mobile Menu if missing
+            // Add Login link to Mobile Menu if missing for guest
             if (mobileMenu && !mobileMenu.querySelector('a[href*="login.html"]')) {
                 const loginLink = document.createElement('a');
                 loginLink.href = 'login.html';
@@ -98,17 +45,21 @@
             return;
         }
 
-        // --- Logged In UI ---
-        const firstName = user.name.split(' ')[0];
-        
+        // --- Verified User UI Injection ---
+        const firstName = (user.name.includes('@')) ? user.name.split(' ')[0] : user.name;
+        console.log("[Auth] Active Session:", firstName);
+
+        // 1. SELECTORS
         const allLinks = document.querySelectorAll('a[href*="login.html"], .account-dropdown .dropdown-item.bold, .mobile-menu a[href*="login.html"]');
         const accountIcon = document.querySelector('.account-icon-btn');
 
+        // A. Update Account Icon (Disable link redirect)
         if (accountIcon) {
             accountIcon.setAttribute('href', 'javascript:void(0)');
             accountIcon.style.cursor = 'default';
         }
 
+        // B. Update/Replace Login Links
         allLinks.forEach(el => {
             if (el.classList.contains('is-logged-in')) return;
 
@@ -120,6 +71,7 @@
                 el.innerHTML = `<span class="user-greeting">👤 ${firstName}</span>`;
                 el.classList.add('is-logged-in');
 
+                // Add Logout button if sibling doesn't exist
                 let parent = el.parentNode;
                 if (!parent.querySelector('.dynamic-logout')) {
                     const logoutBtn = document.createElement('a');
@@ -133,6 +85,7 @@
             }
         });
 
+        // C. Inject User Profile into Mobile Menu
         if (mobileMenu && !document.getElementById('mobile-auth-header')) {
             const header = document.createElement('div');
             header.id = 'mobile-auth-header';
@@ -152,9 +105,11 @@
             if (mobileLogout) mobileLogout.addEventListener('click', handleLogout);
         }
 
+        // D. Inject Seller Centre Button if authorized (Inside Dropdown)
         if (user.email === SELLER_EMAIL) {
             const dropdown = document.querySelector('.account-dropdown');
             const purchasesLink = dropdown ? dropdown.querySelector('a[href*="purchases.html"]') : null;
+            
             if (purchasesLink && !dropdown.querySelector('.seller-centre-dropdown-item')) {
                 const sellerLink = document.createElement('a');
                 sellerLink.href = 'seller-centre.html';
@@ -165,38 +120,38 @@
                 purchasesLink.after(sellerLink);
             }
         }
+
+
     }
 
-    async function handleLogout(e) {
+    function handleLogout(e) {
         if (e && typeof e.preventDefault === 'function') {
             e.preventDefault();
             e.stopPropagation();
         }
         console.log("[Auth] Logging out...");
-        
-        if (window.firebaseAuth && window.auth) {
-            try {
-                await window.firebaseAuth.signOut(window.auth);
-            } catch (err) {
-                console.error("[Auth] Firebase signOut failed:", err);
-            }
-        }
-        
-        localStorage.removeItem(AUTH_KEY);
+        localStorage.setItem('pao_logout_pending', 'true');
+        localStorage.removeItem('paomobile_user');
+        // Scoped cart data and owners remain preserved for this account
+
         window.location.href = 'login.html';
     }
 
-    // --- Boot ---
-    const observer = new MutationObserver(() => updateNavForUser());
+    // --- AGGRESSIVE DETECTION (MutationObserver) ---
+    const observer = new MutationObserver(() => {
+        updateNavForUser();
+    });
 
+    // Start watching
     window.addEventListener('load', () => {
-        initUI();
+        updateNavForUser();
         observer.observe(document.body, { childList: true, subtree: true });
     });
 
+    // Immediate check
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initUI);
+        document.addEventListener('DOMContentLoaded', updateNavForUser);
     } else {
-        initUI();
+        updateNavForUser();
     }
 })();
