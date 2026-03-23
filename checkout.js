@@ -174,15 +174,26 @@ const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem(
 
                 // Save to Global Orders (for Seller Centre)
                 try {
-                    const allOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-                    allOrders.unshift({
+                    const globalOrderData = {
                         ...newOrder,
                         customer: getActiveUserId(),
                         customerName: savedAddress ? savedAddress.name : 'N/A',
                         customerPhone: savedAddress ? savedAddress.phone : 'N/A',
-                        customerAddress: savedAddress ? `${savedAddress.addr1} ตำบล${savedAddress.district} อำเภอ${savedAddress.amphoe} จังหวัด${savedAddress.province} ${savedAddress.zip}` : 'N/A'
-                    });
+                        customerAddress: savedAddress ? `${savedAddress.addr1} ตำบล${savedAddress.district} อำเภอ${savedAddress.amphoe} จังหวัด${savedAddress.province} ${savedAddress.zip}` : 'N/A',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    // 1. Save to Local Storage (Legacy/Fallback)
+                    const allOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+                    allOrders.unshift(globalOrderData);
                     localStorage.setItem('pao_global_orders', JSON.stringify(allOrders));
+
+                    // 2. Save to Firestore (Cloud Sync)
+                    if (window.db) {
+                        db.collection('orders').doc(orderId).set(globalOrderData)
+                            .then(() => console.log("Order synced to Firestore"))
+                            .catch(err => console.error("Firestore sync failed:", err));
+                    }
                 } catch (err) { console.error("Global order sync failed:", err); }
 
                 // Clear selected items from cart
