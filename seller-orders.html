@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คำสั่งซื้อของฉัน — Seller Centre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="seller-centre.css">
+    <style>
+        .tabs-nav {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid #e8e8e8;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 16px 24px;
+            font-size: 0.95rem;
+            color: #555;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-family: inherit;
+        }
+        .tab-btn:hover { color: #ee4d2d; }
+        .tab-btn.active {
+            color: #ee4d2d;
+            border-bottom-color: #ee4d2d;
+            font-weight: 500;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { padding: 16px 10px; border-bottom: 1px solid #eee; text-align: left; }
+        th { color: #888; font-weight: 500; }
+        td { color: #333; }
+        
+        .btn-ship {
+            background:#ee4d2d; color:#fff; border:none; padding:6px 12px; border-radius:4px; font-size:0.8rem; cursor:pointer; font-family: inherit; margin-right: 6px;
+        }
+        .btn-ship:hover { background: #d73211; }
+        .btn-detail {
+            background:#fff; color:#4080ff; border:1px solid #4080ff; padding:5px 12px; border-radius:4px; font-size:0.8rem; cursor:pointer; font-family: inherit;
+        }
+        .btn-detail:hover { background: #f0f5ff; }
+    </style>
+    <style>
+        .tab-btn { position: relative; padding: 12px 20px; border: none; background: none; cursor: pointer; color: #555; }
+        .tab-btn.active { color: #ee4d2d; border-bottom: 2px solid #ee4d2d; }
+        .tab-badge {
+            position: absolute;
+            top: 2px;
+            right: 0px;
+            background: #ee4d2d;
+            color: white;
+            font-size: 0.7rem;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(238, 77, 45, 0.3);
+            border: 1px solid white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="seller-centre.html" class="sidebar-logo">
+                <img src="logo.png" alt="Paomobile">
+                <span>Seller Centre</span>
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-section">
+                <p class="menu-title">คำสั่งซื้อ</p>
+                <a href="seller-orders.html" class="menu-item active"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">สินค้า</p>
+                <a href="#" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="#" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Top Navigation -->
+    <header class="top-nav">
+        <div class="nav-left">
+            <h2>คำสั่งซื้อของฉัน</h2>
+        </div>
+        <div class="nav-right"></div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-wrapper">
+        <div class="dashboard-header">
+            <h1 style="font-size: 1.5rem; color: #333;">จัดการคำสั่งซื้อ</h1>
+        </div>
+
+        <div class="card" style="padding: 0;">
+            <div class="tabs-nav" id="orderTabs">
+                <button class="tab-btn active" data-tab="all">ทั้งหมด</button>
+                <button class="tab-btn" data-tab="unpaid">ที่ต้องชำระ <span class="tab-badge" id="badge-unpaid">0</span></button>
+                <button class="tab-btn" data-tab="toship">ที่ต้องจัดส่ง <span class="tab-badge" id="badge-toship">0</span></button>
+                <button class="tab-btn" data-tab="processed">เตรียมจัดส่งแล้ว <span class="tab-badge" id="badge-processed">0</span></button>
+                <button class="tab-btn" data-tab="receive">ที่ต้องได้รับ <span class="tab-badge" id="badge-receive">0</span></button>
+                <button class="tab-btn" data-tab="completed">สำเร็จแล้ว</button>
+                <button class="tab-btn" data-tab="cancelled">ขอยกเลิก/คืนเงิน/คืน</button>
+            </div>
+            
+            <div style="padding: 0 20px 20px 20px;">
+                <div id="full-orders-list">
+                    <!-- Orders will be injected here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+        <div style="background: #fff; width: 400px; max-width: 90%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #333;">รายละเอียดการจัดส่ง</h3>
+                <button onclick="closeOrderDetails()" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #888;">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ชื่อลูกค้า</div>
+                    <div id="modalCustomerName" style="font-size: 1rem; color: #222; font-weight: 500;">-</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">เบอร์โทรศัพท์</div>
+                    <div id="modalCustomerPhone" style="font-size: 1rem; color: #222;">-</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ที่อยู่สำหรับจัดส่ง</div>
+                    <div id="modalCustomerAddress" style="font-size: 0.95rem; color: #444; line-height: 1.5;">-</div>
+                </div>
+                
+                <!-- Shipping Input Section -->
+                <div id="shipInputSection" style="display: none; border-top: 1px dashed #eee; padding-top: 15px; margin-top: 10px;">
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">เลขพัสดุ</div>
+                        <input type="text" id="modalTrackingNum" placeholder="กรอกเลขพัสดุที่นี่" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.9rem;">
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ลิงค์เช็คพัสดุ (ถ้ามี)</div>
+                        <input type="text" id="modalTrackingLink" placeholder="เช่น https://track.thailandpost.co.th/" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.9rem;">
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 16px 20px; border-top: 1px solid #eee; text-align: right; background: #fafafa;">
+                <button id="btnShipConfirm" onclick="handleModalShip()" style="display: none; background: #ee4d2d; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 500;">แจ้งส่งพัสดุ</button>
+                <button id="btnSaveTracking" onclick="handleSaveTrackingEdit()" style="display: none; background: #2f54eb; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 500;">บันทึกการแก้ไข</button>
+                <button onclick="closeOrderDetails()" style="background: #fff; color: #555; border: 1px solid #ddd; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit;">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="seller-orders.js"></script>
+</body>
+</html>

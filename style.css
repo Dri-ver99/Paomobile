@@ -745,3 +745,22 @@
     transform: scale(1.02);
     box-shadow: var(--shadow-lg);
 }
+
+/* --- Seller Centre (Dropdown) --- */
+.seller-centre-dropdown-item {
+    color: #ee4d2d !important; /* Shopee Orange */
+    font-weight: 700 !important;
+    border-top: 1px solid #f1f5f9;
+    margin-top: 5.5px;
+    padding-top: 15px !important;
+    transition: all 0.2s ease;
+}
+
+.seller-centre-dropdown-item:hover {
+    background-color: #fff5f2 !important;
+    color: #d73211 !important;
+}
+
+.seller-centre-dropdown-item .arrow {
+    color: #ee4d2d !important;
+}

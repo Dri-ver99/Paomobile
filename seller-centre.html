@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Centre — Paomobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="seller-centre.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">
+                <img src="logo.png" alt="Paomobile">
+                <span>Seller Centre</span>
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-section">
+                <p class="menu-title">คำสั่งซื้อ</p>
+                <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">สินค้า</p>
+                <a href="#" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="#" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+            </div>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Top Navigation -->
+    <header class="top-nav">
+        <div class="nav-left">
+            <h2>ยินดีต้อนรับสู่ Seller Centre</h2>
+        </div>
+        <div class="nav-right">
+            <!-- User profile removed -->
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-wrapper">
+        <div class="dashboard-header">
+            <h1 style="font-size: 1.5rem; color: #333;">ภาพรวมระบบ</h1>
+        </div>
+
+        <div class="dashboard-content">
+            <!-- Order Stats Card -->
+            <div class="card">
+                <div class="card-title">สิ่งที่ต้องทำ</div>
+                <div class="stats-row">
+                    <div class="stat-item clickable-stat" onclick="location.href='seller-orders.html?tab=unpaid'">
+                        <span class="stat-num" id="stat-unpaid">0</span>
+                        <span class="stat-label">ที่ต้องชำระ</span>
+                    </div>
+                    <div class="stat-item clickable-stat" onclick="location.href='seller-orders.html?tab=toship'">
+                        <span class="stat-num" id="stat-to-ship">0</span>
+                        <span class="stat-label">ที่ต้องจัดส่ง</span>
+                    </div>
+                    <div class="stat-item clickable-stat" onclick="location.href='seller-orders.html?tab=processed'">
+                        <span class="stat-num" id="stat-processed">0</span>
+                        <span class="stat-label">เตรียมจัดส่งแล้ว</span>
+                    </div>
+                    <div class="stat-item clickable-stat" onclick="location.href='seller-orders.html?tab=cancelled'">
+                        <span class="stat-num" id="stat-refund">0</span>
+                        <span class="stat-label">ขอยกเลิก/คืนเงิน/คืน</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders Card -->
+            <div class="card">
+                <div class="card-title">คำสั่งซื้อล่าลุด <a href="seller-orders.html" class="card-link">ดูทั้งหมด ></a></div>
+                <div id="recent-orders-list">
+                    <!-- Dynamic Content Injected Here -->
+                </div>
+            </div>
+
+            <!-- Business Insights Card -->
+            <div class="card">
+                <div class="card-title">
+                    <span>Business Insights</span>
+                    <a href="#" class="card-link">ดูเพิ่มเติม ></a>
+                </div>
+                <p style="font-size: 0.75rem; color: #999; margin-top: -15px; margin-bottom: 20px;">ข้อมูลล่าสุดเมื่ออัปเดตอัตโนมัติ (ยอดขายรวมจากทุการสั่งซื้อ)</p>
+                <div class="insights-grid">
+                    <div class="insight-item">
+                        <span class="stat-label">ยอดขาย</span>
+                        <span class="insight-val" id="insight-sales">฿0</span>
+                        <span class="insight-trend">ทั้งหมดที่ได้รับ</span>
+                    </div>
+                    <div class="insight-item">
+                        <span class="stat-label">จำนวนผู้เข้าชม</span>
+                        <span class="insight-val">--</span>
+                    </div>
+                    <div class="insight-item">
+                        <span class="stat-label">จำนวนการคลิกสินค้า</span>
+                        <span class="insight-val">--</span>
+                    </div>
+                    <div class="insight-item">
+                        <span class="stat-label">คำสั่งซื้อ</span>
+                        <span class="insight-val" id="insight-orders">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+        <div style="background: #fff; width: 400px; max-width: 90%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #333;">รายละเอียดการจัดส่ง</h3>
+                <button onclick="closeOrderDetails()" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #888;">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ชื่อลูกค้า</div>
+                    <div id="modalCustomerName" style="font-size: 1rem; color: #222; font-weight: 500;">-</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">เบอร์โทรศัพท์</div>
+                    <div id="modalCustomerPhone" style="font-size: 1rem; color: #222;">-</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ที่อยู่สำหรับจัดส่ง</div>
+                    <div id="modalCustomerAddress" style="font-size: 0.95rem; color: #444; line-height: 1.5;">-</div>
+                </div>
+            </div>
+            <div style="padding: 16px 20px; border-top: 1px solid #eee; text-align: right; background: #fafafa;">
+                <button onclick="closeOrderDetails()" style="background: #ee4d2d; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="seller-centre.js"></script>
+</body>
+</html>
