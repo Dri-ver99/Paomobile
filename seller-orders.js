@@ -1,6 +1,5 @@
-// seller-orders.js - Logic for the Seller Orders Page
-
 let currentTab = 'all';
+let ordersData = []; // Global store for Firestore orders
 
 document.addEventListener('DOMContentLoaded', () => {
     // Check URL params for initial tab
@@ -11,8 +10,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initTabs();
-    renderOrders();
-    updateTabBadges();
+    
+    // 1. Sync from Firestore (Real-time)
+    if (window.db) {
+        console.log("[Firestore] Starting real-time listener...");
+        db.collection('orders').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            ordersData = snapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id // Use Firestore Doc ID as Order ID
+            }));
+            console.log("[Firestore] Received " + ordersData.length + " orders.");
+            renderOrders();
+            updateTabBadges();
+        }, err => {
+            console.error("[Firestore] error:", err);
+            // Fallback to localStorage if Firestore fails
+            ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+            renderOrders();
+            updateTabBadges();
+        });
+    } else {
+        // Legacy Fallback
+        ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+        renderOrders();
+        updateTabBadges();
+    }
 });
 
 function initTabs() {
@@ -42,7 +64,7 @@ function initTabs() {
 
 function renderOrders() {
     const container = document.getElementById('full-orders-list');
-    const orders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+    const orders = ordersData;
 
     // Helper: find name by phone if missing
     const getNameByPhone = (phone) => {
@@ -132,6 +154,21 @@ function confirmSent(orderId) {
 
 function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink = null) {
     try {
+        const updateObj = { status: newStatus };
+        if (trackingNum) updateObj.trackingNum = trackingNum;
+        if (trackingLink) updateObj.trackingLink = trackingLink;
+
+        // 1. Update Firestore (Cloud)
+        if (window.db) {
+            db.collection('orders').doc(orderId).update(updateObj)
+                .then(() => console.log("Firestore updated successfully"))
+                .catch(err => {
+                    console.error("Firestore update failed:", err);
+                    alert("เกิดข้อผิดพลาดในการอัปเดตข้อมูลบน Cloud");
+                });
+        }
+
+        // 2. Local fallback sync logic
         const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
         const gIdx = globalOrders.findIndex(o => o.id === orderId);
         
@@ -155,8 +192,7 @@ function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink 
                 }
             }
             localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
-            renderOrders(); 
-            updateTabBadges();
+            // No need to call renderOrders() here as onSnapshot will trigger it
         }
     } catch(e) {
         console.error("Failed to update status:", e);
@@ -166,8 +202,7 @@ function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink 
 let currentModalOrderId = null;
 
 function viewOrderDetails(orderId) {
-    const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-    const order = globalOrders.find(o => o.id === orderId);
+    const order = ordersData.find(o => o.id === orderId);
     
     if (order) {
         currentModalOrderId = orderId;
@@ -266,7 +301,7 @@ function closeOrderDetails() {
 }
 
 function updateTabBadges() {
-    const orders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+    const orders = ordersData;
     
     const counts = {
         unpaid: orders.filter(o => o.status === 'ที่ต้องชำระ' || o.status === 'Pending').length,
