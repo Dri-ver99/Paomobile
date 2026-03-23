@@ -1544,14 +1544,28 @@
   const btnGoogle = document.getElementById('btnGoogleLogin');
   if (btnGoogle) {
       btnGoogle.addEventListener('click', async () => {
-          if (detectRestrictedBrowser()) return;
+          const isRestricted = detectRestrictedBrowser();
+          if (isRestricted) {
+              alert("ขออภัยครับ การล็อกอินด้วย Google ไม่รองรับในเบราว์เซอร์ของแอป LINE/Facebook โดยตรงครับ\n\nกรุณากดปุ่ม ⋯ (3 จุด) ที่มุมขวาบน แล้วเลือก 'เปิดด้วยเบอร์ราเซอร์อื่น' (Open in Browser / Safari / Chrome) เพื่อความปลอดภัยและใช้งานได้ปกติครับ");
+              const notice = document.getElementById('webviewNotice');
+              if (notice) notice.style.display = 'block';
+              return;
+          }
           
           showLoading("Google Auth Start");
           const provider = new GoogleAuthProvider();
           
           try {
-              // Try Popup first as it's more reliable and better UX on desktop
-              console.log("[Auth] Attempting Google Popup...");
+              // On mobile, prefer Redirect directly as Popups are often blocked or fail to communicate
+              const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+              
+              if (isMobile) {
+                  console.log("[Auth] Mobile detected: Using Redirect instead of Popup");
+                  await signInWithRedirect(auth, provider);
+                  return;
+              }
+
+              console.log("[Auth] Desktop detected: Attempting Google Popup...");
               const result = await signInWithPopup(auth, provider);
               if (result.user) {
                   console.log("[Auth] Popup Success:", result.user.email);
@@ -1559,12 +1573,11 @@
                   finishLogin(result.user.displayName || result.user.email.split('@')[0]);
               }
           } catch (error) {
-              console.warn("[Auth] Popup failed or blocked, falling back to Redirect:", error.code);
+              console.warn("[Auth] Auth failed, falling back to Redirect:", error.code);
               if (error.code === 'auth/popup-closed-by-user') {
                   hideLoading();
                   return;
               }
-              // Fallback to Redirect for mobile/webviews where popups are often blocked
               try {
                   await signInWithRedirect(auth, provider);
               } catch (redirectError) {
