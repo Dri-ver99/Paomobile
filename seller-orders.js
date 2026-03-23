@@ -12,25 +12,30 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     
     // 1. Sync from Firestore (Real-time)
-    if (window.db) {
+    if (typeof db !== 'undefined') {
         console.log("[Firestore] Starting real-time listener...");
         db.collection('orders').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
             ordersData = snapshot.docs.map(doc => ({
                 ...doc.data(),
-                id: doc.id // Use Firestore Doc ID as Order ID
+                id: doc.id 
             }));
             console.log("[Firestore] Received " + ordersData.length + " orders.");
             renderOrders();
             updateTabBadges();
         }, err => {
-            console.error("[Firestore] error:", err);
+            console.error("[Firestore] Snapshot Error:", err);
+            if (err.code === 'permission-denied') {
+                alert("Firestore Error: Permission Denied (เช็ค Security Rules ใน Firebase Console คับ)");
+            } else {
+                alert("Firestore Error: " + err.message);
+            }
             // Fallback to localStorage if Firestore fails
             ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
             renderOrders();
             updateTabBadges();
         });
     } else {
-        // Legacy Fallback
+        console.warn("[Firestore] DB is not initialized. Falling back to local storage.");
         ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
         renderOrders();
         updateTabBadges();
