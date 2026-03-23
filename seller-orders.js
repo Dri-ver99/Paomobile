@@ -1,7 +1,6 @@
 // seller-orders.js - Logic for the Seller Orders Page
 
 let currentTab = 'all';
-let allGlobalOrders = []; // Cached orders from Firestore/Local
 
 document.addEventListener('DOMContentLoaded', () => {
     // Check URL params for initial tab
@@ -12,41 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initTabs();
-    initFirestoreSync();
-});
-
-function initFirestoreSync() {
-    // Fallback to local first
-    allGlobalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
     renderOrders();
     updateTabBadges();
-
-    // Start real-time sync if Firebase is ready
-    const checkFirebase = setInterval(() => {
-        if (window.db && window.firestore) {
-            clearInterval(checkFirebase);
-            const { collection, query, onSnapshot, orderBy } = window.firestore;
-            const ordersRef = collection(window.db, 'orders');
-            const q = query(ordersRef, orderBy('orderDate', 'desc'));
-
-            onSnapshot(q, (snapshot) => {
-                const fsOrders = [];
-                snapshot.forEach((doc) => {
-                    fsOrders.push({ ...doc.data(), fsId: doc.id });
-                });
-                
-                if (fsOrders.length > 0) {
-                    allGlobalOrders = fsOrders;
-                    // Also update local storage for persistence/offline
-                    localStorage.setItem('pao_global_orders', JSON.stringify(allGlobalOrders));
-                    console.log("Syncing with Firestore: ", fsOrders.length, " orders");
-                    renderOrders();
-                    updateTabBadges();
-                }
-            });
-        }
-    }, 500);
-}
+});
 
 function initTabs() {
     const btns = document.querySelectorAll('.tab-btn');
@@ -75,7 +42,7 @@ function initTabs() {
 
 function renderOrders() {
     const container = document.getElementById('full-orders-list');
-    const orders = allGlobalOrders; // Use the synced array
+    const orders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
 
     // Helper: find name by phone if missing
     const getNameByPhone = (phone) => {
@@ -163,30 +130,8 @@ function confirmSent(orderId) {
     viewOrderDetails(orderId);
 }
 
-async function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink = null) {
+function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink = null) {
     try {
-        // 1. Update Firestore (Global Sync)
-        if (window.db && window.firestore) {
-            try {
-                const { collection, query, where, getDocs, updateDoc, doc } = window.firestore;
-                const q = query(collection(window.db, 'orders'), where('id', '==', orderId));
-                const querySnapshot = await getDocs(q);
-                
-                const updatePromises = [];
-                querySnapshot.forEach((dSnapshot) => {
-                    const updateData = { status: newStatus };
-                    if (trackingNum) updateData.trackingNum = trackingNum;
-                    if (trackingLink) updateData.trackingLink = trackingLink;
-                    updatePromises.push(updateDoc(doc(window.db, 'orders', dSnapshot.id), updateData));
-                });
-                await Promise.all(updatePromises);
-                console.log("Status updated in Firestore");
-            } catch (fsErr) {
-                console.error("Firestore status update failed:", fsErr);
-            }
-        }
-
-        // 2. Update Local (Legacy/Fallback)
         const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
         const gIdx = globalOrders.findIndex(o => o.id === orderId);
         
@@ -210,8 +155,6 @@ async function updateOrderStatus(orderId, newStatus, trackingNum = null, trackin
                 }
             }
             localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
-            
-            // Real-time listener will trigger render, but we force it here for immediate feedback if offline
             renderOrders(); 
             updateTabBadges();
         }
