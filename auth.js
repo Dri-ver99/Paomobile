@@ -3,10 +3,12 @@
 
 (function () {
     const AUTH_KEY = 'paomobile_user';
+    const SELLER_EMAIL = 'sattawat2560@gmail.com';
 
     function updateNavForUser() {
         const userDataString = localStorage.getItem(AUTH_KEY);
         const mobileMenu = document.querySelector('.mobile-menu-inner');
+        const navLinks = document.getElementById('navLinks');
         
         let user;
         try {
@@ -16,13 +18,16 @@
             user = null;
         }
 
-        // Only show member UI if verified (or non-email login usually implies verified here)
+        // Cleanup: remove dynamic elements if state changed
+
+
+        // Only show member UI if verified
         const isFullyLoggedIn = user && user.name && user.isVerified;
 
         if (!isFullyLoggedIn) {
             console.log("[Auth] No verified session (Guest Mode).");
             
-            // Cleanup: remove dynamic logout or greeting if present (e.g. after logout or verification lost)
+            // Cleanup: remove dynamic logout or greeting if present
             document.querySelectorAll('.is-logged-in, .dynamic-logout, #mobile-auth-header').forEach(el => el.remove());
             document.querySelectorAll('.account-icon-btn').forEach(el => {
                 el.setAttribute('href', 'login.html');
@@ -99,6 +104,24 @@
             const mobileLogout = document.getElementById('btnMobileLogout');
             if (mobileLogout) mobileLogout.addEventListener('click', handleLogout);
         }
+
+        // D. Inject Seller Centre Button if authorized (Inside Dropdown)
+        if (user.email === SELLER_EMAIL) {
+            const dropdown = document.querySelector('.account-dropdown');
+            const purchasesLink = dropdown ? dropdown.querySelector('a[href*="purchases.html"]') : null;
+            
+            if (purchasesLink && !dropdown.querySelector('.seller-centre-dropdown-item')) {
+                const sellerLink = document.createElement('a');
+                sellerLink.href = 'seller-centre.html';
+                sellerLink.target = '_blank';
+                sellerLink.className = 'dropdown-item seller-centre-dropdown-item';
+                sellerLink.innerHTML = '<span>Seller Centre</span> <span class="arrow">›</span>';
+                sellerLink.style.cssText = 'color: #ee4d2d !important; font-weight: 700; border-top: 1px solid #eee; margin-top: 5px; padding-top: 12px;';
+                purchasesLink.after(sellerLink);
+            }
+        }
+
+
     }
 
     function handleLogout(e) {

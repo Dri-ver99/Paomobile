@@ -169,8 +169,8 @@
                         <div class="dropdown-divider"></div>
                         <a href="promotions.html" class="dropdown-item"
                             style="padding-bottom: 8px;">รับสิทธิประโยชน์สุดพิเศษ <span class="arrow">›</span></a>
-                        <a href="javascript:void(0)" class="dropdown-item"
-                            style="color: var(--text-soft) !important; font-size: 0.9em; padding-top: 6px;">Member</a>
+                        <a href="purchases.html" class="dropdown-item"
+                            style="color: var(--text) !important; font-size: 0.9em; padding-top: 6px;">การซื้อของฉัน</a>
                     </div>
                 </div>
                 <button class="cart-icon-btn" id="cartBtn" aria-label="ตะกร้าสินค้า">
@@ -290,8 +290,8 @@
                         description: 'สายชาร์จ Why 60W Type C To C ชาร์จเร็วและเสถียร คุณภาพสูง มั่นใจด้วยรับประกัน 1 เดือน สอบถามเพิ่มเติมทาง LINE @pao789',
                         emoji: '🔌'
                     })">
-                    <div class="product-badge new">ใหม่</div>
                     <div class="product-img">
+                        <div class="product-badge new">ใหม่</div>
                         <img src="Why 60W-1 Type C To C - 1.jpg" alt="สายชาร์จ Why 60W Type C To C">
                     </div>
                     <div class="product-info">
@@ -317,8 +317,8 @@
                         description: 'ชุดชาร์จ Why ขนาด 20W ชาร์จเร็วและเสถียร พร้อมสายชาร์จคุณภาพสูง มั่นใจด้วยรับประกัน 1 เดือน สอบถามเพิ่มเติมทาง LINE @pao789',
                         emoji: '🔌'
                     })">
-                    <div class="product-badge new">ใหม่</div>
                     <div class="product-img">
+                        <div class="product-badge new">ใหม่</div>
                         <img src="Why 20w-1.jpg" alt="ชุดชาร์จ Why 20W Type C To C">
                     </div>
                     <div class="product-info">
@@ -473,6 +473,33 @@
                         + เพิ่มลงตะกร้า
                     </button>
                 </div>
+
+                <div class="product-card" data-name="สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)"
+                    data-tags="ชาร์จ สาย cable type-c to c มือ1 ใหม่ อุปกรณ์เสริม Anidary promotion โปรโมชั่น 1บาท" onclick="ProductDetail.open({
+                        id:'acc-anidary-ctoc-1baht', 
+                        name:'สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)', 
+                        price:1, 
+                        brand:'Anidary', 
+                        img:'Anidary Type c To c - 1.jpg',
+                        images:['Anidary Type c To c - 1.jpg', 'Anidary Type c To c - 2.jpg', 'Anidary Type c To c - 3.jpg', 'Anidary Type c To c - 4.jpg'],
+                        emoji:'🔌', 
+                        description:'🔥 โปรโมชั่นพิเศษ! สายชาร์จ Anidary ANC007 Type C to C ในราคาเพียง 1 บาทเท่านั้น! คุณภาพสูง ชาร์จเร็วและเสถียร สอบถามเพิ่มเติมทาง LINE @pao789'
+                    })">
+                    <div class="product-img">
+                        <div class="product-badge" style="background: #ee4d2d; color: #fff;">โปรโมชั่น 1฿</div>
+                        <img src="Anidary Type c To c - 1.jpg" alt="สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-brand">Anidary</div>
+                        <h3 class="product-name">สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)</h3>
+                        <div class="product-specs">แตะเพื่อดูรูปภาพเพิ่มเติม</div>
+                        <div class="product-price">฿1</div>
+                    </div>
+                    <button class="btn-add-cart"
+                        onclick="event.stopPropagation(); CartAPI.add({id:'acc-anidary-ctoc-1baht',name:'สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)',price:1,img:'Anidary Type c To c - 1.jpg',emoji:'🔌'})">
+                        + เพิ่มลงตะกร้า
+                    </button>
+                </div>
             </div>
         </div>
     </section>
@@ -592,3 +619,6 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
 </body>
 
 </html>
+
+
+

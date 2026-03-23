@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>แจ้งโอนเงินผ่านบัญชีธนาคาร — Paomobile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Dependencies for AI Verification -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans Thai', 'Outfit', sans-serif;
+      background: #f5f5f7;
+      min-height: 100vh;
+      color: #333;
+    }
+
+    /* ─── Top Bar ─── */
+    .top-bar {
+      background: #1C1710;
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .back-btn {
+      background: rgba(255,255,255,0.08);
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s;
+      flex-shrink: 0;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.15); }
+    .top-bar-title {
+      color: rgba(255,255,255,0.7);
+      font-size: 0.9rem;
+      font-weight: 400;
+      flex: 1;
+    }
+    .top-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: #fff;
+    }
+    .top-logo img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+    .top-logo-text {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .top-logo-text span {
+      color: #6366f1;
+    }
+
+    /* ─── Main container ─── */
+    .page-wrap {
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    /* ─── Amount row ─── */
+    .amount-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 22px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .amount-label { font-size: 0.95rem; color: #666; }
+    .amount-value { font-size: 1.15rem; font-weight: 700; color: #ee4d2d; }
+
+    /* ─── Countdown ─── */
+    .countdown-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 22px;
+    }
+    .countdown-label { font-size: 0.85rem; color: #666; }
+    .countdown-timer {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ee4d2d;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+    }
+    .countdown-expire {
+      font-size: 0.75rem;
+      color: #aaa;
+      text-align: right;
+    }
+
+    /* ─── Bank Details Section ─── */
+    .bank-card {
+      padding: 24px 22px;
+      text-align: center;
+      background: #fafafa;
+      border-bottom: 1px solid #eee;
+    }
+    .bank-logo {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 12px auto;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(43,92,119,0.1);
+      border: 2px solid #fff;
+    }
+    .bank-logo img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+    }
+    .bank-name {
+      font-size: 1.05rem;
+      color: #333;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .account-detail-box {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 0 auto;
+      max-width: 320px;
+      text-align: left;
+    }
+    .acc-label {
+      font-size: 0.8rem;
+      color: #757575;
+      margin-bottom: 4px;
+    }
+    .acc-value {
+      font-size: 1.1rem;
+      color: #222;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .copy-btn {
+      background: #f0f0f0;
+      color: #555;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* ─── Upload Section ─── */
+    .upload-card {
+      padding: 28px 22px;
+      text-align: center;
+    }
+    .upload-box {
+      border: 2px dashed #ccc;
+      border-radius: 12px;
+      padding: 30px 20px;
+      cursor: pointer;
+      background: #fafafa;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .upload-box:hover {
+      border-color: #ee4d2d;
+      background: #fff5f3;
+    }
+    .upload-icon {
+      font-size: 2.5rem;
+      color: #ee4d2d;
+      margin-bottom: 10px;
+    }
+    .upload-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+    }
+    .upload-sub {
+      font-size: 0.8rem;
+      color: #888;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .preview-container {
+      display: none;
+      margin-top: 16px;
+      text-align: center;
+    }
+    .preview-container img {
+      max-width: 200px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border: 1px solid #eee;
+    }
+
+    /* ─── Action Button ─── */
+    .btn-verify {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      background: linear-gradient(135deg, #1b3a6b 0%, #2a5298 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 28px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      font-family: inherit;
+      transition: opacity .2s, transform .1s;
+      box-shadow: 0 4px 12px rgba(27,58,107,0.3);
+    }
+    .btn-verify:disabled {
+      background: #ccc;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    .btn-verify:not(:disabled):active { transform: scale(0.98); }
+
+    /* ─── AI Verification Status ─── */
+    .verify-status-box {
+      display: none;
+      margin-top: 20px;
+      background: #f8f9fc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: left;
+    }
+    .verify-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+    .verify-step.active {
+      color: #3b82f6;
+      font-weight: 600;
+    }
+    .verify-step.success {
+      color: #10b981;
+    }
+    .verify-step.error {
+      color: #ef4444;
+    }
+    .step-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .spinner {
+      border: 2px solid rgba(59,130,246,0.2);
+      border-left-color: #3b82f6;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <button class="back-btn" onclick="history.back()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+    <span class="top-bar-title">แจ้งชำระเงินโอนเงิน</span>
+    <a href="index.html" class="top-logo">
+      <img src="logo.png" alt="Paomobile" />
+      <span class="top-logo-text">Pao<span>mobile</span></span>
+    </a>
+  </div>
+
+  <div class="page-wrap">
+
+    <!-- Amount & Countdown -->
+    <div class="card">
+      <div class="amount-row">
+        <span class="amount-label">ยอดที่ต้องโอน</span>
+        <span class="amount-value" id="displayAmount">฿0</span>
+      </div>
+      <div class="countdown-row">
+        <div>
+          <div class="countdown-label">กรุณาโอนและแนบสลิปภายใน</div>
+          <div class="countdown-expire" id="expireText"></div>
+        </div>
+        <div class="countdown-timer" id="countdownTimer">30 : 00</div>
+      </div>
+    </div>
+
+    <!-- Bank Details -->
+    <div class="card">
+      <div class="bank-card">
+        <div class="bank-logo">
+          <!-- SCB / Generic Thai Bank Logo -->
+          <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.scb.co.th&size=64" alt="SCB" id="bankFavicon">
+        </div>
+        <div class="bank-name">ธนาคารไทยพาณิชย์ (SCB)</div>
+
+        <div class="account-detail-box">
+          <div class="acc-label">เลขที่บัญชี</div>
+          <div class="acc-value">
+            <span id="accNum">407-866794-5</span>
+            <button class="copy-btn" onclick="copyText('accNum')">คัดลอก</button>
+          </div>
+          <div class="acc-label" style="margin-top:8px;">ชื่อบัญชี</div>
+          <div class="acc-value" style="margin-bottom:0; font-size:1rem; color:#ee4d2d;">
+            <span id="accName">เขมรัฐ นาคภักดี</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Section -->
+      <div class="upload-card">
+        <label for="slipInput" class="upload-box" id="uploadBox">
+          <div class="upload-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </div>
+          <div class="upload-text">คลิกเพื่ออัปโหลดสลิปธนาคาร</div>
+          <div class="upload-sub">รองรับรูปภาพ .jpg, .png</div>
+        </label>
+        <input type="file" id="slipInput" accept="image/*" onchange="handleFileSelect(event)">
+
+        <div class="preview-container" id="previewContainer">
+          <img id="slipPreview" src="" alt="Slip Preview">
+          <div style="margin-top: 10px;">
+            <button onclick="document.getElementById('slipInput').click()" style="background:none; border:none; color:#1b3a6b; font-weight:600; cursor:pointer; text-decoration:underline;">เปลี่ยนรูป</button>
+          </div>
+        </div>
+
+        <div class="verify-status-box" id="verifyStatusBox">
+          <div class="verify-step" id="step-time">
+            <div class="step-icon" id="icon-time">○</div>
+            <span>ตรวจเวลาความใหม่ของสลิป</span>
+          </div>
+          <div class="verify-step" id="step-qr">
+            <div class="step-icon" id="icon-qr">○</div>
+            <span>ค้นหา QR Code ประจำสลิป</span>
+          </div>
+          <div class="verify-step" id="step-ocr">
+            <div class="step-icon" id="icon-ocr">○</div>
+            <span>วิเคราะห์ชื่อผู้รับโอนด้วย AI</span>
+          </div>
+        </div>
+
+        <button class="btn-verify" id="btnVerify" disabled onclick="startVerification()">
+          ส่งสลิปเพื่อตรวจสอบ
+        </button>
+
+      </div>
+    </div>
+
+  </div><!-- end page-wrap -->
+
+  <script>
+    // ─── Utility ───
+    function copyText(elementId) {
+      const el = document.getElementById(elementId);
+      navigator.clipboard.writeText(el.textContent).then(() => {
+        alert("คัดลอก " + el.textContent + " แล้ว");
+      });
+    }
+
+    // ─── Read URL params ───
+    const params = new URLSearchParams(location.search);
+    const amount = parseFloat(params.get('amount') || '0');
+    const ref = params.get('ref') || '';
+    
+    // ─── Display amount ───
+    const fmt = '฿' + amount.toLocaleString('th-TH', {minimumFractionDigits: 0});
+    document.getElementById('displayAmount').textContent = fmt;
+
+    // ─── Expire Calculation ───
+    const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };
+    const userOrdersKey = 'pao_orders_' + getActiveUserId();
+    const rawUser = localStorage.getItem(userOrdersKey) || '[]';
+    let userOrders = [];
+    try { userOrders = JSON.parse(rawUser); } catch(e){}
+    
+    let currentOrder = userOrders.find(o => o.id === ref);
+    let orderTime = Date.now();
+    if (currentOrder && currentOrder.orderDate) {
+        orderTime = new Date(currentOrder.orderDate).getTime();
+    }
+    
+    const expireDate = new Date(orderTime + 30 * 60 * 1000);
+    const dd = ('0'+expireDate.getDate()).slice(-2);
+    const mm = ('0'+(expireDate.getMonth()+1)).slice(-2);
+    const yy = expireDate.getFullYear() + 543;
+    const hh = ('0'+expireDate.getHours()).slice(-2);
+    const mi = ('0'+expireDate.getMinutes()).slice(-2);
+    document.getElementById('expireText').textContent = `หมดอายุ ${dd}/${mm}/${yy} ${hh}:${mi}`;
+
+    // ─── Countdown Timer ───
+    const timerEl = document.getElementById('countdownTimer');
+    
+    function cancelOrderDueToTimeout() {
+        if (currentOrder && currentOrder.status === 'ที่ต้องชำระ') {
+            currentOrder.status = 'ยกเลิกแล้ว';
+            localStorage.setItem(userOrdersKey, JSON.stringify(userOrders));
+            try {
+                const rawGlobal = localStorage.getItem('pao_global_orders') || '[]';
+                let globalOrders = JSON.parse(rawGlobal);
+                let gOrder = globalOrders.find(o => o.id === ref);
+                if (gOrder) {
+                    gOrder.status = 'ยกเลิกแล้ว';
+                    localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
+                }
+            } catch(e){}
+        }
+        timerEl.textContent = 'หมดเวลาชำระเงิน';
+        timerEl.style.color = '#757575';
+        timerEl.style.fontSize = '1rem';
+        document.getElementById('btnVerify').disabled = true;
+    }
+
+    function updateTick() {
+        let remaining = Math.floor((expireDate.getTime() - Date.now()) / 1000);
+        if (remaining <= 0) { 
+            cancelOrderDueToTimeout();
+            return false; 
+        }
+        const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+        const s = String(remaining % 60).padStart(2, '0');
+        timerEl.textContent = `${m} : ${s}`;
+        if (remaining <= 300) timerEl.style.color = '#c0392b';
+        return true;
+    }
+    if (updateTick()) {
+        const tick = setInterval(() => { if (!updateTick()) clearInterval(tick); }, 1000);
+    }
+
+    // ─── Slip Upload & Verification Variables ───
+    let currentFile = null;
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      currentFile = file;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('uploadBox').style.display = 'none';
+        document.getElementById('previewContainer').style.display = 'block';
+        document.getElementById('slipPreview').src = e.target.result;
+        document.getElementById('btnVerify').disabled = false;
+        
+        // Reset status box
+        document.getElementById('verifyStatusBox').style.display = 'none';
+        resetSteps();
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function resetSteps() {
+      ['time', 'qr', 'ocr'].forEach(id => {
+        document.getElementById('step-' + id).className = 'verify-step';
+        document.getElementById('icon-' + id).innerHTML = '○';
+        document.getElementById('icon-' + id).style.color = '#64748b';
+      });
+    }
+
+    function setStepStatus(id, status) {
+      const el = document.getElementById('step-' + id);
+      const icon = document.getElementById('icon-' + id);
+      el.className = 'verify-step ' + status;
+      if (status === 'active') {
+        icon.innerHTML = '<div class="spinner"></div>';
+        icon.style.color = '#3b82f6';
+      } else if (status === 'success') {
+        icon.innerHTML = '✓';
+        icon.style.color = '#10b981';
+      } else if (status === 'error') {
+        icon.innerHTML = '✗';
+        icon.style.color = '#ef4444';
+      }
+    }
+
+    async function startVerification() {
+        const btn = document.getElementById('btnVerify');
+        btn.disabled = true;
+        btn.textContent = "AI กำลังตรวจสอบ...";
+        document.getElementById('verifyStatusBox').style.display = 'block';
+        resetSteps();
+
+        // 1. Check Time
+        setStepStatus('time', 'active');
+        await sleep(600);
+        // We ensure slip is less than 24 hours old based on lastModified
+        const ageHours = (Date.now() - currentFile.lastModified) / (1000 * 60 * 60);
+        if (ageHours > 24) {
+            setStepStatus('time', 'error');
+            alert('ล้มเหลว: ภาพสลิปนี้ดูเหมือนจะเป็นสลิปเก่า (เกิน 24 ชม.) กรุณาใช้สลิปปัจจุบัน');
+            btn.disabled = false;
+            btn.textContent = "ส่งสลิปเพื่อตรวจสอบ";
+            return;
+        }
+        setStepStatus('time', 'success');
+
+        // 2. Check QR
+        setStepStatus('qr', 'active');
+        const hasQR = await scanQR(document.getElementById('slipPreview'));
+        await sleep(800);
+        if (!hasQR) {
+            setStepStatus('qr', 'error');
+            alert("❌ ไม่อนุมัติ: ระบบไม่พบ QR Code บนสลิป กรุณาอัปโหลดสลิปธนาคารของแท้ที่มี QR Code เพื่อทำการตรวจสอบ");
+            btn.disabled = false;
+            btn.textContent = "อัปโหลดภาพถัดไป";
+            return;
+        } else {
+            setStepStatus('qr', 'success');
+        }
+
+        // 3. OCR Check Name
+        setStepStatus('ocr', 'active');
+        try {
+            // Tesseract load and scan
+            const recognizedText = await runOCR(currentFile);
+            const lowerText = recognizedText.toLowerCase().replace(/\s+/g, '');
+            // Check for names: "เขมรัฐ" or "นาคภักดี" in Thai
+            if (lowerText.includes('เขมรัฐ') || lowerText.includes('นาคภักดี')) {
+                setStepStatus('ocr', 'success');
+                await finalizePayment();
+            } else {
+                setStepStatus('ocr', 'error');
+                alert('❌ ไม่อนุมัติ: ระบบ AI อ่านชื่อผู้รับโอนไม่ตรงกับ "เขมรัฐ นาคภักดี" ถ้านี่คือสลิปจริง กรุณาถ่ายภาพให้ชัดเจนขึ้น หรือแคปหน้าจอสลิปใหม่ให้ตัวหนังสือคมชัดที่สุด');
+                btn.disabled = false;
+                btn.textContent = "อัปโหลดภาพถัดไป";
+                return;
+            }
+        } catch (e) {
+            console.error("OCR Error", e);
+            setStepStatus('ocr', 'error');
+            alert('❌ เกิดข้อผิดพลาดในการโหลด AI (Tesseract.js) กรุณาตรวจสอบอินเทอร์เน็ตและลองใหม่อีกครั้ง');
+            btn.disabled = false;
+            btn.textContent = "ลองอีกครั้ง";
+        }
+    }
+
+    async function scanQR(imgEl) {
+        return new Promise((resolve) => {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            // Scale down for faster scan
+            const maxDimension = 800;
+            let ratio = 1;
+            if (imgEl.naturalWidth > imgEl.naturalHeight) {
+                if (imgEl.naturalWidth > maxDimension) ratio = maxDimension / imgEl.naturalWidth;
+            } else {
+                if (imgEl.naturalHeight > maxDimension) ratio = maxDimension / imgEl.naturalHeight;
+            }
+            canvas.width = imgEl.naturalWidth * ratio;
+            canvas.height = imgEl.naturalHeight * ratio;
+            
+            ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+            });
+            if (code && code.data) {
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        });
+    }
+
+    async function runOCR(file) {
+        // Run OCR on the image. Tesseract takes a file directly or objectURL.
+        const worker = await Tesseract.createWorker('tha');
+        const url = URL.createObjectURL(file);
+        const ret = await worker.recognize(url);
+        await worker.terminate();
+        URL.revokeObjectURL(url);
+        return ret.data.text;
+    }
+
+    function sleep(ms) {
+        return new Promise(r => setTimeout(r, ms));
+    }
+
+    async function finalizePayment() {
+        const btn = document.getElementById('btnVerify');
+        btn.style.background = '#10b981'; // green
+        btn.innerHTML = 'ตรวจสอบสลิปสำเร็จ!';
+        
+        const globalOrdersKey = 'pao_global_orders';
+        let updated = false;
+
+        try {
+            const rawUser = localStorage.getItem(userOrdersKey) || '[]';
+            let uOrders = JSON.parse(rawUser);
+            let targetOrderId = ref;
+            
+            for (let i = 0; i < uOrders.length; i++) {
+                if (uOrders[i].id === targetOrderId || (uOrders[i].status === 'ที่ต้องชำระ' && uOrders[i].total === amount)) {
+                    uOrders[i].status = 'ที่ต้องจัดส่ง';
+                    targetOrderId = uOrders[i].id;
+                    updated = true;
+                    break;
+                }
+            }
+            
+            if (updated) {
+                localStorage.setItem(userOrdersKey, JSON.stringify(uOrders));
+                
+                const rawGlobal = localStorage.getItem(globalOrdersKey) || '[]';
+                let gOrders = JSON.parse(rawGlobal);
+                for (let i = 0; i < gOrders.length; i++) {
+                    if (gOrders[i].id === targetOrderId) {
+                        gOrders[i].status = 'ที่ต้องจัดส่ง';
+                        localStorage.setItem(globalOrdersKey, JSON.stringify(gOrders));
+                        break;
+                    }
+                }
+            }
+        } catch (e) { console.error(e); }
+
+        setTimeout(() => {
+            alert('✅ AI ยืนยันสลิปสำเร็จ! สถานะคำสั่งซื้อของคุณได้อัพเดทเป็น "ที่ต้องจัดส่ง"');
+            window.location.href = 'purchases.html';
+        }, 1200);
+    }
+  </script>
+
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };
+const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };
         const getAddressKey = () => 'pao_user_addresses_' + getActiveUserId();
         const getCartKey = () => 'pao_cart_' + getActiveUserId();
 
@@ -128,13 +128,81 @@
             if (target) target.classList.remove('hidden');
         }
 
+        const getOrdersKey = () => 'pao_orders_' + getActiveUserId();
+
         function confirmOrder() {
             if (!savedAddress) {
                 alert('กรุณาเพิ่มหรือเลือกที่อยู่จัดส่ง');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
             }
-            alert('ขอบคุณที่สั่งซื้อสินค้า! ระบบกำลังนำคุณไปยังหน้าชำระเงิน (ตัวอย่าง)');
+
+            const activeTab = document.querySelector('.pay-tab.active');
+            const method = activeTab ? activeTab.dataset.method : 'transfer';
+            const methodLabel = activeTab ? activeTab.textContent.trim() : 'โอนเงินธนาคาร';
+
+            // initial status
+            let orderStatus = 'ที่ต้องชำระ';
+            if (method === 'cod') {
+                orderStatus = 'ที่ต้องจัดส่ง';
+            }
+
+            // Create Order Object
+            const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
+            const total = subtotal + shippingCost;
+            const orderId = 'PAO-' + Date.now().toString(36).toUpperCase().slice(-8);
+            
+            const newOrder = {
+                id: orderId,
+                orderDate: new Date().toISOString(),
+                status: orderStatus,
+                items: cartItems.map(i => ({
+                    name: i.name,
+                    price: i.price,
+                    qty: i.qty,
+                    img: i.img || 'logo.png'
+                })),
+                total: total,
+                method: methodLabel
+            };
+
+            try {
+                // Save to User Orders
+                const existingOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+                existingOrders.unshift(newOrder);
+                localStorage.setItem(getOrdersKey(), JSON.stringify(existingOrders));
+
+                // Save to Global Orders (for Seller Centre)
+                try {
+                    const allOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+                    allOrders.unshift({
+                        ...newOrder,
+                        customer: getActiveUserId(),
+                        customerName: savedAddress ? savedAddress.name : 'N/A',
+                        customerPhone: savedAddress ? savedAddress.phone : 'N/A',
+                        customerAddress: savedAddress ? `${savedAddress.addr1} ตำบล${savedAddress.district} อำเภอ${savedAddress.amphoe} จังหวัด${savedAddress.province} ${savedAddress.zip}` : 'N/A'
+                    });
+                    localStorage.setItem('pao_global_orders', JSON.stringify(allOrders));
+                } catch (err) { console.error("Global order sync failed:", err); }
+
+                // Clear selected items from cart
+                const rawCart = localStorage.getItem(getCartKey()) || '[]';
+                const fullCart = JSON.parse(rawCart);
+                const remainingCart = fullCart.filter(i => i.selected === false);
+                localStorage.setItem(getCartKey(), JSON.stringify(remainingCart));
+
+                if (method === 'promptpay') {
+                    window.location.href = 'payment-qr.html?amount=' + total + '&ref=' + orderId;
+                } else if (method === 'transfer') {
+                    window.location.href = 'payment-transfer.html?amount=' + total + '&ref=' + orderId;
+                } else {
+                    alert('ขอบคุณที่สั่งซื้อสินค้า! ทีมงาน Paomobile จะติดต่อกลับเพื่อยืนยันคำสั่งซื้อ');
+                    window.location.href = 'purchases.html';
+                }
+            } catch (e) {
+                console.error("Order save failed:", e);
+                alert('เกิดข้อผิดพลาดในการบันทึกคำสั่งซื้อ กรุณาลองใหม่อีกครั้ง');
+            }
         }
 
         let addressLookup = {};
@@ -329,100 +397,7 @@
 
         const fAddr1 = document.getElementById('f-addr1');
         if (fAddr1) {
-            fAddr1.addEventListener('blur', function() {
-                // Wait slightly in case user clicked an autocomplete item
-                setTimeout(() => {
-                    const text = this.value.trim();
-                    const menu = document.getElementById('addrAutocomplete');
-                    if (menu && menu.style.display !== 'none') {
-                        menu.style.display = 'none';
-                        if(text.length > 5) {
-                            updateGoogleMapsForAddress(text);
-                        }
-                    }
-                }, 200);
-            });
-            
-            fAddr1.addEventListener('input', function() {
-                const val = this.value.trim();
-                const menu = document.getElementById('addrAutocomplete');
-                
-                if(val.length > 0) {
-                    const keywords = val.toLowerCase().split(/\s+/).filter(k => k.length > 0);
-                    let suggs = [];
-                    
-                    const dist = locState.district || '';
-                    const amp = locState.amphoe || '';
-                    const prov = locState.province || '';
-                    
-                    // If location picker is already filled, offer that as first suggestion
-                    let defaultSuffix = '';
-                    if(dist || amp) {
-                        defaultSuffix = ` ตำบล${dist} อำเภอ${amp}${prov ? ' จังหวัด'+prov : ''}`;
-                        suggs.push(val + defaultSuffix);
-                    }
-                    
-                    // Smart Nationwide Search using thaiAddressData
-                    // Only search if user typed a thai word or 5 digit zip
-                    const searchTh = keywords.find(k => /[ก-๙]{2,}/.test(k));
-                    const searchZip = keywords.find(k => /^[0-9]{5}$/.test(k));
-                    
-                    if ((searchTh || searchZip) && suggs.length < 5) {
-                        let count = 0;
-                        for (let p of (window.thaiAddressData || [])) {
-                            let pMatch = searchTh && p.name_th.includes(searchTh);
-                            for (let d of p.districts) {
-                                let dMatch = pMatch || (searchTh && d.name_th.includes(searchTh));
-                                for (let s of d.sub_districts) {
-                                    let sMatch = dMatch || (searchTh && s.name_th.includes(searchTh));
-                                    let zMatch = searchZip && String(s.zip_code) === searchZip;
-                                    
-                                    if (sMatch || zMatch) {
-                                        let subPrefix = p.name_th === 'กรุงเทพมหานคร' ? 'แขวง' : 'ตำบล';
-                                        let distPrefix = p.name_th === 'กรุงเทพมหานคร' ? 'เขต' : 'อำเภอ';
-                                        let provPrefix = p.name_th === 'กรุงเทพมหานคร' ? '' : 'จังหวัด';
-                                        
-                                        let cleanInput = val;
-                                        if(searchTh && val.endsWith(searchTh)) {
-                                             cleanInput = val.substring(0, val.length - searchTh.length).trim();
-                                        }
-                                        if(cleanInput && !cleanInput.endsWith(' ')) cleanInput += ' ';
-                                        else if(!cleanInput) cleanInput = '';
-                                        
-                                        let fullGeo = `${subPrefix}${s.name_th} ${distPrefix}${d.name_th} ${provPrefix}${p.name_th} ${s.zip_code}`;
-                                        let target = cleanInput ? `${cleanInput}${fullGeo}` : fullGeo;
-                                        
-                                        if(!suggs.includes(target) && target !== val) {
-                                            suggs.push(target);
-                                            count++;
-                                            if (suggs.length >= 5) break;
-                                        }
-                                    }
-                                }
-                                if (suggs.length >= 5) break;
-                            }
-                            if (suggs.length >= 5) break;
-                        }
-                    }
-                    
-                    if (suggs.length > 0) {
-                        menu.innerHTML = suggs.slice(0, 5).map((s, idx) => `
-                            <div class="autocomplete-item" 
-                                 onclick="fillAutocomplete('${s}')" 
-                                 onmouseover="this.style.background='#f0f0f0'" 
-                                 onmouseout="this.style.background='transparent'"
-                                 style="padding: 10px 14px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 0.9rem; color: #333; transition: background 0.15s; ${idx === 0 ? 'background: #f0f0f0;' : ''}">
-                                ${s}
-                            </div>
-                        `).join('');
-                        menu.style.display = 'block';
-                    } else {
-                        menu.style.display = 'none';
-                    }
-                } else {
-                    menu.style.display = 'none';
-                }
-            });
+            // Suggestion logic removed as per user request to let them type manually
         }
         
         function fillAutocomplete(text) {
@@ -548,8 +523,11 @@
             const zip = locState.zip;
             const isDefault = document.getElementById('f-isDefault').checked;
             
-            if (!name || !phone || !prov || !amp || !dist || !zip) { 
-                alert('กรุณากรอกข้อมูลให้ครบถ้วน'); 
+            const phoneRegex = /^0[0-9]{9}$/;
+            if (!name) { alert('กรุณาระบุชื่อ-นามสกุล'); return; }
+            if (!phone || !phoneRegex.test(phone)) { alert('กรุณาระบุหมายเลขโทรศัพท์ให้ถูกต้อง (10 หลัก ขึ้นต้นด้วย 0)'); return; }
+            if (!prov || !amp || !dist || !zip) { 
+                alert('กรุณาเลือกที่อยู่ (จังหวัด, อำเภอ, ตำบล) ให้ครบถ้วน'); 
                 return; 
             }
             
@@ -684,6 +662,13 @@
 
         // init
         document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is guest - force login if strictly required
+            if (getActiveUserId() === 'guest') {
+                alert('กรุณาเข้าสู่ระบบก่อนดำเนินการสั่งซื้อ');
+                window.location.href = 'login.html?redirect=checkout.html';
+                return;
+            }
+
             loadCart();
             renderAddress();
             renderCheckoutItems();
