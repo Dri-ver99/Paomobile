@@ -189,10 +189,22 @@ const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem(
                     localStorage.setItem('pao_global_orders', JSON.stringify(allOrders));
 
                     // 2. Save to Firestore (Cloud Sync)
-                    if (window.db) {
+                    if (typeof db !== 'undefined') {
+                        console.log("[Firestore] Attempting to sync order:", orderId);
                         db.collection('orders').doc(orderId).set(globalOrderData)
-                            .then(() => console.log("Order synced to Firestore"))
-                            .catch(err => console.error("Firestore sync failed:", err));
+                            .then(() => {
+                                console.log("[Firestore] Order synced successfully");
+                            })
+                            .catch(err => {
+                                console.error("[Firestore] Sync failed:", err);
+                                if (err.code === 'permission-denied') {
+                                    alert("Firestore Error: Permission Denied (เช็ค Security Rules ใน Firebase Console คับ)");
+                                } else {
+                                    alert("Firestore Error: " + err.message);
+                                }
+                            });
+                    } else {
+                        console.warn("[Firestore] DB is not initialized. Sync skipped.");
                     }
                 } catch (err) { console.error("Global order sync failed:", err); }
 
