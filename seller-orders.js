@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initTabs();
     
+    const statusText = document.getElementById('statusText');
+    const statusIndicator = document.getElementById('statusIndicator');
+    const orderCountStatus = document.getElementById('orderCountStatus');
+    const lastUpdateStatus = document.getElementById('lastUpdateStatus');
+
     // 1. Sync from Firestore (Real-time)
     if (typeof db !== 'undefined') {
         console.log("[Firestore] Starting real-time listener...");
@@ -19,11 +24,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 ...doc.data(),
                 id: doc.id 
             }));
+            
+            // Update Diagnostic UI
+            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (Real-time)";
+            if (statusIndicator) statusIndicator.style.background = "#52c41a"; // Green
+            if (orderCountStatus) orderCountStatus.textContent = "ออเดอร์ในระบบ: " + ordersData.length;
+            if (lastUpdateStatus) lastUpdateStatus.textContent = "อัปเดตล่าสุด: " + new Date().toLocaleTimeString();
+
             console.log("[Firestore] Received " + ordersData.length + " orders.");
             renderOrders();
             updateTabBadges();
         }, err => {
             console.error("[Firestore] Snapshot Error:", err);
+            if (statusText) statusText.textContent = "Firestore Error: " + err.code;
+            if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
+            
             if (err.code === 'permission-denied') {
                 alert("Firestore Error: Permission Denied (เช็ค Security Rules ใน Firebase Console คับ)");
             } else {
@@ -36,6 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } else {
         console.warn("[Firestore] DB is not initialized. Falling back to local storage.");
+        if (statusText) statusText.textContent = "Firestore: ไม่ได้ติดตั้ง (เชื่อมต่อไม่ได้)";
+        if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
+
         ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
         renderOrders();
         updateTabBadges();
