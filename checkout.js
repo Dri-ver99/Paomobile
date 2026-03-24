@@ -168,14 +168,35 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 method: methodLabel
             };
 
-            try {
-                // Save to User Orders
-                const existingOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
-                existingOrders.unshift(newOrder);
-                localStorage.setItem(getOrdersKey(), JSON.stringify(existingOrders));
-
-                // Save to Global Orders (for Seller Centre)
+            // Use Direct Cloud Sync Logic (Simple & Robust)
+            const syncToCloud = async (data) => {
+                const firestoreDB = (typeof db !== 'undefined') ? db : (window.firebase ? firebase.firestore() : null);
+                if (!firestoreDB) {
+                    console.error("[v1.2.4] Firestore not found");
+                    return false;
+                }
                 try {
+                    console.log("[v1.2.4] Sending to Cloud:", data.id);
+                    await firestoreDB.collection('orders').doc(data.id).set(data);
+                    console.log("[v1.2.4] Cloud Sync Success");
+                    return true;
+                } catch (err) {
+                    console.error("[v1.2.4] Cloud Sync Error:", err);
+                    alert("⚠️ คำเตือน: ออเดอร์บันทึกสำเร็จแต่ส่งเข้า Cloud ไม่ได้ (Error: " + err.code + ")");
+                    return false;
+                }
+            };
+
+            const finalizeOrder = async () => {
+                // Change button to processing
+                const confirmBtn = document.getElementById('confirmOrderBtn');
+                if (confirmBtn) {
+                    confirmBtn.disabled = true;
+                    confirmBtn.innerHTML = '🕒 กำลังสั่งซื้อ...';
+                }
+
+                try {
+                    // 1. Prepare Data
                     const globalOrderData = {
                         ...newOrder,
                         customer: getActiveUserId(),
@@ -184,63 +205,45 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         customerAddress: savedAddress ? `${savedAddress.addr1} ตำบล${savedAddress.district} อำเภอ${savedAddress.amphoe} จังหวัด${savedAddress.province} ${savedAddress.zip}` : 'N/A',
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
-                    
-                    // 1. Save to Local Storage (Legacy/Fallback)
+
+                    // 2. Save Locally (Immediate)
+                    const existingOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+                    existingOrders.unshift(newOrder);
+                    localStorage.setItem(getOrdersKey(), JSON.stringify(existingOrders));
+
                     const allOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
                     allOrders.unshift(globalOrderData);
                     localStorage.setItem('pao_global_orders', JSON.stringify(allOrders));
 
-                    // 2. Save to Firestore (Cloud Sync) [v1.2.1]
-                    const firestoreDB = (typeof db !== 'undefined') ? db : (window.firebase ? firebase.firestore() : null);
-                    
-                    if (firestoreDB) {
-                        // Ensure we use the correct timestamp access
-                        const timestamp = (window.firebase && firebase.firestore.FieldValue) ? 
-                                          firebase.firestore.FieldValue.serverTimestamp() : 
-                                          new Date().toISOString();
+                    // 3. Save to Cloud (MUST WAIT)
+                    await syncToCloud(globalOrderData);
 
-                        const finalData = { ...globalOrderData, createdAt: timestamp };
+                    // 4. Clear Cart
+                    const rawCart = localStorage.getItem(getCartKey()) || '[]';
+                    const fullCart = JSON.parse(rawCart);
+                    const remainingCart = fullCart.filter(i => i.selected === false);
+                    localStorage.setItem(getCartKey(), JSON.stringify(remainingCart));
 
-                        console.log("[v1.2.1] Syncing order:", orderId);
-                        firestoreDB.collection('orders').doc(orderId).set(finalData)
-                            .then(() => {
-                                console.log("[v1.2.1] Sync Success");
-                                alert("✅ สำเร็จ (v1.2.1)! ออเดอร์ส่งเข้าระบบ Cloud แล้วครับ");
-                                window.location.href = 'purchases.html';
-                            })
-                            .catch(err => {
-                                console.error("[v1.2.1] Sync Error:", err);
-                                alert("❌ Sync Error (v1.2.1): " + err.code + " - " + err.message);
-                                window.location.href = 'purchases.html';
-                            });
+                    // 5. Redirect based on method
+                    if (method === 'promptpay') {
+                        window.location.href = 'payment-qr.html?amount=' + total + '&ref=' + orderId;
+                    } else if (method === 'transfer') {
+                        window.location.href = 'payment-transfer.html?amount=' + total + '&ref=' + orderId;
                     } else {
-                        console.error("[v1.2.1] No Firestore DB found.");
-                        alert("⚠️ Error (v1.2.1): ระบบ Cloud ไม่เชื่อมต่อ! ออเดอร์จะบันทึกแค่ในเครื่องนี้ครับ");
+                        alert('ขอบคุณที่สั่งซื้อสินค้า! (v1.2.4)\nรายการถูกส่งเข้าสู่ระบบ Seller Centre เรียบร้อยแล้วคับ');
                         window.location.href = 'purchases.html';
                     }
-                } catch (err) { 
-                    console.error("Global order sync failed:", err); 
-                    alert("❌ Fatal Error (v1.2.1): " + err.message);
+                } catch (e) {
+                    console.error("Order process failed:", e);
+                    alert('เกิดข้อผิดพลาดในการบันทึกคำสั่งซื้อ กรุณาลองใหม่อีกครั้ง');
+                    if (confirmBtn) {
+                        confirmBtn.disabled = false;
+                        confirmBtn.innerHTML = 'สั่งสินค้า';
+                    }
                 }
+            };
 
-                // Clear selected items from cart
-                const rawCart = localStorage.getItem(getCartKey()) || '[]';
-                const fullCart = JSON.parse(rawCart);
-                const remainingCart = fullCart.filter(i => i.selected === false);
-                localStorage.setItem(getCartKey(), JSON.stringify(remainingCart));
-
-                if (method === 'promptpay') {
-                    window.location.href = 'payment-qr.html?amount=' + total + '&ref=' + orderId;
-                } else if (method === 'transfer') {
-                    window.location.href = 'payment-transfer.html?amount=' + total + '&ref=' + orderId;
-                } else {
-                    alert('ขอบคุณที่สั่งซื้อสินค้า! ทีมงาน Paomobile จะติดต่อกลับเพื่อยืนยันคำสั่งซื้อ');
-                    window.location.href = 'purchases.html';
-                }
-            } catch (e) {
-                console.error("Order save failed:", e);
-                alert('เกิดข้อผิดพลาดในการบันทึกคำสั่งซื้อ กรุณาลองใหม่อีกครั้ง');
-            }
+            finalizeOrder();
         }
 
         let addressLookup = {};
