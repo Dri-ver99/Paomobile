@@ -7,17 +7,16 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // 2. ข้อมูลคำสั่งซื้อ (Orders)
     match /orders/{orderId} {
-      // ให้ทุกคนที่ล็อกอินสั่งของได้
-      allow create: if request.auth != null;
+      // ✅ อนุญาตให้ "ทุกคน" สั่งซื้อได้ (แก้ปัญหาคนอื่นสั่งแล้วไม่ขึ้น)
+      allow create: if true;
       
-      // ให้ลูกค้าทั่วไปดูได้เฉพาะออเดอร์ของตัวเอง
-      allow read: if request.auth != null && resource.data.customer == request.auth.uid;
+      // ✅ เฉพาะ Admin (sattawat2560@gmail.com) หรือ "เจ้าของออเดอร์" เท่านั้นที่ดูข้อมูลได้
+      allow read: if (request.auth != null && resource.data.customer == request.auth.uid) || 
+                   (request.auth != null && request.auth.token.email == "sattawat2560@gmail.com");
       
-      // สิทธิ์พิเศษ: ให้ Seller (sattawat2560@gmail.com) ดูและจัดการออเดอร์ "ทั้งหมด" ได้ทันที
-      allow read, write: if request.auth != null && 
-        request.auth.token.email == "sattawat2560@gmail.com";
+      // ✅ เฉพาะ Admin เท่านั้นที่แก้ไขหรือลบออเดอร์ได้
+      allow update, delete: if request.auth != null && request.auth.token.email == "sattawat2560@gmail.com";
     }
     
     // 3. ส่วนอื่นๆ ของระบบ
