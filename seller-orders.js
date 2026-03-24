@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 console.warn("[v1.2] No user logged in. Firestore will be blocked.");
-                if (statusText) statusText.textContent = "Firestore: กรุณาล็อกอิน (v1.2)";
+                if (statusText) statusText.textContent = "Firestore: กรุณาล็อกอิน (v1.2.1)";
                 if (statusIndicator) statusIndicator.style.background = "#faad14"; // Orange
                 if (adminLoginBtn) adminLoginBtn.style.display = 'block';
                 
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startFirestoreSync() {
-        console.log("[v1.2] Starting real-time sync...");
+        console.log("[v1.2.1] Starting real-time sync...");
         db.collection('orders').onSnapshot(snapshot => {
             let fetchedOrders = snapshot.docs.map(doc => ({
                 ...doc.data(),
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ordersData = fetchedOrders;
             
             // Update UI
-            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (v1.2)";
+            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (v1.2.1)";
             if (statusIndicator) statusIndicator.style.background = "#52c41a"; // Green
             if (orderCountStatus) orderCountStatus.textContent = "ออเดอร์ในระบบ: " + ordersData.length;
             
@@ -71,12 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
             renderOrders();
             updateTabBadges();
         }, err => {
-            console.error("[v1.2] Sync Error:", err);
-            if (statusText) statusText.textContent = "Firestore Error (v1.2)";
+            console.error("[v1.2.1] Sync Error:", err);
+            if (statusText) statusText.textContent = "Firestore Error (v1.2.1)";
             if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
             
             if (err.code === 'permission-denied') {
-                alert("สิทธิ์ไม่ถูกต้อง (v1.2)\n\nกรุณากดปุ่ม 'ล็อกอิน Admin' ที่มุมขวาบน และใช้เมล sattawat2560@gmail.com เท่านั้นครับ");
+                alert("สิทธิ์ไม่ถูกต้อง (v1.2.1)\n\nกรุณากดปุ่ม 'ล็อกอิน Admin' ที่มุมขวาบน และใช้เมล sattawat2560@gmail.com เท่านั้นครับ");
                 if (adminLoginBtn) adminLoginBtn.style.display = 'block';
             }
             loadLocalStorageFallback();
