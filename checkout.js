@@ -172,16 +172,16 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             const syncToCloud = async (data) => {
                 const firestoreDB = (typeof db !== 'undefined') ? db : (window.firebase ? firebase.firestore() : null);
                 if (!firestoreDB) {
-                    console.error("[v1.2.4] Firestore not found");
+                    console.error("[v1.2.10] Firestore not found");
                     return false;
                 }
                 try {
-                    console.log("[v1.2.4] Sending to Cloud:", data.id);
+                    console.log("[v1.2.10] Sending to Cloud:", data.id);
                     await firestoreDB.collection('orders').doc(data.id).set(data);
-                    console.log("[v1.2.4] Cloud Sync Success");
+                    console.log("[v1.2.10] Cloud Sync Success");
                     return true;
                 } catch (err) {
-                    console.error("[v1.2.4] Cloud Sync Error:", err);
+                    console.error("[v1.2.10] Cloud Sync Error:", err);
                     alert("⚠️ คำเตือน: ออเดอร์บันทึกสำเร็จแต่ส่งเข้า Cloud ไม่ได้ (Error: " + err.code + ")");
                     return false;
                 }
@@ -230,7 +230,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                     } else if (method === 'transfer') {
                         window.location.href = 'payment-transfer.html?amount=' + total + '&ref=' + orderId;
                     } else {
-                        alert('ขอบคุณที่สั่งซื้อสินค้า! (v1.2.4)\nรายการถูกส่งเข้าสู่ระบบ Seller Centre เรียบร้อยแล้วคับ');
+                        alert('ขอบคุณที่สั่งซื้อสินค้า! (v1.2.10)\nรายการถูกส่งเข้าสู่ระบบ Seller Centre เรียบร้อยแล้วคับ');
                         window.location.href = 'purchases.html';
                     }
                 } catch (e) {
