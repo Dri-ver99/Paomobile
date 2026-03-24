@@ -4,16 +4,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusText = document.getElementById('statusText');
     const statusIndicator = document.getElementById('statusIndicator');
 
-    // 1. Sync from Firestore (Real-time)
-    if (typeof db !== 'undefined') {
-        console.log("[Firestore] Dashboard: Starting real-time listener...");
+    // --- v1.2.1 Auth & Firestore Initialization ---
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged(user => {
+            const statusIndicator = document.getElementById('firestore-status');
+            
+            if (user) {
+                console.log("[v1.2.1] Dashboard User detected:", user.email);
+                if (typeof db !== 'undefined') {
+                    startFirestoreSync();
+                }
+            } else {
+                console.warn("[v1.2.1] No user logged in. Dashboard sync might be limited.");
+                if (statusIndicator) {
+                    statusIndicator.style.background = "#faad14"; // Orange
+                    statusIndicator.innerHTML = `&bull; Firestore: กรุณาล็อกอิน (v1.2.1) <button onclick="firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())" style="margin-left:8px; border:none; background:#ee4d2d; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;">ล็อกอิน</button>`;
+                }
+                updateDashboard(); // Show local data as fallback
+            }
+        });
+    } else {
+        updateDashboard();
+    }
+
+    function startFirestoreSync() {
+        console.log("[v1.2.1] Starting real-time sync...");
         db.collection('orders').onSnapshot(snapshot => {
             let fetchedOrders = snapshot.docs.map(doc => ({
                 ...doc.data(),
                 id: doc.id 
             }));
             
-            // Sort client-side so orders without createdAt still show up (at the bottom)
+            // Sort client-side
             fetchedOrders.sort((a, b) => {
                 const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date(0);
                 const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date(0);
@@ -25,25 +47,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusIndicator = document.getElementById('firestore-status');
             if (statusIndicator) {
                 statusIndicator.style.background = "#52c41a"; // Green
-                statusIndicator.innerHTML = `&bull; Firestore: เชื่อมต่อแล้ว (v1.2) - พบ ${ordersData.length} ออเดอร์`;
+                statusIndicator.innerHTML = `&bull; Firestore: เชื่อมต่อแล้ว (v1.2.1) - พบ ${ordersData.length} ออเดอร์`;
             }
             
-            console.log("[v1.2] Dashboard: Received " + ordersData.length + " orders.");
+            localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
             updateDashboard();
         }, (err) => {
-            console.error("[Firestore] Connection error:", err);
+            console.error("[v1.2.1] Sync Error:", err);
             const statusIndicator = document.getElementById('firestore-status');
-            if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
-            
-            if (err.code === 'permission-denied') {
-                alert("Firestore Error: Permission Denied\n\nสาเหตุ: บัญชีของคุณไม่มีสิทธิ์เข้าถึงออเดอร์ทั้งหมด\nวิธีแก้: กรุณาล็อกอินด้วย sattawat2560@gmail.com และอัปเดต Security Rules ครับ");
-            } else {
-                alert("Firestore Error: " + err.message);
+            if (statusIndicator) {
+                statusIndicator.style.background = "#ff4d4f"; // Red
+                statusIndicator.innerHTML = `&bull; Firestore: Error v1.2.1 (${err.code})`;
             }
+            if (err.code === 'permission-denied') {
+                alert("สิทธิ์ไม่ถูกต้อง (v1.2.1)\n\nกรุณาล็อกอินด้วยเมล sattawat2560@gmail.com หรือแอดมินเท่านั้นครับ");
+            }
+            updateDashboard();
         });
-    } else {
-        console.warn("[Firestore] DB is not initialized. Using fallback data.");
-        updateDashboard();
     }
 });
 
