@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     startFirestoreSync();
                 }
             } else {
-                console.warn("[v1.2] No user logged in. Firestore will be blocked.");
-                if (statusText) statusText.textContent = "Firestore: กรุณาล็อกอิน (v1.2.1)";
+                console.warn("[v1.2.3] No user logged in. Firestore will be blocked.");
+                if (statusText) statusText.textContent = "Firestore: กรุณาล็อกอิน (v1.2.3)";
                 if (statusIndicator) statusIndicator.style.background = "#faad14"; // Orange
                 if (adminLoginBtn) adminLoginBtn.style.display = 'block';
                 
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startFirestoreSync() {
-        console.log("[v1.2.1] Starting real-time sync...");
+        console.log("[v1.2.3] Starting real-time sync...");
         db.collection('orders').onSnapshot(snapshot => {
             let fetchedOrders = snapshot.docs.map(doc => ({
                 ...doc.data(),
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ordersData = fetchedOrders;
             
             // Update UI
-            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (v1.2.1)";
+            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (v1.2.3)";
             if (statusIndicator) statusIndicator.style.background = "#52c41a"; // Green
             if (orderCountStatus) orderCountStatus.textContent = "ออเดอร์ในระบบ: " + ordersData.length;
             
@@ -71,12 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
             renderOrders();
             updateTabBadges();
         }, err => {
-            console.error("[v1.2.1] Sync Error:", err);
-            if (statusText) statusText.textContent = "Firestore Error (v1.2.1)";
+            console.error("[v1.2.3] Sync Error:", err);
+            if (statusText) statusText.textContent = "Firestore Error (v1.2.3)";
             if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
             
             if (err.code === 'permission-denied') {
-                alert("สิทธิ์ไม่ถูกต้อง (v1.2.1)\n\nกรุณากดปุ่ม 'ล็อกอิน Admin' ที่มุมขวาบน และใช้เมล sattawat2560@gmail.com เท่านั้นครับ");
+                alert("สิทธิ์ไม่ถูกต้อง (v1.2.3)\n\nกรุณากดปุ่ม 'ล็อกอิน Admin' ที่มุมขวาบน และใช้เมล sattawat2560@gmail.com เท่านั้นครับ");
                 if (adminLoginBtn) adminLoginBtn.style.display = 'block';
             }
             loadLocalStorageFallback();
@@ -119,16 +119,9 @@ function renderOrders() {
     const container = document.getElementById('full-orders-list');
     const orders = ordersData;
 
-    // Helper: find name by phone if missing
-    const getNameByPhone = (phone) => {
-        if (!phone || phone === 'N/A') return null;
-        const match = orders.find(o => o.customerPhone === phone && o.customerName && o.customerName !== 'N/A');
-        return match ? match.customerName : null;
-    };
-
     let filtered = orders;
     if (currentTab === 'unpaid') {
-        filtered = orders.filter(o => o.status === 'ที่ต้องชำระ' || o.status === 'Pending');
+        filtered = orders.filter(o => o.status === 'ที่ต้องชำระ' || o.status === 'Pending' || o.status === 'DEBUG-TEST');
     } else if (currentTab === 'toship') {
         filtered = orders.filter(o => o.status === 'ที่ต้องจัดส่ง' || o.status === 'To Ship');
     } else if (currentTab === 'processed') {
@@ -159,8 +152,9 @@ function renderOrders() {
             </thead>
             <tbody>
                 ${filtered.map(order => {
-                    const firstItem = order.items[0] || { name: 'Unknown' };
-                    const others = order.items.length > 1 ? ` <br><span style="font-size:0.8rem; color:#888;">ละรายการอื่นอีก ${order.items.length - 1} รายการ</span>` : '';
+                    const items = order.items || [];
+                    const firstItemName = items.length > 0 ? items[0].name : (order.status === 'DEBUG-TEST' ? 'รายการทดสอบ (Debug)' : 'ไม่ระบุสินค้า');
+                    const others = items.length > 1 ? ` <br><span style="font-size:0.8rem; color:#888;">และรายการอื่นอีก ${items.length - 1} รายการ</span>` : '';
                     
                     // Tracking info display (v1.2)
                     let trackingHTML = '';
@@ -183,7 +177,7 @@ function renderOrders() {
                             <td style="color: #4080ff; font-family: monospace; font-size: 0.95rem;">${order.id}</td>
                             <td>
                                 <div style="font-weight: 500;">${firstItem.name}${others}</div>
-                                <div style="font-size: 0.8rem; color: #757575; margin-top: 4px;">ลูกค้า: ${order.customerName && order.customerName !== 'N/A' ? order.customerName : (getNameByPhone(order.customerPhone) || 'ไม่ระบุชื่อ')} (${order.customerPhone || '-'})</div>
+                                <div style="font-size: 0.8rem; color: #757575; margin-top: 4px;">ลูกค้า: ${order.customerName || 'ไม่ระบุชื่อ'} (${order.customerPhone || '-'})</div>
                                 ${trackingHTML}
                             </td>
                             <td style="text-align: center; font-weight: 600; font-size: 1rem; color: #ee4d2d;">฿${(order.total || 0).toLocaleString()}</td>
@@ -195,6 +189,7 @@ function renderOrders() {
                                 ${order.status === 'เตรียมจัดส่งแล้ว' ? `<button class="btn-ship" onclick="confirmSent('${order.id}')" style="background: #1890ff;">แจ้งส่งพัสดุ</button>` : ''}
                                 ${order.status === 'ที่ต้องได้รับ' ? `<button class="btn-ship" onclick="markAsCompleted('${order.id}')" style="background: #52c41a; border-radius: 20px; padding: 6px 15px;">สำเร็จแล้ว</button>` : ''}
                                 <button class="btn-detail" onclick="viewOrderDetails('${order.id}')">รายละเอียด</button>
+                                <button class="btn-detail" onclick="deleteOrder('${order.id}')" style="background: #fff; color: #ff4d4f; border-color: #ff4d4f; margin-left:5px;">ลบ</button>
                             </td>
                         </tr>
                     `;
@@ -202,6 +197,22 @@ function renderOrders() {
             </tbody>
         </table>
     `;
+}
+
+function deleteOrder(orderId) {
+    if (!confirm('🚨 ยืนยันการลบออเดอร์ ' + orderId + ' ใช่ไหมคับ? (ลบแล้วกู้ไม่ได้นะค๊าบ)')) return;
+    
+    if (window.db) {
+        db.collection('orders').doc(orderId).delete()
+            .then(() => alert("ลบทิ้งเรียบร้อยแล้วคับ!"))
+            .catch(err => alert("ลบไม่สำเร็จ (Error): " + err.message));
+    } else {
+        const gOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+        const filtered = gOrders.filter(o => o.id !== orderId);
+        localStorage.setItem('pao_global_orders', JSON.stringify(filtered));
+        renderOrders();
+        alert("ลบคลังในเครื่องเรียบร้อย");
+    }
 }
 
 function getStatusStyle(status) {

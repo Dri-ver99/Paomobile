@@ -47,20 +47,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusIndicator = document.getElementById('firestore-status');
             if (statusIndicator) {
                 statusIndicator.style.background = "#52c41a"; // Green
-                statusIndicator.innerHTML = `&bull; Firestore: เชื่อมต่อแล้ว (v1.2.1) - พบ ${ordersData.length} ออเดอร์`;
+                statusIndicator.innerHTML = `&bull; Firestore: เชื่อมต่อแล้ว (v1.2.3) - พบ ${ordersData.length} ออเดอร์`;
             }
             
             localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
             updateDashboard();
         }, (err) => {
-            console.error("[v1.2.1] Sync Error:", err);
+            console.error("[v1.2.3] Sync Error:", err);
             const statusIndicator = document.getElementById('firestore-status');
             if (statusIndicator) {
                 statusIndicator.style.background = "#ff4d4f"; // Red
-                statusIndicator.innerHTML = `&bull; Firestore: Error v1.2.1 (${err.code})`;
+                statusIndicator.innerHTML = `&bull; Firestore: Error v1.2.3 (${err.code})`;
             }
             if (err.code === 'permission-denied') {
-                alert("สิทธิ์ไม่ถูกต้อง (v1.2.1)\n\nกรุณาล็อกอินด้วยเมล sattawat2560@gmail.com หรือแอดมินเท่านั้นครับ");
+                alert("สิทธิ์ไม่ถูกต้อง (v1.2.2)\n\nกรุณาล็อกอินด้วยเมล sattawat2560@gmail.com หรือแอดมินเท่านั้นครับ");
             }
             updateDashboard();
         });
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function updateDashboard() {
     const orders = ordersData.length > 0 ? ordersData : JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
     
-    // 1. Update Stats Counts
+    // 1. Update Stats Counts (Include fallback for ALL orders)
     const stats = {
         unpaid: 0,
         toShip: 0,
@@ -81,8 +81,8 @@ function updateDashboard() {
     };
 
     orders.forEach(order => {
-        const s = order.status;
-        if (s === 'ที่ต้องชำระ' || s === 'Pending') stats.unpaid++;
+        const s = order.status || 'Pending';
+        if (s === 'ที่ต้องชำระ' || s === 'Pending' || s === 'DEBUG-TEST') stats.unpaid++;
         else if (s === 'ที่ต้องจัดส่ง' || s === 'To Ship') stats.toShip++;
         else if (s === 'เตรียมจัดส่งแล้ว' || s === 'Processed') stats.processed++;
         else if (s === 'ที่ต้องได้รับ' || s === 'To Receive') stats.receive++;
@@ -116,19 +116,11 @@ function renderRecentOrders(orders) {
     const container = document.getElementById('recent-orders-list');
     if (!container) return;
 
-    // Helper: find name by phone if missing
-    const getNameByPhone = (phone) => {
-        if (!phone || phone === 'N/A') return null;
-        const match = orders.find(o => o.customerPhone === phone && o.customerName && o.customerName !== 'N/A');
-        return match ? match.customerName : null;
-    };
-
     if (orders.length === 0) {
         container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">ยังไม่มีคำสั่งซื้อในขณะนี้</div>';
         return;
     }
 
-    // Show only last 5 for dashboard overview
     const latest = orders.slice(0, 5);
 
     container.innerHTML = `
@@ -144,23 +136,25 @@ function renderRecentOrders(orders) {
             </thead>
             <tbody>
                 ${latest.map(order => {
-                    const firstItem = order.items[0] || { name: 'Unknown' };
-                    const others = order.items.length > 1 ? ` และอีก ${order.items.length - 1} รายการ` : '';
+                    const items = order.items || [];
+                    const firstItemName = items.length > 0 ? items[0].name : (order.status === 'DEBUG-TEST' ? 'รายการทดสอบ (Debug)' : 'ไม่ระบุสินค้า');
+                    const others = items.length > 1 ? ` และอีก ${items.length - 1} รายการ` : '';
+                    const orderTotal = typeof order.total === 'number' ? order.total.toLocaleString() : '0';
+                    
                     return `
                         <tr style="border-bottom: 1px solid #fafafa;">
                             <td style="padding: 12px 0; color: #4080ff; font-family: monospace;">${order.id}</td>
                             <td style="padding: 12px 0;">
-                                <div style="font-weight: 500;">${firstItem.name}${others}</div>
-                                <div style="font-size: 0.75rem; color: #999;">ลูกค้า: ${order.customerName && order.customerName !== 'N/A' ? order.customerName : (getNameByPhone(order.customerPhone) || 'ไม่ระบุชื่อ')} (${order.customerPhone || '-'})</div>
-                                ${order.trackingNum ? `<div style="font-size: 0.7rem; color: #ee4d2d; margin-top: 2px;">📦 ${order.trackingNum}</div>` : ''}
+                                <div style="font-weight: 500;">${firstItemName}${others}</div>
+                                <div style="font-size: 0.75rem; color: #999;">ลูกค้า: ${order.customerName || 'ไม่ระบุชื่อ'} (${order.customerPhone || '-'})</div>
                             </td>
-                            <td style="padding: 12px 0; text-align: center; font-weight: 600;">฿${order.total.toLocaleString()}</td>
+                            <td style="padding: 12px 0; text-align: center; font-weight: 600;">฿${orderTotal}</td>
                             <td style="padding: 12px 0; text-align: right;">
-                                <span class="status-tag" style="${getStatusStyle(order.status)}">${order.status === 'ยกเลิกแล้ว' ? 'ขอยกเลิก/คืนเงิน/คืน' : order.status}</span>
+                                <span class="status-tag" style="${getStatusStyle(order.status)}">${order.status || 'ที่ต้องชำระ'}</span>
                             </td>
                             <td style="padding: 12px 0; text-align: right;">
-                                ${order.status === 'ที่ต้องจัดส่ง' ? `<button onclick="shipOrder('${order.id}')" style="background:#ee4d2d; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; margin-right:4px;">จัดส่ง</button>` : ''}
-                                <button onclick="viewOrderDetails('${order.id}')" style="background:#fff; color:#4080ff; border:1px solid #4080ff; padding:3px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer;">รายละเอียด</button>
+                                <button onclick="location.href='seller-orders.html'" style="background:#fff; color:#4080ff; border:1px solid #4080ff; padding:3px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer; margin-right:4px;">ดูรายละเอียด</button>
+                                <button onclick="deleteOrder('${order.id}')" style="background:#fff; color:#ff4d4f; border:1px solid #ff4d4f; padding:3px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer;">ลบทิ้ง</button>
                             </td>
                         </tr>
                     `;
@@ -170,8 +164,25 @@ function renderRecentOrders(orders) {
     `;
 }
 
+function deleteOrder(orderId) {
+    if (!confirm('🚨 ยืนยันการลบออเดอร์ ' + orderId + ' ใช่ไหมคับ? (ลบแล้วกู้ไม่ได้นะค๊าบ)')) return;
+    
+    if (window.db) {
+        db.collection('orders').doc(orderId).delete()
+            .then(() => alert("ลบทิ้งเรียบร้อยแล้วคับ!"))
+            .catch(err => alert("ลบไม่สำเร็จ (Error): " + err.message));
+    } else {
+        // Fallback local delete
+        const gOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+        const filtered = gOrders.filter(o => o.id !== orderId);
+        localStorage.setItem('pao_global_orders', JSON.stringify(filtered));
+        updateDashboard();
+        alert("ลบในเครื่องเรียบร้อย (ไม่ได้ซิงค์ Cloud)");
+    }
+}
+
 function getStatusStyle(status) {
-    if (status === 'ที่ต้องชำระ') return 'background: #fff1f0; border-color: #ffa39e; color: #f5222d;';
+    if (status === 'ที่ต้องชำระ' || status === 'Pending' || status === 'DEBUG-TEST') return 'background: #fff1f0; border-color: #ffa39e; color: #f5222d;';
     if (status === 'ที่ต้องจัดส่ง') return 'background: #e6f7ff; border-color: #91d5ff; color: #1890ff;';
     if (status === 'เตรียมจัดส่งแล้ว') return 'background: #fffbe6; border-color: #ffe58f; color: #faad14;';
     if (status === 'ที่ต้องได้รับ') return 'background: #f0f5ff; border-color: #adc6ff; color: #2f54eb;';
