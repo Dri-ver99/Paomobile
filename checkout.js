@@ -194,17 +194,15 @@ const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem(
                         db.collection('orders').doc(orderId).set(globalOrderData)
                             .then(() => {
                                 console.log("[Firestore] Order synced successfully");
+                                alert("สำเร็จ! ออเดอร์ถูกบันทึกลงระบบ Cloud แล้วครับ\n(ขณะนี้ Seller จะเห็นออเดอร์ของคุณทันที)");
                             })
                             .catch(err => {
                                 console.error("[Firestore] Sync failed:", err);
-                                if (err.code === 'permission-denied') {
-                                    alert("Firestore Error: Permission Denied (เช็ค Security Rules ใน Firebase Console คับ)");
-                                } else {
-                                    alert("Firestore Error: " + err.message);
-                                }
+                                alert("Firestore Sync Error: " + err.message + "\n(กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต)");
                             });
                     } else {
-                        console.warn("[Firestore] DB is not initialized. Sync skipped.");
+                        console.error("[Firestore] DB is not initialized. Order saved locally only.");
+                        alert("⚠️ คำเตือน: ระบบ Cloud ไม่ทำงาน! ออเดอร์จะถูกบันทึกแค่ในเครื่องนี้เท่านั้น");
                     }
                 } catch (err) { console.error("Global order sync failed:", err); }
 
