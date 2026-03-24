@@ -7,19 +7,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Sync from Firestore (Real-time)
     if (typeof db !== 'undefined') {
         console.log("[Firestore] Dashboard: Starting real-time listener...");
-        db.collection('orders').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            ordersData = snapshot.docs.map(doc => ({
+        db.collection('orders').onSnapshot(snapshot => {
+            let fetchedOrders = snapshot.docs.map(doc => ({
                 ...doc.data(),
                 id: doc.id 
             }));
             
+            // Sort client-side so orders without createdAt still show up (at the bottom)
+            fetchedOrders.sort((a, b) => {
+                const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date(0);
+                const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date(0);
+                return dateB - dateA;
+            });
+            
+            ordersData = fetchedOrders;
+            
             const statusIndicator = document.getElementById('firestore-status');
             if (statusIndicator) {
                 statusIndicator.style.background = "#52c41a"; // Green
-                statusIndicator.innerHTML = `&bull; Firestore: เชื่อมต่อแล้ว (พบ ${ordersData.length} ออเดอร์)`;
+                statusIndicator.innerHTML = `&bull; Firestore: เชื่อมต่อแล้ว (v1.2) - พบ ${ordersData.length} ออเดอร์`;
             }
             
-            console.log("[Firestore] Dashboard: Received " + ordersData.length + " orders.");
+            console.log("[v1.2] Dashboard: Received " + ordersData.length + " orders.");
             updateDashboard();
         }, (err) => {
             console.error("[Firestore] Connection error:", err);
@@ -123,6 +132,7 @@ function renderRecentOrders(orders) {
                             <td style="padding: 12px 0;">
                                 <div style="font-weight: 500;">${firstItem.name}${others}</div>
                                 <div style="font-size: 0.75rem; color: #999;">ลูกค้า: ${order.customerName && order.customerName !== 'N/A' ? order.customerName : (getNameByPhone(order.customerPhone) || 'ไม่ระบุชื่อ')} (${order.customerPhone || '-'})</div>
+                                ${order.trackingNum ? `<div style="font-size: 0.7rem; color: #ee4d2d; margin-top: 2px;">📦 ${order.trackingNum}</div>` : ''}
                             </td>
                             <td style="padding: 12px 0; text-align: center; font-weight: 600;">฿${order.total.toLocaleString()}</td>
                             <td style="padding: 12px 0; text-align: right;">

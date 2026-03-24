@@ -19,11 +19,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Sync from Firestore (Real-time)
     if (typeof db !== 'undefined') {
         console.log("[Firestore] Starting real-time listener...");
-        db.collection('orders').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            ordersData = snapshot.docs.map(doc => ({
+        db.collection('orders').onSnapshot(snapshot => {
+            let fetchedOrders = snapshot.docs.map(doc => ({
                 ...doc.data(),
                 id: doc.id 
             }));
+            
+            // Sort client-side so orders without createdAt still show up (at the bottom)
+            fetchedOrders.sort((a, b) => {
+                const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date(0);
+                const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date(0);
+                return dateB - dateA;
+            });
+            
+            ordersData = fetchedOrders;
             
             // Update Diagnostic UI
             if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (Real-time)";
@@ -131,12 +140,30 @@ function renderOrders() {
                 ${filtered.map(order => {
                     const firstItem = order.items[0] || { name: 'Unknown' };
                     const others = order.items.length > 1 ? ` <br><span style="font-size:0.8rem; color:#888;">ละรายการอื่นอีก ${order.items.length - 1} รายการ</span>` : '';
+                    
+                    // Tracking info display (v1.2)
+                    let trackingHTML = '';
+                    if (order.status === 'ที่ต้องได้รับ' || order.status === 'สำเร็จแล้ว') {
+                        if (order.trackingNum) {
+                            trackingHTML = `
+                                <div style="margin-top: 8px; padding: 6px; background: #f9f9f9; border-radius: 4px; border: 1px dashed #ddd; font-size: 0.8rem;">
+                                    <strong>เลขพัสดุ:</strong> ${order.trackingNum}
+                                    <br>
+                                    <a href="${order.trackingLink}" target="_blank" style="color: #ee4d2d; text-decoration: none; font-weight: 500;">
+                                        🔍 เช็คสถานะคลิกที่นี่
+                                    </a>
+                                </div>
+                            `;
+                        }
+                    }
+
                     return `
                         <tr>
                             <td style="color: #4080ff; font-family: monospace; font-size: 0.95rem;">${order.id}</td>
                             <td>
                                 <div style="font-weight: 500;">${firstItem.name}${others}</div>
                                 <div style="font-size: 0.8rem; color: #757575; margin-top: 4px;">ลูกค้า: ${order.customerName && order.customerName !== 'N/A' ? order.customerName : (getNameByPhone(order.customerPhone) || 'ไม่ระบุชื่อ')} (${order.customerPhone || '-'})</div>
+                                ${trackingHTML}
                             </td>
                             <td style="text-align: center; font-weight: 600; font-size: 1rem; color: #ee4d2d;">฿${(order.total || 0).toLocaleString()}</td>
                             <td style="text-align: center;">
@@ -145,6 +172,7 @@ function renderOrders() {
                             <td style="text-align: right;">
                                 ${order.status === 'ที่ต้องจัดส่ง' ? `<button class="btn-ship" onclick="shipOrder('${order.id}')">จัดส่ง</button>` : ''}
                                 ${order.status === 'เตรียมจัดส่งแล้ว' ? `<button class="btn-ship" onclick="confirmSent('${order.id}')" style="background: #1890ff;">แจ้งส่งพัสดุ</button>` : ''}
+                                ${order.status === 'ที่ต้องได้รับ' ? `<button class="btn-ship" onclick="markAsCompleted('${order.id}')" style="background: #52c41a; border-radius: 20px; padding: 6px 15px;">สำเร็จแล้ว</button>` : ''}
                                 <button class="btn-detail" onclick="viewOrderDetails('${order.id}')">รายละเอียด</button>
                             </td>
                         </tr>
@@ -168,6 +196,11 @@ function getStatusStyle(status) {
 function shipOrder(orderId) {
     if(!confirm('ยืนยันเตรียมการจัดส่ง (แพ็คสินค้า) หมายเลข ' + orderId + ' ใช่หรือไม่?')) return;
     updateOrderStatus(orderId, 'เตรียมจัดส่งแล้ว');
+}
+
+function markAsCompleted(orderId) {
+    if(!confirm('ยืนยันว่ารายการสั่งซื้อ ' + orderId + ' สำเร็จเรียบร้อยแล้วใช่หรือไม่?')) return;
+    updateOrderStatus(orderId, 'สำเร็จแล้ว');
 }
 
 function confirmSent(orderId) {
