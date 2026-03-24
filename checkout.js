@@ -204,16 +204,16 @@ const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem(
 
                         firestoreDB.collection('orders').doc(orderId).set(finalData)
                             .then(() => {
-                                console.log("[v1.2] Order synced successfully");
-                                alert("สำเร็จ (v1.2)! ออเดอร์ส่งขึ้นระบบ Cloud เรียบร้อยแล้วครับ");
+                                console.log("[v1.2.1] Order synced successfully");
+                                alert("สำเร็จ (v1.2.1)! ออเดอร์ส่งขึ้นระบบ Cloud เรียบร้อยแล้วครับ");
                             })
                             .catch(err => {
-                                console.error("[v1.2] Sync failed:", err);
-                                alert("Sync Error (v1.2): " + err.message + "\n(รหัสออเดอร์: " + orderId + ")");
+                                console.error("[v1.2.1] Sync failed:", err);
+                                alert("Sync Error (v1.2.1): " + err.message + "\n(รหัสออเดอร์: " + orderId + ")");
                             });
                     } else {
-                        console.error("[v1.2] No Firestore DB found.");
-                        alert("⚠️ พบบัญปัญหา (v1.2): ระบบ Cloud ไม่เชื่อมต่อ! ออเดอร์จะบันทึกแค่ในเครื่องนี้ครับ");
+                        console.error("[v1.2.1] No Firestore DB found.");
+                        alert("⚠️ พบบัญปัญหา (v1.2.1): ระบบ Cloud ไม่เชื่อมต่อ! ออเดอร์จะบันทึกแค่ในเครื่องนี้ครับ");
                     }
                 } catch (err) { console.error("Global order sync failed:", err); }
 
