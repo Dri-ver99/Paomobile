@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
             
             if (err.code === 'permission-denied') {
-                alert("Firestore Error: Permission Denied (เช็ค Security Rules ใน Firebase Console คับ)");
+                alert("Firestore Error: Permission Denied\n\nสาเหตุ: บัญชีของคุณไม่มีสิทธิ์อ่านข้อมูลออเดอร์ทั้งหมด\nวิธีแก้: กรุณาเข้าไปที่ Firebase Console > Firestore > Rules แล้วอัปเดต Security Rules ให้เรียบร้อยครับ");
             } else {
                 alert("Firestore Error: " + err.message);
             }

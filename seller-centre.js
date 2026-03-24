@@ -1,14 +1,48 @@
-// seller-centre.js - Dynamic Dashboard Logic
+let ordersData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-    updateDashboard();
-    
-    // Refresh every 30 seconds if orders are being placed
-    setInterval(updateDashboard, 30000);
+    const statusText = document.getElementById('statusText');
+    const statusIndicator = document.getElementById('statusIndicator');
+
+    // 1. Sync from Firestore (Real-time)
+    if (typeof db !== 'undefined') {
+        console.log("[Firestore] Dashboard: Starting real-time listener...");
+        db.collection('orders').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            ordersData = snapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id 
+            }));
+            
+            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว";
+            if (statusIndicator) statusIndicator.style.background = "#52c41a"; // Green
+
+            console.log("[Firestore] Dashboard: Received " + ordersData.length + " orders.");
+            updateDashboard();
+        }, err => {
+            console.error("[Firestore] Dashboard Error:", err);
+            if (statusText) statusText.textContent = "Firestore Error: " + err.code;
+            if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
+            
+            if (err.code === 'permission-denied') {
+                alert("Firestore Error: Permission Denied\nกรุณาอัปเดต Security Rules ใน Firebase Console ตามคู่มือในหน้าจัดการออเดอร์ครับ");
+            }
+
+            // Fallback to localStorage
+            ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+            updateDashboard();
+        });
+    } else {
+        console.warn("[Firestore] DB is not initialized. Falling back to local storage.");
+        if (statusText) statusText.textContent = "Firestore: ไม่ได้ติดตั้ง";
+        if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
+
+        ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+        updateDashboard();
+    }
 });
 
 function updateDashboard() {
-    const orders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+    const orders = ordersData;
     
     // 1. Update Stats Counts
     const stats = {
