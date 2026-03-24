@@ -13,36 +13,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: doc.id 
             }));
             
-            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว";
-            if (statusIndicator) statusIndicator.style.background = "#52c41a"; // Green
-
+            const statusIndicator = document.getElementById('firestore-status');
+            if (statusIndicator) {
+                statusIndicator.style.background = "#52c41a"; // Green
+                statusIndicator.innerHTML = `&bull; Firestore: เชื่อมต่อแล้ว (พบ ${ordersData.length} ออเดอร์)`;
+            }
+            
             console.log("[Firestore] Dashboard: Received " + ordersData.length + " orders.");
             updateDashboard();
-        }, err => {
-            console.error("[Firestore] Dashboard Error:", err);
-            if (statusText) statusText.textContent = "Firestore Error: " + err.code;
+        }, (err) => {
+            console.error("[Firestore] Connection error:", err);
+            const statusIndicator = document.getElementById('firestore-status');
             if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
             
             if (err.code === 'permission-denied') {
-                alert("Firestore Error: Permission Denied\nกรุณาอัปเดต Security Rules ใน Firebase Console ตามคู่มือในหน้าจัดการออเดอร์ครับ");
+                alert("Firestore Error: Permission Denied\n\nสาเหตุ: บัญชีของคุณไม่มีสิทธิ์เข้าถึงออเดอร์ทั้งหมด\nวิธีแก้: กรุณาล็อกอินด้วย sattawat2560@gmail.com และอัปเดต Security Rules ครับ");
+            } else {
+                alert("Firestore Error: " + err.message);
             }
-
-            // Fallback to localStorage
-            ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-            updateDashboard();
         });
     } else {
-        console.warn("[Firestore] DB is not initialized. Falling back to local storage.");
-        if (statusText) statusText.textContent = "Firestore: ไม่ได้ติดตั้ง";
-        if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
-
-        ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+        console.warn("[Firestore] DB is not initialized. Using fallback data.");
         updateDashboard();
     }
 });
 
 function updateDashboard() {
-    const orders = ordersData;
+    const orders = ordersData.length > 0 ? ordersData : JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
     
     // 1. Update Stats Counts
     const stats = {
@@ -157,36 +154,23 @@ function getStatusStyle(status) {
 function shipOrder(orderId) {
     if(!confirm('ยืนยันเตรียมการจัดส่งสำหรับหมายเลขคำสั่งซื้อ ' + orderId + ' ใช่หรือไม่?')) return;
     
-    try {
-        const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-        const gIdx = globalOrders.findIndex(o => o.id === orderId);
-        
-        if(gIdx > -1) {
-            globalOrders[gIdx].status = 'เตรียมจัดส่งแล้ว';
-            const customerId = globalOrders[gIdx].customer;
-            
-            // Also update the specific user's order list
-            if (customerId && customerId !== 'guest') {
-                const userOrdersKey = 'pao_orders_' + customerId;
-                const userOrders = JSON.parse(localStorage.getItem(userOrdersKey) || '[]');
-                const uIdx = userOrders.findIndex(o => o.id === orderId);
-                if (uIdx > -1) {
-                    userOrders[uIdx].status = 'เตรียมจัดส่งแล้ว';
-                    localStorage.setItem(userOrdersKey, JSON.stringify(userOrders));
-                }
-            }
-            
-            localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
-            updateDashboard(); // Refresh UI
-        }
-    } catch(e) {
-        console.error("Failed to ship order:", e);
+    if (typeof db !== 'undefined') {
+        db.collection('orders').doc(orderId).update({ status: 'เตรียมจัดส่งแล้ว' })
+            .then(() => {
+                alert('อัปเดตสถานะสำเร็จ!');
+            })
+            .catch(err => {
+                console.error("Firestore update failed:", err);
+                alert("Error: " + err.message);
+            });
+    } else {
+        alert('Firestore not connected. Update failed.');
     }
 }
 
 function viewOrderDetails(orderId) {
-    const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-    const order = globalOrders.find(o => o.id === orderId);
+    const orders = ordersData.length > 0 ? ordersData : JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+    const order = orders.find(o => o.id === orderId);
     
     if (order) {
         document.getElementById('modalCustomerName').textContent = order.customerName || 'N/A';
