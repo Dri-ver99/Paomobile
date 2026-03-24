@@ -188,21 +188,32 @@ const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem(
                     allOrders.unshift(globalOrderData);
                     localStorage.setItem('pao_global_orders', JSON.stringify(allOrders));
 
-                    // 2. Save to Firestore (Cloud Sync)
-                    if (typeof db !== 'undefined') {
-                        console.log("[Firestore] Attempting to sync order:", orderId);
-                        db.collection('orders').doc(orderId).set(globalOrderData)
+                    // 2. Save to Firestore (Cloud Sync) [v1.2]
+                    console.log("[v1.2] Attempting sync to cloud...");
+                    const firestoreDB = (typeof db !== 'undefined') ? db : (window.firebase ? firebase.firestore() : null);
+                    
+                    if (firestoreDB) {
+                        console.log("[v1.2] Firestore initialized. Document ID:", orderId);
+                        
+                        // Ensure we use the correct timestamp access
+                        const timestamp = (window.firebase && firebase.firestore.FieldValue) ? 
+                                          firebase.firestore.FieldValue.serverTimestamp() : 
+                                          new Date().toISOString();
+
+                        const finalData = { ...globalOrderData, createdAt: timestamp };
+
+                        firestoreDB.collection('orders').doc(orderId).set(finalData)
                             .then(() => {
-                                console.log("[Firestore] Order synced successfully");
-                                alert("สำเร็จ! ออเดอร์ถูกบันทึกลงระบบ Cloud แล้วครับ\n(ขณะนี้ Seller จะเห็นออเดอร์ของคุณทันที)");
+                                console.log("[v1.2] Order synced successfully");
+                                alert("สำเร็จ (v1.2)! ออเดอร์ส่งขึ้นระบบ Cloud เรียบร้อยแล้วครับ");
                             })
                             .catch(err => {
-                                console.error("[Firestore] Sync failed:", err);
-                                alert("Firestore Sync Error: " + err.message + "\n(กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต)");
+                                console.error("[v1.2] Sync failed:", err);
+                                alert("Sync Error (v1.2): " + err.message + "\n(รหัสออเดอร์: " + orderId + ")");
                             });
                     } else {
-                        console.error("[Firestore] DB is not initialized. Order saved locally only.");
-                        alert("⚠️ คำเตือน: ระบบ Cloud ไม่ทำงาน! ออเดอร์จะถูกบันทึกแค่ในเครื่องนี้เท่านั้น");
+                        console.error("[v1.2] No Firestore DB found.");
+                        alert("⚠️ พบบัญปัญหา (v1.2): ระบบ Cloud ไม่เชื่อมต่อ! ออเดอร์จะบันทึกแค่ในเครื่องนี้ครับ");
                     }
                 } catch (err) { console.error("Global order sync failed:", err); }
 
