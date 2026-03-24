@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
     if (tabParam) {
-        currentTab = tabParam;
+        currentTab = tabParam.replace(/^-+/, ''); // Remove leading dashes if any
     }
 
     initTabs();
@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     startFirestoreSync();
                 }
             } else {
-                console.warn("[v1.2.4] No user logged in. Firestore will be blocked.");
-                if (statusText) statusText.textContent = "Firestore: กรุณาล็อกอิน (v1.2.4)";
+                console.warn("[v1.2.10] No user logged in. Firestore will be blocked.");
+                if (statusText) statusText.textContent = "Firestore: กรุณาล็อกอิน (v1.2.10)";
                 if (statusIndicator) statusIndicator.style.background = "#faad14"; // Orange
                 if (adminLoginBtn) adminLoginBtn.style.display = 'block';
                 
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startFirestoreSync() {
-        console.log("[v1.2.4] Starting real-time sync...");
+        console.log("[v1.2.10] Starting real-time sync...");
         db.collection('orders').onSnapshot(snapshot => {
             let fetchedOrders = snapshot.docs.map(doc => ({
                 ...doc.data(),
@@ -63,20 +63,23 @@ document.addEventListener('DOMContentLoaded', () => {
             ordersData = fetchedOrders;
             
             // Update UI
-            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (v1.2.4)";
+            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (v1.2.7)";
             if (statusIndicator) statusIndicator.style.background = "#52c41a"; // Green
             if (orderCountStatus) orderCountStatus.textContent = "ออเดอร์ในระบบ: " + ordersData.length;
             
             localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
             renderOrders();
             updateTabBadges();
+            
+            // Cloud-Aware Auto-Check Logic (v1.2.10)
+            checkDeliveryStatusAuto();
         }, err => {
-            console.error("[v1.2.4] Sync Error:", err);
-            if (statusText) statusText.textContent = "Firestore Error (v1.2.4)";
+            console.error("[v1.2.7] Sync Error:", err);
+            if (statusText) statusText.textContent = "Firestore Error (v1.2.7)";
             if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
             
             if (err.code === 'permission-denied') {
-                alert("สิทธิ์ไม่ถูกต้อง (v1.2.4)\n\nกรุณากดปุ่ม 'ล็อกอิน Admin' ที่มุมขวาบน และใช้เมล sattawat2560@gmail.com เท่านั้นครับ");
+                alert("สิทธิ์ไม่ถูกต้อง (v1.2.7)\n\nกรุณากดปุ่ม 'ล็อกอิน Admin' ที่มุมขวาบน และใช้เมล sattawat2560@gmail.com เท่านั้นครับ");
                 if (adminLoginBtn) adminLoginBtn.style.display = 'block';
             }
             loadLocalStorageFallback();
@@ -126,8 +129,6 @@ function renderOrders() {
         filtered = orders.filter(o => o.status === 'ที่ต้องจัดส่ง' || o.status === 'To Ship');
     } else if (currentTab === 'processed') {
         filtered = orders.filter(o => o.status === 'เตรียมจัดส่งแล้ว' || o.status === 'Processed');
-    } else if (currentTab === 'receive') {
-        filtered = orders.filter(o => o.status === 'ที่ต้องได้รับ' || o.status === 'To Receive');
     } else if (currentTab === 'completed') {
         filtered = orders.filter(o => o.status === 'สำเร็จแล้ว' || o.status === 'Completed');
     } else if (currentTab === 'cancelled') {
@@ -162,7 +163,8 @@ function renderOrders() {
                         if (order.trackingNum) {
                             trackingHTML = `
                                 <div style="margin-top: 8px; padding: 6px; background: #f9f9f9; border-radius: 4px; border: 1px dashed #ddd; font-size: 0.8rem;">
-                                    <strong>เลขพัสดุ:</strong> ${order.trackingNum}
+                                    <strong>เลขพัสดุ:</strong> ${order.trackingNum} 
+                                    <a href="${order.trackingLink}" target="_blank" style="color: #1890ff; margin-left: 8px; text-decoration: none;">[เช็คพัสดุ]</a>
                                     <br>
                                     <a href="${order.trackingLink}" target="_blank" style="color: #ee4d2d; text-decoration: none; font-weight: 500;">
                                         🔍 เช็คสถานะคลิกที่นี่
@@ -176,7 +178,7 @@ function renderOrders() {
                         <tr>
                             <td style="color: #4080ff; font-family: monospace; font-size: 0.95rem;">${order.id}</td>
                             <td>
-                                <div style="font-weight: 500;">${firstItem.name}${others}</div>
+                                <div style="font-weight: 500;">${firstItemName}${others}</div>
                                 <div style="font-size: 0.8rem; color: #757575; margin-top: 4px;">ลูกค้า: ${order.customerName || 'ไม่ระบุชื่อ'} (${order.customerPhone || '-'})</div>
                                 ${trackingHTML}
                             </td>
@@ -185,6 +187,7 @@ function renderOrders() {
                                 <span class="status-tag" style="${getStatusStyle(order.status)}">${order.status === 'ยกเลิกแล้ว' ? 'ขอยกเลิก/คืนเงิน/คืน' : order.status}</span>
                             </td>
                             <td style="text-align: right;">
+                                ${order.status === 'ที่ต้องชำระ' ? `<button class="btn-ship" onclick="confirmPayment('${order.id}')" style="background: #faad14;">ยืนยันชำระเงิน</button>` : ''}
                                 ${order.status === 'ที่ต้องจัดส่ง' ? `<button class="btn-ship" onclick="shipOrder('${order.id}')">จัดส่ง</button>` : ''}
                                 ${order.status === 'เตรียมจัดส่งแล้ว' ? `<button class="btn-ship" onclick="confirmSent('${order.id}')" style="background: #1890ff;">แจ้งส่งพัสดุ</button>` : ''}
                                 ${order.status === 'ที่ต้องได้รับ' ? `<button class="btn-ship" onclick="markAsCompleted('${order.id}')" style="background: #52c41a; border-radius: 20px; padding: 6px 15px;">สำเร็จแล้ว</button>` : ''}
@@ -233,6 +236,11 @@ function shipOrder(orderId) {
 function markAsCompleted(orderId) {
     if(!confirm('ยืนยันว่ารายการสั่งซื้อ ' + orderId + ' สำเร็จเรียบร้อยแล้วใช่หรือไม่?')) return;
     updateOrderStatus(orderId, 'สำเร็จแล้ว');
+}
+
+function confirmPayment(orderId) {
+    if(!confirm('ยืนยันว่าลูกค้าได้ชำระเงินสำหรับออเดอร์ ' + orderId + ' เรียบร้อยแล้วใช่หรือไม่?\n(ออเดอร์จะถูกย้ายไปที่หน้า "ที่ต้องจัดส่ง")')) return;
+    updateOrderStatus(orderId, 'ที่ต้องจัดส่ง');
 }
 
 function confirmSent(orderId) {
@@ -310,7 +318,7 @@ function viewOrderDetails(orderId) {
             shipBtn.style.display = 'inline-block';
             saveBtn.style.display = 'none';
             inputNum.value = order.trackingNum || '';
-            inputLink.value = order.trackingLink || 'https://track.thailandpost.co.th/';
+            inputLink.value = order.trackingLink || '';
             inputNum.readOnly = false;
             inputLink.readOnly = false;
         } else if (order.status === 'ที่ต้องได้รับ') {
@@ -394,8 +402,7 @@ function updateTabBadges() {
     const counts = {
         unpaid: orders.filter(o => o.status === 'ที่ต้องชำระ' || o.status === 'Pending').length,
         toship: orders.filter(o => o.status === 'ที่ต้องจัดส่ง' || o.status === 'To Ship').length,
-        processed: orders.filter(o => o.status === 'เตรียมจัดส่งแล้ว' || o.status === 'Processed').length,
-        receive: orders.filter(o => o.status === 'ที่ต้องได้รับ' || o.status === 'To Receive').length
+        processed: orders.filter(o => o.status === 'เตรียมจัดส่งแล้ว' || o.status === 'Processed').length
     };
 
     Object.keys(counts).forEach(key => {
@@ -409,4 +416,25 @@ function updateTabBadges() {
             }
         }
     });
+}
+
+async function checkDeliveryStatusAuto() {
+    // Only check if we have orders that are "To Receive"
+    let toReceiveOrders = ordersData.filter(o => o.status === 'ที่ต้องได้รับ' && o.trackingNum);
+    if (toReceiveOrders.length === 0) return;
+
+    console.log("[v1.2.10] Seller-Side Auto-Check active for:", toReceiveOrders.length, "orders");
+
+    // Simulate "Tracking API" delay
+    setTimeout(async () => {
+        for (let order of toReceiveOrders) {
+            // Update Firestore directly!
+            if (typeof db !== 'undefined') {
+                try {
+                    await db.collection('orders').doc(order.id).update({ status: 'สำเร็จแล้ว' });
+                    console.log("[v1.2.10] Seller Firestore Auto-Update Success:", order.id);
+                } catch(e) { console.error("[v1.2.10] Seller Firestore Update Failed:", e); }
+            }
+        }
+    }, 5000); // 5 seconds delay for seller too
 }

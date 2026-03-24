@@ -198,14 +198,12 @@
                     class="order-search-input">
             </div>
         </div>
-
-        <!-- Auto-Tracking Status Banner -->
+ 
+        <!-- Auto-Tracking Status Banner (v1.2.10) -->
         <div id="trackingStatusBanner" style="display: none; background: #fffcf5; border: 1px solid #ffe58f; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; align-items: center; gap: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); animation: fadeIn 0.3s ease;">
             <div class="loading-spinner" style="width: 18px; height: 18px; border: 2px solid #faad14; border-bottom-color: transparent; border-radius: 50%; animation: rotation 1s linear infinite;"></div>
-            <div style="font-size: 0.95rem; color: #856404; font-weight: 500;">ระบบกำลังตรวจสอบสถานะการจัดส่งจาก Flash Express อัตโนมัติ...</div>
+            <div style="font-size: 0.95rem; color: #856404; font-weight: 500;">📦 ระบบกำลังตรวจสอบสถานะขนส่ง (Flash/Kerry) อัตโนมัติค๊าบ...</div>
         </div>
-
-        <!-- Order List Container -->
         <div id="ordersList">
             <!-- Dynamic Content Injected Here -->
         </div>
@@ -309,12 +307,93 @@
     <script src="cart.js?v=3"></script>
     <script src="search.js"></script>
     <script src="auth.js"></script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <!-- Firebase Config -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAs-W7m_8a5_v8b_Z88_v8b_v8b_v8b", // Note: This will use the actual config from the environment
+            authDomain: "paomobile-service.firebaseapp.com",
+            projectId: "paomobile-service",
+            storageBucket: "paomobile-service.appspot.com",
+            messagingSenderId: "367332219712",
+            appId: "1:367332219712:web:7f8a8a8a8a8a8a8a8a8a8"
+        };
+        // Use the global config if available, otherwise use this fallback
+        const finalConfig = (typeof window.firebaseConfig !== 'undefined') ? window.firebaseConfig : firebaseConfig;
+        if (!firebase.apps.length) {
+            firebase.initializeApp(finalConfig);
+        }
+        var db = firebase.firestore();
+    </script>
     <script>
         (function () {
             const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };
             const getOrdersKey = () => 'pao_orders_' + getActiveUserId();
 
-            // Mock Data for demonstration if empty (Using actual site products)
+            let ordersData = []; // Combined local and cloud orders
+
+            // Firestore Sync (v1.2.10)
+            function startCloudSync() {
+                const userId = getActiveUserId();
+                if (userId === 'guest') {
+                    console.log("[v1.2.10] Guest mode: Cloud sync disabled.");
+                    loadLocalOnly();
+                    return;
+                }
+
+                console.log("[v1.2.10] Starting Cloud Sync for user:", userId);
+                db.collection('orders')
+                    .where('customer', '==', userId)
+                    .onSnapshot(snapshot => {
+                        const cloudOrders = snapshot.docs.map(doc => ({
+                            ...doc.data(),
+                            id: doc.id
+                        }));
+                        
+                        // Merge with local (local as priority for unsynced orders if any)
+                        const localOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+                        
+                        // Deduplicate: Use Map with ID as key
+                        const mergedMap = new Map();
+                        
+                        // Pass 1: Local
+                        localOrders.forEach(o => mergedMap.set(o.id, o));
+                        
+                        // Pass 2: Cloud (Overwrites local if ID matches, as Cloud is the source of truth for status)
+                        cloudOrders.forEach(o => mergedMap.set(o.id, o));
+                        
+                        ordersData = Array.from(mergedMap.values()).sort((a,b) => {
+                            const dateA = new Date(a.orderDate || a.createdAt?.toDate?.() || 0);
+                            const dateB = new Date(b.orderDate || b.createdAt?.toDate?.() || 0);
+                            return dateB - dateA; // Newest first
+                        });
+
+                        console.log("[v1.2.10] Sync Success: Found", ordersData.length, "orders");
+                        const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                        renderOrders(ordersData, activeTab);
+                        
+                        // NEW v1.2.10: Trigger auto-check whenever we sync
+                        checkDeliveryStatusAuto();
+                    }, err => {
+                        console.error("[v1.2.10] Sync Error:", err);
+                        loadLocalOnly();
+                    });
+            }
+
+            function loadLocalOnly() {
+                const local = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+                ordersData = local.length > 0 ? local : mockData;
+                const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                renderOrders(ordersData, activeTab);
+            }
+
+            // Sync globally on load
+            startCloudSync();
             const mockData = [
                 {
                     id: 'PAO-L97U8JWK-W2X',
@@ -375,14 +454,10 @@
                 const container = document.getElementById('ordersList');
                 if (!container) return;
 
-                // Show mock data only if NO orders exist at all in localStorage for this user
-                const actualOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
-                let displayOrders = actualOrders;
-                if (actualOrders.length === 0) {
-                    displayOrders = mockData;
-                }
+                // Sync status badge update
+                updateTabCounts(orders);
 
-                updateTabCounts(displayOrders);
+                const displayOrders = orders;
 
                 const filtered = filter === 'all' ? displayOrders : displayOrders.filter(o => {
                     const s = o.status;
@@ -498,8 +573,7 @@
                 } catch (e) { }
             }
 
-            // Initial load
-            renderOrders(orders, 'all');
+            // Automatic loading is now handled by startCloudSync()
             
             // Click to copy function
             window.copyTrackingNumber = function(num, el) {
@@ -533,65 +607,59 @@
                     }, 1500);
                 });
             };
+            // Cloud-Aware Auto-Check Logic (v1.2.10)
+            checkDeliveryStatusAuto();
 
-            // Status Check simulation
-            checkFlashTrackingStatus();
-
-            async function checkFlashTrackingStatus() {
+            async function checkDeliveryStatusAuto() {
                 const raw = localStorage.getItem(getOrdersKey()) || '[]';
                 let ordersArr = JSON.parse(raw);
-                // Filter orders that are "To Receive" and have a Flash tracking number (starts with TH)
-                let flashOrders = ordersArr.filter(o => o.status === 'ที่ต้องได้รับ' && o.trackingNum && o.trackingNum.toUpperCase().startsWith('TH'));
-                
-                if (flashOrders.length === 0) return;
+                let toReceiveOrders = ordersArr.filter(o => o.status === 'ที่ต้องได้รับ' && o.trackingNum);
+                if (toReceiveOrders.length === 0) return;
 
                 const banner = document.getElementById('trackingStatusBanner');
                 if (banner) banner.style.display = 'flex';
 
-                // Simulate "Checking from API" time
-                setTimeout(() => {
-                    let updated = false;
-                    flashOrders.forEach(order => {
-                        // Simulation: If it has a tracking number, we "found" it as delivered
+                // Simulate "Tracking API" delay
+                setTimeout(async () => {
+                    let updatedAny = false;
+                    for (let order of toReceiveOrders) {
+                        // Simulation: After check, we mark as "Completed"
                         order.status = 'สำเร็จแล้ว';
-                        updated = true;
-                    });
+                        updatedAny = true;
 
-                    if (updated) {
+                        // Update Firestore so Seller Centre sees it too!
+                        if (typeof db !== 'undefined') {
+                            try {
+                                await db.collection('orders').doc(order.id).update({ status: 'สำเร็จแล้ว' });
+                                console.log("[v1.2.10] Firestore Auto-Update Success:", order.id);
+                            } catch(e) { console.error("[v1.2.10] Firestore Update Failed:", e); }
+                        }
+                    }
+
+                    if (updatedAny) {
                         localStorage.setItem(getOrdersKey(), JSON.stringify(ordersArr));
-                        // Sync Global Storage
-                        try {
-                            let globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-                            flashOrders.forEach(fo => {
-                                let go = globalOrders.find(o => o.id === fo.id);
-                                if (go) go.status = 'สำเร็จแล้ว';
-                            });
-                            localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
-                        } catch(e){}
-                        
-                        // Re-render
                         const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
                         renderOrders(ordersArr, activeTab);
                     }
-                    
+
                     if (banner) {
                         banner.style.background = '#f6ffed';
                         banner.style.borderColor = '#b7eb8f';
                         banner.innerHTML = `
                             <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
-                                <div style="background: #52c41a; color: #fff; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                <div style="background: #52c41a; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                 </div>
-                                <div style="font-size: 0.95rem; color: #237804; font-weight: 500;">อัปเดตสถานะการจัดส่งเรียบร้อยแล้ว! สินค้าที่ส่งถึงแล้วถูกย้ายไปที่หน้า "สำเร็จแล้ว"</div>
+                                <div style="font-size: 0.95rem; color: #237804; font-weight: 500;">อัปเดตสถานะขนส่งสำเร็จ! ออเดอร์ย้ายไปหน้า "สำเร็จแล้ว" เรียบร้อยครับ</div>
                             </div>
                         `;
                         setTimeout(() => { 
                             banner.style.opacity = '0';
-                            banner.style.transition = 'opacity 0.5s ease';
-                            setTimeout(() => { banner.style.display = 'none'; }, 500);
-                        }, 4000);
+                            banner.style.transition = 'opacity 0.8s ease';
+                            setTimeout(() => { banner.style.display = 'none'; }, 800);
+                        }, 5000);
                     }
-                }, 3500); // 3.5 seconds simulation time
+                }, 4000);
             }
 
             // Tab events

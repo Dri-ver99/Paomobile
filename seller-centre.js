@@ -47,17 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusIndicator = document.getElementById('firestore-status');
             if (statusIndicator) {
                 statusIndicator.style.background = "#52c41a"; // Green
-                statusIndicator.innerHTML = `&bull; Firestore: เชื่อมต่อแล้ว (v1.2.4) - พบ ${ordersData.length} ออเดอร์`;
+                statusIndicator.innerHTML = `&bull; Firestore: เชื่อมต่อแล้ว (v1.2.10) - พบ ${ordersData.length} ออเดอร์`;
             }
             
             localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
             updateDashboard();
         }, (err) => {
-            console.error("[v1.2.4] Sync Error:", err);
+            console.error("[v1.2.10] Sync Error:", err);
             const statusIndicator = document.getElementById('firestore-status');
             if (statusIndicator) {
                 statusIndicator.style.background = "#ff4d4f"; // Red
-                statusIndicator.innerHTML = `&bull; Firestore: Error v1.2.4 (${err.code})`;
+                statusIndicator.innerHTML = `&bull; Firestore: Error v1.2.10 (${err.code})`;
             }
             if (err.code === 'permission-denied') {
                 alert("สิทธิ์ไม่ถูกต้อง (v1.2.2)\n\nกรุณาล็อกอินด้วยเมล sattawat2560@gmail.com หรือแอดมินเท่านั้นครับ");

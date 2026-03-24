@@ -80,7 +80,7 @@
         <nav class="sidebar-menu">
             <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
-                <a href="seller-orders.html" class="menu-item active"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="purchases.html?v=1.2.10" class="dropdown-item active"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
                 <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
                 <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
                 <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
@@ -121,7 +121,6 @@
                 <button class="tab-btn" data-tab="unpaid">ที่ต้องชำระ <span class="tab-badge" id="badge-unpaid">0</span></button>
                 <button class="tab-btn" data-tab="toship">ที่ต้องจัดส่ง <span class="tab-badge" id="badge-toship">0</span></button>
                 <button class="tab-btn" data-tab="processed">เตรียมจัดส่งแล้ว <span class="tab-badge" id="badge-processed">0</span></button>
-                <button class="tab-btn" data-tab="receive">ที่ต้องได้รับ <span class="tab-badge" id="badge-receive">0</span></button>
                 <button class="tab-btn" data-tab="completed">สำเร็จแล้ว</button>
                 <button class="tab-btn" data-tab="cancelled">ขอยกเลิก/คืนเงิน/คืน</button>
             </div>
@@ -152,7 +151,7 @@
                 </div>
                 <div style="margin-bottom: 12px;">
                     <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ที่อยู่สำหรับจัดส่ง</div>
-                    <div id="modalCustomerAddress" style="font-size: 0.95rem; color: #444; line-height: 1.5;">-</div>
+                    <div id="modalCustomerAddress" style="font-size: 1.1rem; color: #222; font-weight: 600; line-height: 1.5; background: #fffbe6; padding: 12px; border: 1px dashed #faad14; border-radius: 4px; white-space: pre-wrap;">-</div>
                 </div>
                 
                 <!-- Shipping Input Section -->
@@ -191,6 +190,6 @@
         firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
     </script>
-    <script src="seller-orders.js?v=1.2.4"></script>
+    <script src="seller-orders.js?v=1.2.10"></script>
 </body>
 </html>
