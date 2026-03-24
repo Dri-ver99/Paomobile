@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEBUG SYNC (v1.2.1)</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        .status { padding: 15px; border-radius: 8px; margin: 10px 0; font-weight: bold; font-size: 1.1rem; }
+        .pending { background: #fffbe6; color: #faad14; }
+        .success { background: #f6ffed; color: #52c41a; }
+        .error { background: #fff2f0; color: #ff4d4f; }
+        .log { text-align: left; background: #f5f5f5; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 0.8rem; overflow-y: auto; max-height: 200px; }
+        button { background: #1890ff; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>🛠️ DEBUG SYNC (v1.2.1)</h1>
+    <p>กดปุ่มด้านล่างเพื่อทดสอบการเชื่อมต่อกับระบบ Cloud</p>
+    
+    <div id="status-box" class="status pending">สถานะ: กำลังโหลด Firebase...</div>
+    
+    <button onclick="testSync()">🚀 ทดสอบส่งข้อมูล (Test Write)</button>
+    
+    <h3>Log System:</h3>
+    <div id="log-box" class="log"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script>
+        const logBox = document.getElementById('log-box');
+        const statusBox = document.getElementById('status-box');
+        
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            logBox.innerHTML += `[${time}] ${msg}<br>`;
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
+        };
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+            log("Firebase Initialized!");
+            statusBox.innerText = "สถานะ: พร้อมทดสอบ (Ready)";
+            statusBox.className = "status success";
+        } catch (err) {
+            log("Init Failed: " + err.message);
+            statusBox.innerText = "สถานะ: โหลดไม่สำเร็จ (Init Error)";
+            statusBox.className = "status error";
+        }
+
+        function testSync() {
+            log("กำลังส่งข้อมูลทดสอบ...");
+            statusBox.innerText = "สถานะ: กำลังส่ง... (Pending)";
+            statusBox.className = "status pending";
+            
+            const db = firebase.firestore();
+            const testId = "DEBUG-" + Date.now();
+            
+            db.collection('orders').doc(testId).set({
+                id: testId,
+                status: 'DEBUG-TEST',
+                customerName: 'MOBILE-DEBUGGER',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                log("✅ สำเร็จ: ข้อมูลถูกส่งเข้า Firestore แล้ว!");
+                statusBox.innerText = "สถานะ: สำเร็จ! (SUCCESS)";
+                statusBox.className = "status success";
+                alert("✅ สำเร็จ (v1.2.1-DEBUG)! ข้อมูลถูกส่งเข้า Cloud แล้วครับ");
+            })
+            .catch(err => {
+                log("❌ พิกัดจำกัด (Error): " + err.code + " - " + err.message);
+                statusBox.innerText = "สถานะ: ผิดพลาด (Error)";
+                statusBox.className = "status error";
+                alert("❌ ผิดพลาด (v1.2.1-DEBUG): " + err.code + "\n" + err.message);
+            });
+        }
+    </script>
+</body>
+</html>

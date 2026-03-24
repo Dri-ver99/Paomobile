@@ -1,6 +1,8 @@
 const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };
-        const getAddressKey = () => 'pao_user_addresses_' + getActiveUserId();
-        const getCartKey = () => 'pao_cart_' + getActiveUserId();
+console.log("[v1.2.1] Checkout script loading...");
+
+const getAddressKey = () => 'pao_user_addresses_' + getActiveUserId();
+const getCartKey = () => 'pao_cart_' + getActiveUserId();
 
         let userAddresses = JSON.parse(localStorage.getItem(getAddressKey()) || '[]');
         let savedAddress = userAddresses.find(a => a.isDefault) || userAddresses[0] || null;
@@ -188,13 +190,10 @@ const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem(
                     allOrders.unshift(globalOrderData);
                     localStorage.setItem('pao_global_orders', JSON.stringify(allOrders));
 
-                    // 2. Save to Firestore (Cloud Sync) [v1.2]
-                    console.log("[v1.2] Attempting sync to cloud...");
+                    // 2. Save to Firestore (Cloud Sync) [v1.2.1]
                     const firestoreDB = (typeof db !== 'undefined') ? db : (window.firebase ? firebase.firestore() : null);
                     
                     if (firestoreDB) {
-                        console.log("[v1.2] Firestore initialized. Document ID:", orderId);
-                        
                         // Ensure we use the correct timestamp access
                         const timestamp = (window.firebase && firebase.firestore.FieldValue) ? 
                                           firebase.firestore.FieldValue.serverTimestamp() : 
@@ -202,20 +201,27 @@ const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem(
 
                         const finalData = { ...globalOrderData, createdAt: timestamp };
 
+                        console.log("[v1.2.1] Syncing order:", orderId);
                         firestoreDB.collection('orders').doc(orderId).set(finalData)
                             .then(() => {
-                                console.log("[v1.2.1] Order synced successfully");
-                                alert("สำเร็จ (v1.2.1)! ออเดอร์ส่งขึ้นระบบ Cloud เรียบร้อยแล้วครับ");
+                                console.log("[v1.2.1] Sync Success");
+                                alert("✅ สำเร็จ (v1.2.1)! ออเดอร์ส่งเข้าระบบ Cloud แล้วครับ");
+                                window.location.href = 'purchases.html';
                             })
                             .catch(err => {
-                                console.error("[v1.2.1] Sync failed:", err);
-                                alert("Sync Error (v1.2.1): " + err.message + "\n(รหัสออเดอร์: " + orderId + ")");
+                                console.error("[v1.2.1] Sync Error:", err);
+                                alert("❌ Sync Error (v1.2.1): " + err.code + " - " + err.message);
+                                window.location.href = 'purchases.html';
                             });
                     } else {
                         console.error("[v1.2.1] No Firestore DB found.");
-                        alert("⚠️ พบบัญปัญหา (v1.2.1): ระบบ Cloud ไม่เชื่อมต่อ! ออเดอร์จะบันทึกแค่ในเครื่องนี้ครับ");
+                        alert("⚠️ Error (v1.2.1): ระบบ Cloud ไม่เชื่อมต่อ! ออเดอร์จะบันทึกแค่ในเครื่องนี้ครับ");
+                        window.location.href = 'purchases.html';
                     }
-                } catch (err) { console.error("Global order sync failed:", err); }
+                } catch (err) { 
+                    console.error("Global order sync failed:", err); 
+                    alert("❌ Fatal Error (v1.2.1): " + err.message);
+                }
 
                 // Clear selected items from cart
                 const rawCart = localStorage.getItem(getCartKey()) || '[]';
