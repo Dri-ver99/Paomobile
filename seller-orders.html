@@ -98,7 +98,15 @@
         <div class="nav-left">
             <h2>คำสั่งซื้อของฉัน</h2>
         </div>
-        <div class="nav-right"></div>
+        <div class="nav-right" id="diag-ui" style="display: flex; align-items: center; gap: 15px; font-size: 0.8rem;">
+            <div id="statusIndicator" style="width: 10px; height: 10px; border-radius: 50%; background: #ccc;"></div>
+            <div style="text-align: right;">
+                <div id="statusText" style="font-weight: 600; color: #555;">Firestore: กำลังเชื่อมต่อ... (v1.2)</div>
+                <div id="orderCountStatus" style="color: #888;">ออเดอร์ในระบบ: -</div>
+            </div>
+            <div id="lastUpdateStatus" style="color: #bbb; display: none;"></div>
+            <button id="adminLoginBtn" onclick="firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())" style="display: none; background: #ee4d2d; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">ล็อกอิน Admin</button>
+        </div>
     </header>
 
     <!-- Main Content -->

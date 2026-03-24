@@ -16,16 +16,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const orderCountStatus = document.getElementById('orderCountStatus');
     const lastUpdateStatus = document.getElementById('lastUpdateStatus');
 
-    // 1. Sync from Firestore (Real-time)
-    if (typeof db !== 'undefined') {
-        console.log("[Firestore] Starting real-time listener...");
+    // --- v1.2 Auth & Firestore Initialization ---
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged(user => {
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            const statusText = document.getElementById('statusText');
+            const statusIndicator = document.getElementById('statusIndicator');
+
+            if (user) {
+                console.log("[v1.2] User detected:", user.email);
+                if (adminLoginBtn) adminLoginBtn.style.display = 'none';
+                
+                // Proceed to fetch if initialized
+                if (typeof db !== 'undefined') {
+                    startFirestoreSync();
+                }
+            } else {
+                console.warn("[v1.2] No user logged in. Firestore will be blocked.");
+                if (statusText) statusText.textContent = "Firestore: กรุณาล็อกอิน (v1.2)";
+                if (statusIndicator) statusIndicator.style.background = "#faad14"; // Orange
+                if (adminLoginBtn) adminLoginBtn.style.display = 'block';
+                
+                // Fallback to local storage
+                loadLocalStorageFallback();
+            }
+        });
+    } else {
+        loadLocalStorageFallback();
+    }
+
+    function startFirestoreSync() {
+        console.log("[v1.2] Starting real-time sync...");
         db.collection('orders').onSnapshot(snapshot => {
             let fetchedOrders = snapshot.docs.map(doc => ({
                 ...doc.data(),
                 id: doc.id 
             }));
             
-            // Sort client-side so orders without createdAt still show up (at the bottom)
+            // Sort client-side
             fetchedOrders.sort((a, b) => {
                 const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date(0);
                 const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date(0);
@@ -34,35 +62,28 @@ document.addEventListener('DOMContentLoaded', () => {
             
             ordersData = fetchedOrders;
             
-            // Update Diagnostic UI
-            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (Real-time)";
+            // Update UI
+            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (v1.2)";
             if (statusIndicator) statusIndicator.style.background = "#52c41a"; // Green
             if (orderCountStatus) orderCountStatus.textContent = "ออเดอร์ในระบบ: " + ordersData.length;
-            if (lastUpdateStatus) lastUpdateStatus.textContent = "อัปเดตล่าสุด: " + new Date().toLocaleTimeString();
-
-            console.log("[Firestore] Received " + ordersData.length + " orders.");
+            
+            localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
             renderOrders();
             updateTabBadges();
         }, err => {
-            console.error("[Firestore] Snapshot Error:", err);
-            if (statusText) statusText.textContent = "Firestore Error: " + err.code;
+            console.error("[v1.2] Sync Error:", err);
+            if (statusText) statusText.textContent = "Firestore Error (v1.2)";
             if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
             
             if (err.code === 'permission-denied') {
-                alert("Firestore Error: Permission Denied\n\nสาเหตุ: บัญชีของคุณไม่มีสิทธิ์อ่านข้อมูลออเดอร์ทั้งหมด\nวิธีแก้: กรุณาเข้าไปที่ Firebase Console > Firestore > Rules แล้วอัปเดต Security Rules ให้เรียบร้อยครับ");
-            } else {
-                alert("Firestore Error: " + err.message);
+                alert("สิทธิ์ไม่ถูกต้อง (v1.2)\n\nกรุณากดปุ่ม 'ล็อกอิน Admin' ที่มุมขวาบน และใช้เมล sattawat2560@gmail.com เท่านั้นครับ");
+                if (adminLoginBtn) adminLoginBtn.style.display = 'block';
             }
-            // Fallback to localStorage if Firestore fails
-            ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-            renderOrders();
-            updateTabBadges();
+            loadLocalStorageFallback();
         });
-    } else {
-        console.warn("[Firestore] DB is not initialized. Falling back to local storage.");
-        if (statusText) statusText.textContent = "Firestore: ไม่ได้ติดตั้ง (เชื่อมต่อไม่ได้)";
-        if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
+    }
 
+    function loadLocalStorageFallback() {
         ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
         renderOrders();
         updateTabBadges();
