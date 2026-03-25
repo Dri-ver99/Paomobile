@@ -8,6 +8,28 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  
+  <!-- Firebase SDK (v10.9.0) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+      authDomain: "paomobile-85e39.firebaseapp.com",
+      projectId: "paomobile-85e39",
+      storageBucket: "paomobile-85e39.firebasestorage.app",
+      messagingSenderId: "844151679424",
+      appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+      measurementId: "G-BZYNZ9B9LQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    window.firebaseApp = app;
+    window.firestoreDB = db;
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -572,7 +594,7 @@
     }
 
     // ─── Confirm Payment ───
-    function confirmPayment() {
+    async function confirmPayment() {
       const btn = document.getElementById('btnConfirmPayment');
       
       // Prevent multiple clicks
@@ -592,7 +614,25 @@
       let updated = false;
 
       try {
-          // 1. Update user orders
+          // --- Sync with Firestore (v1.2.11) ---
+          const db = window.firestoreDB;
+          if (db) {
+              console.log("[v1.2.11] Syncing to Firestore...");
+              const orderId = ref;
+              const orderRef = doc(db, "orders", orderId);
+              try {
+                  await updateDoc(orderRef, {
+                      status: 'ที่ต้องจัดส่ง',
+                      paymentDate: new Date()
+                  });
+                  console.log("[v1.2.11] Firestore updated successfully");
+                  updated = true;
+              } catch (fsErr) {
+                  console.error("[v1.2.11] Cloud sync failed:", fsErr);
+              }
+          }
+
+          // --- Local Storage fallback ---
           const rawUser = localStorage.getItem(userOrdersKey) || '[]';
           let userOrders = JSON.parse(rawUser);
           
@@ -602,6 +642,7 @@
           for (let i = 0; i < userOrders.length; i++) {
               if (userOrders[i].status === 'ที่ต้องชำระ' && userOrders[i].total === amount) {
                   userOrders[i].status = 'ที่ต้องจัดส่ง';
+                  userOrders[i].paymentMethod = 'พร้อมเพย์ (PromptPay)';
                   targetOrderId = userOrders[i].id;
                   updated = true;
                   break;
@@ -615,9 +656,12 @@
               const rawGlobal = localStorage.getItem(globalOrdersKey) || '[]';
               let globalOrders = JSON.parse(rawGlobal);
               
+              if (!targetOrderId) targetOrderId = ref; // fallback
+
               for (let i = 0; i < globalOrders.length; i++) {
                   if (globalOrders[i].id === targetOrderId) {
                       globalOrders[i].status = 'ที่ต้องจัดส่ง';
+                      globalOrders[i].paymentMethod = 'พร้อมเพย์ (PromptPay)';
                       localStorage.setItem(globalOrdersKey, JSON.stringify(globalOrders));
                       break;
                   }

@@ -142,6 +142,22 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             const activeTab = document.querySelector('.pay-tab.active');
             const method = activeTab ? activeTab.dataset.method : 'transfer';
             const methodLabel = activeTab ? activeTab.textContent.trim() : 'โอนเงินธนาคาร';
+            
+            // Detailed Bank Info (v1.2.11)
+            let selectedBank = 'N/A';
+            if (method === 'transfer') {
+                const bankOpt = document.querySelector('input[name="bankOption"]:checked');
+                if (bankOpt) {
+                    const label = bankOpt.closest('label').querySelector('.sub-text').textContent.trim();
+                    selectedBank = label.replace('โอนเงิน (', '').replace(')', '');
+                }
+            } else if (method === 'promptpay') {
+                selectedBank = 'PromptPay';
+            }
+
+            // Shipping Method (v1.2.11)
+            const activeShip = document.querySelector('.inline-ship-opt.selected');
+            const shippingMethod = activeShip ? activeShip.querySelector('span:first-of-type').textContent.replace('🎯 ', '').replace('🚚 ', '').trim() : 'รับที่ร้าน';
 
             // initial status
             let orderStatus = 'ที่ต้องชำระ';
@@ -165,7 +181,9 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                     img: i.img || 'logo.png'
                 })),
                 total: total,
-                method: methodLabel
+                method: methodLabel,
+                paymentMethod: methodLabel,    // v1.2.13
+                paymentBank: selectedBank      // v1.2.13
             };
 
             // Use Direct Cloud Sync Logic (Simple & Robust)
@@ -203,6 +221,9 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         customerName: savedAddress ? savedAddress.name : 'N/A',
                         customerPhone: savedAddress ? savedAddress.phone : 'N/A',
                         customerAddress: savedAddress ? `${savedAddress.addr1} ตำบล${savedAddress.district} อำเภอ${savedAddress.amphoe} จังหวัด${savedAddress.province} ${savedAddress.zip}` : 'N/A',
+                        shippingMethod: shippingMethod, // v1.2.11
+                        paymentMethod: methodLabel,     // v1.2.11
+                        paymentBank: selectedBank,      // v1.2.11
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
 
@@ -228,7 +249,9 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                     if (method === 'promptpay') {
                         window.location.href = 'payment-qr.html?amount=' + total + '&ref=' + orderId;
                     } else if (method === 'transfer') {
-                        window.location.href = 'payment-transfer.html?amount=' + total + '&ref=' + orderId;
+                        const bankOpt = document.querySelector('input[name="bankOption"]:checked');
+                        const bankVal = bankOpt ? bankOpt.value : 'scb';
+                        window.location.href = `payment-transfer.html?amount=${total}&ref=${orderId}&bank=${bankVal}`;
                     } else {
                         alert('ขอบคุณที่สั่งซื้อสินค้า! (v1.2.10)\nรายการถูกส่งเข้าสู่ระบบ Seller Centre เรียบร้อยแล้วคับ');
                         window.location.href = 'purchases.html';

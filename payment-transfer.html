@@ -11,6 +11,31 @@
   <!-- Dependencies for AI Verification -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  
+  <!-- Firebase SDK (v10.9.0) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+      authDomain: "paomobile-85e39.firebaseapp.com",
+      projectId: "paomobile-85e39",
+      storageBucket: "paomobile-85e39.firebasestorage.app",
+      messagingSenderId: "844151679424",
+      appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+      measurementId: "G-BZYNZ9B9LQ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    
+    window.firebaseApp = app;
+    window.firestoreDB = db;
+    window.firebaseStorage = storage;
+  </script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -189,9 +214,14 @@
     /* ─── Upload Section ─── */
     .upload-card {
       padding: 28px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
     }
     .upload-box {
+      width: 100%;
+      box-sizing: border-box;
       border: 2px dashed #ccc;
       border-radius: 12px;
       padding: 30px 20px;
@@ -225,13 +255,17 @@
     .preview-container {
       display: none;
       margin-top: 16px;
-      text-align: center;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
     .preview-container img {
-      max-width: 200px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      border: 1px solid #eee;
+      width: 100%;
+      max-width: 260px;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      border: 1px solid #e0e0e0;
     }
 
     /* ─── Action Button ─── */
@@ -240,17 +274,18 @@
       align-items: center;
       justify-content: center;
       width: 100%;
+      max-width: 400px;
       background: linear-gradient(135deg, #1b3a6b 0%, #2a5298 100%);
       color: #fff;
       border: none;
-      border-radius: 8px;
-      padding: 14px 28px;
+      border-radius: 12px;
+      padding: 16px 28px;
       font-size: 1.05rem;
       font-weight: 600;
       cursor: pointer;
       margin-top: 20px;
       font-family: inherit;
-      transition: opacity .2s, transform .1s;
+      transition: all .2s;
       box-shadow: 0 4px 12px rgba(27,58,107,0.3);
     }
     .btn-verify:disabled {
@@ -263,11 +298,14 @@
     /* ─── AI Verification Status ─── */
     .verify-status-box {
       display: none;
+      width: 100%;
+      max-width: 400px;
+      box-sizing: border-box;
       margin-top: 20px;
       background: #f8f9fc;
       border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 16px;
+      border-radius: 12px;
+      padding: 18px;
       text-align: left;
     }
     .verify-step {
@@ -345,9 +383,9 @@
       <div class="bank-card">
         <div class="bank-logo">
           <!-- SCB / Generic Thai Bank Logo -->
-          <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.scb.co.th&size=64" alt="SCB" id="bankFavicon">
+          <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.scb.co.th&size=64" alt="Bank Logo" id="bankLogoImg">
         </div>
-        <div class="bank-name">ธนาคารไทยพาณิชย์ (SCB)</div>
+        <div class="bank-name" id="bankNameText">ธนาคารไทยพาณิชย์ (SCB)</div>
 
         <div class="account-detail-box">
           <div class="acc-label">เลขที่บัญชี</div>
@@ -395,7 +433,15 @@
           </div>
           <div class="verify-step" id="step-ocr">
             <div class="step-icon" id="icon-ocr">○</div>
-            <span>วิเคราะห์ชื่อผู้รับโอนด้วย AI</span>
+            <span>ตรวจสอบชื่อผู้รับ (เขมรัฐ)</span>
+          </div>
+          <div class="verify-step" id="step-bank">
+            <div class="step-icon" id="icon-bank">○</div>
+            <span>ตรวจสอบธนาคารผู้โอน</span>
+          </div>
+          <div class="verify-step" id="step-amount">
+            <div class="step-icon" id="icon-amount">○</div>
+            <span>ตรวจสอบยอดเงิน (฿)</span>
           </div>
         </div>
 
@@ -425,6 +471,33 @@
     // ─── Display amount ───
     const fmt = '฿' + amount.toLocaleString('th-TH', {minimumFractionDigits: 0});
     document.getElementById('displayAmount').textContent = fmt;
+
+    // ─── Dynamic Bank Info (v1.2.12) ───
+    const selectedBankValue = params.get('bank') || 'scb';
+    function updateBankInfo() {
+      const bankLogos = {
+        'scb': 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.scb.co.th&size=64',
+        'kbank': 'https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.kasikornbank.com&size=64'
+      };
+      const bankNames = {
+        'scb': 'ไทยพาณิชย์ (Siam Commercial Bank)',
+        'kbank': 'กสิกรไทย (Kasikornbank)'
+      };
+      const bankNums = {
+        'scb': '407-866794-5',
+        'kbank': 'XXX-XXXXXX-X'
+      };
+      const bankAccNames = {
+        'scb': 'เขมรัฐ นาคภักดี',
+        'kbank': 'เขมรัฐ นาคภักดี'
+      };
+
+      if (document.getElementById('bankLogoImg')) document.getElementById('bankLogoImg').src = bankLogos[selectedBankValue];
+      if (document.getElementById('bankNameText')) document.getElementById('bankNameText').textContent = bankNames[selectedBankValue];
+      if (document.getElementById('accNum')) document.getElementById('accNum').textContent = bankNums[selectedBankValue];
+      if (document.getElementById('accName')) document.getElementById('accName').textContent = bankAccNames[selectedBankValue];
+    }
+    updateBankInfo();
 
     // ─── Expire Calculation ───
     const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };
@@ -497,7 +570,7 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         document.getElementById('uploadBox').style.display = 'none';
-        document.getElementById('previewContainer').style.display = 'block';
+        document.getElementById('previewContainer').style.display = 'flex';
         document.getElementById('slipPreview').src = e.target.result;
         document.getElementById('btnVerify').disabled = false;
         
@@ -509,10 +582,14 @@
     }
 
     function resetSteps() {
-      ['time', 'qr', 'ocr'].forEach(id => {
-        document.getElementById('step-' + id).className = 'verify-step';
-        document.getElementById('icon-' + id).innerHTML = '○';
-        document.getElementById('icon-' + id).style.color = '#64748b';
+      ['time', 'qr', 'bank', 'ocr', 'amount'].forEach(id => {
+        const el = document.getElementById('step-' + id);
+        const icon = document.getElementById('icon-' + id);
+        if (el) el.className = 'verify-step';
+        if (icon) {
+          icon.innerHTML = '○';
+          icon.style.color = '#64748b';
+        }
       });
     }
 
@@ -539,57 +616,134 @@
         document.getElementById('verifyStatusBox').style.display = 'block';
         resetSteps();
 
-        // 1. Check Time
+        // 1. Time Check (45 min grace period)
         setStepStatus('time', 'active');
         await sleep(600);
-        // We ensure slip is less than 24 hours old based on lastModified
-        const ageHours = (Date.now() - currentFile.lastModified) / (1000 * 60 * 60);
-        if (ageHours > 24) {
+        const slipTime = currentFile.lastModified;
+        const diffMinutes = (Date.now() - slipTime) / (1000 * 60);
+        if (diffMinutes > 45) {
             setStepStatus('time', 'error');
-            alert('ล้มเหลว: ภาพสลิปนี้ดูเหมือนจะเป็นสลิปเก่า (เกิน 24 ชม.) กรุณาใช้สลิปปัจจุบัน');
+            alert('❌ ไม่ผ่าน: สลิปนี้เก่าเกินไป (เกิน 45 นาที) กรุณาใช้สลิปปัจจุบันที่คุณเพิ่งโอนสำเร็จ');
             btn.disabled = false;
-            btn.textContent = "ส่งสลิปเพื่อตรวจสอบ";
+            btn.textContent = "ลองอัปโหลดสลิปใหม่";
             return;
         }
         setStepStatus('time', 'success');
 
-        // 2. Check QR
+        // 2. QR Code
         setStepStatus('qr', 'active');
         const hasQR = await scanQR(document.getElementById('slipPreview'));
-        await sleep(800);
+        await sleep(500);
         if (!hasQR) {
             setStepStatus('qr', 'error');
-            alert("❌ ไม่อนุมัติ: ระบบไม่พบ QR Code บนสลิป กรุณาอัปโหลดสลิปธนาคารของแท้ที่มี QR Code เพื่อทำการตรวจสอบ");
+            alert("❌ ไม่ผ่าน: ไม่พบ QR Code ของธนาคารบนสลิป กรุณาอัปโหลดสลิปธนาคารของแท้ที่มี QR Code");
             btn.disabled = false;
-            btn.textContent = "อัปโหลดภาพถัดไป";
+            btn.textContent = "เปลี่ยนรูปสลิป";
             return;
-        } else {
-            setStepStatus('qr', 'success');
         }
+        setStepStatus('qr', 'success');
 
-        // 3. OCR Check Name
+        // 3. OCR (Detailed Multi-Fact Verification)
+        setStepStatus('bank', 'active');
         setStepStatus('ocr', 'active');
+        setStepStatus('amount', 'active');
         try {
-            // Tesseract load and scan
             const recognizedText = await runOCR(currentFile);
-            const lowerText = recognizedText.toLowerCase().replace(/\s+/g, '');
-            // Check for names: "เขมรัฐ" or "นาคภักดี" in Thai
-            if (lowerText.includes('เขมรัฐ') || lowerText.includes('นาคภักดี')) {
-                setStepStatus('ocr', 'success');
-                await finalizePayment();
-            } else {
+            const cleanText = recognizedText.toLowerCase().replace(/\s+/g, '');
+            console.log("OCR Result Text:", cleanText);
+
+            // --- Fact 1: Recipient Name (เขมรัฐ นาคภักดี) ---
+            const nameMatch = cleanText.includes('เขมรัฐ') || cleanText.includes('khemarat') || cleanText.includes('นาคภักดี') || cleanText.includes('nakphakdee');
+            
+            // --- Fact 2: Date (Buddhist Era 2569) ---
+            const now = new Date();
+            const day = now.getDate().toString().padStart(2, '0');
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const yearBE = (now.getFullYear() + 543).toString();
+            const yearBEshort = yearBE.slice(-2);
+            const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            const thaiMonth = thaiMonths[now.getMonth()];
+            
+            const datePatterns = [
+                `${day}/${month}/${yearBE}`,
+                `${day}/${month}/${yearBEshort}`,
+                day + month + yearBEshort,
+                day + thaiMonth + yearBEshort,
+                day + thaiMonth + yearBE
+            ];
+            const dateMatch = datePatterns.some(p => cleanText.includes(p.replace(/\s+/g, '').toLowerCase())) || cleanText.includes(day);
+
+            // --- Fact 2.5: Time Check (Before Expiration) ---
+            // The user's order expires 30 minutes after orderDate
+            const expTime = new Date(new Date(orderDate).getTime() + 30 * 60 * 1000);
+            const slipTimeMatch = recognizedText.match(/([01]\d|2[0-3])[:.]([0-5]\d)/);
+            let timeValid = true;
+            if (slipTimeMatch) {
+                const [_, hour, minute] = slipTimeMatch;
+                const slipDateObj = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(hour), parseInt(minute));
+                // Add a small buffer (5 min) in case clocks are slightly off
+                if (slipDateObj.getTime() > expTime.getTime() + 5 * 60 * 1000) {
+                    timeValid = false;
+                }
+            }
+
+            // Results Processing
+            if (!nameMatch) {
                 setStepStatus('ocr', 'error');
-                alert('❌ ไม่อนุมัติ: ระบบ AI อ่านชื่อผู้รับโอนไม่ตรงกับ "เขมรัฐ นาคภักดี" ถ้านี่คือสลิปจริง กรุณาถ่ายภาพให้ชัดเจนขึ้น หรือแคปหน้าจอสลิปใหม่ให้ตัวหนังสือคมชัดที่สุด');
+                alert('❌ ไม่ผ่าน: AI ตรวจไม่พบชื่อผู้รับ "เขมรัฐ นาคภักดี" บนสลิป');
+                btn.disabled = false; return;
+            }
+            if (!dateMatch) {
+                setStepStatus('ocr', 'error');
+                alert(`❌ ไม่ผ่าน: วันที่บนสลิปไม่ตรงกับออเดอร์ (${day}/${month}/${yearBE})`);
+                btn.disabled = false; return;
+            }
+            if (!timeValid) {
+                setStepStatus('time', 'error');
+                alert(`❌ ไม่ผ่าน: โอนเกินเวลาที่กำหนด (หมดอายุเมื่อ ${expTime.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})})`);
+                btn.disabled = false; return;
+            }
+
+            // --- Fact 3: Amount (Exact match) ---
+            const targetAmountStr = amount.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            const targetAmountSimple = amount.toString();
+            const amountMatch = cleanText.includes(targetAmountStr.replace(',', '')) || 
+                                cleanText.includes(targetAmountStr.replace('.', '')) || 
+                                cleanText.includes(targetAmountSimple);
+
+            // --- Fact 4: Bank Name (SCB/KBank) ---
+            const selectedBank = params.get('bank') || 'scb';
+            let bankMatch = false;
+            if (selectedBank === 'scb') {
+                bankMatch = cleanText.includes('scb') || cleanText.includes('ไทยพาณิชย์') || cleanText.includes('siamcommercial');
+            } else if (selectedBank === 'kbank') {
+                bankMatch = cleanText.includes('kbank') || cleanText.includes('กสิกร') || cleanText.includes('kasikorn');
+            }
+
+            if (bankMatch) {
+                setStepStatus('bank', 'success');
+            } else {
+                setStepStatus('bank', 'error');
+                alert(`❌ ไม่ผ่าน: สลิปนี้ไม่ใช่ธนาคาร ${selectedBank.toUpperCase()} ที่คุณเลือกไว้ตอนสั่งซื้อ`);
+                btn.disabled = false; return;
+            }
+            setStepStatus('ocr', 'success');
+
+            if (amountMatch) {
+                setStepStatus('amount', 'success');
+            } else {
+                setStepStatus('amount', 'error');
+                alert(`❌ ไม่ผ่าน: ยอดเงินบนสลิปไม่ตรงกับยอด ฿${amount.toLocaleString()} กรุณาตรวจสอบการพิมพ์ยอดโอนให้ถูกต้อง`);
                 btn.disabled = false;
-                btn.textContent = "อัปโหลดภาพถัดไป";
+                btn.textContent = "เปลี่ยนรูปสลิป";
                 return;
             }
+
+            await finalizePayment();
         } catch (e) {
             console.error("OCR Error", e);
-            setStepStatus('ocr', 'error');
-            alert('❌ เกิดข้อผิดพลาดในการโหลด AI (Tesseract.js) กรุณาตรวจสอบอินเทอร์เน็ตและลองใหม่อีกครั้ง');
+            alert('❌ ระบบ AI ขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้ง');
             btn.disabled = false;
-            btn.textContent = "ลองอีกครั้ง";
         }
     }
 
@@ -598,7 +752,7 @@
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
             // Scale down for faster scan
-            const maxDimension = 800;
+            const maxDimension = 1200;
             let ratio = 1;
             if (imgEl.naturalWidth > imgEl.naturalHeight) {
                 if (imgEl.naturalWidth > maxDimension) ratio = maxDimension / imgEl.naturalWidth;
@@ -622,8 +776,8 @@
     }
 
     async function runOCR(file) {
-        // Run OCR on the image. Tesseract takes a file directly or objectURL.
-        const worker = await Tesseract.createWorker('tha');
+        // Use both Thai and English for best accuracy on numbers/names
+        const worker = await Tesseract.createWorker('tha+eng');
         const url = URL.createObjectURL(file);
         const ret = await worker.recognize(url);
         await worker.terminate();
@@ -644,6 +798,36 @@
         let updated = false;
 
         try {
+            // --- Sync with Firestore & Storage (v1.2.11) ---
+            const db = window.firestoreDB;
+            const storage = window.firebaseStorage;
+            let slipUrl = "";
+
+            if (db && storage && currentFile) {
+                console.log("[v1.2.11] Syncing to Firestore...");
+                const orderId = ref;
+                const storageRef = ref(storage, `slips/${orderId}_${Date.now()}.png`);
+                
+                try {
+                    const uploadResult = await uploadBytes(storageRef, currentFile);
+                    slipUrl = await getDownloadURL(uploadResult.ref);
+                    console.log("[v1.2.11] Slip uploaded:", slipUrl);
+                    
+                    const orderRef = doc(db, "orders", orderId);
+                    await updateDoc(orderRef, {
+                        status: 'ที่ต้องจัดส่ง',
+                        paymentSlip: slipUrl,
+                        paymentDate: new Date()
+                    });
+                    console.log("[v1.2.11] Firestore updated successfully");
+                    updated = true;
+                } catch (fsErr) {
+                    console.error("[v1.2.11] Cloud sync failed:", fsErr);
+                    // Continue to local sync as fallback
+                }
+            }
+
+            // --- Local Storage Fallback ---
             const rawUser = localStorage.getItem(userOrdersKey) || '[]';
             let uOrders = JSON.parse(rawUser);
             let targetOrderId = ref;
@@ -651,6 +835,10 @@
             for (let i = 0; i < uOrders.length; i++) {
                 if (uOrders[i].id === targetOrderId || (uOrders[i].status === 'ที่ต้องชำระ' && uOrders[i].total === amount)) {
                     uOrders[i].status = 'ที่ต้องจัดส่ง';
+                    uOrders[i].paymentMethod = 'โอนเงินผ่านธนาคาร';
+                    uOrders[i].paymentBank = 'SCB';
+                    if (slipUrl) uOrders[i].paymentSlip = slipUrl;
+                    
                     targetOrderId = uOrders[i].id;
                     updated = true;
                     break;
@@ -665,6 +853,9 @@
                 for (let i = 0; i < gOrders.length; i++) {
                     if (gOrders[i].id === targetOrderId) {
                         gOrders[i].status = 'ที่ต้องจัดส่ง';
+                        gOrders[i].paymentMethod = 'โอนเงินผ่านธนาคาร';
+                        gOrders[i].paymentBank = 'SCB';
+                        if (slipUrl) gOrders[i].paymentSlip = slipUrl;
                         localStorage.setItem(globalOrdersKey, JSON.stringify(gOrders));
                         break;
                     }

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firestore Cleanup Utility</title>
+</head>
+<body>
+    <div id="log" style="font-family: monospace; white-space: pre; padding: 20px; background: #f0f0f0;">Initializing...</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
+        };
+
+        const log = (msg) => {
+            console.log(msg);
+            document.getElementById('log').innerText += "\n" + msg;
+        };
+
+        async function cleanup() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                const targetEmail = "duckview96@gmail.com";
+
+                log("Searching for user: " + targetEmail);
+                
+                // 1. Find UID
+                const uq = query(collection(db, "users"), where("email", "==", targetEmail));
+                const uSnap = await getDocs(uq);
+                
+                if (uSnap.empty) {
+                    log("User not found in 'users' collection. Trying direct customer field search in 'orders'...");
+                    // It's possible the user is not in 'users' but has orders (shouldn't happen with the current logic but possible if data is old)
+                }
+
+                const uids = [];
+                uSnap.forEach(doc => uids.push(doc.id));
+                log("Found UIDs: " + JSON.stringify(uids));
+
+                // 2. Find and delete orders
+                let totalDeleted = 0;
+
+                // Search by UIDs
+                for (const uid of uids) {
+                    log("Searching orders for UID: " + uid);
+                    const oq = query(collection(db, "orders"), where("customer", "==", uid));
+                    const oSnap = await getDocs(oq);
+                    for (const oDoc of oSnap.docs) {
+                        await deleteDoc(doc(db, "orders", oDoc.id));
+                        log("Deleted order: " + oDoc.id);
+                        totalDeleted++;
+                    }
+                }
+
+                // Search by direct email if no UID found or just as fallback
+                log("Searching orders with direct email: " + targetEmail);
+                const oqEmail = query(collection(db, "orders"), where("customer", "==", targetEmail));
+                const oSnapEmail = await getDocs(oqEmail);
+                for (const oDoc of oSnapEmail.docs) {
+                    await deleteDoc(doc(db, "orders", oDoc.id));
+                    log("Deleted order (by email): " + oDoc.id);
+                    totalDeleted++;
+                }
+
+                // Additional search: if the identifier used was the phone number or something else
+                // But the user specified email. 
+                // Let's also check if any orders have 'customerPhone' that might match if we knew it? No, stick to email-related UIDs.
+
+                log("--- FINISHED ---");
+                log("Total orders deleted: " + totalDeleted);
+                document.body.style.background = "#d4edda";
+                
+            } catch (err) {
+                log("ERROR: " + err.message);
+                document.body.style.background = "#f8d7da";
+            }
+        }
+
+        cleanup();
+    </script>
+</body>
+</html>
