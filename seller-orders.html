@@ -79,8 +79,12 @@
         </div>
         <nav class="sidebar-menu">
             <div class="menu-section">
+                <p class="menu-title">เมนูหลัก</p>
+                <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+            </div>
+            <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
-                <a href="purchases.html?v=1.2.10" class="dropdown-item active"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
                 <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
                 <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
                 <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
@@ -106,6 +110,7 @@
             </div>
             <div id="lastUpdateStatus" style="color: #bbb; display: none;"></div>
             <button id="adminLoginBtn" onclick="firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())" style="display: none; background: #ee4d2d; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">ล็อกอิน Admin</button>
+            <button id="btnCleanupOrders" onclick="cleanupUserOrders()" style="background: #555; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Cleanup duckview96</button>
         </div>
     </header>
 
@@ -150,8 +155,25 @@
                     <div id="modalCustomerPhone" style="font-size: 1rem; color: #222;">-</div>
                 </div>
                 <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">รูปแบบการรับสินค้า</div>
+                    <div id="modalShippingMethod" style="font-size: 1rem; color: #222; font-weight: 400;">-</div>
+                </div>
+                <div style="margin-bottom: 12px;">
                     <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ที่อยู่สำหรับจัดส่ง</div>
                     <div id="modalCustomerAddress" style="font-size: 1.1rem; color: #222; font-weight: 600; line-height: 1.5; background: #fffbe6; padding: 12px; border: 1px dashed #faad14; border-radius: 4px; white-space: pre-wrap;">-</div>
+                </div>
+
+                <!-- Payment Info Section -->
+                <div style="margin-bottom: 12px; border-top: 1px dashed #eee; padding-top: 10px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">การชำระเงิน</div>
+                    <div id="modalPaymentFull" style="font-size: 1rem; color: #222; font-weight: 600; background: #f9f9f9; padding: 10px; border-radius: 4px; border: 1px solid #f0f0f0;">-</div>
+                </div>
+                <div id="slipInfoGroup" style="margin-bottom: 12px; display: none; text-align: center; background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 8px; text-align: left;">หลักฐานการโอน (สลิป)</div>
+                    <a id="modalSlipLink" href="#" target="_blank" style="display: inline-block; position: relative;">
+                        <img id="modalSlipThumb" src="" style="max-width: 100%; max-height: 250px; border-radius: 4px; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <div style="font-size: 0.75rem; color: #fff; background: rgba(0,0,0,0.5); position: absolute; bottom: 0; width: 100%; padding: 4px 0; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;">คลิกเพื่อดูรูปใหญ่</div>
+                    </a>
                 </div>
                 
                 <!-- Shipping Input Section -->

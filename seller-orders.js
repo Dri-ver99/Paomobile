@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initTabs();
+    updateSidebarActiveState();
     
     const statusText = document.getElementById('statusText');
     const statusIndicator = document.getElementById('statusIndicator');
@@ -70,9 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
             renderOrders();
             updateTabBadges();
-            
-            // Cloud-Aware Auto-Check Logic (v1.2.10)
-            checkDeliveryStatusAuto();
         }, err => {
             console.error("[v1.2.7] Sync Error:", err);
             if (statusText) statusText.textContent = "Firestore Error (v1.2.7)";
@@ -128,7 +126,7 @@ function renderOrders() {
     } else if (currentTab === 'toship') {
         filtered = orders.filter(o => o.status === 'ที่ต้องจัดส่ง' || o.status === 'To Ship');
     } else if (currentTab === 'processed') {
-        filtered = orders.filter(o => o.status === 'เตรียมจัดส่งแล้ว' || o.status === 'Processed');
+        filtered = orders.filter(o => o.status === 'เตรียมจัดส่งแล้ว' || o.status === 'Processed' || o.status === 'ที่ต้องได้รับ' || o.status === 'To Receive');
     } else if (currentTab === 'completed') {
         filtered = orders.filter(o => o.status === 'สำเร็จแล้ว' || o.status === 'Completed');
     } else if (currentTab === 'cancelled') {
@@ -157,22 +155,8 @@ function renderOrders() {
                     const firstItemName = items.length > 0 ? items[0].name : (order.status === 'DEBUG-TEST' ? 'รายการทดสอบ (Debug)' : 'ไม่ระบุสินค้า');
                     const others = items.length > 1 ? ` <br><span style="font-size:0.8rem; color:#888;">และรายการอื่นอีก ${items.length - 1} รายการ</span>` : '';
                     
-                    // Tracking info display (v1.2)
+                    // Tracking info not shown in seller table (shown in modal instead)
                     let trackingHTML = '';
-                    if (order.status === 'ที่ต้องได้รับ' || order.status === 'สำเร็จแล้ว') {
-                        if (order.trackingNum) {
-                            trackingHTML = `
-                                <div style="margin-top: 8px; padding: 6px; background: #f9f9f9; border-radius: 4px; border: 1px dashed #ddd; font-size: 0.8rem;">
-                                    <strong>เลขพัสดุ:</strong> ${order.trackingNum} 
-                                    <a href="${order.trackingLink}" target="_blank" style="color: #1890ff; margin-left: 8px; text-decoration: none;">[เช็คพัสดุ]</a>
-                                    <br>
-                                    <a href="${order.trackingLink}" target="_blank" style="color: #ee4d2d; text-decoration: none; font-weight: 500;">
-                                        🔍 เช็คสถานะคลิกที่นี่
-                                    </a>
-                                </div>
-                            `;
-                        }
-                    }
 
                     return `
                         <tr>
@@ -187,10 +171,11 @@ function renderOrders() {
                                 <span class="status-tag" style="${getStatusStyle(order.status)}">${order.status === 'ยกเลิกแล้ว' ? 'ขอยกเลิก/คืนเงิน/คืน' : order.status}</span>
                             </td>
                             <td style="text-align: right;">
-                                ${order.status === 'ที่ต้องชำระ' ? `<button class="btn-ship" onclick="confirmPayment('${order.id}')" style="background: #faad14;">ยืนยันชำระเงิน</button>` : ''}
+                                ${order.status === 'ที่ต้องชำระ' ? `<span style="font-size:0.8rem; color:#888;">รอการชำระเงิน/AI ตรวจสอบ</span>` : ''}
                                 ${order.status === 'ที่ต้องจัดส่ง' ? `<button class="btn-ship" onclick="shipOrder('${order.id}')">จัดส่ง</button>` : ''}
                                 ${order.status === 'เตรียมจัดส่งแล้ว' ? `<button class="btn-ship" onclick="confirmSent('${order.id}')" style="background: #1890ff;">แจ้งส่งพัสดุ</button>` : ''}
-                                ${order.status === 'ที่ต้องได้รับ' ? `<button class="btn-ship" onclick="markAsCompleted('${order.id}')" style="background: #52c41a; border-radius: 20px; padding: 6px 15px;">สำเร็จแล้ว</button>` : ''}
+                                ${order.status === 'ที่ต้องได้รับ' ? `<button class="btn-ship" onclick="confirmSent('${order.id}')" style="background: #2f54eb;">แก้ไขเลขพัสดุ</button>` : ''}
+                                ${order.status === 'ที่ต้องได้รับ' ? `<button class="btn-ship" onclick="markAsCompleted('${order.id}')" style="background: #52c41a;">สำเร็จแล้ว</button>` : ''}
                                 <button class="btn-detail" onclick="viewOrderDetails('${order.id}')">รายละเอียด</button>
                                 <button class="btn-detail" onclick="deleteOrder('${order.id}')" style="background: #fff; color: #ff4d4f; border-color: #ff4d4f; margin-left:5px;">ลบ</button>
                             </td>
@@ -229,7 +214,7 @@ function getStatusStyle(status) {
 }
 
 function shipOrder(orderId) {
-    if(!confirm('ยืนยันเตรียมการจัดส่ง (แพ็คสินค้า) หมายเลข ' + orderId + ' ใช่หรือไม่?')) return;
+    if(!confirm('ยืนยันการจัดส่ง หมายเลข ' + orderId + ' ?\nรายการจะถูกย้ายไปที่หน้า "ที่ต้องได้รับ" ของลูกค้า ทันที')) return;
     updateOrderStatus(orderId, 'เตรียมจัดส่งแล้ว');
 }
 
@@ -244,8 +229,8 @@ function confirmPayment(orderId) {
 }
 
 function confirmSent(orderId) {
-    // Just open the modal now, the modal handles the logic
-    viewOrderDetails(orderId);
+    // Open modal in dispatch mode (simplified view)
+    viewOrderDetails(orderId, true);
 }
 
 function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink = null) {
@@ -255,8 +240,9 @@ function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink 
         if (trackingLink) updateObj.trackingLink = trackingLink;
 
         // 1. Update Firestore (Cloud)
-        if (window.db) {
-            db.collection('orders').doc(orderId).update(updateObj)
+        const firestoreDB = (typeof db !== 'undefined') ? db : (window.db ? window.db : null);
+        if (firestoreDB) {
+            firestoreDB.collection('orders').doc(orderId).update(updateObj)
                 .then(() => console.log("Firestore updated successfully"))
                 .catch(err => {
                     console.error("Firestore update failed:", err);
@@ -297,54 +283,85 @@ function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink 
 
 let currentModalOrderId = null;
 
-function viewOrderDetails(orderId) {
+function viewOrderDetails(orderId, isDispatch = false) {
     const order = ordersData.find(o => o.id === orderId);
     
     if (order) {
         currentModalOrderId = orderId;
+        // Toggle Visibility for Dispatch Mode (v1.2.13)
+        const shippingMethodEl = document.getElementById('modalShippingMethod');
+        const paymentFullEl = document.getElementById('modalPaymentFull');
+        
+        if (isDispatch) {
+            if (shippingMethodEl) shippingMethodEl.closest('div').style.display = 'none';
+            if (paymentFullEl) paymentFullEl.closest('div').style.display = 'none';
+        } else {
+            if (shippingMethodEl) shippingMethodEl.closest('div').style.display = 'block';
+            if (paymentFullEl) paymentFullEl.closest('div').style.display = 'block';
+        }
+
         document.getElementById('modalCustomerName').textContent = order.customerName || 'N/A';
         document.getElementById('modalCustomerPhone').textContent = order.customerPhone || 'N/A';
+        document.getElementById('modalShippingMethod').textContent = order.shippingMethod || 'รับที่ร้าน';
         document.getElementById('modalCustomerAddress').textContent = order.customerAddress || 'ไม่มีข้อมูลที่อยู่จัดส่ง';
         
-        // Handle Tracking Fields logic
+        // --- Payment Info (v1.2.11) ---
+        const payMethod = order.paymentMethod || order.method || '-';
+        const payBank = order.paymentBank || '';
+        const paySlip = order.paymentSlip || '';
+        
+        let paymentFullText = payMethod;
+        if (payBank && payBank !== 'N/A' && payBank !== '-') {
+            paymentFullText += ` (${payBank})`;
+        }
+        document.getElementById('modalPaymentFull').textContent = paymentFullText;
+        
+        const slipGroup = document.getElementById('slipInfoGroup');
+        
+        if (paySlip && !isDispatch) {
+            slipGroup.style.display = 'block';
+            document.getElementById('modalSlipLink').href = paySlip;
+            document.getElementById('modalSlipThumb').src = paySlip;
+        } else {
+            slipGroup.style.display = 'none';
+        }
+
+        // Handle Tracking Fields logic (v1.2.13)
         const shipSection = document.getElementById('shipInputSection');
         const shipBtn = document.getElementById('btnShipConfirm');
         const saveBtn = document.getElementById('btnSaveTracking');
         const inputNum = document.getElementById('modalTrackingNum');
         const inputLink = document.getElementById('modalTrackingLink');
         
-        if (order.status === 'เตรียมจัดส่งแล้ว') {
+        // Ensure tracking fields are visible if in dispatch mode
+        if (isDispatch || order.status === 'เตรียมจัดส่งแล้ว' || order.status === 'ที่ต้องได้รับ' || order.status === 'สำเร็จแล้ว') {
             shipSection.style.display = 'block';
-            shipBtn.style.display = 'inline-block';
-            saveBtn.style.display = 'none';
             inputNum.value = order.trackingNum || '';
             inputLink.value = order.trackingLink || '';
-            inputNum.readOnly = false;
-            inputLink.readOnly = false;
-        } else if (order.status === 'ที่ต้องได้รับ') {
-            shipSection.style.display = 'block';
-            shipBtn.style.display = 'none';
-            saveBtn.style.display = 'inline-block'; // Show save button for editing only in "To Receive"
-            inputNum.value = order.trackingNum || '';
-            inputLink.value = order.trackingLink || '';
-            inputNum.readOnly = false; // Allow editing
-            inputLink.readOnly = false;
-        } else if (order.status === 'สำเร็จแล้ว') {
-            shipSection.style.display = 'block';
-            shipBtn.style.display = 'none';
-            saveBtn.style.display = 'none'; // No editing for completed orders
-            inputNum.value = order.trackingNum || 'ไม่มีข้อมูล';
-            inputLink.value = order.trackingLink || '-';
-            inputNum.readOnly = true; // Read Only
-            inputLink.readOnly = true;
+            
+            if (isDispatch || order.status === 'เตรียมจัดส่งแล้ว') {
+                shipBtn.style.display = 'inline-block';
+                saveBtn.style.display = 'none';
+                inputNum.readOnly = false;
+                inputLink.readOnly = false;
+            } else if (order.status === 'ที่ต้องได้รับ') {
+                shipBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-block';
+                inputNum.readOnly = false;
+                inputLink.readOnly = false;
+            } else { // สำเร็จแล้ว
+                shipBtn.style.display = 'none';
+                saveBtn.style.display = 'none';
+                inputNum.readOnly = true;
+                inputLink.readOnly = true;
+                if (!order.trackingNum) inputNum.value = 'ไม่มีข้อมูล';
+            }
         } else {
             shipSection.style.display = 'none';
             shipBtn.style.display = 'none';
             saveBtn.style.display = 'none';
-            inputNum.readOnly = false;
-            inputLink.readOnly = false;
         }
-        
+
         document.getElementById('orderDetailsModal').style.display = 'flex';
     }
 }
@@ -402,7 +419,7 @@ function updateTabBadges() {
     const counts = {
         unpaid: orders.filter(o => o.status === 'ที่ต้องชำระ' || o.status === 'Pending').length,
         toship: orders.filter(o => o.status === 'ที่ต้องจัดส่ง' || o.status === 'To Ship').length,
-        processed: orders.filter(o => o.status === 'เตรียมจัดส่งแล้ว' || o.status === 'Processed').length
+        processed: orders.filter(o => o.status === 'เตรียมจัดส่งแล้ว' || o.status === 'Processed' || o.status === 'ที่ต้องได้รับ' || o.status === 'To Receive').length
     };
 
     Object.keys(counts).forEach(key => {
@@ -418,23 +435,82 @@ function updateTabBadges() {
     });
 }
 
-async function checkDeliveryStatusAuto() {
-    // Only check if we have orders that are "To Receive"
-    let toReceiveOrders = ordersData.filter(o => o.status === 'ที่ต้องได้รับ' && o.trackingNum);
-    if (toReceiveOrders.length === 0) return;
 
-    console.log("[v1.2.10] Seller-Side Auto-Check active for:", toReceiveOrders.length, "orders");
-
-    // Simulate "Tracking API" delay
-    setTimeout(async () => {
-        for (let order of toReceiveOrders) {
-            // Update Firestore directly!
-            if (typeof db !== 'undefined') {
-                try {
-                    await db.collection('orders').doc(order.id).update({ status: 'สำเร็จแล้ว' });
-                    console.log("[v1.2.10] Seller Firestore Auto-Update Success:", order.id);
-                } catch(e) { console.error("[v1.2.10] Seller Firestore Update Failed:", e); }
+function updateSidebarActiveState() {
+    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    
+    document.querySelectorAll('.menu-item').forEach(item => {
+        const itemHref = item.getAttribute('href');
+        if (!itemHref) return;
+        
+        const itemPath = itemHref.split('?')[0];
+        const itemParams = new URLSearchParams(itemHref.split('?')[1] || '');
+        const itemTab = itemParams.get('tab');
+        
+        item.classList.remove('active');
+        
+        // Match path
+        if (currentPath === itemPath) {
+            // Match tab if specified in link
+            if (itemTab) {
+                if (tab === itemTab) {
+                    item.classList.add('active');
+                }
+            } else if (!tab && itemPath === 'seller-orders.html') {
+                // Main orders link (no tab in link AND no tab in URL)
+                item.classList.add('active');
+            } else if (itemPath === 'seller-centre.html') {
+                // Dashboard link
+                item.classList.add('active');
             }
         }
-    }, 5000); // 5 seconds delay for seller too
+    });
+}
+
+// v1.2.11 - Special Cleanup Function for duckview96@gmail.com
+async function cleanupUserOrders() {
+    if (!confirm("🚨 ยืนยันการลบออเดอร์ทั้งหมดของ duckview96@gmail.com ใช่ไหมคับ?")) return;
+    
+    const targetEmail = "duckview96@gmail.com";
+    const firestoreDB = (typeof db !== 'undefined') ? db : (window.db ? window.db : null);
+    
+    if (!firestoreDB) {
+        alert("Firestore not initialized");
+        return;
+    }
+
+    try {
+        console.log("[Cleanup] Searching for user:", targetEmail);
+        
+        // 1. Find UID
+        const uSnap = await firestoreDB.collection("users").where("email", "==", targetEmail).get();
+        let uids = [];
+        uSnap.forEach(doc => uids.push(doc.id));
+        
+        let deleteCount = 0;
+
+        // 2. Delete by UIDs
+        for (const uid of uids) {
+            const oSnap = await firestoreDB.collection("orders").where("customer", "==", uid).get();
+            for (const oDoc of oSnap.docs) {
+                await firestoreDB.collection("orders").doc(oDoc.id).delete();
+                deleteCount++;
+            }
+        }
+
+        // 3. Delete by direct email fallback
+        const oSnapEmail = await firestoreDB.collection("orders").where("customer", "==", targetEmail).get();
+        for (const oDoc of oSnapEmail.docs) {
+            await firestoreDB.collection("orders").doc(oDoc.id).delete();
+            deleteCount++;
+        }
+
+        alert(`ลบออเดอร์ของ ${targetEmail} เรียบร้อยแล้วคับ!\nรวมทั้งหมด: ${deleteCount} รายการ`);
+        
+    } catch (err) {
+        console.error("Cleanup failed:", err);
+        alert("เกิดข้อผิดพลาด: " + err.message);
+    }
 }

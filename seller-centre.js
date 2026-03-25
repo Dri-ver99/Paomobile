@@ -3,6 +3,8 @@ let ordersData = [];
 document.addEventListener('DOMContentLoaded', () => {
     const statusText = document.getElementById('statusText');
     const statusIndicator = document.getElementById('statusIndicator');
+    
+    if (typeof updateSidebarActiveState === 'function') updateSidebarActiveState();
 
     // --- v1.2.1 Auth & Firestore Initialization ---
     if (typeof firebase !== 'undefined' && firebase.auth) {
@@ -193,19 +195,19 @@ function getStatusStyle(status) {
 
 // Order Management Actions
 function shipOrder(orderId) {
-    if(!confirm('ยืนยันเตรียมการจัดส่งสำหรับหมายเลขคำสั่งซื้อ ' + orderId + ' ใช่หรือไม่?')) return;
+    if(!confirm('ยืนยันแจ้งส่งพัสดุ หมายเลข ' + orderId + ' ?\nสถานะจะเปลี่ยนเป็น "ที่ต้องได้รับ" คับ')) return;
     
     if (typeof db !== 'undefined') {
-        db.collection('orders').doc(orderId).update({ status: 'เตรียมจัดส่งแล้ว' })
+        db.collection('orders').doc(orderId).update({ status: 'ที่ต้องได้รับ' })
             .then(() => {
-                alert('อัปเดตสถานะสำเร็จ!');
+                alert('อัปเดตสถานะ "ที่ต้องได้รับ" สำเร็จแล้วคับ!');
             })
             .catch(err => {
                 console.error("Firestore update failed:", err);
                 alert("Error: " + err.message);
             });
     } else {
-        alert('Firestore not connected. Update failed.');
+        alert('ไม่ได้เชื่อมต่อ Firestore คับ');
     }
 }
 
@@ -224,4 +226,37 @@ function viewOrderDetails(orderId) {
 
 function closeOrderDetails() {
     document.getElementById('orderDetailsModal').style.display = 'none';
+}
+
+function updateSidebarActiveState() {
+    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    
+    document.querySelectorAll('.menu-item').forEach(item => {
+        const itemHref = item.getAttribute('href');
+        if (!itemHref) return;
+        
+        const itemPath = itemHref.split('?')[0];
+        const itemParams = new URLSearchParams(itemHref.split('?')[1] || '');
+        const itemTab = itemParams.get('tab');
+        
+        item.classList.remove('active');
+        
+        // Match path
+        if (currentPath === itemPath) {
+            // Match tab if specified in link
+            if (itemTab) {
+                if (tab === itemTab) {
+                    item.classList.add('active');
+                }
+            } else if (!tab && itemPath === 'seller-orders.html') {
+                // Main orders link (no tab in link AND no tab in URL)
+                item.classList.add('active');
+            } else if (itemPath === 'seller-centre.html') {
+                // Dashboard link
+                item.classList.add('active');
+            }
+        }
+    });
 }

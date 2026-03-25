@@ -199,11 +199,6 @@
             </div>
         </div>
  
-        <!-- Auto-Tracking Status Banner (v1.2.10) -->
-        <div id="trackingStatusBanner" style="display: none; background: #fffcf5; border: 1px solid #ffe58f; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; align-items: center; gap: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); animation: fadeIn 0.3s ease;">
-            <div class="loading-spinner" style="width: 18px; height: 18px; border: 2px solid #faad14; border-bottom-color: transparent; border-radius: 50%; animation: rotation 1s linear infinite;"></div>
-            <div style="font-size: 0.95rem; color: #856404; font-weight: 500;">📦 ระบบกำลังตรวจสอบสถานะขนส่ง (Flash/Kerry) อัตโนมัติค๊าบ...</div>
-        </div>
         <div id="ordersList">
             <!-- Dynamic Content Injected Here -->
         </div>
@@ -316,12 +311,13 @@
     <!-- Firebase Config -->
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyAs-W7m_8a5_v8b_Z88_v8b_v8b_v8b", // Note: This will use the actual config from the environment
-            authDomain: "paomobile-service.firebaseapp.com",
-            projectId: "paomobile-service",
-            storageBucket: "paomobile-service.appspot.com",
-            messagingSenderId: "367332219712",
-            appId: "1:367332219712:web:7f8a8a8a8a8a8a8a8a8a8"
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
         };
         // Use the global config if available, otherwise use this fallback
         const finalConfig = (typeof window.firebaseConfig !== 'undefined') ? window.firebaseConfig : firebaseConfig;
@@ -376,9 +372,6 @@
                         console.log("[v1.2.10] Sync Success: Found", ordersData.length, "orders");
                         const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
                         renderOrders(ordersData, activeTab);
-                        
-                        // NEW v1.2.10: Trigger auto-check whenever we sync
-                        checkDeliveryStatusAuto();
                     }, err => {
                         console.error("[v1.2.10] Sync Error:", err);
                         loadLocalOnly();
@@ -435,7 +428,7 @@
                     const s = o.status;
                     if (s === 'ที่ต้องชำระ') counts.pay++;
                     else if (s === 'ที่ต้องจัดส่ง') counts.ship++;
-                    else if (s === 'ที่ต้องได้รับ') counts.receive++;
+                    else if (s === 'ที่ต้องได้รับ' || s === 'เตรียมจัดส่งแล้ว' || s === 'Processed') counts.receive++;
                     else if (s === 'สำเร็จแล้ว' || s === 'Completed') counts.completed++;
                     else if (s === 'ยกเลิกแล้ว') counts.cancel++;
                     else if (s === 'คืนเงิน/คืนสินค้า') counts.return++;
@@ -463,7 +456,7 @@
                     const s = o.status;
                     if (filter === 'pay') return s === 'ที่ต้องชำระ';
                     if (filter === 'ship') return s === 'ที่ต้องจัดส่ง';
-                    if (filter === 'receive') return s === 'ที่ต้องได้รับ';
+                    if (filter === 'receive') return s === 'ที่ต้องได้รับ' || s === 'เตรียมจัดส่งแล้ว' || s === 'Processed';
                     if (filter === 'completed') return s === 'สำเร็จแล้ว' || s === 'Completed';
                     if (filter === 'cancel') return s === 'ยกเลิกแล้ว';
                     if (filter === 'return') return s === 'คืนเงิน/คืนสินค้า';
@@ -474,30 +467,34 @@
                     container.innerHTML = `
                         <div style="text-align: center; padding: 100px 20px; color: #757575; background: #fff; border-radius: 4px; border: 1px solid #eee;">
                             <div style="font-size: 4rem; margin-bottom: 20px;">📦</div>
-                            <div style="font-size: 1.1rem;">ยังไม่มีรายการสั่งซื้อตามสถานะที่คุณเลือก</div>
+                            <div style="font-size: 1.1rem;">ยังไม่มีรายการสั่งซื้อในแถบนี้</div>
                         </div>
                     `;
                     return;
                 }
 
-                container.innerHTML = filtered.map(order => `
+                try {
+                    container.innerHTML = filtered.map(order => {
+                        const items = order.items || [];
+                        const status = order.status || 'รอดำเนินการ';
+                        return `
                     <div class="order-card" style="border: 1px solid #eee; margin-bottom: 20px; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.03);">
                         <div class="order-card-body" style="padding: 15px 20px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f9f9f9; padding-bottom: 10px;">
                                 <div style="font-size: 0.85rem; color: #757575; font-family: monospace; display: flex; align-items: center;">
                                     รหัสคำสั่งซื้อ: ${order.id}
                                 </div>
-                                <div class="order-status" style="font-weight: 600; color: #ee4d2d; font-size: 0.9rem;">${order.status}</div>
+                                <div class="order-status" style="font-weight: 600; color: #ee4d2d; font-size: 0.9rem;">${status}</div>
                             </div>
-                            ${order.items.map((item, idx) => `
+                            ${items.map((item, idx) => `
                                 <div class="order-item" style="border-bottom: none; padding: 10px 0;">
-                                    <img src="${item.img}" alt="${item.name}" class="item-img" onerror="this.src='logo.png'" style="width: 70px; height: 70px;">
+                                    <img src="${item.img || 'logo.png'}" alt="${item.name || 'สินค้า'}" class="item-img" onerror="this.src='logo.png'" style="width: 70px; height: 70px;">
                                     <div class="item-details">
-                                        <div class="item-name" style="font-weight: 400; font-size: 0.95rem; color: #222;">${item.name}</div>
-                                        <div class="item-variation" style="color: #888;">จำนวน: x${item.qty}</div>
+                                        <div class="item-name" style="font-weight: 400; font-size: 0.95rem; color: #222;">${item.name || 'ไม่ระบุชื่อสินค้า'}</div>
+                                        <div class="item-variation" style="color: #888;">จำนวน: x${item.qty || 1}</div>
                                     </div>
                                     <div class="item-price-info">
-                                        <div class="price-final" style="color: #ee4d2d; font-weight: 500;">฿${item.price.toLocaleString()}</div>
+                                        <div class="price-final" style="color: #ee4d2d; font-weight: 500;">฿${(item.price || 0).toLocaleString()}</div>
                                     </div>
                                 </div>
                             `).join('')}
@@ -512,18 +509,27 @@
                                     ` : ''}
                                 </div>
                             </div>
-                            ` : ''}
-                            <div class="total-label" style="font-size: 0.95rem; color: #555;">${order.status.includes('ชำระ') ? 'จำนวนเงินที่ต้องชำระ:' : 'ยอดคำสั่งซื้อทั้งหมด:'}</div>
-                            <div class="total-price" style="font-weight: 600; color: #ee4d2d; font-size: ${order.status.includes('ชำระ') ? '1.4rem' : '1.3rem'};">฿${order.total.toLocaleString()}</div>
+                            ` : (status === 'ที่ต้องจัดส่ง' || status === 'เตรียมจัดส่งแล้ว' || status === 'ที่ต้องได้รับ' ? `
+                            <div style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                                <div style="color: #faad14; font-size: 1.2rem;">●</div>
+                                <div style="font-size: 0.95rem; color: #555;">
+                                    ${status === 'ที่ต้องจัดส่ง' ? 'รอผู้ขายจัดส่งและแจ้งเลขพัสดุ...' : 'ผู้ขายกำลังเตรียมจัดส่งสินค้าและแจ้งเลขพัสดุ...'}
+                                </div>
+                            </div>
+                            ` : '')}
+                            <div class="total-label" style="font-size: 0.95rem; color: #555;">${status.includes('ชำระ') ? 'จำนวนเงินที่ต้องชำระ:' : 'ยอดคำสั่งซื้อทั้งหมด:'}</div>
+                            <div class="total-price" style="font-weight: 600; color: #ee4d2d; font-size: ${status.includes('ชำระ') ? '1.4rem' : '1.3rem'};">฿${(order.total || 0).toLocaleString()}</div>
                         </div>
                         <div class="order-card-footer" style="padding: 15px 20px; border-top: 1px solid #f5f5f5; background: #fff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                                 <div style="font-size: 0.85rem; color: #757575;">
-                                    ${order.status === 'ที่ต้องชำระ' && order.orderDate ? `ชำระเงินภายใน ${formatDeadline(order.orderDate)} โดย ${order.method || 'QR พร้อมเพย์'}` : `รหัสคำสั่งซื้อ: <strong style="color: #444;">${order.id}</strong>`}
+                                    ${status === 'ที่ต้องชำระ' && order.orderDate ? `ชำระเงินภายใน ${formatDeadline(order.orderDate)} โดย ${order.paymentMethod || order.method || 'QR พร้อมเพย์'}${order.paymentBank ? ` (${order.paymentBank})` : ''}` : `รหัสคำสั่งซื้อ: <strong style="color: #444;">${order.id}</strong>`}
                                 </div>
 
                                 <div class="order-actions" style="gap: 12px; display: flex; align-items: center;">
-                                    ${order.status === 'ที่ต้องชำระ' ? `
-                                        <button class="btn-purchase btn-purchase-primary" onclick="location.href='payment-qr.html?amount=${order.total}&ref=${order.id}'" style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">ชำระเงินตอนนี้</button>
+                                    ${status === 'ที่ต้องชำระ' ? `
+                                        <button class="btn-purchase btn-purchase-primary" 
+                                            onclick="window.goToPayment && window.goToPayment({id: '${order.id}', total: ${order.total}, method: '${order.method || ''}', paymentMethod: '${order.paymentMethod || ''}', paymentBank: '${order.paymentBank || ''}'})" 
+                                            style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">ชำระเงินตอนนี้</button>
                                         <div style="position: relative; display: inline-block;">
                                             <button class="btn-purchase" onclick="toggleDropdown('${order.id}', event)" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">เพิ่มเติม ˅</button>
                                             <div id="dropdown-${order.id}" class="more-dropdown" style="display: none; position: absolute; bottom: 100%; right: 0; background: #fff; border: 1px solid #ee4d2d; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 2px; padding: 8px 0; min-width: 190px; z-index: 100; margin-bottom: 5px;">
@@ -537,8 +543,12 @@
                                     <button class="btn-purchase" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">ติดต่อผู้ขาย</button>
                                 </div>
                         </div>
-                    </div>
-                `).join('');
+                    </div>`;
+                    }).join('');
+                } catch (err) {
+                    console.error("Rendering error:", err);
+                    container.innerHTML = `<div style="padding:20px; color:red;">เกิดข้อผิดพลาดในการแสดงผลรายการ</div>`;
+                }
             }
 
             // Expiration Process (Runs on load)
@@ -607,69 +617,61 @@
                     }, 1500);
                 });
             };
-            // Cloud-Aware Auto-Check Logic (v1.2.10)
-            checkDeliveryStatusAuto();
-
-            async function checkDeliveryStatusAuto() {
-                const raw = localStorage.getItem(getOrdersKey()) || '[]';
-                let ordersArr = JSON.parse(raw);
-                let toReceiveOrders = ordersArr.filter(o => o.status === 'ที่ต้องได้รับ' && o.trackingNum);
-                if (toReceiveOrders.length === 0) return;
-
-                const banner = document.getElementById('trackingStatusBanner');
-                if (banner) banner.style.display = 'flex';
-
-                // Simulate "Tracking API" delay
-                setTimeout(async () => {
-                    let updatedAny = false;
-                    for (let order of toReceiveOrders) {
-                        // Simulation: After check, we mark as "Completed"
-                        order.status = 'สำเร็จแล้ว';
-                        updatedAny = true;
-
-                        // Update Firestore so Seller Centre sees it too!
-                        if (typeof db !== 'undefined') {
-                            try {
-                                await db.collection('orders').doc(order.id).update({ status: 'สำเร็จแล้ว' });
-                                console.log("[v1.2.10] Firestore Auto-Update Success:", order.id);
-                            } catch(e) { console.error("[v1.2.10] Firestore Update Failed:", e); }
-                        }
-                    }
-
-                    if (updatedAny) {
-                        localStorage.setItem(getOrdersKey(), JSON.stringify(ordersArr));
-                        const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
-                        renderOrders(ordersArr, activeTab);
-                    }
-
-                    if (banner) {
-                        banner.style.background = '#f6ffed';
-                        banner.style.borderColor = '#b7eb8f';
-                        banner.innerHTML = `
-                            <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
-                                <div style="background: #52c41a; color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                </div>
-                                <div style="font-size: 0.95rem; color: #237804; font-weight: 500;">อัปเดตสถานะขนส่งสำเร็จ! ออเดอร์ย้ายไปหน้า "สำเร็จแล้ว" เรียบร้อยครับ</div>
-                            </div>
-                        `;
-                        setTimeout(() => { 
-                            banner.style.opacity = '0';
-                            banner.style.transition = 'opacity 0.8s ease';
-                            setTimeout(() => { banner.style.display = 'none'; }, 800);
-                        }, 5000);
-                    }
-                }, 4000);
-            }
 
             // Tab events
             document.querySelectorAll('.order-tab').forEach(tab => {
                 tab.addEventListener('click', function () {
                     document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
-                    renderOrders(orders, this.dataset.filter);
+                    // Removed logic that overwrote ordersData status from localStorage
+                    renderOrders(ordersData, this.dataset.filter);
                 });
             });
+
+            // Listen for localStorage changes from seller dashboard (cross-tab)
+            window.addEventListener('storage', function(e) {
+                if (e.key === getOrdersKey() || e.key === 'pao_global_orders') {
+                    const freshOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+                    if (freshOrders.length > 0) {
+                        freshOrders.forEach(fo => {
+                            const idx = ordersData.findIndex(o => o.id === fo.id);
+                            if (idx > -1) ordersData[idx] = fo;
+                        });
+                        const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                        renderOrders(ordersData, activeTab);
+                    }
+                }
+            });
+
+            // Poll localStorage every 3 seconds to catch seller updates on same browser
+            setInterval(function() {
+                let changed = false;
+
+                // 1. Check user-specific key (Mostly used for real-time local updates)
+                // Skip status overwriting if cloud sync is likely active to prevent reversion
+                /* 
+                const freshLocal = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+                freshLocal.forEach(fo => {
+                    const idx = ordersData.findIndex(o => o.id === fo.id);
+                    if (idx > -1 && ordersData[idx].status !== fo.status) {
+                        ordersData[idx].status = fo.status;
+                        if (fo.trackingNum) ordersData[idx].trackingNum = fo.trackingNum;
+                        if (fo.trackingLink) ordersData[idx].trackingLink = fo.trackingLink;
+                        changed = true;
+                    }
+                });
+                */
+
+                // 2. ALSO check pao_global_orders by matching order IDs
+                // Only sync from local TO cloud state if Cloud Sync didn't already happen
+                // Removed aggressive status overwriting from localStorage to prevent reversion
+                
+                if (changed) {
+                    const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                    renderOrders(ordersData, activeTab);
+                }
+            }, 3000);
+
 
             window.buyAgain = function(orderId) {
                 const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
@@ -791,8 +793,35 @@
             let currentChangePaymentOrderId = null;
             let newlySelectedPayment = 'QR พร้อมเพย์';
 
-            window.changePaymentUser = function(orderId, currentMethod) {
-                currentChangePaymentOrderId = orderId;
+            window.goToPayment = function(order) {
+                if (!order || !order.id) return;
+                const pm = (order.paymentMethod || order.method || '').toLowerCase();
+                const pb = (order.paymentBank || '').toLowerCase();
+                const combined = pm + ' ' + pb;
+                const total = order.total || 0;
+                const ref = order.id;
+                
+                // Check if it's a bank transfer
+                const isTransfer = combined.includes('โอน') || 
+                                   combined.includes('bank') || 
+                                   combined.includes('transfer') || 
+                                   combined.includes('ไทยพาณิชย์') || 
+                                   combined.includes('scb') ||
+                                   combined.includes('กสิกร') ||
+                                   combined.includes('kbank');
+                
+                if (isTransfer) {
+                    let bank = 'scb';
+                    if (combined.includes('กสิกร') || combined.includes('kbank')) bank = 'kbank';
+                    window.location.href = `payment-transfer.html?amount=${total}&ref=${ref}&bank=${bank}`;
+                } else {
+                    // Default to QR for all other types of online payment
+                    window.location.href = `payment-qr.html?amount=${total}&ref=${ref}`;
+                }
+            };
+
+            window.toggleChangePayment = function(id, currentMethod) {
+                currentChangePaymentOrderId = id;
                 const overlay = document.getElementById('paymentModalOverlay');
                 const modal = document.getElementById('paymentModal');
                 if(overlay && modal) {
@@ -838,9 +867,20 @@
                 
                 if (order) {
                     order.paymentMethod = newlySelectedPayment;
-                    if(newlySelectedPayment === 'เก็บเงินปลายทาง') {
+                    
+                    if (newlySelectedPayment.includes('ไทยพาณิชย์')) {
+                        order.paymentMethod = 'โอนเงินผ่านธนาคาร';
+                        order.paymentBank = 'SCB';
+                    } else if (newlySelectedPayment.includes('กสิกร')) {
+                        order.paymentMethod = 'โอนเงินผ่านธนาคาร';
+                        order.paymentBank = 'KBank';
+                    } else if (newlySelectedPayment === 'เก็บเงินปลายทาง') {
                         order.status = 'ที่ต้องจัดส่ง';
+                        order.paymentBank = '';
+                    } else {
+                        order.paymentBank = '';
                     }
+
                     localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
                     
                     // Global sync
