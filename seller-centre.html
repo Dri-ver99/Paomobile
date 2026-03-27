@@ -8,6 +8,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="seller-centre.css">
+    <style>
+        body { font-family: 'Outfit', 'Noto Sans Thai', sans-serif; }
+        .stat-num, .insight-val {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
     <!-- Sidebar -->
@@ -32,9 +39,8 @@
             </div>
             <div class="menu-section">
                 <p class="menu-title">สินค้า</p>
-                <a href="#" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
-                <a href="#" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
-            </div>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
             </div>
         </nav>
     </aside>
@@ -81,7 +87,7 @@
 
             <!-- Recent Orders Card -->
             <div class="card">
-                <div class="card-title">คำสั่งซื้อล่าลุด <a href="seller-orders.html" class="card-link">ดูทั้งหมด ></a></div>
+                <div class="card-title">คำสั่งซื้อล่าสุด <a href="seller-orders.html" class="card-link">ดูทั้งหมด ></a></div>
                 <div id="recent-orders-list">
                     <!-- Dynamic Content Injected Here -->
                 </div>
@@ -91,9 +97,9 @@
             <div class="card">
                 <div class="card-title">
                     <span>Business Insights</span>
-                    <a href="#" class="card-link">ดูเพิ่มเติม ></a>
+                    <a href="seller-orders.html" class="card-link">ดูเพิ่มเติม ></a>
                 </div>
-                <p style="font-size: 0.75rem; color: #999; margin-top: -15px; margin-bottom: 20px;">ข้อมูลล่าสุดเมื่ออัปเดตอัตโนมัติ (ยอดขายรวมจากทุการสั่งซื้อ)</p>
+                <p style="font-size: 0.75rem; color: #999; margin-top: -15px; margin-bottom: 20px;">ข้อมูลล่าสุดเมื่ออัปเดตอัตโนมัติ (ยอดขายรวมจากทุกการสั่งซื้อ)</p>
                 <div class="insights-grid">
                     <div class="insight-item">
                         <span class="stat-label">ยอดขาย</span>
@@ -101,8 +107,8 @@
                         <span class="insight-trend">ทั้งหมดที่ได้รับ</span>
                     </div>
                     <div class="insight-item">
-                        <span class="stat-label">จำนวนผู้เข้าชม</span>
-                        <span class="insight-val">--</span>
+                        <span class="stat-label">สินค้าทั้งหมด</span>
+                        <span class="insight-val" id="insight-products">0</span>
                     </div>
                     <div class="insight-item">
                         <span class="stat-label">จำนวนการคลิกสินค้า</span>
@@ -139,7 +145,7 @@
                 </div>
             </div>
             <div style="padding: 16px 20px; border-top: 1px solid #eee; text-align: right; background: #fafafa;">
-                <button onclick="closeOrderDetails()" style="background: #ee4d2d; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">ปิดหน้าต่าง</button>
+                <button onclick="closeOrderDetails()" style="background: #ee4d2d; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-family: inherit;">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
@@ -167,3 +173,4 @@
     <script src="seller-centre.js?v=1.2.10"></script>
 </body>
 </html>
+

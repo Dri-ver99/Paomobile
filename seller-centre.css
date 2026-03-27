@@ -17,12 +17,14 @@
 }
 
 body {
-    font-family: 'Noto Sans Thai', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
     background-color: var(--bg-gray);
     color: var(--text-main);
     display: flex;
     min-height: 100vh;
 }
+
+input, button, select, textarea { font-family: inherit; }
 
 /* Sidebar */
 .sidebar {

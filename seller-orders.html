@@ -44,8 +44,7 @@
             background:#fff; color:#4080ff; border:1px solid #4080ff; padding:5px 12px; border-radius:4px; font-size:0.8rem; cursor:pointer; font-family: inherit;
         }
         .btn-detail:hover { background: #f0f5ff; }
-    </style>
-    <style>
+
         .tab-btn { position: relative; padding: 12px 20px; border: none; background: none; cursor: pointer; color: #555; }
         .tab-btn.active { color: #ee4d2d; border-bottom: 2px solid #ee4d2d; }
         .tab-badge {
@@ -84,14 +83,14 @@
             </div>
             <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
-                <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html" class="menu-item active"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
                 <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
-                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡</span> เตรียมจัดส่ง</a>
                 <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">สินค้า</p>
-                <a href="#" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛠️</span> สินค้าของฉัน</a>
                 <a href="#" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
             </div>
         </nav>
@@ -105,12 +104,12 @@
         <div class="nav-right" id="diag-ui" style="display: flex; align-items: center; gap: 15px; font-size: 0.8rem;">
             <div id="statusIndicator" style="width: 10px; height: 10px; border-radius: 50%; background: #ccc;"></div>
             <div style="text-align: right;">
-                <div id="statusText" style="font-weight: 600; color: #555;">Firestore: กำลังเชื่อมต่อ... (v1.2)</div>
+                <div id="statusText" style="font-weight: 600; color: #555;">Firestore: กำลังเชื่อมต่อ...</div>
                 <div id="orderCountStatus" style="color: #888;">ออเดอร์ในระบบ: -</div>
             </div>
+            <button onclick="forceManualSync()" style="background: #f0f0f0; border: 1px solid #ddd; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; color: #555;">🔄 รีเฟรชข้อมูล</button>
             <div id="lastUpdateStatus" style="color: #bbb; display: none;"></div>
             <button id="adminLoginBtn" onclick="firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())" style="display: none; background: #ee4d2d; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">ล็อกอิน Admin</button>
-            <button id="btnCleanupOrders" onclick="cleanupUserOrders()" style="background: #555; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Cleanup duckview96</button>
         </div>
     </header>
 
@@ -127,7 +126,7 @@
                 <button class="tab-btn" data-tab="toship">ที่ต้องจัดส่ง <span class="tab-badge" id="badge-toship">0</span></button>
                 <button class="tab-btn" data-tab="processed">เตรียมจัดส่งแล้ว <span class="tab-badge" id="badge-processed">0</span></button>
                 <button class="tab-btn" data-tab="completed">สำเร็จแล้ว</button>
-                <button class="tab-btn" data-tab="cancelled">ขอยกเลิก/คืนเงิน/คืน</button>
+                <button class="tab-btn" data-tab="cancelled">ขอยกเลิก/คืนเงิน/คืนสินค้า</button>
             </div>
             
             <div style="padding: 0 20px 20px 20px;">
@@ -170,7 +169,7 @@
                 </div>
                 <div id="slipInfoGroup" style="margin-bottom: 12px; display: none; text-align: center; background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
                     <div style="font-size: 0.8rem; color: #757575; margin-bottom: 8px; text-align: left;">หลักฐานการโอน (สลิป)</div>
-                    <a id="modalSlipLink" href="#" target="_blank" style="display: inline-block; position: relative;">
+                    <a id="modalSlipLink" href="javascript:void(0)" style="display: inline-block; position: relative;">
                         <img id="modalSlipThumb" src="" style="max-width: 100%; max-height: 250px; border-radius: 4px; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                         <div style="font-size: 0.75rem; color: #fff; background: rgba(0,0,0,0.5); position: absolute; bottom: 0; width: 100%; padding: 4px 0; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;">คลิกเพื่อดูรูปใหญ่</div>
                     </a>
@@ -183,7 +182,7 @@
                         <input type="text" id="modalTrackingNum" placeholder="กรอกเลขพัสดุที่นี่" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.9rem;">
                     </div>
                     <div style="margin-bottom: 12px;">
-                        <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ลิงค์เช็คพัสดุ (ถ้ามี)</div>
+                        <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ลิงก์เช็คพัสดุ (ถ้ามี)</div>
                         <input type="text" id="modalTrackingLink" placeholder="เช่น https://track.thailandpost.co.th/" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.9rem;">
                     </div>
                 </div>
@@ -193,6 +192,14 @@
                 <button id="btnSaveTracking" onclick="handleSaveTrackingEdit()" style="display: none; background: #2f54eb; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 500;">บันทึกการแก้ไข</button>
                 <button onclick="closeOrderDetails()" style="background: #fff; color: #555; border: 1px solid #ddd; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit;">ปิดหน้าต่าง</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Premium Slip Lightbox Overlay -->
+    <div id="slipLightbox" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; cursor: zoom-out; transition: opacity 0.3s ease; opacity: 0;" onclick="closeSlipLightbox()">
+        <div style="position: relative; max-width: 90%; max-height: 90%; background: #fff; padding: 10px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: default;" onclick="event.stopPropagation()">
+            <div style="position: absolute; top: -15px; right: -15px; width: 35px; height: 35px; background: #ee4d2d; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.3); border: 2px solid #fff; z-index: 100;" onclick="closeSlipLightbox()">&times;</div>
+            <img id="lightboxImg" src="" style="display: block; max-width: 100%; max-height: calc(90vh - 40px); border-radius: 8px;">
         </div>
     </div>
 
@@ -215,3 +222,4 @@
     <script src="seller-orders.js?v=1.2.10"></script>
 </body>
 </html>
+

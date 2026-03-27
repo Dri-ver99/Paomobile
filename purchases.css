@@ -223,8 +223,10 @@ body {
     font-size: 0.95rem;
     cursor: pointer;
     border: 1px solid var(--shopee-border);
-    background: #fff;
-    color: #555;
+    font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
+    background-color: #f7f7f7;
+    color: #333;
+    line-height: 1.6;
     min-width: 140px;
     text-align: center;
 }

@@ -47,7 +47,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startFirestoreSync() {
-        console.log("[v1.2.10] Starting real-time sync...");
+        console.log("[v1.2.11] Starting real-time sync...");
+        
+        // v1.2.11 - Pre-render local data for instant visibility
+        const localGlobal = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+        if (localGlobal.length > 0) {
+            console.log("[v1.2.11] Pre-rendering local orders...");
+            ordersData = localGlobal;
+            renderOrders();
+            updateTabBadges();
+        }
+
         db.collection('orders').onSnapshot(snapshot => {
             let fetchedOrders = snapshot.docs.map(doc => ({
                 ...doc.data(),
@@ -61,11 +71,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 return dateB - dateA;
             });
             
-            ordersData = fetchedOrders;
+            // ✅ Preserve optimistic local status (v1.4)
+            const localGlobal = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+            const localMap = new Map();
+            localGlobal.forEach(o => localMap.set(o.id, o));
+            
+            fetchedOrders = fetchedOrders.map(o => {
+                if (localMap.has(o.id)) {
+                    const localO = localMap.get(o.id);
+                    const advanced = ['ที่ต้องจัดส่ง', 'เตรียมจัดส่งแล้ว', 'ที่ต้องได้รับ', 'สำเร็จแล้ว'];
+                    if (advanced.includes(localO.status) && o.status === 'ที่ต้องชำระ') {
+                        return { ...o, status: localO.status };
+                    }
+                }
+                return o;
+            });
+            
+            ordersData = processExpirations(fetchedOrders);
             
             // Update UI
-            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (v1.2.7)";
-            if (statusIndicator) statusIndicator.style.background = "#52c41a"; // Green
+            if (statusIndicator) statusIndicator.style.background = '#52c41a';
+            if (statusText) statusText.textContent = "Firestore: เชื่อมต่อแล้ว (v1.2.11)";
             if (orderCountStatus) orderCountStatus.textContent = "ออเดอร์ในระบบ: " + ordersData.length;
             
             localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
@@ -86,9 +112,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadLocalStorageFallback() {
         ordersData = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+        ordersData = processExpirations(ordersData);
         renderOrders();
         updateTabBadges();
     }
+
+    // Expiration Logic for Seller Dashboard
+    function processExpirations(orders) {
+        if (typeof db === 'undefined') return orders;
+
+        orders.forEach(o => {
+            if (o.status === 'ที่ต้องชำระ' && (o.orderDate || o.createdAt)) {
+                let timeVal = 0;
+                if (o.orderDate) {
+                    timeVal = new Date(o.orderDate).getTime();
+                } else if (o.createdAt && o.createdAt.toMillis) {
+                    timeVal = o.createdAt.toMillis();
+                } else if (o.createdAt && o.createdAt.seconds) {
+                    timeVal = o.createdAt.seconds * 1000;
+                }
+
+                if (timeVal > 0) {
+                    const elapsed = Date.now() - timeVal;
+                    if (elapsed > 30 * 60 * 1000) {
+                        o.status = 'ยกเลิกแล้ว';
+                        // Sync to Cloud automatically
+                        db.collection('orders').doc(o.id).update({ status: 'ยกเลิกแล้ว' })
+                            .catch(err => console.warn("Admin background expiry sync failed for", o.id, err));
+                    }
+                }
+            }
+        });
+        return orders;
+    }
+
+    // Poll for expirations continuously in background
+    setInterval(function() {
+        if (ordersData && ordersData.length > 0) {
+            const oldStatusStr = JSON.stringify(ordersData.map(o => o.status));
+            ordersData = processExpirations(ordersData);
+            const newStatusStr = JSON.stringify(ordersData.map(o => o.status));
+            
+            if (oldStatusStr !== newStatusStr) {
+                renderOrders();
+                updateTabBadges();
+            }
+        }
+    }, 3000);
+
+    // v1.4.8 - BroadcastChannel for Instant 1:1 Parity with Customer
+    const bc = new BroadcastChannel('pao_order_sync');
+    bc.onmessage = (event) => {
+        console.log("[v1.4.8] Broadcast received:", event.data);
+        if (event.data && event.data.type === 'REFRESH_ORDERS') {
+            // OPTIMISTIC UPDATE: If we have an 'updatedOrder' object, use it!
+            if (event.data.updatedOrder) {
+                const updated = event.data.updatedOrder;
+                let found = false;
+                ordersData = ordersData.map(o => {
+                    if (o.id === updated.id) {
+                        found = true;
+                        return { ...o, ...updated }; // Merge optimistic fields
+                    }
+                    return o;
+                });
+                
+                // If not found in current list, maybe we should still fetch or wait for snapshot
+                console.log("[v1.4.8] Optimistic Merge Result:", found ? "Success" : "Order ID not in current view");
+                
+                if (found) {
+                    localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
+                    renderOrders();
+                    updateTabBadges();
+                    if (statusText) statusText.textContent = `Firestore: เชื่อมต่อแล้ว (v1.2.11) - อัปเดตจากลูกค้าเมื่อ ${new Date().toLocaleTimeString()}`;
+                }
+            }
+            
+            // Still trigger a cloud sync in background as a safety
+            forceManualSync(true); 
+        }
+    };
 });
 
 function initTabs() {
@@ -168,7 +271,7 @@ function renderOrders() {
                             </td>
                             <td style="text-align: center; font-weight: 600; font-size: 1rem; color: #ee4d2d;">฿${(order.total || 0).toLocaleString()}</td>
                             <td style="text-align: center;">
-                                <span class="status-tag" style="${getStatusStyle(order.status)}">${order.status === 'ยกเลิกแล้ว' ? 'ขอยกเลิก/คืนเงิน/คืน' : order.status}</span>
+                                <span class="status-tag" style="${getStatusStyle(order.status)}">${order.status}</span>
                             </td>
                             <td style="text-align: right;">
                                 ${order.status === 'ที่ต้องชำระ' ? `<span style="font-size:0.8rem; color:#888;">รอการชำระเงิน/AI ตรวจสอบ</span>` : ''}
@@ -292,13 +395,9 @@ function viewOrderDetails(orderId, isDispatch = false) {
         const shippingMethodEl = document.getElementById('modalShippingMethod');
         const paymentFullEl = document.getElementById('modalPaymentFull');
         
-        if (isDispatch) {
-            if (shippingMethodEl) shippingMethodEl.closest('div').style.display = 'none';
-            if (paymentFullEl) paymentFullEl.closest('div').style.display = 'none';
-        } else {
-            if (shippingMethodEl) shippingMethodEl.closest('div').style.display = 'block';
-            if (paymentFullEl) paymentFullEl.closest('div').style.display = 'block';
-        }
+        // Always show these in all tabs (v1.4.9)
+        if (shippingMethodEl) shippingMethodEl.closest('div').style.display = 'block';
+        if (paymentFullEl) paymentFullEl.closest('div').style.display = 'block';
 
         document.getElementById('modalCustomerName').textContent = order.customerName || 'N/A';
         document.getElementById('modalCustomerPhone').textContent = order.customerPhone || 'N/A';
@@ -318,10 +417,17 @@ function viewOrderDetails(orderId, isDispatch = false) {
         
         const slipGroup = document.getElementById('slipInfoGroup');
         
-        if (paySlip && !isDispatch) {
+        if (paySlip) {
             slipGroup.style.display = 'block';
-            document.getElementById('modalSlipLink').href = paySlip;
-            document.getElementById('modalSlipThumb').src = paySlip;
+            const slipThumb = document.getElementById('modalSlipThumb');
+            slipThumb.src = paySlip;
+            slipThumb.style.cursor = 'pointer';
+            // Handle large Base64 by using a click listener instead of a direct link
+            const slipLink = document.getElementById('modalSlipLink');
+            slipLink.href = "javascript:void(0)";
+            slipLink.onclick = () => {
+                viewSlipLightbox(paySlip);
+            };
         } else {
             slipGroup.style.display = 'none';
         }
@@ -405,6 +511,68 @@ function handleSaveTrackingEdit() {
     closeOrderDetails();
 }
 
+// v1.2.11 - Force Manual Sync with Cloud
+function forceManualSync(isSilent = false) {
+    const btn = (!isSilent && event && event.target && event.target.tagName === 'BUTTON') ? event.target : null;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '🔄 กำลังโหลด...';
+    }
+
+    if (typeof db !== 'undefined') {
+        db.collection('orders').get({ source: 'server' }).then(snapshot => {
+            console.log("[v1.2.11] Cloud Fetch Success:", snapshot.size);
+            let fetchedOrders = snapshot.docs.map(doc => ({
+                ...doc.data(),
+                id: doc.id 
+            }));
+            
+            // Apply sorting (Newest first)
+            fetchedOrders.sort((a, b) => {
+                const dateA = a.orderDate ? new Date(a.orderDate) : new Date(0);
+                const dateB = b.orderDate ? new Date(b.orderDate) : new Date(0);
+                return dateB - dateA;
+            });
+
+            // v1.4.8 - PROTECT OPTIMISTIC STATUS: 
+            // If local storage has 'ที่ต้องจัดส่ง' but cloud still has 'ที่ต้องชำระ', keep local!
+            const localOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+            ordersData = fetchedOrders.map(o => {
+                const local = localOrders.find(lo => lo.id === o.id);
+                if (local && local.status === 'ที่ต้องจัดส่ง' && o.status === 'ที่ต้องชำระ') {
+                    console.log("[v1.4.8] Keeping optimistic status for:", o.id);
+                    return { ...o, status: 'ที่ต้องจัดส่ง' };
+                }
+                return o;
+            });
+
+            ordersData = processExpirations(ordersData);
+            localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
+            
+            renderOrders();
+            updateTabBadges();
+            
+            if (btn) {
+                btn.innerHTML = '✅ รีเฟรชสำเร็จ';
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '🔄 รีเฟรชข้อมูล';
+                }, 1500);
+            }
+            if (statusText) statusText.textContent = `Firestore: เชื่อมต่อแล้ว (v1.2.11) - อัปเดตเมื่อ ${new Date().toLocaleTimeString()}`;
+        }).catch(err => {
+            console.error("Manual Sync Failed:", err);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '❌ รีเฟรชล้มเหลว: ' + (err.code || 'ERR');
+            }
+            if (!isSilent) alert("เกิดข้อผิดพลาดในการโหลดข้อมูล: " + err.message);
+        });
+    }
+}
+
+// Ensure the initial script actually runs v1.2.11
+console.log("[v1.2.11] Seller Orders Logic Loaded");
 function closeOrderDetails() {
     document.getElementById('orderDetailsModal').style.display = 'none';
     currentModalOrderId = null;
@@ -435,6 +603,35 @@ function updateTabBadges() {
     });
 }
 
+
+function viewSlipLightbox(url) {
+    const lightbox = document.getElementById('slipLightbox');
+    const img = document.getElementById('lightboxImg');
+    if (lightbox && img) {
+        img.src = url;
+        lightbox.style.display = 'flex';
+        // Force reflow
+        lightbox.offsetHeight;
+        lightbox.style.opacity = '1';
+        const content = lightbox.querySelector('div');
+        if (content) content.style.transform = 'scale(1)';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeSlipLightbox() {
+    const lightbox = document.getElementById('slipLightbox');
+    if (lightbox) {
+        lightbox.style.opacity = '0';
+        const content = lightbox.querySelector('div');
+        if (content) content.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            lightbox.style.display = 'none';
+            document.getElementById('lightboxImg').src = '';
+            document.body.style.overflow = '';
+        }, 300);
+    }
+}
 
 function updateSidebarActiveState() {
     const currentPath = window.location.pathname.split('/').pop() || 'index.html';

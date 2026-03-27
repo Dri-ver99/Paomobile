@@ -6,23 +6,34 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (typeof updateSidebarActiveState === 'function') updateSidebarActiveState();
 
+    // --- v1.2.11 Instant Local Load ---
+    updateDashboard();
+
+    // Show baseline products (17) or cached count immediately
+    const elProd = document.getElementById('insight-products');
+    if (elProd) elProd.textContent = localStorage.getItem('pao_total_products_count') || 17;
+
     // --- v1.2.1 Auth & Firestore Initialization ---
     if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged(user => {
             const statusIndicator = document.getElementById('firestore-status');
             
             if (user) {
-                console.log("[v1.2.1] Dashboard User detected:", user.email);
+                console.log("[v1.2.11] Dashboard User detected:", user.email);
+                if (statusIndicator) {
+                    statusIndicator.style.background = "#1890ff"; // Blue
+                    statusIndicator.innerHTML = `&bull; Firestore: กำลังซิงค์ข้อมูล...`;
+                }
                 if (typeof db !== 'undefined') {
                     startFirestoreSync();
                 }
             } else {
-                console.warn("[v1.2.1] No user logged in. Dashboard sync might be limited.");
+                console.warn("[v1.2.1] No user logged in.");
                 if (statusIndicator) {
-                    statusIndicator.style.background = "#faad14"; // Orange
-                    statusIndicator.innerHTML = `&bull; Firestore: กรุณาล็อกอิน (v1.2.1) <button onclick="firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())" style="margin-left:8px; border:none; background:#ee4d2d; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;">ล็อกอิน</button>`;
+                    statusIndicator.style.background = "#faad14";
+                    statusIndicator.innerHTML = `&bull; Firestore: กรุณาล็อกอิน <button onclick="firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())" style="margin-left:8px; border:none; background:#ee4d2d; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;">ล็อกอิน</button>`;
                 }
-                updateDashboard(); // Show local data as fallback
+                updateDashboard();
             }
         });
     } else {
@@ -31,20 +42,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startFirestoreSync() {
         console.log("[v1.2.1] Starting real-time sync...");
+        
+        // Orders Sync
         db.collection('orders').onSnapshot(snapshot => {
             let fetchedOrders = snapshot.docs.map(doc => ({
                 ...doc.data(),
                 id: doc.id 
             }));
             
-            // Sort client-side
             fetchedOrders.sort((a, b) => {
                 const dateA = a.createdAt ? (a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt)) : new Date(0);
                 const dateB = b.createdAt ? (b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt)) : new Date(0);
                 return dateB - dateA;
             });
             
-            ordersData = fetchedOrders;
+            ordersData = processExpirations(fetchedOrders);
             
             const statusIndicator = document.getElementById('firestore-status');
             if (statusIndicator) {
@@ -61,12 +73,65 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusIndicator.style.background = "#ff4d4f"; // Red
                 statusIndicator.innerHTML = `&bull; Firestore: Error v1.2.10 (${err.code})`;
             }
-            if (err.code === 'permission-denied') {
-                alert("สิทธิ์ไม่ถูกต้อง (v1.2.2)\n\nกรุณาล็อกอินด้วยเมล sattawat2560@gmail.com หรือแอดมินเท่านั้นครับ");
-            }
             updateDashboard();
         });
+
+        // Products Sync (for stats)
+        db.collection('products').onSnapshot(snapshot => {
+            const count = snapshot.size;
+            // Use 17 as baseline if collection is empty
+            const totalProductsCount = count > 0 ? count : 17; 
+            const el = document.getElementById('insight-products');
+            if (el) el.textContent = totalProductsCount;
+            localStorage.setItem('pao_total_products_count', totalProductsCount);
+        }, err => {
+            console.warn("[v1.2.11] Product sync failed, using baseline:", err);
+            const el = document.getElementById('insight-products');
+            if (el) el.textContent = 17;
+        });
     }
+
+    // Expiration Logic for Dashboard
+    function processExpirations(orders) {
+        if (typeof db === 'undefined') return orders;
+
+        orders.forEach(o => {
+            if (o.status === 'ที่ต้องชำระ' && (o.orderDate || o.createdAt)) {
+                let timeVal = 0;
+                if (o.orderDate) {
+                    timeVal = new Date(o.orderDate).getTime();
+                } else if (o.createdAt && o.createdAt.toMillis) {
+                    timeVal = o.createdAt.toMillis();
+                } else if (o.createdAt && o.createdAt.seconds) {
+                    timeVal = o.createdAt.seconds * 1000;
+                }
+
+                if (timeVal > 0) {
+                    const elapsed = Date.now() - timeVal;
+                    if (elapsed > 30 * 60 * 1000) {
+                        o.status = 'ยกเลิกแล้ว';
+                        // Sync to Cloud automatically
+                        db.collection('orders').doc(o.id).update({ status: 'ยกเลิกแล้ว' })
+                            .catch(err => console.warn("Admin background expiry sync failed for", o.id, err));
+                    }
+                }
+            }
+        });
+        return orders;
+    }
+
+    // Polling interval for expirations
+    setInterval(function() {
+        if (ordersData && ordersData.length > 0) {
+            const oldStatusStr = JSON.stringify(ordersData.map(o => o.status));
+            ordersData = processExpirations(ordersData);
+            const newStatusStr = JSON.stringify(ordersData.map(o => o.status));
+            
+            if (oldStatusStr !== newStatusStr) {
+                updateDashboard();
+            }
+        }
+    }, 3000);
 });
 
 function updateDashboard() {
@@ -91,24 +156,33 @@ function updateDashboard() {
         else if (s === 'ยกเลิกแล้ว' || s === 'ขอยกเลิก/คืนเงิน/คืน' || s === 'Cancelled' || s === 'คืนเงิน/คืนสินค้า' || s === 'Return') stats.refund++;
     });
 
-    // Update UI numbers
-    const elUnpaid = document.getElementById('stat-unpaid');
-    const elToShip = document.getElementById('stat-to-ship');
-    const elProcessed = document.getElementById('stat-processed');
-    const elRefund = document.getElementById('stat-refund');
-    
-    if (elUnpaid) elUnpaid.textContent = stats.unpaid;
-    if (elToShip) elToShip.textContent = stats.toShip;
-    if (elProcessed) elProcessed.textContent = stats.processed;
-    if (elRefund) elRefund.textContent = stats.refund;
-
-    // 2. Update Business Insights (Sales)
+    // 2. Update Business Insights (Sales & Products)
     const totalSales = orders.reduce((sum, order) => sum + (order.total || 0), 0);
-    const elSales = document.getElementById('insight-sales');
-    if (elSales) elSales.textContent = '฿' + totalSales.toLocaleString();
+    const cachedProductCount = localStorage.getItem('pao_total_products_count') || 17;
 
-    const elOrderCount = document.getElementById('insight-orders');
-    if (elOrderCount) elOrderCount.textContent = orders.length;
+    const elements = [
+        { el: document.getElementById('stat-unpaid'), val: stats.unpaid },
+        { el: document.getElementById('stat-to-ship'), val: stats.toShip },
+        { el: document.getElementById('stat-processed'), val: stats.processed },
+        { el: document.getElementById('stat-refund'), val: stats.refund },
+        { el: document.getElementById('insight-sales'), val: '฿' + (totalSales || 0).toLocaleString() },
+        { el: document.getElementById('insight-orders'), val: orders.length },
+        { el: document.getElementById('insight-products'), val: cachedProductCount }
+    ];
+
+    elements.forEach(item => {
+        if (item.el) {
+            if (item.el.textContent !== String(item.val)) {
+                item.el.style.opacity = '0';
+                item.el.style.transform = 'translateY(-5px)';
+                setTimeout(() => {
+                    item.el.textContent = item.val;
+                    item.el.style.opacity = '1';
+                    item.el.style.transform = 'translateY(0)';
+                }, 150);
+            }
+        }
+    });
 
     // 3. Render Recent Orders List
     renderRecentOrders(orders);
