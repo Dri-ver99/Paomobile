@@ -148,6 +148,23 @@
         observer.observe(document.body, { childList: true, subtree: true });
     });
 
+    // --- GLOBAL API FOR OTHER SCRIPTS ---
+    window.AuthAPI = {
+        isLoggedIn: function() {
+            const userDataString = localStorage.getItem(AUTH_KEY);
+            if (!userDataString) return false;
+            try {
+                const user = JSON.parse(userDataString);
+                return !!(user && user.name && user.isVerified);
+            } catch (e) {
+                return false;
+            }
+        },
+        redirectToLogin: function() {
+            window.location.href = 'login.html';
+        }
+    };
+
     // Immediate check
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', updateNavForUser);

@@ -12,12 +12,12 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   
-  <!-- Firebase SDK (v10.9.0) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-    import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js";
-
+  <!-- Firebase SDK (v10.9.0 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
       authDomain: "paomobile-85e39.firebaseapp.com",
@@ -27,24 +27,21 @@
       appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
       measurementId: "G-BZYNZ9B9LQ"
     };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-    
-    window.firebaseApp = app;
-    window.firestoreDB = db;
-    window.firebaseStorage = storage;
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
   </script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Noto Sans Thai', 'Outfit', sans-serif;
+      font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
       background: #f5f5f7;
       min-height: 100vh;
       color: #333;
     }
+    input, button, select, textarea { font-family: inherit; }
 
     /* ─── Top Bar ─── */
     .top-bar {
@@ -77,27 +74,6 @@
       font-size: 0.9rem;
       font-weight: 400;
       flex: 1;
-    }
-    .top-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-      color: #fff;
-    }
-    .top-logo img {
-      width: 28px;
-      height: 28px;
-      object-fit: contain;
-    }
-    .top-logo-text {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: -0.3px;
-    }
-    .top-logo-text span {
-      color: #6366f1;
     }
 
     /* ─── Main container ─── */
@@ -293,8 +269,6 @@
       box-shadow: none;
       cursor: not-allowed;
     }
-    .btn-verify:not(:disabled):active { transform: scale(0.98); }
-
     /* ─── AI Verification Status ─── */
     .verify-status-box {
       display: none;
@@ -316,23 +290,10 @@
       font-size: 0.9rem;
       color: #64748b;
     }
-    .verify-step.active {
-      color: #3b82f6;
-      font-weight: 600;
-    }
-    .verify-step.success {
-      color: #10b981;
-    }
-    .verify-step.error {
-      color: #ef4444;
-    }
-    .step-icon {
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .verify-step.active { color: #3b82f6; font-weight: 600; }
+    .verify-step.success { color: #10b981; }
+    .verify-step.error { color: #ef4444; }
+    .step-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
     .spinner {
       border: 2px solid rgba(59,130,246,0.2);
       border-left-color: #3b82f6;
@@ -343,6 +304,35 @@
     }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
+    /* ─── Success Modal Overlay ─── */
+    .success-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(4px);
+    }
+    .success-overlay.show { opacity: 1; pointer-events: auto; }
+    .success-modal {
+      background: #fff; width: 90%; max-width: 340px;
+      border-radius: 20px; padding: 40px 24px;
+      text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      transform: scale(0.9) translateY(20px);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .success-overlay.show .success-modal { transform: scale(1) translateY(0); }
+    .check-circle {
+      width: 80px; height: 80px; border-radius: 50%; background: #10b981;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px auto; box-shadow: 0 8px 24px rgba(16,185,129,0.3);
+    }
+    .check-circle svg { width: 44px; height: 44px; color: #fff; }
+    .success-title { font-size: 1.4rem; font-weight: 700; color: #222; margin-bottom: 8px; }
+    .success-desc { font-size: 0.95rem; color: #666; line-height: 1.5; margin-bottom: 24px; }
+    .success-loader { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem; color: #888; }
+    .success-loader .dot { width: 6px; height: 6px; background: #888; border-radius: 50%; animation: loaderBlink 1.4s infinite ease-in-out both; }
+    @keyframes loaderBlink { 0%, 80%, 100% { transform: scale(0); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; } }
   </style>
 </head>
 <body>
@@ -355,9 +345,9 @@
       </svg>
     </button>
     <span class="top-bar-title">แจ้งชำระเงินโอนเงิน</span>
-    <a href="index.html" class="top-logo">
-      <img src="logo.png" alt="Paomobile" />
-      <span class="top-logo-text">Pao<span>mobile</span></span>
+    <a href="index.html" class="logo" style="color:#fff; font-size:1.1rem;">
+      <img src="logo.png" alt="Paomobile" class="logo-img" style="height:32px;" />
+      Pao<span class="accent">mobile</span>
     </a>
   </div>
 
@@ -382,7 +372,6 @@
     <div class="card">
       <div class="bank-card">
         <div class="bank-logo">
-          <!-- SCB / Generic Thai Bank Logo -->
           <img src="https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.scb.co.th&size=64" alt="Bank Logo" id="bankLogoImg">
         </div>
         <div class="bank-name" id="bankNameText">ธนาคารไทยพาณิชย์ (SCB)</div>
@@ -455,7 +444,6 @@
   </div><!-- end page-wrap -->
 
   <script>
-    // ─── Utility ───
     function copyText(elementId) {
       const el = document.getElementById(elementId);
       navigator.clipboard.writeText(el.textContent).then(() => {
@@ -463,16 +451,14 @@
       });
     }
 
-    // ─── Read URL params ───
     const params = new URLSearchParams(location.search);
     const amount = parseFloat(params.get('amount') || '0');
-    const ref = params.get('ref') || '';
+    const ref = (params.get('ref') || '').trim();
+    const bank = (params.get('bank') || 'scb').toLowerCase();
     
-    // ─── Display amount ───
     const fmt = '฿' + amount.toLocaleString('th-TH', {minimumFractionDigits: 0});
     document.getElementById('displayAmount').textContent = fmt;
 
-    // ─── Dynamic Bank Info (v1.2.12) ───
     const selectedBankValue = params.get('bank') || 'scb';
     function updateBankInfo() {
       const bankLogos = {
@@ -485,11 +471,11 @@
       };
       const bankNums = {
         'scb': '407-866794-5',
-        'kbank': 'XXX-XXXXXX-X'
+        'kbank': 'XXX-X-XXXXX-X'
       };
       const bankAccNames = {
         'scb': 'เขมรัฐ นาคภักดี',
-        'kbank': 'เขมรัฐ นาคภักดี'
+        'kbank': 'รอการอัปเดตบัญชี'
       };
 
       if (document.getElementById('bankLogoImg')) document.getElementById('bankLogoImg').src = bankLogos[selectedBankValue];
@@ -499,7 +485,6 @@
     }
     updateBankInfo();
 
-    // ─── Expire Calculation ───
     const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };
     const userOrdersKey = 'pao_orders_' + getActiveUserId();
     const rawUser = localStorage.getItem(userOrdersKey) || '[]';
@@ -520,10 +505,9 @@
     const mi = ('0'+expireDate.getMinutes()).slice(-2);
     document.getElementById('expireText').textContent = `หมดอายุ ${dd}/${mm}/${yy} ${hh}:${mi}`;
 
-    // ─── Countdown Timer ───
     const timerEl = document.getElementById('countdownTimer');
     
-    function cancelOrderDueToTimeout() {
+    async function cancelOrderDueToTimeout() {
         if (currentOrder && currentOrder.status === 'ที่ต้องชำระ') {
             currentOrder.status = 'ยกเลิกแล้ว';
             localStorage.setItem(userOrdersKey, JSON.stringify(userOrders));
@@ -536,11 +520,22 @@
                     localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
                 }
             } catch(e){}
+
+            if (typeof db !== 'undefined' && ref) {
+                db.collection('orders').doc(ref).update({ status: 'ยกเลิกแล้ว' })
+                    .then(() => console.log("Firestore: Order cancelled due to timeout"))
+                    .catch(err => console.error("Firestore cancel failed:", err));
+            }
         }
+        
         timerEl.textContent = 'หมดเวลาชำระเงิน';
         timerEl.style.color = '#757575';
-        timerEl.style.fontSize = '1rem';
+        timerEl.style.fontSize = '1.1rem';
         document.getElementById('btnVerify').disabled = true;
+
+        setTimeout(() => {
+            window.location.href = 'purchases.html?tab=cancel';
+        }, 3000);
     }
 
     function updateTick() {
@@ -559,24 +554,19 @@
         const tick = setInterval(() => { if (!updateTick()) clearInterval(tick); }, 1000);
     }
 
-    // ─── Slip Upload & Verification Variables ───
     let currentFile = null;
-
     function handleFileSelect(event) {
       const file = event.target.files[0];
       if (!file) return;
       currentFile = file;
-
       const reader = new FileReader();
       reader.onload = function(e) {
         document.getElementById('uploadBox').style.display = 'none';
         document.getElementById('previewContainer').style.display = 'flex';
         document.getElementById('slipPreview').src = e.target.result;
-        document.getElementById('btnVerify').disabled = false;
-        
-        // Reset status box
-        document.getElementById('verifyStatusBox').style.display = 'none';
+        document.getElementById('btnVerify').style.display = 'none';
         resetSteps();
+        startVerification();
       }
       reader.readAsDataURL(file);
     }
@@ -604,7 +594,7 @@
         icon.innerHTML = '✓';
         icon.style.color = '#10b981';
       } else if (status === 'error') {
-        icon.innerHTML = '✗';
+        icon.innerHTML = '✕';
         icon.style.color = '#ef4444';
       }
     }
@@ -612,138 +602,75 @@
     async function startVerification() {
         const btn = document.getElementById('btnVerify');
         btn.disabled = true;
-        btn.textContent = "AI กำลังตรวจสอบ...";
         document.getElementById('verifyStatusBox').style.display = 'block';
         resetSteps();
 
-        // 1. Time Check (45 min grace period)
         setStepStatus('time', 'active');
         await sleep(600);
         const slipTime = currentFile.lastModified;
         const diffMinutes = (Date.now() - slipTime) / (1000 * 60);
         if (diffMinutes > 45) {
             setStepStatus('time', 'error');
-            alert('❌ ไม่ผ่าน: สลิปนี้เก่าเกินไป (เกิน 45 นาที) กรุณาใช้สลิปปัจจุบันที่คุณเพิ่งโอนสำเร็จ');
-            btn.disabled = false;
-            btn.textContent = "ลองอัปโหลดสลิปใหม่";
+            alert('✕ ไม่ผ่าน: สลิปนี้เก่าเกินไป (เกิน 45 นาที) กรุณาใช้สลิปปัจจุบันที่คุณเพิ่งโอนสำเร็จ');
             return;
         }
         setStepStatus('time', 'success');
 
-        // 2. QR Code
         setStepStatus('qr', 'active');
         const hasQR = await scanQR(document.getElementById('slipPreview'));
         await sleep(500);
         if (!hasQR) {
             setStepStatus('qr', 'error');
-            alert("❌ ไม่ผ่าน: ไม่พบ QR Code ของธนาคารบนสลิป กรุณาอัปโหลดสลิปธนาคารของแท้ที่มี QR Code");
-            btn.disabled = false;
-            btn.textContent = "เปลี่ยนรูปสลิป";
+            alert("✕ ไม่ผ่าน: ไม่พบ QR Code ของธนาคารบนสลิป กรุณาอัปโหลดสลิปของแท้ที่มี QR Code");
             return;
         }
         setStepStatus('qr', 'success');
 
-        // 3. OCR (Detailed Multi-Fact Verification)
         setStepStatus('bank', 'active');
         setStepStatus('ocr', 'active');
         setStepStatus('amount', 'active');
         try {
             const recognizedText = await runOCR(currentFile);
             const cleanText = recognizedText.toLowerCase().replace(/\s+/g, '');
-            console.log("OCR Result Text:", cleanText);
-
-            // --- Fact 1: Recipient Name (เขมรัฐ นาคภักดี) ---
+            
             const nameMatch = cleanText.includes('เขมรัฐ') || cleanText.includes('khemarat') || cleanText.includes('นาคภักดี') || cleanText.includes('nakphakdee');
             
-            // --- Fact 2: Date (Buddhist Era 2569) ---
             const now = new Date();
             const day = now.getDate().toString().padStart(2, '0');
             const month = (now.getMonth() + 1).toString().padStart(2, '0');
             const yearBE = (now.getFullYear() + 543).toString();
             const yearBEshort = yearBE.slice(-2);
-            const thaiMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-            const thaiMonth = thaiMonths[now.getMonth()];
-            
-            const datePatterns = [
-                `${day}/${month}/${yearBE}`,
-                `${day}/${month}/${yearBEshort}`,
-                day + month + yearBEshort,
-                day + thaiMonth + yearBEshort,
-                day + thaiMonth + yearBE
-            ];
-            const dateMatch = datePatterns.some(p => cleanText.includes(p.replace(/\s+/g, '').toLowerCase())) || cleanText.includes(day);
+            const dateMatch = cleanText.includes(day + '/' + month + '/' + yearBE) || cleanText.includes(day + '/' + month + '/' + yearBEshort) || cleanText.includes(day);
 
-            // --- Fact 2.5: Time Check (Before Expiration) ---
-            // The user's order expires 30 minutes after orderDate
-            const expTime = new Date(new Date(orderDate).getTime() + 30 * 60 * 1000);
-            const slipTimeMatch = recognizedText.match(/([01]\d|2[0-3])[:.]([0-5]\d)/);
-            let timeValid = true;
-            if (slipTimeMatch) {
-                const [_, hour, minute] = slipTimeMatch;
-                const slipDateObj = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(hour), parseInt(minute));
-                // Add a small buffer (5 min) in case clocks are slightly off
-                if (slipDateObj.getTime() > expTime.getTime() + 5 * 60 * 1000) {
-                    timeValid = false;
-                }
-            }
-
-            // Results Processing
             if (!nameMatch) {
                 setStepStatus('ocr', 'error');
-                alert('❌ ไม่ผ่าน: AI ตรวจไม่พบชื่อผู้รับ "เขมรัฐ นาคภักดี" บนสลิป');
-                btn.disabled = false; return;
+                alert('✕ ไม่ผ่าน: AI ตรวจไม่พบชื่อผู้รับ "เขมรัฐ นาคภักดี" บนสลิป');
+                return;
             }
             if (!dateMatch) {
                 setStepStatus('ocr', 'error');
-                alert(`❌ ไม่ผ่าน: วันที่บนสลิปไม่ตรงกับออเดอร์ (${day}/${month}/${yearBE})`);
-                btn.disabled = false; return;
-            }
-            if (!timeValid) {
-                setStepStatus('time', 'error');
-                alert(`❌ ไม่ผ่าน: โอนเกินเวลาที่กำหนด (หมดอายุเมื่อ ${expTime.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})})`);
-                btn.disabled = false; return;
-            }
-
-            // --- Fact 3: Amount (Exact match) ---
-            const targetAmountStr = amount.toLocaleString('th-TH', {minimumFractionDigits: 2});
-            const targetAmountSimple = amount.toString();
-            const amountMatch = cleanText.includes(targetAmountStr.replace(',', '')) || 
-                                cleanText.includes(targetAmountStr.replace('.', '')) || 
-                                cleanText.includes(targetAmountSimple);
-
-            // --- Fact 4: Bank Name (SCB/KBank) ---
-            const selectedBank = params.get('bank') || 'scb';
-            let bankMatch = false;
-            if (selectedBank === 'scb') {
-                bankMatch = cleanText.includes('scb') || cleanText.includes('ไทยพาณิชย์') || cleanText.includes('siamcommercial');
-            } else if (selectedBank === 'kbank') {
-                bankMatch = cleanText.includes('kbank') || cleanText.includes('กสิกร') || cleanText.includes('kasikorn');
-            }
-
-            if (bankMatch) {
-                setStepStatus('bank', 'success');
-            } else {
-                setStepStatus('bank', 'error');
-                alert(`❌ ไม่ผ่าน: สลิปนี้ไม่ใช่ธนาคาร ${selectedBank.toUpperCase()} ที่คุณเลือกไว้ตอนสั่งซื้อ`);
-                btn.disabled = false; return;
+                alert(`✕ ไม่ผ่าน: วันที่บนสลิปไม่ตรงกับออเดอร์ (${day}/${month}/${yearBE})`);
+                return;
             }
             setStepStatus('ocr', 'success');
+
+            const targetAmountStr = amount.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            const targetAmountSimple = amount.toString();
+            const amountMatch = cleanText.includes(targetAmountStr.replace(',', '')) || cleanText.includes(targetAmountStr.replace('.', '')) || cleanText.includes(targetAmountSimple);
 
             if (amountMatch) {
                 setStepStatus('amount', 'success');
             } else {
                 setStepStatus('amount', 'error');
-                alert(`❌ ไม่ผ่าน: ยอดเงินบนสลิปไม่ตรงกับยอด ฿${amount.toLocaleString()} กรุณาตรวจสอบการพิมพ์ยอดโอนให้ถูกต้อง`);
-                btn.disabled = false;
-                btn.textContent = "เปลี่ยนรูปสลิป";
+                alert(`✕ ไม่ผ่าน: ยอดเงินบนสลิปไม่ตรงกับยอด ฿${amount.toLocaleString()} กรุณาโอนให้ตรงตามยอดระบุ`);
                 return;
             }
 
-            await finalizePayment();
+            setStepStatus('bank', 'success');
+            await confirmPayment();
         } catch (e) {
             console.error("OCR Error", e);
-            alert('❌ ระบบ AI ขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้ง');
-            btn.disabled = false;
+            alert('✕ ระะบบ AI ขัดข้องชั่วคราว กรุณาติดต่อแอดมิน');
         }
     }
 
@@ -751,7 +678,6 @@
         return new Promise((resolve) => {
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d");
-            // Scale down for faster scan
             const maxDimension = 1200;
             let ratio = 1;
             if (imgEl.naturalWidth > imgEl.naturalHeight) {
@@ -761,22 +687,16 @@
             }
             canvas.width = imgEl.naturalWidth * ratio;
             canvas.height = imgEl.naturalHeight * ratio;
-            
             ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height, {
                 inversionAttempts: "dontInvert",
             });
-            if (code && code.data) {
-                resolve(true);
-            } else {
-                resolve(false);
-            }
+            resolve(!!(code && code.data));
         });
     }
 
     async function runOCR(file) {
-        // Use both Thai and English for best accuracy on numbers/names
         const worker = await Tesseract.createWorker('tha+eng');
         const url = URL.createObjectURL(file);
         const ret = await worker.recognize(url);
@@ -785,90 +705,95 @@
         return ret.data.text;
     }
 
-    function sleep(ms) {
-        return new Promise(r => setTimeout(r, ms));
-    }
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-    async function finalizePayment() {
-        const btn = document.getElementById('btnVerify');
-        btn.style.background = '#10b981'; // green
-        btn.innerHTML = 'ตรวจสอบสลิปสำเร็จ!';
-        
-        const globalOrdersKey = 'pao_global_orders';
-        let updated = false;
+    async function confirmPayment() {
+      const userId = getActiveUserId();
+      const userOrdersKey = 'pao_orders_' + userId;
+      const globalOrdersKey = 'pao_global_orders';
+      let updated = false;
 
-        try {
-            // --- Sync with Firestore & Storage (v1.2.11) ---
-            const db = window.firestoreDB;
-            const storage = window.firebaseStorage;
-            let slipUrl = "";
+      try {
+          const rawUser = localStorage.getItem(userOrdersKey) || '[]';
+          let userOrders = JSON.parse(rawUser);
+          let targetOrderId = null;
+          for (let i = 0; i < userOrders.length; i++) {
+              if (userOrders[i].id === ref || (userOrders[i].status === 'ที่ต้องชำระ' && userOrders[i].total === amount)) {
+                  userOrders[i].status = 'ที่ต้องจัดส่ง';
+                  userOrders[i].paymentMethod = 'โอนทางธนาคาร (AI-Verified)';
+                  targetOrderId = userOrders[i].id;
+                  updated = true;
+                  break;
+              }
+          }
+          
+          if (updated) {
+              localStorage.setItem(userOrdersKey, JSON.stringify(userOrders));
+              const rawGlobal = localStorage.getItem(globalOrdersKey) || '[]';
+              let globalOrders = JSON.parse(rawGlobal);
+              if (!targetOrderId) targetOrderId = ref;
+              for (let i = 0; i < globalOrders.length; i++) {
+                  if (globalOrders[i].id === targetOrderId) {
+                      globalOrders[i].status = 'ที่ต้องจัดส่ง';
+                      globalOrders[i].paymentMethod = 'โอนทางธนาคาร (AI-Verified)';
+                      localStorage.setItem(globalOrdersKey, JSON.stringify(globalOrders));
+                      break;
+                  }
+              }
+              
+              const modal = document.getElementById('successOverlay');
+              if (modal) { modal.classList.add('show'); }
+              
+              setTimeout(() => { window.location.href = 'purchases.html?tab=ship'; }, 8000);
 
-            if (db && storage && currentFile) {
-                console.log("[v1.2.11] Syncing to Firestore...");
-                const orderId = ref;
-                const storageRef = ref(storage, `slips/${orderId}_${Date.now()}.png`);
-                
-                try {
-                    const uploadResult = await uploadBytes(storageRef, currentFile);
-                    slipUrl = await getDownloadURL(uploadResult.ref);
-                    console.log("[v1.2.11] Slip uploaded:", slipUrl);
-                    
-                    const orderRef = doc(db, "orders", orderId);
-                    await updateDoc(orderRef, {
-                        status: 'ที่ต้องจัดส่ง',
-                        paymentSlip: slipUrl,
-                        paymentDate: new Date()
-                    });
-                    console.log("[v1.2.11] Firestore updated successfully");
-                    updated = true;
-                } catch (fsErr) {
-                    console.error("[v1.2.11] Cloud sync failed:", fsErr);
-                    // Continue to local sync as fallback
-                }
-            }
+              if (typeof firebase !== 'undefined') {
+                  const db = firebase.firestore();
+                  const orderId = targetOrderId || ref;
+                  const currentUser = firebase.auth().currentUser;
+                  if (!currentUser) await new Promise(r => setTimeout(r, 2000));
+                  
+                  try {
+                      let paymentSlipUrl = '';
+                      const previewImg = document.getElementById('slipPreview');
+                      if (previewImg && previewImg.src && previewImg.src.startsWith('data:')) {
+                          paymentSlipUrl = previewImg.src;
+                      }
 
-            // --- Local Storage Fallback ---
-            const rawUser = localStorage.getItem(userOrdersKey) || '[]';
-            let uOrders = JSON.parse(rawUser);
-            let targetOrderId = ref;
-            
-            for (let i = 0; i < uOrders.length; i++) {
-                if (uOrders[i].id === targetOrderId || (uOrders[i].status === 'ที่ต้องชำระ' && uOrders[i].total === amount)) {
-                    uOrders[i].status = 'ที่ต้องจัดส่ง';
-                    uOrders[i].paymentMethod = 'โอนเงินผ่านธนาคาร';
-                    uOrders[i].paymentBank = 'SCB';
-                    if (slipUrl) uOrders[i].paymentSlip = slipUrl;
-                    
-                    targetOrderId = uOrders[i].id;
-                    updated = true;
-                    break;
-                }
-            }
-            
-            if (updated) {
-                localStorage.setItem(userOrdersKey, JSON.stringify(uOrders));
-                
-                const rawGlobal = localStorage.getItem(globalOrdersKey) || '[]';
-                let gOrders = JSON.parse(rawGlobal);
-                for (let i = 0; i < gOrders.length; i++) {
-                    if (gOrders[i].id === targetOrderId) {
-                        gOrders[i].status = 'ที่ต้องจัดส่ง';
-                        gOrders[i].paymentMethod = 'โอนเงินผ่านธนาคาร';
-                        gOrders[i].paymentBank = 'SCB';
-                        if (slipUrl) gOrders[i].paymentSlip = slipUrl;
-                        localStorage.setItem(globalOrdersKey, JSON.stringify(gOrders));
-                        break;
-                    }
-                }
-            }
-        } catch (e) { console.error(e); }
-
-        setTimeout(() => {
-            alert('✅ AI ยืนยันสลิปสำเร็จ! สถานะคำสั่งซื้อของคุณได้อัพเดทเป็น "ที่ต้องจัดส่ง"');
-            window.location.href = 'purchases.html';
-        }, 1200);
+                      await db.collection('orders').doc(orderId).update({
+                          status: 'ที่ต้องจัดส่ง',
+                          paymentDate: firebase.firestore.FieldValue.serverTimestamp(),
+                          paymentMethod: 'โอนทางธนาคาร (AI-Verified)',
+                          paymentSlip: paymentSlipUrl || "" 
+                      });
+                      
+                      try {
+                          const bc = new BroadcastChannel('pao_order_sync');
+                          bc.postMessage({ type: 'REFRESH_ORDERS', orderId: orderId, updatedOrder: { id: orderId, status: 'ที่ต้องจัดส่ง', paymentSlip: paymentSlipUrl || "" } });
+                          bc.close();
+                      } catch(e) {}
+                  } catch (fsErr) { console.error("Firestore Update FAILED:", fsErr); }
+              }
+              window.location.href = 'purchases.html?tab=ship';
+          }
+      } catch (err) { alert('เกิดข้อผิดพลาด: ' + err.message); }
     }
   </script>
 
+  <!-- Success Modal HTML -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-modal">
+        <div class="check-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <div class="success-title">แจ้งโอนสำเร็จ!</div>
+        <div class="success-desc">AI ตรวจสอบสลิปถูกต้องแล้ว<br>ระบบได้อัพเดทสถานะออเดอร์ให้คุณแล้ว</div>
+        <div class="success-loader">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>กำลังพาคุณกลับไปที่หน้ารายการสั่งซื้อ
+        </div>
+    </div>
+  </div>
 </body>
 </html>
+

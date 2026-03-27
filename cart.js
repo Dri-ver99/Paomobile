@@ -375,6 +375,14 @@
                 alert('กรุณาเลือกสินค้าที่ต้องการสั่งซื้ออย่างน้อย 1 ชิ้น');
                 return;
             }
+
+            // --- Authentication Guard ---
+            if (window.AuthAPI && !window.AuthAPI.isLoggedIn()) {
+                alert('กรุณาเข้าสู่ระบบก่อนดำเนินการสั่งซื้อสินค้า');
+                window.AuthAPI.redirectToLogin();
+                return;
+            }
+
             window.location.href = 'checkout.html';
         },
         showDeleteConfirm(name, onConfirm) {

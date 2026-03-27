@@ -209,6 +209,11 @@ window.ProductDetail = {
     },
 
     buyNow() {
+        if (window.AuthAPI && !window.AuthAPI.isLoggedIn()) {
+            alert('กรุณาเข้าสู่ระบบก่อนดำเนินการสั่งซื้อสินค้า');
+            window.AuthAPI.redirectToLogin();
+            return;
+        }
         this.addToCart();
         window.location.href = 'cart.html';
     }

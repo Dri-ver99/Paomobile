@@ -8,12 +8,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <!-- Dependencies for AI Verification -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   
-  <!-- Firebase SDK (v10.9.0) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-    import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-
+  <!-- Firebase SDK (v10.9.0 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
       authDomain: "paomobile-85e39.firebaseapp.com",
@@ -23,21 +27,21 @@
       appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
       measurementId: "G-BZYNZ9B9LQ"
     };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    
-    window.firebaseApp = app;
-    window.firestoreDB = db;
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
   </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Noto Sans Thai', 'Outfit', sans-serif;
+      font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
       background: #f5f5f7;
       min-height: 100vh;
       color: #333;
     }
+    
+    input, button, select, textarea { font-family: inherit; }
 
     /* ─── Top Bar ─── */
     .top-bar {
@@ -70,26 +74,6 @@
       font-size: 0.9rem;
       font-weight: 400;
       flex: 1;
-    }
-    .top-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-    }
-    .top-logo img {
-      width: 28px;
-      height: 28px;
-      object-fit: contain;
-    }
-    .top-logo-text {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: -0.3px;
-    }
-    .top-logo-text span {
-      color: #6366f1;
     }
 
     /* ─── Main container ─── */
@@ -279,6 +263,169 @@
     @media (max-width: 400px) {
       .qr-img { width: 170px; height: 170px; }
     }
+    /* ─── Upload Section ─── */
+    .upload-card {
+      padding: 24px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      border-top: 1px solid #f0f0f0;
+    }
+    .upload-box {
+      width: 100%;
+      box-sizing: border-box;
+      border: 2px dashed #ccc;
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      background: #fafafa;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .upload-box:hover {
+      border-color: #ee4d2d;
+      background: #fff5f3;
+    }
+    .upload-icon {
+      font-size: 2rem;
+      color: #ee4d2d;
+      margin-bottom: 8px;
+    }
+    .upload-text {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 4px;
+    }
+    .upload-sub {
+      font-size: 0.75rem;
+      color: #888;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .preview-container {
+      display: none;
+      margin-top: 16px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .preview-container img {
+      width: 100%;
+      max-width: 200px;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border: 1px solid #e0e0e0;
+    }
+
+    /* ─── AI Verification Status ─── */
+    .verify-status-box {
+      display: none;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 18px;
+      background: #f8f9fc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: left;
+    }
+    .verify-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .verify-step.active {
+      color: #3b82f6;
+      font-weight: 600;
+    }
+    .verify-step.success {
+      color: #10b981;
+    }
+    .verify-step.error {
+      color: #ef4444;
+    }
+    .step-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .spinner {
+      border: 2px solid rgba(59,130,246,0.2);
+      border-left-color: #3b82f6;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+  </style>
+  <style>
+    /* ─── Success Modal Overlay ─── */
+    .success-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(4px);
+    }
+    .success-overlay.show { opacity: 1; pointer-events: auto; }
+    
+    .success-modal {
+      background: #fff; width: 90%; max-width: 340px;
+      border-radius: 20px; padding: 40px 24px;
+      text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      transform: scale(0.9) translateY(20px);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .success-overlay.show .success-modal { transform: scale(1) translateY(0); }
+    
+    .check-circle {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: #10b981;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px auto;
+      box-shadow: 0 8px 24px rgba(16,185,129,0.3);
+      position: relative;
+    }
+    .check-circle svg {
+      width: 44px; height: 44px; color: #fff;
+      stroke-dasharray: 48; stroke-dashoffset: 48;
+    }
+    .success-overlay.show .check-circle svg {
+      animation: drawCheck 0.6s 0.2s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    @keyframes drawCheck {
+      0% { stroke-dashoffset: 48; }
+      100% { stroke-dashoffset: 0; }
+    }
+    .success-title { font-size: 1.4rem; font-weight: 700; color: #222; margin-bottom: 8px; }
+    .success-desc { font-size: 0.95rem; color: #666; line-height: 1.5; margin-bottom: 24px; }
+    
+    .success-loader {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-size: 0.85rem; color: #888;
+    }
+    .success-loader .dot {
+      width: 6px; height: 6px; background: #888; border-radius: 50%;
+      animation: loaderBlink 1.4s infinite ease-in-out both;
+    }
+    .success-loader .dot:nth-child(1) { animation-delay: -0.32s; }
+    .success-loader .dot:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes loaderBlink {
+      0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+      40% { transform: scale(1); opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -344,13 +491,53 @@
             บันทึก QR
           </button>
           
-          <button class="btn-save-qr" id="btnConfirmPayment" onclick="confirmPayment()" style="margin-top: 0; flex: 1; max-width: 160px; justify-content: center; background: linear-gradient(135deg, #28a745, #20c997); box-shadow: 0 3px 12px rgba(40,167,69,0.3);">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            แจ้งชำระเงิน
-          </button>
+          <button class="btn-save-qr" id="btnConfirmPayment" style="display:none;"></button>
+        </div>
+
+        <!-- AI Slip Verification UI -->
+        <div class="upload-card">
+          <label for="slipInput" class="upload-box" id="uploadBox">
+            <div class="upload-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </div>
+            <div class="upload-text">แนบสลิปเพื่อตรวจสอบอัตโนมัติ</div>
+            <div class="upload-sub">รองรับไฟล์ภาพสลิปธนาคาร</div>
+          </label>
+          <input type="file" id="slipInput" accept="image/*" onchange="handleFileSelect(event)">
+
+          <div class="preview-container" id="previewContainer">
+            <img id="slipPreview" src="" alt="Slip Preview">
+            <div style="margin-top: 8px;">
+              <button onclick="document.getElementById('slipInput').click()" style="background:none; border:none; color:#1b3a6b; font-weight:600; cursor:pointer; text-decoration:underline; font-size: 0.85rem;">เปลี่ยนรูป</button>
+            </div>
+          </div>
+
+          <div class="verify-status-box" id="verifyStatusBox">
+            <div class="verify-step" id="step-time">
+              <div class="step-icon" id="icon-time">○</div>
+              <span>ตรวจเวลาความใหม่ของสลิป</span>
+            </div>
+            <div class="verify-step" id="step-qr">
+              <div class="step-icon" id="icon-qr">○</div>
+              <span>ค้นหา QR Code ประจำสลิป</span>
+            </div>
+            <div class="verify-step" id="step-ocr">
+              <div class="step-icon" id="icon-ocr">○</div>
+              <span>ตรวจสอบชื่อผู้รับ (เขมรัฐ)</span>
+            </div>
+            <div class="verify-step" id="step-bank">
+              <div class="step-icon" id="icon-bank">○</div>
+              <span>ตรวจสอบธนาคารผู้โอน</span>
+            </div>
+            <div class="verify-step" id="step-amount">
+              <div class="step-icon" id="icon-amount">○</div>
+              <span>ตรวจสอบยอดเงิน (฿)</span>
+            </div>
+          </div>
         </div>
 
         <div style="margin-top: 15px;">
@@ -382,7 +569,7 @@
         </div>
         <div class="step-item">
           <div class="step-num">4</div>
-          <div class="step-text">          เลือกรูป QR ที่บันทึกไว้ และชำระเงิน ตรวจสอบชื่อผู้รับคือ <strong>"เขมรัฐ นาคภักดี"</strong></div>
+          <div class="step-text">เลือกรูป QR ที่บันทึกไว้ และชำระเงิน ตรวจสอบชื่อผู้รับคือ <strong>"เขมรัฐ นาคภักดี"</strong></div>
         </div>
         <div class="step-item">
           <div class="step-num">5</div>
@@ -400,15 +587,13 @@
       ช่องทางชำระเงิน QR ใช้ได้กับแอปพลิเคชันธนาคารเท่านั้น ไม่สามารถชำระผ่านสาขาธนาคารหรือตู้เอทีเอ็ม หากมีปัญหาการชำระเงิน ติดต่อ LINE: @pao789
     </div>
 
-
-
   </div><!-- end page-wrap -->
 
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script>
     // ─── PromptPay Generator ───
     function generatePromptPayPayload(target, amount) {
-        let targetType = "01"; // 01 for phone, 02 for national ID
+        let targetType = "01"; 
         let targetVal = target.replace(/[^0-9]/g, "");
         if (targetVal.length === 10) {
             targetType = "01";
@@ -418,20 +603,19 @@
         }
 
         const payload = [
-            "000201", // Payload Format Indicator
-            "010212", // Point of Initiation Method: Dynamic
-            "2937",   // Merchant Account Information
-            "0016A000000677010111", // Application ID
-            targetType + ("0" + targetVal.length).slice(-2) + targetVal, // Target
-            "5802TH", // Country Code
-            "5303764" // Currency Code: THB
+            "000201", 
+            "010212", 
+            "2937",   
+            "0016A000000677010111", 
+            targetType + ("0" + targetVal.length).slice(-2) + targetVal, 
+            "5802TH", 
+            "5303764" 
         ];
 
         if (amount > 0) {
             const amtStr = amount.toFixed(2);
             payload.push("54" + ("0" + amtStr.length).slice(-2) + amtStr);
         } else {
-            // Fix for zero amount: point of initiation should ideally be 11 (Static) if no amount
             payload[1] = "010211";
         }
 
@@ -458,7 +642,7 @@
     // ─── Read URL params ───
     const params = new URLSearchParams(location.search);
     const amount = parseFloat(params.get('amount') || '0');
-    const ref = params.get('ref') || generateRef();
+    const ref = (params.get('ref') || '').trim() || generateRef(); 
 
     function generateRef() {
       return 'PAO' + Date.now().toString(36).toUpperCase().slice(-8);
@@ -471,11 +655,10 @@
     document.getElementById('refCode').textContent = ref;
 
     // ─── Generate Dynamic QR ───
-    const PROMPTPAY_ID = "0987059899"; // เบอร์พร้อมเพย์
+    const PROMPTPAY_ID = "0987059899"; 
     const payloadString = generatePromptPayPayload(PROMPTPAY_ID, amount);
-    let qrDataUrl = ''; // dynamic payload
+    let qrDataUrl = ''; 
     
-    // สร้าง QR Code จาก payload แบบ Dynamic ที่มีจำนวนเงิน
     try {
       const qrApiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=' + encodeURIComponent(payloadString);
       if (typeof QRCode !== 'undefined') {
@@ -512,14 +695,12 @@
     let userOrders = [];
     try { userOrders = JSON.parse(rawUser); } catch(e){}
     
-    // Find the current order to get its true creation time
     let currentOrder = userOrders.find(o => o.id === ref);
     let orderTime = Date.now();
     
     if (currentOrder && currentOrder.orderDate) {
         orderTime = new Date(currentOrder.orderDate).getTime();
     } else {
-        // Fallback or create missing order sync if needed
         orderTime = Date.now();
     }
     
@@ -540,7 +721,6 @@
             currentOrder.status = 'ยกเลิกแล้ว';
             localStorage.setItem(userOrdersKey, JSON.stringify(userOrders));
             
-            // Try to sync global
             try {
                 const rawGlobal = localStorage.getItem('pao_global_orders') || '[]';
                 let globalOrders = JSON.parse(rawGlobal);
@@ -550,10 +730,18 @@
                     localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
                 }
             } catch(e){}
+
+            if (typeof db !== 'undefined' && ref) {
+                db.collection('orders').doc(ref).update({ status: 'ยกเลิกแล้ว' })
+                    .then(() => console.log("Firestore: Order cancelled due to timeout"))
+                    .catch(err => console.error("Firestore cancel failed:", err));
+            }
         }
+        
         timerEl.textContent = 'หมดเวลาชำระเงิน';
         timerEl.style.color = '#757575';
-        timerEl.style.fontSize = '1rem';
+        timerEl.style.fontSize = '1.1rem';
+        
         if(btnConfirm) {
             btnConfirm.disabled = true;
             btnConfirm.style.background = '#ccc';
@@ -561,6 +749,10 @@
         }
         document.getElementById('qrAmount').textContent = 'ระบบได้ยกเลิกคำสั่งซื้อนี้แล้ว';
         document.getElementById('qrAmount').style.color = '#757575';
+
+        setTimeout(() => {
+            window.location.href = 'purchases.html?tab=cancel';
+        }, 3000); 
     }
 
     function updateTick() {
@@ -576,7 +768,6 @@
         return true;
     }
 
-    // Run once immediately, then interval
     if (updateTick()) {
         const tick = setInterval(() => {
             if (!updateTick()) clearInterval(tick);
@@ -585,7 +776,6 @@
 
     // ─── Save QR ───
     function saveQR() {
-      const img = document.getElementById('qrImage');
       const a = document.createElement('a');
       a.href = qrDataUrl;
       a.download = 'paomobile-qr-payment.png';
@@ -593,56 +783,225 @@
       a.click();
     }
 
-    // ─── Confirm Payment ───
+    // ─── Slip Verification Logic ───
+    let currentFile = null;
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      currentFile = file;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('uploadBox').style.display = 'none';
+        document.getElementById('previewContainer').style.display = 'flex';
+        document.getElementById('slipPreview').src = e.target.result;
+        
+        document.getElementById('verifyStatusBox').style.display = 'block';
+        resetSteps();
+        
+        setTimeout(() => {
+            startVerification();
+        }, 300);
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function resetSteps() {
+      ['time', 'qr', 'bank', 'ocr', 'amount'].forEach(id => {
+        const el = document.getElementById('step-' + id);
+        const icon = document.getElementById('icon-' + id);
+        if (el) el.className = 'verify-step';
+        if (icon) {
+          icon.innerHTML = '○';
+          icon.style.color = '#64748b';
+        }
+      });
+    }
+
+    function setStepStatus(id, status) {
+      const el = document.getElementById('step-' + id);
+      const icon = document.getElementById('icon-' + id);
+      el.className = 'verify-step ' + status;
+      if (status === 'active') {
+        icon.innerHTML = '<div class="spinner"></div>';
+        icon.style.color = '#3b82f6';
+      } else if (status === 'success') {
+        icon.innerHTML = '✓';
+        icon.style.color = '#10b981';
+      } else if (status === 'error') {
+        icon.innerHTML = '✕';
+        icon.style.color = '#ef4444';
+      }
+    }
+
+    async function startVerification() {
+        if (!currentFile) return;
+        document.getElementById('verifyStatusBox').style.display = 'block';
+        resetSteps();
+
+        setStepStatus('time', 'active');
+        await sleep(600);
+        const slipTime = currentFile.lastModified;
+        const diffMinutes = (Date.now() - slipTime) / (1000 * 60);
+        if (diffMinutes > 45) {
+            setStepStatus('time', 'error');
+            alert('✕ ไม่ผ่าน: สลิปนี้เก่าเกินไป (เกิน 45 นาที) กรุณาใช้สลิปปัจจุบันที่คุณเพิ่งโอนสำเร็จ');
+            return;
+        }
+        setStepStatus('time', 'success');
+
+        setStepStatus('qr', 'active');
+        const hasQR = await scanQR(document.getElementById('slipPreview'));
+        await sleep(500);
+        if (!hasQR) {
+            setStepStatus('qr', 'error');
+            alert("✕ ไม่ผ่าน: ไม่พบ QR Code ของธนาคารบนสลิป กรุณาอัปโหลดสลิปของแท้ที่มี QR Code");
+            return;
+        }
+        setStepStatus('qr', 'success');
+
+        setStepStatus('bank', 'active');
+        setStepStatus('ocr', 'active');
+        setStepStatus('amount', 'active');
+        try {
+            const recognizedText = await runOCR(currentFile);
+            const cleanText = recognizedText.toLowerCase().replace(/\s+/g, '');
+            console.log("[AI-DEBUG] OCR Result Cleaned:", cleanText);
+
+            // 1. Recipient Verification (Strict: Must have BOTH name and surname)
+            const recipientKeywords = ['เขมรัฐ', 'khemarat', 'นาคภักดี', 'nakphakdee'];
+            const hasFirstName = cleanText.includes('เขมรัฐ') || cleanText.includes('khemarat');
+            const hasLastName = cleanText.includes('นาคภักดี') || cleanText.includes('nakphakdee');
+            
+            // 2. Date/Time Check (Strict: Day, Month, Year)
+            const now = new Date();
+            const day = now.getDate().toString().padStart(2, '0');
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const yearBE = (now.getFullYear() + 543).toString();
+            const yearAD = now.getFullYear().toString();
+            const yearBEshort = yearBE.slice(-2);
+            const yearADshort = yearAD.slice(-2);
+
+            // Month names for mapping (Thai & English)
+            const thMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            const enMonths = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+            const currentThMonth = thMonths[now.getMonth()];
+            const currentEnMonth = enMonths[now.getMonth()];
+
+            // Common Date Formats
+            const dateFormats = [
+                day + month + yearBE,      // 26032569
+                day + month + yearAD,      // 26032026
+                day + '/' + month + '/' + yearBE,
+                day + '.' + month + '.' + yearBEshort,
+                day + ' ' + currentThMonth, // 26 มี.ค.
+                day + ' ' + currentEnMonth  // 26 mar
+            ];
+            
+            // Check if ANY valid date format appears with the correct YEAR
+            const hasYear = cleanText.includes(yearBE) || cleanText.includes(yearAD) || cleanText.includes(yearBEshort) || cleanText.includes(yearADshort);
+            const dateMatch = hasYear && (cleanText.includes(day + month) || dateFormats.some(f => cleanText.includes(f.replace(/\s+/g, '').toLowerCase())));
+
+            // 3. Bank & Authenticity (Look for "Success" or "Transfer" keywords)
+            const bankKeywords = [
+                'กสิกร', 'kbank', 'ไทยพาณิชย์', 'scb', 'กรุงไทย', 'ktb', 
+                'กรุงเทพ', 'bbl', 'ออมสิน', 'gsb', 'ธนาคาร', 'bank',
+                'สำเร็จ', 'success', 'transfer', 'transferred'
+            ];
+            const hasBankKeyword = bankKeywords.some(k => cleanText.includes(k));
+
+            // --- Multi-Step AI Logic ---
+            if (!hasFirstName || !hasLastName) {
+                setStepStatus('ocr', 'error');
+                alert('✕ ไม่ผ่าน: AI ตรวจไม่พบชื่อผู้รับ "เขมรัฐ นาคภักดี" บนสลิป กรุณาตรวจสอบว่าคุณโอนถูกคนค๊าบ');
+                return;
+            }
+            if (!dateMatch) {
+                setStepStatus('ocr', 'error');
+                alert(`✕ ไม่ผ่าน: วันที่บนสลิปไม่ถูกต้อง หรือไม่ใช่ของวันนี้ (${day}/${month}/${yearBE}) กรุณาใช้สลิปปัจจุบันนะค๊าบ`);
+                return;
+            }
+            setStepStatus('ocr', 'success');
+
+            // 4. Amount Verification (Extra Precise)
+            const targetAmountStr = amount.toLocaleString('th-TH', {minimumFractionDigits: 2});
+            const targetAmountNoDec = amount.toString();
+            const amountMatch = cleanText.includes(targetAmountStr.replace(',', '')) || 
+                              cleanText.includes(targetAmountStr.replace('.', '')) || 
+                              cleanText.includes(targetAmountNoDec);
+
+            if (!amountMatch) {
+                setStepStatus('amount', 'error');
+                alert(`✕ ไม่ผ่าน: ยอดเงินไม่ตรง (ออเดอร์ ฿${amount.toLocaleString()}) กรุณาโอนให้ตรงตามที่ระบุค๊าบ`);
+                return;
+            }
+            setStepStatus('amount', 'success');
+
+            if (!hasBankKeyword) {
+                setStepStatus('bank', 'error');
+                alert('✕ ไม่ผ่าน: AI ไม่พบสัญลักษณ์ธนาคารหรือคำยืนยันการโอนสำเร็จ กรุณาอัปโหลดสลิปใบจริงนะค๊าบ');
+                return;
+            }
+            setStepStatus('bank', 'success');
+
+            // Final Confirmation
+            await confirmPayment();
+        } catch (e) {
+            console.error("AI Error", e);
+            alert('✕ มีบางอย่างผิดพลาด: ระบบ AI ไม่สามารถประมวลผลได้ชั่วคราว กรุณาติดต่อแอดมินทาง LINE ค๊าบ');
+        }
+    }
+
+    async function scanQR(imgEl) {
+        return new Promise((resolve) => {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            const maxDimension = 1200;
+            let ratio = 1;
+            if (imgEl.naturalWidth > imgEl.naturalHeight) {
+                if (imgEl.naturalWidth > maxDimension) ratio = maxDimension / imgEl.naturalWidth;
+            } else {
+                if (imgEl.naturalHeight > maxDimension) ratio = maxDimension / imgEl.naturalHeight;
+            }
+            canvas.width = imgEl.naturalWidth * ratio;
+            canvas.height = imgEl.naturalHeight * ratio;
+            ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+            });
+            resolve(!!(code && code.data));
+        });
+    }
+
+    async function runOCR(file) {
+        const worker = await Tesseract.createWorker('tha+eng');
+        const url = URL.createObjectURL(file);
+        const ret = await worker.recognize(url);
+        await worker.terminate();
+        URL.revokeObjectURL(url);
+        return ret.data.text;
+    }
+
+    function sleep(ms) {
+        return new Promise(r => setTimeout(r, ms));
+    }
+
     async function confirmPayment() {
-      const btn = document.getElementById('btnConfirmPayment');
-      
-      // Prevent multiple clicks
-      if (btn.disabled) return;
-      btn.disabled = true;
-      btn.innerHTML = 'กำลังประมวลผล...';
-      
-      // Update order status in both local and global storage
-      const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };
-      const userOrdersKey = 'pao_orders_' + getActiveUserId();
+      const userId = getActiveUserId();
+      const userOrdersKey = 'pao_orders_' + userId;
       const globalOrdersKey = 'pao_global_orders';
-      
-      // Extract the original order ID from ref (PAO-XXXXXXXXX -> P-XXXXXXXXX)
-      // Actually, since we passed ref, we need to match the actual created order ID.
-      // Easiest is to update the most recent 'ที่ต้องชำระ' order
-      
       let updated = false;
 
       try {
-          // --- Sync with Firestore (v1.2.11) ---
-          const db = window.firestoreDB;
-          if (db) {
-              console.log("[v1.2.11] Syncing to Firestore...");
-              const orderId = ref;
-              const orderRef = doc(db, "orders", orderId);
-              try {
-                  await updateDoc(orderRef, {
-                      status: 'ที่ต้องจัดส่ง',
-                      paymentDate: new Date()
-                  });
-                  console.log("[v1.2.11] Firestore updated successfully");
-                  updated = true;
-              } catch (fsErr) {
-                  console.error("[v1.2.11] Cloud sync failed:", fsErr);
-              }
-          }
-
-          // --- Local Storage fallback ---
           const rawUser = localStorage.getItem(userOrdersKey) || '[]';
           let userOrders = JSON.parse(rawUser);
-          
           let targetOrderId = null;
-          
-          // Find the most recent pending payment order with matching amount
           for (let i = 0; i < userOrders.length; i++) {
-              if (userOrders[i].status === 'ที่ต้องชำระ' && userOrders[i].total === amount) {
+              if (userOrders[i].id === ref || (userOrders[i].status === 'ที่ต้องชำระ' && userOrders[i].total === amount)) {
                   userOrders[i].status = 'ที่ต้องจัดส่ง';
-                  userOrders[i].paymentMethod = 'พร้อมเพย์ (PromptPay)';
+                  userOrders[i].paymentMethod = 'พร้อมเพย์ (AI-Verified)';
                   targetOrderId = userOrders[i].id;
                   updated = true;
                   break;
@@ -651,71 +1010,71 @@
           
           if (updated) {
               localStorage.setItem(userOrdersKey, JSON.stringify(userOrders));
-              
-              // 2. Update global orders
               const rawGlobal = localStorage.getItem(globalOrdersKey) || '[]';
               let globalOrders = JSON.parse(rawGlobal);
-              
-              if (!targetOrderId) targetOrderId = ref; // fallback
-
+              if (!targetOrderId) targetOrderId = ref;
               for (let i = 0; i < globalOrders.length; i++) {
                   if (globalOrders[i].id === targetOrderId) {
                       globalOrders[i].status = 'ที่ต้องจัดส่ง';
-                      globalOrders[i].paymentMethod = 'พร้อมเพย์ (PromptPay)';
+                      globalOrders[i].paymentMethod = 'พร้อมเพย์ (AI-Verified)';
                       localStorage.setItem(globalOrdersKey, JSON.stringify(globalOrders));
                       break;
                   }
               }
               
-              // Success feedback
-              btn.innerHTML = 'แจ้งชำระเงินสำเร็จแล้ว';
-              btn.style.background = '#6c757d'; // Gray out
+              const modal = document.getElementById('successOverlay');
+              if (modal) { modal.classList.add('show'); }
               
-              setTimeout(() => {
-                  alert('ได้รับแจ้งชำระเงินเรียบร้อยแล้ว สถานะคำสั่งซื้อของคุณได้อัพเดทเป็น "ที่ต้องจัดส่ง"');
-                  window.location.href = 'purchases.html';
-              }, 500);
-          } else {
-              // If not found by exact amount or status, just mark the very last order as shipped
-              if(userOrders.length > 0) {
-                  userOrders[0].status = 'ที่ต้องจัดส่ง';
-                  targetOrderId = userOrders[0].id;
-                  localStorage.setItem(userOrdersKey, JSON.stringify(userOrders));
+              setTimeout(() => { window.location.href = 'purchases.html?tab=ship'; }, 8000);
+
+              if (typeof firebase !== 'undefined') {
+                  const db = firebase.firestore();
+                  const orderId = targetOrderId || ref;
+                  const currentUser = firebase.auth().currentUser;
+                  if (!currentUser) await new Promise(r => setTimeout(r, 2000));
                   
-                  const rawGlobal = localStorage.getItem(globalOrdersKey) || '[]';
-                  let globalOrders = JSON.parse(rawGlobal);
-                  for (let i = 0; i < globalOrders.length; i++) {
-                      if (globalOrders[i].id === targetOrderId) {
-                          globalOrders[i].status = 'ที่ต้องจัดส่ง';
-                          localStorage.setItem(globalOrdersKey, JSON.stringify(globalOrders));
-                          break;
+                  try {
+                      let paymentSlipUrl = '';
+                      const previewImg = document.getElementById('slipPreview');
+                      if (previewImg && previewImg.src && previewImg.src.startsWith('data:')) {
+                          paymentSlipUrl = previewImg.src;
                       }
-                  }
-                  
-                  btn.innerHTML = 'แจ้งชำระเงินสำเร็จแล้ว';
-                  btn.style.background = '#6c757d'; 
-                  
-                  setTimeout(() => {
-                      alert('ได้รับแจ้งชำระเงินเรียบร้อยแล้ว สถานะคำสั่งซื้อของคุณได้อัพเดทเป็น "ที่ต้องจัดส่ง"');
-                      window.location.href = 'purchases.html';
-                  }, 500);
-              } else {
-                  alert('ไม่พบคำสั่งซื้อที่รอชำระเงิน');
-                  btn.disabled = false;
-                  btn.innerHTML = 'แจ้งชำระเงินอีกครั้ง';
+
+                      await db.collection('orders').doc(orderId).update({
+                          status: 'ที่ต้องจัดส่ง',
+                          paymentDate: firebase.firestore.FieldValue.serverTimestamp(),
+                          paymentMethod: 'พร้อมเพย์ (AI-Verified)',
+                          paymentSlip: paymentSlipUrl || "" 
+                      });
+                      
+                      try {
+                          const bc = new BroadcastChannel('pao_order_sync');
+                          bc.postMessage({ type: 'REFRESH_ORDERS', orderId: orderId, updatedOrder: { id: orderId, status: 'ที่ต้องจัดส่ง', paymentSlip: paymentSlipUrl || "" } });
+                          bc.close();
+                      } catch(e) {}
+                  } catch (fsErr) { console.error("Firestore Update FAILED:", fsErr); }
               }
+              window.location.href = 'purchases.html?tab=ship';
           }
-      } catch (err) {
-          console.error("Error confirming payment:", err);
-          alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
-          btn.disabled = false;
-          btn.innerHTML = 'แจ้งชำระเงินอีกครั้ง';
-      }
+      } catch (err) { alert('เกิดข้อผิดพลาด: ' + err.message); }
     }
   </script>
 
+  <!-- Success Modal HTML -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-modal">
+        <div class="check-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <div class="success-title">แจ้งโอนสำเร็จ!</div>
+        <div class="success-desc">AI ตรวจสอบสลิปถูกต้องแล้ว<br>ระบบได้อัพเดทสถานะออเดอร์ให้คุณแล้ว</div>
+        <div class="success-loader">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>กำลังพาคุณกลับไปที่หน้ารายการสั่งซื้อ
+        </div>
+    </div>
+  </div>
 </body>
 </html>
-
-
 

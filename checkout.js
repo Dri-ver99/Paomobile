@@ -8,6 +8,8 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
         let savedAddress = userAddresses.find(a => a.isDefault) || userAddresses[0] || null;
         let cartItems = [];
         let shippingCost = 0;
+        let appliedDiscount = 0;
+        let appliedVoucherCode = '';
         let locState = { province:'', amphoe:'', district:'', zip:'' };
         let currentLocTab = 'province';
         let editingAddressIndex = -1;
@@ -101,16 +103,69 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
 
         function updateTotals() {
             const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
-            const total = subtotal + shippingCost;
+            const total = subtotal + shippingCost - appliedDiscount;
             const count = cartItems.reduce((s, i) => s + i.qty, 0);
 
             // Update UI
             document.getElementById('itemCount').textContent = count;
-            document.getElementById('sectionTotal').textContent = '฿' + (subtotal + shippingCost).toLocaleString();
+            document.getElementById('sectionTotal').textContent = '฿' + (subtotal + shippingCost- appliedDiscount).toLocaleString();
             document.getElementById('s-subtotal').textContent = '฿' + subtotal.toLocaleString();
             document.getElementById('s-shipping').textContent = '฿' + shippingCost.toLocaleString();
-            document.getElementById('s-total').textContent = '฿' + total.toLocaleString();
+            
+            // Voucher Display Row (Summary)
+            const discountRow = document.getElementById('s-discount-row');
+            if (discountRow) {
+                if (appliedDiscount > 0) {
+                    discountRow.style.display = 'flex';
+                    document.getElementById('s-discount').textContent = '-฿' + appliedDiscount.toLocaleString();
+                } else {
+                    discountRow.style.display = 'none';
+                }
+            }
+
+            // Voucher Trigger Button (Main Section)
+            const vStatus = document.getElementById('voucherStatus');
+            if (vStatus) {
+                if (appliedVoucherCode) {
+                    vStatus.innerHTML = `<span style="border: 1px solid #ee4d2d; padding: 2px 8px; border-radius: 2px; font-size: 0.85rem;">${appliedVoucherCode} (-฿${appliedDiscount})</span> <span style="margin-left:8px; color:#555; text-decoration:underline;">แก้ไข</span>`;
+                } else {
+                    vStatus.innerHTML = `<span>กดใช้โค้ด</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+                }
+            }
+
+            document.getElementById('s-total').textContent = '฿' + (total > 0 ? total : 0).toLocaleString();
         }
+
+        function openVoucherPrompt() {
+            const code = prompt('กรุณากรอกโค้ดส่วนลดของ Paomobile:', appliedVoucherCode || '');
+            if (code === null) return; // Cancelled
+            
+            const cleanCode = code.trim().toUpperCase();
+            if (!cleanCode) {
+                appliedDiscount = 0;
+                appliedVoucherCode = '';
+                updateTotals();
+                return;
+            }
+
+            // Demo Voucher Codes
+            const vouchers = {
+                'PAO50': 50,
+                'PAO100': 100,
+                'NEWUSER': 30,
+                'SALE10': 10
+            };
+
+            if (vouchers[cleanCode]) {
+                appliedDiscount = vouchers[cleanCode];
+                appliedVoucherCode = cleanCode;
+                alert('ยินดีด้วย! คุณได้รับส่วนลด ฿' + appliedDiscount);
+                updateTotals();
+            } else {
+                alert('ขออภัย! โค้ดส่วนลดไม่ถูกต้องหรือหมดอายุแล้ว');
+            }
+        }
+        window.openVoucherPrompt = openVoucherPrompt;
 
         function updateShipping(el) {
             shippingCost = parseInt(el.value) || 0;
@@ -133,6 +188,12 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
         const getOrdersKey = () => 'pao_orders_' + getActiveUserId();
 
         function confirmOrder() {
+            if (cartItems.length === 0) {
+                alert('ตะกร้าสินค้าว่างเปล่า กรุณาเลือกสินค้าใหม่ครับ');
+                window.location.href = 'index.html';
+                return;
+            }
+
             if (!savedAddress) {
                 alert('กรุณาเพิ่มหรือเลือกที่อยู่จัดส่ง');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -167,7 +228,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
 
             // Create Order Object
             const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
-            const total = subtotal + shippingCost;
+            const total = Math.max(0, subtotal + shippingCost - appliedDiscount);
             const orderId = 'PAO-' + Date.now().toString(36).toUpperCase().slice(-8);
             
             const newOrder = {
@@ -183,7 +244,9 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 total: total,
                 method: methodLabel,
                 paymentMethod: methodLabel,    // v1.2.13
-                paymentBank: selectedBank      // v1.2.13
+                paymentBank: selectedBank,      // v1.2.13
+                voucherCode: appliedVoucherCode,
+                discountAmount: appliedDiscount
             };
 
             // Use Direct Cloud Sync Logic (Simple & Robust)
@@ -253,8 +316,19 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         const bankVal = bankOpt ? bankOpt.value : 'scb';
                         window.location.href = `payment-transfer.html?amount=${total}&ref=${orderId}&bank=${bankVal}`;
                     } else {
-                        alert('ขอบคุณที่สั่งซื้อสินค้า! (v1.2.10)\nรายการถูกส่งเข้าสู่ระบบ Seller Centre เรียบร้อยแล้วคับ');
-                        window.location.href = 'purchases.html';
+                        // Success Modal for COD (v1.2.14)
+                        const successOverlay = document.getElementById('successOverlay');
+                        if (successOverlay) {
+                            successOverlay.classList.add('show');
+                            // Auto redirect after 3 seconds
+                            setTimeout(() => {
+                                window.location.href = 'purchases.html?tab=ship';
+                            }, 3000);
+                        } else {
+                            // Fallback if modal missing
+                            alert('ขอบคุณที่สั่งซื้อสินค้า! (v1.2.10)\nรายการถูกส่งเข้าสู่ระบบ Seller Centre เรียบร้อยแล้วคับ');
+                            window.location.href = 'purchases.html?tab=ship';
+                        }
                     }
                 } catch (e) {
                     console.error("Order process failed:", e);
@@ -734,6 +808,14 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             }
 
             loadCart();
+            
+            // v1.2.11 - Prevent empty checkout (e.g. back button after payment)
+            if (cartItems.length === 0) {
+                console.log("[v1.2.11] Empty cart detected, redirecting to Purchases...");
+                window.location.href = 'purchases.html?tab=pay';
+                return;
+            }
+
             renderAddress();
             renderCheckoutItems();
             updateTotals();
