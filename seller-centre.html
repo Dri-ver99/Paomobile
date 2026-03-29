@@ -14,6 +14,115 @@
             transition: opacity 0.3s ease, transform 0.3s ease;
             display: inline-block;
         }
+
+        /* Quick QR Styles */
+        .quick-qr-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .quick-qr-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .quick-qr-item:hover {
+            transform: translateY(-2px);
+            border-color: #2D9CDB;
+        }
+        .quick-qr-code {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        .quick-qr-title {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .btn-gen-qr-small {
+            background: #2D9CDB;
+            color: #fff;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        /* QR Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            backdrop-filter: blur(4px);
+        }
+        .qr-modal {
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            animation: modalPop 0.3s ease-out;
+        }
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .qr-close {
+            position: absolute;
+            top: 15px; right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+        .qr-img {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            display: block;
+            border: 8px solid #f9f9f9;
+            border-radius: 12px;
+        }
+        .qr-link-box {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 15px;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-copy {
+            background: #ee4d2d;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -29,6 +138,7 @@
             <div class="menu-section">
                 <p class="menu-title">เมนูหลัก</p>
                 <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
@@ -118,6 +228,29 @@
                         <span class="stat-label">คำสั่งซื้อ</span>
                         <span class="insight-val" id="insight-orders">0</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- Quick QR Ticket Card -->
+            <div class="card">
+                <div class="card-title">🎫 ตั๋วรับคูปองเร่งด่วน <a href="seller-vouchers.html" class="card-link">จัดการทั้งหมด ></a></div>
+                <div id="quick-qr-list" class="quick-qr-list">
+                    <div style="grid-column: 1/-1; padding: 20px; text-align: center; color: #999;">กำลังโหลดคูปอง...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secure QR Modal -->
+        <div id="qrModalOverlay" class="modal-overlay">
+            <div class="qr-modal">
+                <span class="qr-close" onclick="closeQRModal()">&times;</span>
+                <h3 style="margin-top:0; color:#333;">🎫 Secure QR Ticket</h3>
+                <p style="font-size: 0.85rem; color:#888;">สแกนเพื่อรับคูปอง (มีอายุ 1 ชม. และใช้ได้ครั้งเดียว)</p>
+                <img id="qrImage" class="qr-img" src="" alt="Voucher QR">
+                <div id="qrTimer" style="font-weight:600; color:#ee4d2d; font-size:1.1rem; margin-bottom:10px;">00:60:00</div>
+                <div class="qr-link-box">
+                    <span id="qrLinkText" style="flex-grow:1; text-align:left; overflow:hidden; text-overflow:ellipsis;">https://paomobile.com/redeem?id=...</span>
+                    <button class="btn-copy" onclick="copyQRLink()">คัดลอก</button>
                 </div>
             </div>
         </div>

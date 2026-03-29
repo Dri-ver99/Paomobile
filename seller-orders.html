@@ -80,6 +80,7 @@
             <div class="menu-section">
                 <p class="menu-title">เมนูหลัก</p>
                 <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
@@ -175,6 +176,15 @@
                     </a>
                 </div>
                 
+                <!-- Voucher Info Section (v1.5.0) -->
+                <div id="voucherInfoGroup" style="margin-bottom: 12px; display: none; background: #fff7e6; padding: 12px; border: 1px solid #ffd591; border-radius: 8px;">
+                    <div style="font-size: 0.8rem; color: #874d00; margin-bottom: 4px; font-weight: 600;">🎫 คูปองที่ใช้ส่วนลด</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span id="modalVoucherCode" style="font-size: 1rem; color: #d46b08; font-weight: 700; font-family: monospace;">-</span>
+                        <span id="modalDiscountAmount" style="font-size: 1rem; color: #cf1322; font-weight: 700;">-฿0</span>
+                    </div>
+                </div>
+
                 <!-- Shipping Input Section -->
                 <div id="shipInputSection" style="display: none; border-top: 1px dashed #eee; padding-top: 15px; margin-top: 10px;">
                     <div style="margin-bottom: 12px;">

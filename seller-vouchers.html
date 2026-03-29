@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการโค้ดส่วนลด — Seller Centre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="seller-centre.css">
+    <style>
+        body { font-family: 'Outfit', 'Noto Sans Thai', sans-serif; }
+        
+        .voucher-container {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: #ee4d2d;
+            outline: none;
+        }
+
+        .btn-submit {
+            background: #ee4d2d;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #d73211;
+        }
+
+        /* Voucher Table */
+        .v-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .v-table th {
+            text-align: left;
+            padding: 12px;
+            background: #fafafa;
+            border-bottom: 1px solid #eee;
+            color: #757575;
+            font-weight: 600;
+        }
+
+        .v-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .v-type-tag {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tag-discount { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+        .tag-ship { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #ff4d4f;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-delete:hover { opacity: 0.7; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        @media (max-width: 1024px) {
+            .voucher-container { grid-template-columns: 1fr; }
+        }
+
+        /* QR Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+
+        .qr-modal {
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            animation: modalPop 0.3s ease-out;
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .qr-close {
+            position: absolute;
+            top: 15px; right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .qr-img {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            display: block;
+            border: 8px solid #f9f9f9;
+            border-radius: 12px;
+        }
+
+        .qr-link-box {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 15px;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-copy {
+            background: #ee4d2d;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .btn-gen-qr {
+            background: #2D9CDB;
+            color: #fff;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn-gen-qr:hover { background: #1a7bb9; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">
+                <img src="logo.png" alt="Paomobile">
+                <span>Seller Centre</span>
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-section">
+                <p class="menu-title">เมนูหลัก</p>
+                <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-vouchers.html" class="menu-item active"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">คำสั่งซื้อ</p>
+                <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">สินค้า</p>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+            </div>
+        </nav>
+    </aside>
+
+    <header class="top-nav">
+        <div class="nav-left">
+            <h2>จัดการโปรโมชั่นและโค้ดส่วนลด</h2>
+        </div>
+        <div class="nav-right" style="display: flex; align-items: center; gap: 15px;">
+            <div id="admin-status-bar" style="font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                <span id="authIndicator" style="width: 10px; height: 10px; border-radius: 50%; background: #ccc;"></span>
+                <span id="authEmail">กำลังตรวจสอบสิทธิ์...</span>
+            </div>
+            <button id="adminLoginBtn" onclick="sellerLogin()" style="display:none; background: #ee4d2d; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">🔐 ล็อกอิน Admin</button>
+            <button id="adminLogoutBtn" onclick="sellerLogout()" style="display:none; background: none; border: 1px solid #ddd; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">ออกจากระบบ</button>
+        </div>
+    </header>
+
+    <main class="main-wrapper">
+        <div class="dashboard-header">
+            <h1 style="font-size: 1.5rem; color: #333;">บัตรส่วนลดของร้านค้า</h1>
+            <p style="color: #666; font-size: 0.9rem; margin-top: 5px;">สร้างและรักษายอดขายด้วยคูปองส่วนลดที่น่าสนใจ</p>
+        </div>
+
+        <div class="voucher-container">
+            <!-- Settings Card -->
+            <div class="card" style="margin-bottom: 20px; border: 1px solid #e0e0e0; background: #fffaf0;">
+                <div class="card-title" style="color: #d35400;">🌐 ตั้งค่าโดเมนเว็บไซต์</div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <p style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">ระบุ URL เว็บไซต์ของคุณเพื่อให้สแกน QR ผ่านมือถือได้ (เช่น <code>https://paomobile-85e39.web.app</code>)</p>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="setting-base-url" placeholder="https://..." style="flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button onclick="saveSettings()" style="background: #27ae60; color: white; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-weight: 600;">บันทึก</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Voucher Form -->
+            <div class="card">
+                <div class="card-title">✨ สร้างคูปองใหม่</div>
+                <form id="voucherForm">
+                    <div class="form-group">
+                        <label>รหัสโค้ด (Voucher Code)</label>
+                        <input type="text" id="v-code" placeholder="เช่น SALE99 (ภาษาอังกฤษเท่านั้น)" required maxlength="15">
+                    </div>
+                    <div class="form-group">
+                        <label>ชื่อคูปอง</label>
+                        <input type="text" id="v-title" placeholder="เช่น ส่วนลดพิเศษวันแม่" required>
+                    </div>
+                    <div class="form-group">
+                        <label>รายละเอียด</label>
+                        <textarea id="v-desc" rows="2" placeholder="เช่น สั่งซื้อครบ 500 บาท ลดทันที 50 บาท"></textarea>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>ประเภทส่วนลด</label>
+                            <select id="v-type" required>
+                                <option value="discount">หักราคาสินค้า (บาท)</option>
+                                <option value="ship">ส่วนลดค่าจัดส่ง (ส่งฟรี)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>มูลค่า (ส่วนลด)</label>
+                            <input type="number" id="v-value" placeholder="ระบุจำนวนเงิน" required min="0">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>เก็บได้กี่ครั้งต่อคน</label>
+                            <input type="number" id="v-redemptionLimit" placeholder="ปกติคือ 1" value="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>ใช้ได้กี่รอบต่อคน</label>
+                            <input type="number" id="v-usageLimit" placeholder="ปกติคือ 1" value="1" min="1">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>ยอดซื้อขั้นต่ำ (฿)</label>
+                            <input type="number" id="v-minPurchase" placeholder="0 ถ้าไม่มีขั้นต่ำ" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>วันหมดอายุ</label>
+                            <input type="date" id="v-expiry" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit" id="btnSaveVoucher">💾 บันทึกและเปิดใช้งาน</button>
+                </form>
+            </div>
+
+            <!-- Voucher List -->
+            <div class="card">
+                <div class="card-title">📜 รายการคูปองทั้งหมด</div>
+                <div style="overflow-x: auto;">
+                    <table class="v-table">
+                        <thead>
+                            <tr>
+                                <th>รหัส / ชื่อ</th>
+                                <th>ประเภท</th>
+                                <th>ส่วนลด</th>
+                                <th>สิทธิ์ (เก็บ/ใช้)</th>
+                                <th>ขั้นต่ำ</th>
+                                <th>หมดอายุ</th>
+                                <th>จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="voucherListBody">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                    <div id="v-empty" class="empty-state" style="display: none;">ยังไม่มีการสร้างคูปอง</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secure QR Modal -->
+        <div id="qrModalOverlay" class="modal-overlay">
+            <div class="qr-modal">
+                <span class="qr-close" onclick="closeQRModal()">&times;</span>
+                <h3 style="margin-top:0; color:#333;">🎫 Secure QR Ticket</h3>
+                <p style="font-size: 0.85rem; color:#888;">สแกนเพื่อรับคูปอง (มีอายุ 1 ชม. และใช้ได้ครั้งเดียว)</p>
+                <img id="qrImage" class="qr-img" src="" alt="Voucher QR">
+                <div id="qrTimer" style="font-weight:600; color:#ee4d2d; font-size:1.1rem; margin-bottom:10px;">00:60:00</div>
+                <div class="qr-link-box">
+                    <span id="qrLinkText" style="flex-grow:1; text-align:left; overflow:hidden; text-overflow:ellipsis;">https://paomobile.com/redeem?id=...</span>
+                    <button class="btn-copy" onclick="copyQRLink()">คัดลอก</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="firestore-status" style="position: fixed; bottom: 20px; right: 20px; background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px; font-size: 0.8rem; z-index: 1000; border: 1px solid #eee;">
+        &bull; Firestore: กำลังเชื่อมต่อ...
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+    </script>
+    <script src="seller-vouchers.js"></script>
+</body>
+</html>

@@ -432,6 +432,19 @@ function viewOrderDetails(orderId, isDispatch = false) {
             slipGroup.style.display = 'none';
         }
 
+        // --- Voucher Info (v1.5.0) ---
+        const vCode = order.appliedVoucherCode || '';
+        const vDiscount = order.discountAmount || 0;
+        const vGroup = document.getElementById('voucherInfoGroup');
+
+        if (vCode || vDiscount > 0) {
+            vGroup.style.display = 'block';
+            document.getElementById('modalVoucherCode').textContent = vCode || 'สแกนรับ (Private)';
+            document.getElementById('modalDiscountAmount').textContent = `-฿${vDiscount.toLocaleString()}`;
+        } else {
+            vGroup.style.display = 'none';
+        }
+
         // Handle Tracking Fields logic (v1.2.13)
         const shipSection = document.getElementById('shipInputSection');
         const shipBtn = document.getElementById('btnShipConfirm');

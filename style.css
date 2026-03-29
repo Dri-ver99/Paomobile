@@ -800,3 +800,56 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 .seller-centre-dropdown-item .arrow {
     color: #ee4d2d !important;
 }
+
+/* --- User Navigation Avatars --- */
+.nav-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+.avatar-letter-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange-400), var(--gold-400));
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-right: 10px;
+    text-transform: uppercase;
+}
+
+.mobile-nav-user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(0,0,0,0.08);
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.mobile-nav-letter-placeholder {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange-400), var(--gold-400));
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-right: 8px;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+

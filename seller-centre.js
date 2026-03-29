@@ -89,7 +89,114 @@ document.addEventListener('DOMContentLoaded', () => {
             const el = document.getElementById('insight-products');
             if (el) el.textContent = 17;
         });
+
+        // Vouchers Sync (for Quick QR)
+        db.collection('vouchers').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            const vouchers = snapshot.docs.map(doc => doc.data());
+            renderQuickVouchers(vouchers);
+        }, err => {
+            console.error("Voucher sync error:", err);
+        });
     }
+
+    function renderQuickVouchers(vouchers) {
+        const list = document.getElementById('quick-qr-list');
+        if (!list) return;
+
+        if (vouchers.length === 0) {
+            list.innerHTML = '<div style="grid-column: 1/-1; padding: 20px; text-align: center; color: #999;">คุณยังไม่มีคูปอง</div>';
+            return;
+        }
+
+        // Only show first 8 vouchers in quick list
+        const displayVouchers = vouchers.slice(0, 8);
+        list.innerHTML = displayVouchers.map(v => `
+            <div class="quick-qr-item">
+                <div class="quick-qr-code">${v.code}</div>
+                <div class="quick-qr-title">${v.title}</div>
+                <button class="btn-gen-qr-small" onclick="generateSecureQR('${v.code}')">🎫 สร้าง QR</button>
+            </div>
+        `).join('');
+    }
+
+    // Secure QR Logic (Reused from seller-vouchers.js)
+    let timerInterval = null;
+
+    window.generateSecureQR = async (code) => {
+        try {
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '🕒';
+
+            const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 Hour
+            const qrRef = await db.collection('voucher_qrs').add({
+                voucherCode: code,
+                expiresAt: firebase.firestore.Timestamp.fromDate(expiresAt),
+                usedBy: null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Construct Link
+            const baseUrl = window.location.href.split('seller-centre.html')[0];
+            const redeemUrl = `${baseUrl}redeem.html?id=${qrRef.id}`;
+            document.getElementById('qrLinkText').textContent = redeemUrl;
+
+            // Generate QR via API
+            const qrImg = document.getElementById('qrImage');
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(redeemUrl)}`;
+            
+            // Show Modal
+            document.getElementById('qrModalOverlay').style.display = 'flex';
+            
+            // Start Timer
+            startQRTimer(expiresAt);
+
+            btn.disabled = false;
+            btn.textContent = originalText;
+        } catch (err) {
+            console.error(err);
+            alert("ไม่สามารถสร้าง QR ได้: " + err.message);
+        }
+    };
+
+    function startQRTimer(expiry) {
+        clearInterval(timerInterval);
+        const timerEl = document.getElementById('qrTimer');
+        
+        timerInterval = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = expiry.getTime() - now;
+            
+            if (distance < 0) {
+                clearInterval(timerInterval);
+                timerEl.textContent = "หมดเวลาใช้งาน (Expired)";
+                document.getElementById('qrImage').style.opacity = '0.3';
+                return;
+            }
+            
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            timerEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    window.closeQRModal = () => {
+        document.getElementById('qrModalOverlay').style.display = 'none';
+        document.getElementById('qrImage').style.opacity = '1';
+        clearInterval(timerInterval);
+    };
+
+    window.copyQRLink = () => {
+        const text = document.getElementById('qrLinkText').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.btn-copy');
+            btn.textContent = 'คัดลอกแล้ว!';
+            setTimeout(() => { btn.textContent = 'คัดลอก'; }, 2000);
+        });
+    };
 
     // Expiration Logic for Dashboard
     function processExpirations(orders) {
