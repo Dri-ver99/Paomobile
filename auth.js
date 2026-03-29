@@ -62,22 +62,25 @@
 
             // 2. Add Login & Member link to Mobile Menu for guest
             if (mobileMenu && !mobileMenu.querySelector('a[href*="login.html"]')) {
-                const mobileGuestGroup = document.createElement('div');
-                mobileGuestGroup.style.cssText = 'border-top: 1px solid #f1f5f9; margin-top: 10px; padding-top: 15px; display: flex; flex-direction: column; gap: 10px; padding: 15px;';
+                const loginBox = document.createElement('div');
+                loginBox.style.cssText = 'padding: 15px; margin: 10px 15px; background: #fff; border: 1px dashed var(--gold-primary); border-radius: 12px; text-align: center;';
                 
                 const loginLink = document.createElement('a');
                 loginLink.href = 'login.html';
                 loginLink.innerHTML = 'เข้าสู่ระบบ / สมัครสมาชิก';
-                loginLink.style.cssText = 'font-weight: 600; color: var(--gold-primary); text-align: center; width: 100%; display: block;';
-                
-                const memberLinkM = document.createElement('a');
-                memberLinkM.href = 'member.html';
-                memberLinkM.innerHTML = '💎 Member (ดูคูปอง)';
-                memberLinkM.style.cssText = 'font-size: 0.85em; color: #64748b; text-align: center; width: 100%; display: block; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 8px; text-decoration: none;';
-                
-                mobileGuestGroup.appendChild(loginLink);
-                mobileGuestGroup.appendChild(memberLinkM);
-                mobileMenu.appendChild(mobileGuestGroup);
+                loginLink.style.cssText = 'font-weight: 700; color: var(--gold-primary); display: block; text-decoration: none; font-size: 1rem;';
+                loginBox.appendChild(loginLink);
+                mobileMenu.prepend(loginBox);
+
+                // Move Guest Member Link to bottom (Below Order)
+                const orderBtn = Array.from(mobileMenu.querySelectorAll('.menu-item-parent')).find(el => el.textContent.includes('สั่งของ'));
+                if (orderBtn) {
+                    const memberLinkM = document.createElement('a');
+                    memberLinkM.href = 'member.html';
+                    memberLinkM.innerHTML = '💎 Member (ดูคูปอง)';
+                    memberLinkM.style.cssText = 'font-size: 0.9em; color: #64748b; margin-top: 5px; padding: 12px 0 12px 5px; border-top: 1px solid #f1f5f9; display: block; text-decoration: none;';
+                    orderBtn.closest('.menu-item-wrapper').after(memberLinkM);
+                }
             }
             return;
         }
@@ -151,27 +154,32 @@
         if (mobileMenu && !document.getElementById('mobile-auth-header')) {
             const header = document.createElement('div');
             header.id = 'mobile-auth-header';
-            header.style.cssText = 'padding: 20px; background: #f8fafc; border-radius: 12px; margin: 5px 15px 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px;';
-            
-            const mobileAvatarHtml = user.avatar
-                ? `<img src="${user.avatar}" class="mobile-nav-user-avatar">`
-                : `<div class="mobile-nav-letter-placeholder">${firstName.charAt(0)}</div>`;
+            header.style.cssText = 'padding: 15px 20px; background: #fff; border-radius: 12px; margin: 5px 15px 15px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px; position: relative;';
             
             header.innerHTML = `
-                <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);">
-                    ${user.avatar ? `<img src="${user.avatar}" style="width:100%; height:100%; object-fit:cover;">` : `<span style="color:white; font-weight:700; font-size:1.2rem;">${firstName.charAt(0).toUpperCase()}</span>`}
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.4rem; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2); flex-shrink: 0;">
+                    ${user.avatar ? `<img src="${user.avatar}" style="width:100%; height:100%; object-fit:cover;">` : `<span style="color:white;">${firstName.charAt(0).toUpperCase()}</span>`}
                 </div>
                 <div style="flex: 1;">
-                    <div style="font-size: 0.85em; color: #64748b;">สวัสดีคุณ</div>
-                    <div style="font-weight: 600; color: #1e293b; font-size: 1rem; display:flex; align-items:center;">${mobileAvatarHtml}${firstName}</div>
+                    <div style="font-size: 0.8em; color: #64748b; margin-bottom: 2px;">สวัสดีคุณ</div>
+                    <div style="font-weight: 700; color: #1e293b; font-size: 1.1rem; line-height: 1.2;">${firstName}</div>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
-                    <a href="member.html" style="background: var(--gold-primary); color: white; border: none; font-size: 0.75em; padding: 4px 10px; border-radius: 4px; text-decoration: none;">💎 Member</a>
-                    <button id="btnMobileLogout" style="background:none; border:none; color: #ef4444; font-size: 0.85em; font-weight: 500; cursor: pointer;">🚪 ออกจากระบบ</button>
+                <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                    <button id="btnMobileLogout" style="background:rgba(239, 68, 68, 0.1); border:none; color: #ef4444; font-size: 0.8em; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 20px; display:flex; align-items:center; gap:4px;">🚪 ออกจากระบบ</button>
                 </div>
             `;
             mobileMenu.prepend(header);
             
+            // Move User Member Link to bottom (Below Order)
+            const orderBtn = Array.from(mobileMenu.querySelectorAll('.menu-item-parent')).find(el => el.textContent.includes('สั่งของ'));
+            if (orderBtn) {
+                const memberLinkM = document.createElement('a');
+                memberLinkM.href = 'member.html';
+                memberLinkM.innerHTML = '💎 Member (ดูคูปอง) <span style="float:right">›</span>';
+                memberLinkM.style.cssText = 'font-size: 1em; font-weight: 500; color: var(--text); padding: 15px 5px; border-top: 1px solid #f1f5f9; display: block; text-decoration: none; margin-top: 5px;';
+                orderBtn.closest('.menu-item-wrapper').after(memberLinkM);
+            }
+
             const mobileLogout = document.getElementById('btnMobileLogout');
             if (mobileLogout) mobileLogout.addEventListener('click', handleLogout);
         }
