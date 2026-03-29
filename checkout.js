@@ -101,22 +101,50 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             `).join('');
         }
 
+
         function updateTotals() {
             const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
-            const total = subtotal + shippingCost - appliedDiscount;
+            
+            // Handle Free Shipping Voucher
+            let finalShipping = shippingCost;
+            let finalDiscount = appliedDiscount;
+            
+            // Check if current voucher is a shipping type (v1.2.2)
+            const merged = getMergedVouchers();
+            const currentV = merged[appliedVoucherCode];
+            
+            if (appliedVoucherCode === 'FREE' || (currentV && currentV.type === 'ship')) {
+                finalShipping = 0;
+            }
+            
+            const total = subtotal + finalShipping - finalDiscount;
             const count = cartItems.reduce((s, i) => s + i.qty, 0);
 
             // Update UI
-            document.getElementById('itemCount').textContent = count;
-            document.getElementById('sectionTotal').textContent = '฿' + (subtotal + shippingCost- appliedDiscount).toLocaleString();
-            document.getElementById('s-subtotal').textContent = '฿' + subtotal.toLocaleString();
-            document.getElementById('s-shipping').textContent = '฿' + shippingCost.toLocaleString();
+            const itemCountEl = document.getElementById('itemCount');
+            if (itemCountEl) itemCountEl.textContent = count;
+            
+            const sectionTotalEl = document.getElementById('sectionTotal');
+            if (sectionTotalEl) sectionTotalEl.textContent = '฿' + total.toLocaleString();
+            
+            const subtotalEl = document.getElementById('s-subtotal');
+            if (subtotalEl) subtotalEl.textContent = '฿' + subtotal.toLocaleString();
+            
+            const shippingEl = document.getElementById('s-shipping');
+            if (shippingEl) shippingEl.textContent = '฿' + finalShipping.toLocaleString();
             
             // Voucher Display Row (Summary)
             const discountRow = document.getElementById('s-discount-row');
             if (discountRow) {
-                if (appliedDiscount > 0) {
+                if (appliedVoucherCode === 'FREE' || (currentV && currentV.type === 'ship')) {
                     discountRow.style.display = 'flex';
+                    const spanFirst = discountRow.querySelector('span:first-child');
+                    if(spanFirst) spanFirst.textContent = 'ส่วนลดค่าจัดส่ง';
+                    document.getElementById('s-discount').textContent = '-฿' + (shippingCost).toLocaleString();
+                } else if (appliedDiscount > 0) {
+                    discountRow.style.display = 'flex';
+                    const spanFirst = discountRow.querySelector('span:first-child');
+                    if(spanFirst) spanFirst.textContent = 'ส่วนลดจากโค้ด';
                     document.getElementById('s-discount').textContent = '-฿' + appliedDiscount.toLocaleString();
                 } else {
                     discountRow.style.display = 'none';
@@ -127,45 +155,308 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             const vStatus = document.getElementById('voucherStatus');
             if (vStatus) {
                 if (appliedVoucherCode) {
-                    vStatus.innerHTML = `<span style="border: 1px solid #ee4d2d; padding: 2px 8px; border-radius: 2px; font-size: 0.85rem;">${appliedVoucherCode} (-฿${appliedDiscount})</span> <span style="margin-left:8px; color:#555; text-decoration:underline;">แก้ไข</span>`;
+                    let label = `${appliedVoucherCode} (-฿${appliedDiscount})`;
+                    if (appliedVoucherCode === 'FREE' || (currentV && currentV.type === 'ship')) {
+                        label = `ฟรีค่าจัดส่ง (-฿${shippingCost})`;
+                    }
+                    vStatus.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="border: 1px solid #ee4d2d; color:#ee4d2d; padding: 2px 8px; border-radius: 2px; font-size: 0.85rem;">${label}</span>
+                            <span style="color:#757575; font-size:0.9rem;">แก้ไข</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </div>
+                    `;
                 } else {
-                    vStatus.innerHTML = `<span>กดใช้โค้ด</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+                    vStatus.innerHTML = `
+                        <span>กดใช้โค้ด</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    `;
                 }
             }
 
-            document.getElementById('s-total').textContent = '฿' + (total > 0 ? total : 0).toLocaleString();
+            const totalEl = document.getElementById('s-total');
+            if (totalEl) totalEl.textContent = '฿' + (total > 0 ? total : 0).toLocaleString();
         }
 
-        function openVoucherPrompt() {
-            const code = prompt('กรุณากรอกโค้ดส่วนลดของ Paomobile:', appliedVoucherCode || '');
-            if (code === null) return; // Cancelled
+        // --- Voucher Modal Logic (Shopee Style) ---
+        let tempVoucherCode = '';
+        const STATIC_VOUCHERS = {
+            'FREE': { value: 0, type: 'ship' },
+            'PAO50': { value: 50, type: 'discount' },
+            'PAO100': { value: 100, type: 'discount' },
+            'NEWUSER': { value: 30, type: 'discount' },
+            'SALE10': { value: 10, type: 'discount' }
+        };
+
+        // Get user's personal vouchers and combine with static ones
+        function getMergedVouchers() {
+            const user = JSON.parse(localStorage.getItem('paomobile_user'));
+            const email = user ? user.email : '';
+            const personalVouchers = JSON.parse(localStorage.getItem('pao_user_vouchers_' + email) || '[]');
             
-            const cleanCode = code.trim().toUpperCase();
-            if (!cleanCode) {
-                appliedDiscount = 0;
-                appliedVoucherCode = '';
-                updateTotals();
-                return;
+            let merged = { ...STATIC_VOUCHERS };
+            personalVouchers.forEach(v => {
+                // If personal voucher is missing value/type/minPurchase (e.g. collected before update),
+                // use static definition as fallback if available.
+                const base = STATIC_VOUCHERS[v.code] || { value: 0, type: 'discount', minPurchase: 0 };
+                merged[v.code] = {
+                    title: v.title || base.title || 'Voucher',
+                    value: (v.value !== undefined) ? v.value : base.value,
+                    type: (v.type !== undefined) ? v.type : base.type,
+                    minPurchase: (v.minPurchase !== undefined) ? v.minPurchase : (base.minPurchase || 0),
+                    expiry: v.expiry || base.expiry || '-'
+                };
+            });
+            return merged;
+        }
+
+        async function openVoucherModal() {
+            const overlay = document.getElementById('voucherModalOverlay');
+            if (overlay) overlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            tempVoucherCode = appliedVoucherCode;
+            
+            // v1.3.3 - Fetch usage counts from Firestore to hide used vouchers
+            let usageCounts = {};
+            if (window.db) {
+                try {
+                    const user = JSON.parse(localStorage.getItem('paomobile_user'));
+                    const email = user ? user.email : '';
+                    const snap = await db.collection('orders')
+                        .where('customerEmail', '==', email)
+                        .get();
+                    
+                    snap.docs.forEach(doc => {
+                        const d = doc.data();
+                        if (d.status !== 'ยกเลิกแล้ว' && d.appliedVoucherCode) {
+                            usageCounts[d.appliedVoucherCode] = (usageCounts[d.appliedVoucherCode] || 0) + 1;
+                        }
+                        // Support legacy field name too
+                        if (d.status !== 'ยกเลิกแล้ว' && d.voucherCode) {
+                             usageCounts[d.voucherCode] = (usageCounts[d.voucherCode] || 0) + 1;
+                        }
+                    });
+                } catch (e) {
+                    console.error("Failed to fetch voucher usage:", e);
+                }
             }
 
-            // Demo Voucher Codes
-            const vouchers = {
-                'PAO50': 50,
-                'PAO100': 100,
-                'NEWUSER': 30,
-                'SALE10': 10
-            };
+            renderPersonalVouchers(usageCounts); // Inject personal vouchers into UI
+            refreshVoucherListUI();
+        }
 
-            if (vouchers[cleanCode]) {
-                appliedDiscount = vouchers[cleanCode];
-                appliedVoucherCode = cleanCode;
-                alert('ยินดีด้วย! คุณได้รับส่วนลด ฿' + appliedDiscount);
-                updateTotals();
-            } else {
-                alert('ขออภัย! โค้ดส่วนลดไม่ถูกต้องหรือหมดอายุแล้ว');
+        function renderPersonalVouchers(usageCounts = {}) {
+            const container = document.getElementById('voucherListContainer');
+            if (!container) return;
+
+            const user = JSON.parse(localStorage.getItem('paomobile_user'));
+            const email = user ? user.email : '';
+            
+            // Get all vouchers dynamically merged (v1.5.0)
+            const merged = getMergedVouchers();
+            const personalVouchers = Object.keys(merged).map(code => ({
+                code: code,
+                ...merged[code]
+            }));
+
+            // Combine static with personal for rendering
+            let html = '';
+            
+            const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            // Render All Vouchers (v1.5.0 - Unified loop with usage filter)
+            personalVouchers.forEach(v => {
+                // 1. Expiry Check
+                const isExpired = v.expiry && new Date(v.expiry) < today;
+                if (isExpired) return;
+
+                // 2. Usage Limit Check (v1.3.3)
+                const usedToday = usageCounts[v.code] || 0;
+                const limit = v.usageLimit || 1;
+                if (usedToday >= limit) return; // Hide if already used to the limit
+
+                const isEligible = subtotal >= (v.minPurchase || 0);
+                const minText = v.minPurchase > 0 ? `ขั้นต่ำ ฿${v.minPurchase.toLocaleString()}` : 'ไม่มีขั้นต่ำ';
+                const opacity = isEligible ? '1' : '0.5';
+                const cursor = isEligible ? 'pointer' : 'not-allowed';
+                const warningMsg = isEligible ? '' : `<div style="color:#ee4d2d; font-size:0.7rem; margin-top:2px;">ยอดซื้อไม่ถึงขั้นต่ำ</div>`;
+
+                const vTypeLabel = (v.type === 'ship') ? 'Free Ship' : (v.isPersonal ? 'Personal' : 'Voucher');
+
+                html += `
+                    <div class="v-item-card-wrapper" style="opacity: ${opacity}; cursor: ${cursor}">
+                        <div class="v-item-card" onclick="${isEligible ? `selectVoucherListItem('${v.code}')` : ''}">
+                            <div class="v-item-left ${v.type === 'ship' ? 'shipping' : ''}">
+                                <div class="v-item-icon-box">
+                                    ${v.type === 'ship' ? '<svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M1 3h15v13H1V3zm16 10h4l3-3V7h-7v6zM5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm14 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>' : '<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12.89 3L14.85 3.4L11.11 21L9.15 20.6L12.89 3Z"/></svg>'}
+                                </div>
+                                <div class="v-item-label">${vTypeLabel}</div>
+                            </div>
+                            <div class="v-item-right">
+                                <div class="v-info-box">
+                                    <div class="v-info-title">${v.title || v.code}</div>
+                                    <div class="v-info-tag">${minText}</div>
+                                    <div class="v-info-expiry">ใช้ได้ถึง: ${v.expiry} &nbsp;<a href="#" class="v-info-link">เงื่อนไข</a></div>
+                                    ${warningMsg}
+                                </div>
+                                <div class="v-radio-box"><div class="v-radio" data-code="${v.code}"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if (html === '') {
+                html = '<div style="padding: 40px; text-align:center; color:#999;">ไม่มีโค้ดส่วนลดที่ใช้งานได้ในขณะนี้</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function closeVoucherModal() {
+            const overlay = document.getElementById('voucherModalOverlay');
+            if (overlay) overlay.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        function toggleModalApplyBtn() {
+            const input = document.getElementById('modalVoucherInput');
+            const btn = document.getElementById('modalApplyBtn');
+            if (input && btn) {
+                if (input.value.trim().length > 0) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
             }
         }
-        window.openVoucherPrompt = openVoucherPrompt;
+
+        function applyModalVoucherManual() {
+            const input = document.getElementById('modalVoucherInput');
+            if (!input) return;
+            const code = input.value.trim().toUpperCase();
+            const merged = getMergedVouchers();
+            if (merged[code] !== undefined) {
+                selectVoucherListItem(code);
+                input.value = '';
+                toggleModalApplyBtn();
+            } else {
+                alert('ไม่พบโค้ดส่วนลดนี้ครับ');
+            }
+        }
+
+        function selectVoucherListItem(code) {
+            tempVoucherCode = (tempVoucherCode === code) ? '' : code;
+            refreshVoucherListUI();
+        }
+
+        function refreshVoucherListUI() {
+            document.querySelectorAll('.v-radio').forEach(radio => {
+                const code = radio.dataset.code;
+                if (code === tempVoucherCode) {
+                    radio.classList.add('selected');
+                } else {
+                    radio.classList.remove('selected');
+                }
+            });
+        }
+
+        async function confirmVoucherSelection() {
+            if (tempVoucherCode) {
+                const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
+                const merged = getMergedVouchers();
+                const vData = merged[tempVoucherCode];
+                
+                if (vData && subtotal < (vData.minPurchase || 0)) {
+                    alert(`โค้ดนี้ใช้ได้เมื่อมียอดซื้อขั้นต่ำ ฿${vData.minPurchase.toLocaleString()} ขึ้นไปครับ`);
+                    return;
+                }
+
+                // v1.3.1 - Usage Limit Check (Firestore)
+                if (window.db && tempVoucherCode) {
+                    try {
+                        const user = JSON.parse(localStorage.getItem('paomobile_user'));
+                        const email = user ? user.email : '';
+                        
+                        // Count existing non-cancelled orders for this code/user
+                        const snap = await db.collection('orders')
+                            .where('customerEmail', '==', email)
+                            .where('appliedVoucherCode', '==', tempVoucherCode)
+                            .get();
+                        
+                        const usedCount = snap.docs.filter(doc => doc.data().status !== 'ยกเลิกแล้ว').length;
+                        const limit = vData.usageLimit || 1;
+
+                        if (usedCount >= limit) {
+                            alert(`ขออภัยครับ คุณใช้สิทธิ์โค้ด ${tempVoucherCode} ครบ ${limit} ครั้งตามกำหนดแล้วครับ`);
+                            return;
+                        }
+                    } catch (e) {
+                        console.error("Usage validation failed:", e);
+                    }
+                }
+            }
+
+            appliedVoucherCode = tempVoucherCode;
+            const merged = getMergedVouchers();
+            const vData = merged[appliedVoucherCode];
+            appliedDiscount = vData ? vData.value : 0;
+            updateTotals();
+            closeVoucherModal();
+        }
+
+        // Auto-apply pending voucher from member profile
+        async function checkPendingVoucher() {
+            const pendingCode = localStorage.getItem('pao_pending_voucher');
+            if (pendingCode) {
+                const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
+                const merged = getMergedVouchers();
+                const vData = merged[pendingCode];
+                
+                if (vData !== undefined) {
+                    if (subtotal < (vData.minPurchase || 0)) {
+                        alert(`คูปอง ${pendingCode} ไม่สามารถใช้ได้ เนื่องจากยอดซื้อไม่ถึงขั้นต่ำ ฿${vData.minPurchase.toLocaleString()}`);
+                    } else {
+                        // v1.3.1 - Usage Limit Check
+                        let canUse = true;
+                        if (window.db) {
+                            try {
+                                const user = JSON.parse(localStorage.getItem('paomobile_user'));
+                                const email = user ? user.email : '';
+                                const snap = await db.collection('orders')
+                                    .where('customerEmail', '==', email)
+                                    .where('appliedVoucherCode', '==', pendingCode)
+                                    .get();
+                                const usedCount = snap.docs.filter(doc => doc.data().status !== 'ยกเลิกแล้ว').length;
+                                const limit = vData.usageLimit || 1;
+                                if (usedCount >= limit) {
+                                    alert(`โค้ด ${pendingCode} ถูกใช้เกินจำนวนสิทธิ์ที่กำหนดแล้วครับ`);
+                                    canUse = false;
+                                }
+                            } catch (e) { console.error(e); }
+                        }
+                        
+                        if (canUse) {
+                            appliedVoucherCode = pendingCode;
+                            appliedDiscount = vData.value || 0;
+                            console.log("[Checkout] Auto-applied pending voucher:", pendingCode);
+                            updateTotals(); // Ensure UI updates
+                        }
+                    }
+                }
+                localStorage.removeItem('pao_pending_voucher');
+            }
+        }
+
+        window.openVoucherModal = openVoucherModal;
+        window.closeVoucherModal = closeVoucherModal;
+        window.toggleModalApplyBtn = toggleModalApplyBtn;
+        window.applyModalVoucherManual = applyModalVoucherManual;
+        window.selectVoucherListItem = selectVoucherListItem;
+        window.confirmVoucherSelection = confirmVoucherSelection;
+        window.checkPendingVoucher = checkPendingVoucher;
 
         function updateShipping(el) {
             shippingCost = parseInt(el.value) || 0;
@@ -277,10 +568,14 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 }
 
                 try {
+                    const user = JSON.parse(localStorage.getItem('paomobile_user'));
+                    const userEmail = user ? user.email : '';
+
                     // 1. Prepare Data
                     const globalOrderData = {
                         ...newOrder,
                         customer: getActiveUserId(),
+                        customerEmail: userEmail, // v1.3.1 for voucher limits
                         customerName: savedAddress ? savedAddress.name : 'N/A',
                         customerPhone: savedAddress ? savedAddress.phone : 'N/A',
                         customerAddress: savedAddress ? `${savedAddress.addr1} ตำบล${savedAddress.district} อำเภอ${savedAddress.amphoe} จังหวัด${savedAddress.province} ${savedAddress.zip}` : 'N/A',
@@ -298,6 +593,20 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                     const allOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
                     allOrders.unshift(globalOrderData);
                     localStorage.setItem('pao_global_orders', JSON.stringify(allOrders));
+
+                    // 2.1 Check and remove used personal voucher (v1.2.1)
+                    if (appliedVoucherCode) {
+                        const user = JSON.parse(localStorage.getItem('paomobile_user'));
+                        const email = user ? user.email : '';
+                        const V_KEY = 'pao_user_vouchers_' + email;
+                        let pVouchers = JSON.parse(localStorage.getItem(V_KEY)) || [];
+                        const vIdx = pVouchers.findIndex(v => v.code === appliedVoucherCode);
+                        if (vIdx !== -1) {
+                            pVouchers.splice(vIdx, 1);
+                            localStorage.setItem(V_KEY, JSON.stringify(pVouchers));
+                            console.log("[Checkout] Personal voucher consumed:", appliedVoucherCode);
+                        }
+                    }
 
                     // 3. Save to Cloud (MUST WAIT)
                     await syncToCloud(globalOrderData);
@@ -818,6 +1127,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
 
             renderAddress();
             renderCheckoutItems();
+            checkPendingVoucher(); // Check for pre-selected vouchers from Member Profile
             updateTotals();
             initAddressLookup();
         });

@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 1. ข้อมูลผู้ใช้งาน
+    // 1. ข้อมูลผู้ใช้งาน (Users)
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
@@ -18,22 +18,46 @@ service cloud.firestore {
         resource.data.customer == request.auth.token.email
       );
       
-      // ✅ ลูกค้าอัปเดตออเดอร์ตัวเองได้ (ยืนยันชำระเงิน + แนบสลีป)
-      // อนุญาตให้ Guest อัปเดตได้ถ้าออเดอร์ยังอยู่ในสถานะ "ที่ต้องชำระ"
+      // ✅ ลูกค้าอัปเดตออเดอร์ตัวเองได้ (ยืนยันชำระเงิน)
       allow update: if (request.auth != null && (
         resource.data.customer == request.auth.uid ||
         resource.data.customer == request.auth.token.email
       )) || (resource.data.status == "ที่ต้องชำระ");
 
-      // ✅ Seller (sattawat2560@gmail.com) ใช้งานจัดการออเดอร์ทั้งหมด
+      // ✅ เฉพาะ Seller ลบออเดอร์ได้
+      allow delete: if request.auth != null && 
+        request.auth.token.email == "sattawat2560@gmail.com";
+
+      // ✅ Seller จัดการได้ทุกอย่าง
       allow read, write: if request.auth != null && 
         request.auth.token.email == "sattawat2560@gmail.com";
     }
     
-    // 3. ส่วนอื่นๆ ของระบบ
+    // --- ส่วนที่เพิ่มใหม่: ระบบคูปอง (Vouchers) ---
+    
+    // คูปองหลัก (Seller จัดการสร้าง/ลบ)
+    match /vouchers/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        request.auth.token.email == "sattawat2560@gmail.com";
+    }
+
+    // ประวัติการเก็บคูปอง (ลูกค้าต้องสามารถบันทึกข้อมูลตอนกดเก็บโค้ดได้)
+    match /vouchers_redemptions/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // ตั๋วสแกน QR (สำหรับระบบสแกนรับ 1:1 และหมดอายุใน 1 ชม.)
+    match /voucher_qrs/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // 3. ส่วนอื่นๆ ของระบบ (สินค้า และอื่นๆ)
     match /{document=**} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.token.email == "sattawat2560@gmail.com";
+      allow write: if request.auth != null && 
+        request.auth.token.email == "sattawat2560@gmail.com";
     }
   }
 }
