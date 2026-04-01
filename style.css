@@ -27,21 +27,22 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 }
 @media (max-width: 768px) {
     .why-image {
-        max-width: 100vw !important;
-        margin-left: -24px !important;
-        margin-right: -24px !important;
+        max-width: 440px !important;
+        width: 92% !important;
+        margin: 0 auto 20px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        width: 100vw !important;
         padding: 0 !important;
         box-sizing: border-box !important;
-        overflow: visible !important;
+        overflow: hidden !important;
     }
     .why-image img, .why-slider-img {
         width: 100% !important;
         height: auto !important;
         max-height: none !important;
+        aspect-ratio: auto !important;
+        object-fit: contain !important;
         display: block !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -140,9 +141,9 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 .hero-card:hover { transform: rotateY(0) rotateX(0); }
 .hero-card img {
     width: 100%;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    height: 100% !important;
+    aspect-ratio: auto;
+    object-fit: contain;
+    height: auto !important;
     max-height: none !important;
     border-radius: calc(var(--radius-xl) - 8px);
     display: block;
@@ -1256,9 +1257,9 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 
 @media (max-width: 768px) {
     .showcaseSwiper {
-        width: 100% !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
+        width: 92% !important;
+        max-width: 440px !important;
+        margin: 0 auto !important;
         overflow: hidden !important;
     }
     .showcaseSwiper .swiper-slide {
@@ -1271,6 +1272,8 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         width: 100% !important;
         height: auto !important;
         max-height: none !important;
+        aspect-ratio: auto !important;
+        object-fit: contain !important;
     }
     .v-banner-content {
         justify-content: center !important;
