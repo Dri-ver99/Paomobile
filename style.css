@@ -803,7 +803,7 @@ p {
         order: -1 !important;
         width: 92% !important;
         max-width: 440px !important;
-        margin: 0 auto 20px !important;
+        margin: 0 auto 24px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
@@ -822,7 +822,7 @@ p {
     .why-image img,
     .why-slider-img {
         width: 100% !important;
-        aspect-ratio: 1 / 1 !important; /* Square Proportion */
+        aspect-ratio: 1 / 1 !important; /* Standard Square */
         object-fit: cover !important; /* Fill frame perfectly */
         border-radius: calc(var(--radius-xl) - 8px) !important;
         display: block !important;
@@ -2149,6 +2149,7 @@ body.menu-open .navbar .nav-links {
         width: 92% !important;
         max-width: 440px !important;
         margin: 0 auto !important;
+        display: block !important;
         background: rgba(255, 255, 255, 0.7) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
@@ -2160,6 +2161,7 @@ body.menu-open .navbar .nav-links {
         transform: none !important;
         transition: transform 0.5s var(--ease);
         height: auto !important;
+        overflow: hidden !important;
     }
 
     .hero-card:hover {
@@ -2168,7 +2170,7 @@ body.menu-open .navbar .nav-links {
 
     .hero-card img {
         width: 100%;
-        aspect-ratio: 1 / 1 !important; /* Square Proportion */
+        aspect-ratio: 1 / 1 !important; /* Standard Square */
         object-fit: cover !important; /* Fill frame perfectly */
         border-radius: calc(var(--radius-xl) - 8px);
         display: block;
@@ -3500,11 +3502,12 @@ body.menu-open .navbar .nav-links {
         border-radius: var(--radius-xl) !important;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important; /* Premium Shadow */
         overflow: hidden !important;
+        height: auto !important;
     }
 
     .showcase-img {
         width: 100% !important;
-        aspect-ratio: 1 / 1 !important; /* Square Proportion */
+        aspect-ratio: 1 / 1 !important; /* Standard Square */
         object-fit: cover !important; /* Fill frame perfectly */
         border-radius: calc(var(--radius-xl) - 8px) !important;
     }
