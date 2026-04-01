@@ -76,17 +76,25 @@
                     mobileMenu.prepend(loginBox);
                 }
 
-                // Member link in mobile sub-menu
+                // Member link in mobile sub-menu (Refactored to match parent style)
                 const orderBtn = Array.from(mobileMenu.querySelectorAll('.menu-item-parent')).find(el => el.textContent.includes('สั่งของ'));
                 if (orderBtn) {
                     const wrapper = orderBtn.closest('.menu-item-wrapper');
-                    if (wrapper && !wrapper.nextElementSibling?.classList.contains('guest-member-mobile-link')) {
-                        const memberLinkM = document.createElement('a');
-                        memberLinkM.href = 'member.html';
-                        memberLinkM.className = 'guest-member-mobile-link';
-                        memberLinkM.innerHTML = '💎 Member';
-                        memberLinkM.style.cssText = 'font-size: 0.9em; color: #64748b; margin-top: 5px; padding: 12px 0 12px 5px; border-top: 1px solid #f1f5f9; display: block; text-decoration: none;';
-                        wrapper.after(memberLinkM);
+                    if (wrapper && !wrapper.nextElementSibling?.classList.contains('guest-member-mobile-wrapper')) {
+                        const memberWrapper = document.createElement('div');
+                        memberWrapper.className = 'menu-item-wrapper guest-member-mobile-wrapper';
+                        memberWrapper.style.marginTop = '10px';
+                        memberWrapper.innerHTML = `
+                            <div class="menu-item-parent">💎 Member</div>
+                            <div class="mobile-sub-menu">
+                                <a href="login.html">🔑 เข้าสู่ระบบ / สมัครสมาชิก</a>
+                                <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div>
+                                <span style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">สิทธิประโยชน์</span>
+                                <a href="member.html">🎁 ตรวจสอบคะแนนสะสม</a>
+                                <a href="promotions.html">🎫 คูปองของฉัน</a>
+                            </div>
+                        `;
+                        wrapper.after(memberWrapper);
                     }
                 }
             }
@@ -202,18 +210,26 @@
             document.getElementById('btnMobileLogout')?.addEventListener('click', handleLogout);
 
             // Clean up old mobile member links
-            mobileMenu.querySelectorAll('.dynamic-member-mobile-link').forEach(el => el.remove());
+            mobileMenu.querySelectorAll('.dynamic-member-mobile-wrapper').forEach(el => el.remove());
 
             const orderBtn = Array.from(mobileMenu.querySelectorAll('.menu-item-parent')).find(el => el.textContent.includes('สั่งของ'));
             if (orderBtn) {
                 const wrapper = orderBtn.closest('.menu-item-wrapper');
                 if (wrapper) {
-                    const memberLinkM = document.createElement('a');
-                    memberLinkM.href = 'member.html';
-                    memberLinkM.className = 'dynamic-member-mobile-link';
-                    memberLinkM.innerHTML = '💎 Member <span style="float:right">›</span>';
-                    memberLinkM.style.cssText = 'font-size: 1em; font-weight: 500; color: var(--text); padding: 15px 5px; border-top: 1px solid #f1f5f9; display: block; text-decoration: none; margin-top: 5px;';
-                    wrapper.after(memberLinkM);
+                    const memberWrapper = document.createElement('div');
+                    memberWrapper.className = 'menu-item-wrapper dynamic-member-mobile-wrapper';
+                    memberWrapper.style.marginTop = '10px';
+                    memberWrapper.innerHTML = `
+                        <div class="menu-item-parent">💎 Member</div>
+                        <div class="mobile-sub-menu">
+                            <a href="member.html">👤 โปรไฟล์ของฉัน</a>
+                            <a href="purchases.html">📦 ประวัติการซื้อของฉัน</a>
+                            <a href="promotions.html">🎫 คูปองและสิทธิพิเศษ</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div>
+                            <a href="javascript:void(0)" onclick="localStorage.removeItem('paomobile_user'); window.location.reload();" style="color: #ef4444 !important;">🚪 ออกจากระบบ</a>
+                        </div>
+                    `;
+                    wrapper.after(memberWrapper);
                 }
             }
         }
