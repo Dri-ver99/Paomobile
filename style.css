@@ -28,14 +28,14 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 @media (max-width: 768px) {
     .why-image {
         order: -1 !important;
-        max-width: 440px !important;
         width: 92% !important;
+        max-width: 440px !important;
         margin: 0 auto 20px !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        padding: 10px !important; /* Premium Glassy Frame Padding */
-        background: rgba(255, 255, 255, 0.7) !important; /* Glassy background */
+        padding: 10px !important;
+        background: rgba(255, 255, 255, 0.7) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
         border: 1px solid rgba(255, 255, 255, 0.4) !important;
@@ -132,18 +132,18 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 }
 .hero-card {
     position: relative;
-    width: 100%;
-    max-width: 440px;
-    background: rgba(255, 255, 255, 0.7) !important; /* Restored glassy box */
+    width: 92% !important;
+    max-width: 440px !important;
+    margin: 0 auto !important;
+    background: rgba(255, 255, 255, 0.7) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
     border: 1px solid rgba(255, 255, 255, 0.4) !important;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-xl) !important;
     padding: 10px !important;
     box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
     z-index: 2;
-    transform: none; /* Removed tilt for mobile centering */
-    margin: 0 auto;
+    transform: none !important;
     transition: transform 0.5s var(--ease);
 }
 .hero-card:hover { transform: rotateY(0) rotateX(0); }
