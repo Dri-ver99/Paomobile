@@ -804,52 +804,66 @@ p {
         width: 92% !important;
         max-width: 440px !important;
         margin: 0 auto 24px !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        padding: 10px !important; /* Premium Frame Padding */
+        display: block !important;
+        padding: 0 !important; /* Touch the edges */
         background: rgba(255, 255, 255, 0.7) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
         border: 1px solid rgba(255, 255, 255, 0.4) !important;
         border-radius: var(--radius-xl) !important;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important; /* Premium Shadow */
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
-        height: auto !important;
+        aspect-ratio: 1 / 1 !important; /* Perfect Square for uniformity */
     }
 
     .why-image img,
     .why-slider-img {
         width: 100% !important;
-        aspect-ratio: 1 / 1 !important; /* Standard Square */
-        object-fit: cover !important; /* Fill frame perfectly */
-        border-radius: calc(var(--radius-xl) - 8px) !important;
+        height: 100% !important;
+        min-width: 100% !important;
+        min-height: 100% !important;
+        aspect-ratio: 1 / 1 !important;
+        object-fit: cover !important;
+        border-radius: var(--radius-xl) !important;
         display: block !important;
         margin: 0 !important;
         padding: 0 !important;
         transition: transform 0.4s ease;
     }
 
-    .whySwiper,
-    .whySwiper .swiper-wrapper {
-        display: flex !important;
+    .whySwiper {
         width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
+        height: 100% !important;
+        overflow: hidden !important;
     }
+
+    .whySwiper .swiper-wrapper {
+        display: flex !important; /* Swiper needs flex */
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .whySwiper .swiper-slide {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        opacity: 1 !important; /* Ensure visible */
+    }
+
 
     .whySwiper .swiper-slide {
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        margin: 0 !important;
-        padding: 0 !important;
         transition: all 0.4s ease;
+        opacity: 0 !important; /* Hide non-active */
     }
 
     .whySwiper .swiper-slide-active {
-        opacity: 1;
+        opacity: 1 !important; /* Show active only */
     }
 
     .whySwiper {
@@ -2155,12 +2169,12 @@ body.menu-open .navbar .nav-links {
         -webkit-backdrop-filter: blur(20px) !important;
         border: 1px solid rgba(255, 255, 255, 0.4) !important;
         border-radius: var(--radius-xl) !important;
-        padding: 10px !important; /* Premium Frame Padding */
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important; /* Premium Shadow */
+        padding: 0 !important; /* Touch the edges */
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
         z-index: 2;
         transform: none !important;
         transition: transform 0.5s var(--ease);
-        height: auto !important;
+        aspect-ratio: 1 / 1 !important; /* Perfect Square for uniformity */
         overflow: hidden !important;
     }
 
@@ -2169,11 +2183,44 @@ body.menu-open .navbar .nav-links {
     }
 
     .hero-card img {
-        width: 100%;
-        aspect-ratio: 1 / 1 !important; /* Standard Square */
-        object-fit: cover !important; /* Fill frame perfectly */
-        border-radius: calc(var(--radius-xl) - 8px);
+        width: 100% !important;
+        height: 100% !important;
+        min-width: 100% !important;
+        min-height: 100% !important;
+        aspect-ratio: 1 / 1 !important;
+        object-fit: cover !important;
+        border-radius: var(--radius-xl);
         display: block;
+    }
+
+    .heroSwiper {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .heroSwiper .swiper-wrapper {
+        display: flex !important; /* Swiper needs flex */
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .heroSwiper .swiper-slide {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .heroSwiper .swiper-slide {
+        opacity: 0 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+    
+    .heroSwiper .swiper-slide-active {
+        opacity: 1 !important;
     }
 
     .floating-badge {
@@ -3494,22 +3541,56 @@ body.menu-open .navbar .nav-links {
         width: 92% !important;
         max-width: 440px !important;
         margin: 0 auto !important;
+        display: block !important;
         background: rgba(255, 255, 255, 0.7) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
-        padding: 10px !important; /* Premium Frame Padding */
+        padding: 0 !important; /* Touch the edges */
         border: 1px solid rgba(255, 255, 255, 0.4) !important;
         border-radius: var(--radius-xl) !important;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important; /* Premium Shadow */
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
         overflow: hidden !important;
-        height: auto !important;
+        aspect-ratio: 1 / 1 !important; /* Perfect Square for uniformity */
     }
 
     .showcase-img {
         width: 100% !important;
-        aspect-ratio: 1 / 1 !important; /* Standard Square */
-        object-fit: cover !important; /* Fill frame perfectly */
-        border-radius: calc(var(--radius-xl) - 8px) !important;
+        height: 100% !important;
+        min-width: 100% !important;
+        min-height: 100% !important;
+        aspect-ratio: 1 / 1 !important;
+        object-fit: cover !important;
+        border-radius: var(--radius-xl) !important;
+    }
+    
+    .showcaseSwiper {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .showcaseSwiper .swiper-wrapper {
+        display: flex !important; /* Swiper needs flex */
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .showcaseSwiper .swiper-slide {
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .showcaseSwiper .swiper-slide {
+        opacity: 0 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+    
+    .showcaseSwiper .swiper-slide-active {
+        opacity: 1 !important;
     }
 
     .v-banner-content {
