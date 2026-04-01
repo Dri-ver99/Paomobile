@@ -103,7 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (statusIndicator) statusIndicator.style.background = "#ff4d4f"; // Red
             
             if (err.code === 'permission-denied') {
-                alert("สิทธิ์ไม่ถูกต้อง (v1.2.7)\n\nกรุณากดปุ่ม 'ล็อกอิน Admin' ที่มุมขวาบน และใช้เมล sattawat2560@gmail.com เท่านั้นครับ");
+                const currentUser = firebase.auth().currentUser;
+                const emailMsg = currentUser ? currentUser.email : "ไม่ได้ล็อกอิน";
+                alert("สิทธิ์ไม่ถูกต้อง (v1.2.7)\n\nกรุณาใช้เมล sattawat2560@gmail.com เท่านั้นครับ\n(Email ปัจจุบัน: " + emailMsg + ")");
                 if (adminLoginBtn) adminLoginBtn.style.display = 'block';
             }
             loadLocalStorageFallback();
@@ -399,7 +401,17 @@ function viewOrderDetails(orderId, isDispatch = false) {
         if (shippingMethodEl) shippingMethodEl.closest('div').style.display = 'block';
         if (paymentFullEl) paymentFullEl.closest('div').style.display = 'block';
 
-        document.getElementById('modalCustomerName').textContent = order.customerName || 'N/A';
+        document.getElementById('modalCustomerName').textContent = order.customerName || 'ไม่ระบุชื่อ';
+        const profileEl = document.getElementById('modalCustomerProfile');
+        profileEl.textContent = order.customerProfileName || order.customerEmail || 'ไม่มีข้อมูล';
+        profileEl.onclick = () => {
+            if (order.customerEmail) {
+                const chatId = order.customerEmail.toLowerCase().trim();
+                window.location.href = `seller-chat.html?id=${chatId}`;
+            } else {
+                alert("ไม่พบข้อมูลอีเมลสำหรับเปิดหน้าแชท");
+            }
+        };
         document.getElementById('modalCustomerPhone').textContent = order.customerPhone || 'N/A';
         document.getElementById('modalShippingMethod').textContent = order.shippingMethod || 'รับที่ร้าน';
         document.getElementById('modalCustomerAddress').textContent = order.customerAddress || 'ไม่มีข้อมูลที่อยู่จัดส่ง';
@@ -433,7 +445,7 @@ function viewOrderDetails(orderId, isDispatch = false) {
         }
 
         // --- Voucher Info (v1.5.0) ---
-        const vCode = order.appliedVoucherCode || '';
+        const vCode = order.appliedVoucherCode || order.voucherCode || '';
         const vDiscount = order.discountAmount || 0;
         const vGroup = document.getElementById('voucherInfoGroup');
 
@@ -443,6 +455,23 @@ function viewOrderDetails(orderId, isDispatch = false) {
             document.getElementById('modalDiscountAmount').textContent = `-฿${vDiscount.toLocaleString()}`;
         } else {
             vGroup.style.display = 'none';
+        }
+
+        // --- Order Summary (v1.6.0) ---
+        const items = order.items || [];
+        const subtotal = items.reduce((sum, item) => sum + (item.price * (item.qty || 1)), 0);
+        const netTotal = order.total || subtotal; // Use stored total as source of truth
+        const totalDiscount = vDiscount; // Current known discount source
+
+        document.getElementById('modalSubtotal').textContent = `฿${subtotal.toLocaleString()}`;
+        document.getElementById('modalNetTotal').textContent = `฿${netTotal.toLocaleString()}`;
+        
+        const discRow = document.getElementById('summaryDiscountRow');
+        if (totalDiscount > 0) {
+            discRow.style.display = 'flex';
+            document.getElementById('modalSummaryDiscount').textContent = `-฿${totalDiscount.toLocaleString()}`;
+        } else {
+            discRow.style.display = 'none';
         }
 
         // Handle Tracking Fields logic (v1.2.13)

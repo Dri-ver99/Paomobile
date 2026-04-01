@@ -114,6 +114,56 @@
             .voucher-container { grid-template-columns: 1fr; }
         }
 
+        /* Toggle Switch Styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #27ae60;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #27ae60;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
         /* QR Modal */
         .modal-overlay {
             position: fixed;
@@ -202,25 +252,36 @@
 <body>
     <aside class="sidebar">
         <div class="sidebar-header">
-            <a href="index.html" class="sidebar-logo">
+            <a href="seller-centre.html" class="sidebar-logo">
                 <img src="logo.png" alt="Paomobile">
                 <span>Seller Centre</span>
             </a>
         </div>
         <nav class="sidebar-menu">
+            <!-- Home Section -->
+            <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                    <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                </a>
+            </div>
+
             <div class="menu-section">
                 <p class="menu-title">เมนูหลัก</p>
                 <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
                 <a href="seller-vouchers.html" class="menu-item active"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
                 <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
                 <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">สินค้า</p>
                 <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
             </div>
         </nav>
     </aside>
@@ -249,14 +310,17 @@
             <!-- Settings Card -->
             <div class="card" style="margin-bottom: 20px; border: 1px solid #e0e0e0; background: #fffaf0;">
                 <div class="card-title" style="color: #d35400;">🌐 ตั้งค่าโดเมนเว็บไซต์</div>
-                <div class="form-group" style="margin-bottom: 0;">
+                <div class="form-group" style="margin-bottom: 15px;">
                     <p style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">ระบุ URL เว็บไซต์ของคุณเพื่อให้สแกน QR ผ่านมือถือได้ (เช่น <code>https://paomobile-85e39.web.app</code>)</p>
                     <div style="display: flex; gap: 10px;">
                         <input type="text" id="setting-base-url" placeholder="https://..." style="flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                         <button onclick="saveSettings()" style="background: #27ae60; color: white; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-weight: 600;">บันทึก</button>
                     </div>
                 </div>
+                
+                <hr style="border: none; border-top: 1px dashed #e0e0e0; margin: 15px 0;">
             </div>
+
 
             <!-- Create Voucher Form -->
             <div class="card">
@@ -287,6 +351,16 @@
                             <input type="number" id="v-value" placeholder="ระบุจำนวนเงิน" required min="0">
                         </div>
                     </div>
+                    
+                    <div style="background: #f0f7ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #d0e4ff;">
+                        <p style="font-size: 0.85rem; font-weight: 700; color: #0056b3; margin-bottom: 10px;">📍 การแสดงผลคูปอง</p>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.9rem;">
+                                <input type="checkbox" id="v-showOnHomepage" style="width: 18px; height: 18px; cursor: pointer;">
+                                <span>แสดงแถบคูปองแนะนำหน้าหลัก 🏠</span>
+                            </label>
+                        </div>
+                    </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="form-group">
                             <label>เก็บได้กี่ครั้งต่อคน</label>
@@ -311,42 +385,134 @@
                 </form>
             </div>
 
-            <!-- Voucher List -->
-            <div class="card">
-                <div class="card-title">📜 รายการคูปองทั้งหมด</div>
-                <div style="overflow-x: auto;">
-                    <table class="v-table">
-                        <thead>
-                            <tr>
-                                <th>รหัส / ชื่อ</th>
-                                <th>ประเภท</th>
-                                <th>ส่วนลด</th>
-                                <th>สิทธิ์ (เก็บ/ใช้)</th>
-                                <th>ขั้นต่ำ</th>
-                                <th>หมดอายุ</th>
-                                <th>จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="voucherListBody">
-                            <!-- Injected by JS -->
-                        </tbody>
-                    </table>
-                    <div id="v-empty" class="empty-state" style="display: none;">ยังไม่มีการสร้างคูปอง</div>
+            </div>
+        </div>
+
+        <!-- Voucher List (Full Width) -->
+        <div class="card" style="margin-top: 25px;">
+            <div class="card-title">📜 รายการคูปองทั้งหมด</div>
+            <div style="overflow-x: auto;">
+                <table class="v-table">
+                    <thead>
+                        <tr>
+                            <th>รหัส / ชื่อ</th>
+                            <th>ประเภท</th>
+                            <th>ส่วนลด</th>
+                            <th style="text-align: center;">หน้าแรก</th>
+                            <th>ขั้นต่ำ</th>
+                            <th>หมดอายุ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="voucherListBody">
+                        <!-- Injected by JS -->
+                    </tbody>
+                </table>
+                <div id="v-empty" class="empty-state" style="display: none;">ยังไม่มีการสร้างคูปอง</div>
+            </div>
+        </div>
+
+        <!-- Edit Voucher Modal -->
+        <div id="vEditModal" class="modal-overlay">
+            <div class="qr-modal" style="max-width: 450px; text-align: left;">
+                <span class="qr-close" onclick="closeEditModal()">&times;</span>
+                <h3 style="margin-top:0; color:#333; margin-bottom: 20px;">⚙️ ตั้งค่าการแสดงผลคูปอง</h3>
+                
+                <div id="vEditLoader" style="text-align: center; padding: 20px; display: none;">🕒 กำลังโหลด...</div>
+                
+                <div id="vEditContent">
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+                        <div id="editVHeader" style="font-weight: 700; color: #1e293b; font-size: 1.1rem;">-</div>
+                        <div id="editVSub" style="color: #64748b; font-size: 0.85rem;">-</div>
+                    </div>
+
+                    <div class="edit-toggle-row">
+                        <div class="toggle-info">
+                            <strong>แสดงแถบคูปองแนะนำหน้าหลัก</strong>
+                            <small>แสดงคูปองนี้ใน Strip ด้านบนของหน้าหลัก</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="edit-showHome" onchange="updateVField('showOnHomepage', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Detailed Settings (New Section) -->
+                    <div id="vEditDetails" style="display: none; margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size: 0.8rem;">มูลค่าส่วนลด (฿)</label>
+                                <input type="number" id="edit-value" onchange="updateVField('value', parseInt(this.value))" style="padding: 8px; font-size: 0.9rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size: 0.8rem;">ขั้นต่ำที่ซื้อ (฿)</label>
+                                <input type="number" id="edit-minPurchase" onchange="updateVField('minPurchase', parseInt(this.value))" style="padding: 8px; font-size: 0.9rem;">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size: 0.8rem;">วันหมดอายุ</label>
+                                <input type="date" id="edit-expiry" onchange="updateVField('expiry', this.value)" style="padding: 8px; font-size: 0.9rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size: 0.8rem;">จำกัดครั้ง/คน</label>
+                                <input type="number" id="edit-usageLimit" onchange="updateVField('usageLimit', parseInt(this.value))" style="padding: 8px; font-size: 0.9rem;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr style="border:none; border-top: 1px solid #eee; margin: 15px 0;">
+                    
+                    <button id="btnShowDetails" class="btn-submit" onclick="toggleEditDetails()" style="background: #fff; color: #ee4d2d; border: 1px solid #ee4d2d; margin-bottom: 8px; font-size: 0.85rem;">🛠️ แก้ไขข้อมูลเชิงลึก (ราคา/วันหมดอายุ)</button>
+                    <button class="btn-submit" onclick="closeEditModal()" style="background: #333;">เสร็จสิ้น</button>
+                    <button class="btn-submit" onclick="goToFullEdit()" style="background: #f9f9f9; color: #999; border: 1px solid #ddd; margin-top: 8px; font-size: 0.8rem;">แก้ไขข้อมูลทั้งหมด ✨</button>
                 </div>
             </div>
         </div>
+
+        <style>
+            .edit-toggle-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: #fff;
+                padding: 12px;
+                border-radius: 10px;
+                border: 1px solid #eee;
+            }
+            .toggle-info strong { display: block; font-size: 0.9rem; margin-bottom: 2px; }
+            .toggle-info small { color: #888; font-size: 0.75rem; }
+        </style>
 
         <!-- Secure QR Modal -->
         <div id="qrModalOverlay" class="modal-overlay">
             <div class="qr-modal">
                 <span class="qr-close" onclick="closeQRModal()">&times;</span>
                 <h3 style="margin-top:0; color:#333;">🎫 Secure QR Ticket</h3>
-                <p style="font-size: 0.85rem; color:#888;">สแกนเพื่อรับคูปอง (มีอายุ 1 ชม. และใช้ได้ครั้งเดียว)</p>
-                <img id="qrImage" class="qr-img" src="" alt="Voucher QR">
-                <div id="qrTimer" style="font-weight:600; color:#ee4d2d; font-size:1.1rem; margin-bottom:10px;">00:60:00</div>
-                <div class="qr-link-box">
-                    <span id="qrLinkText" style="flex-grow:1; text-align:left; overflow:hidden; text-overflow:ellipsis;">https://paomobile.com/redeem?id=...</span>
-                    <button class="btn-copy" onclick="copyQRLink()">คัดลอก</button>
+                
+                <!-- Duration Config (Shown first) -->
+                <div id="qrConfigArea">
+                    <p style="font-size: 0.9rem; color:#666; margin-bottom: 20px;">เลือกกําหนดระยะเวลาสําหรับ QR Code นี้ครับ</p>
+                    <div class="form-group" style="text-align: left;">
+                        <label>ระยะเวลาที่ใช้งานได้</label>
+                        <select id="qrSelDuration" style="margin-bottom: 15px;">
+                            <option value="60">1 ชั่วโมง (แนะนํา)</option>
+                            <option value="30">30 นาที</option>
+                            <option value="permanent">ถาวร (จนกว่าคูปองจะหมดอายุ)</option>
+                        </select>
+                    </div>
+                    <button id="btnFinalGen" class="btn-submit" onclick="generateSecureQR()">สร้าง QR Code ทันที ✨</button>
+                </div>
+
+                <!-- QR Result (Hidden initially) -->
+                <div id="qrResultArea" style="display: none;">
+                    <p style="font-size: 0.85rem; color:#888;">สแกนเพื่อรับคูปอง (ใช้ได้เฉพาะลิงก์ด้านล่าง)</p>
+                    <img id="qrImage" class="qr-img" src="" alt="Voucher QR">
+                    <div id="qrTimer" style="font-weight:600; color:#ee4d2d; font-size:1.1rem; margin-bottom:10px;">01:00:00</div>
+                    <div class="qr-link-box">
+                        <span id="qrLinkText" style="flex-grow:1; text-align:left; overflow:hidden; text-overflow:ellipsis;">https://...</span>
+                        <button class="btn-copy" onclick="copyQRLink()">คัดลอก</button>
+                    </div>
                 </div>
             </div>
         </div>

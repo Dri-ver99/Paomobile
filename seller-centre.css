@@ -106,6 +106,35 @@ input, button, select, textarea { font-family: inherit; }
     opacity: 0.7;
 }
 
+/* Home Button Specific Style */
+.menu-item-home {
+    margin: 20px 15px 10px 15px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ee4d2d 0%, #ff7a28 100%);
+    color: #fff !important;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(238, 77, 45, 0.25);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    border: none;
+}
+
+.menu-item-home:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(238, 77, 45, 0.4);
+    background: linear-gradient(135deg, #d73211 0%, #ee4d2d 100%);
+}
+
+.menu-item-home .menu-icon {
+    opacity: 1;
+    margin-right: 14px;
+    font-size: 1.3rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
 /* Top Navigation */
 .top-nav {
     position: fixed;

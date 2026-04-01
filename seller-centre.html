@@ -129,15 +129,23 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <a href="index.html" class="sidebar-logo">
+            <a href="seller-centre.html" class="sidebar-logo">
                 <img src="logo.png" alt="Paomobile">
                 <span>Seller Centre</span>
             </a>
         </div>
         <nav class="sidebar-menu">
+            <!-- Home Section -->
+            <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                    <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                </a>
+            </div>
+
             <div class="menu-section">
                 <p class="menu-title">เมนูหลัก</p>
-                <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-centre.html" class="menu-item active"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
                 <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
             </div>
             <div class="menu-section">

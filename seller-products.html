@@ -83,15 +83,16 @@
             border-bottom: 1px solid #f0f0f0;
         }
         .product-table th { color: #888; font-weight: 500; font-size: 0.85rem; }
-        .product-img-cell { width: 60px; }
+        .product-img-cell { width: 70px; text-align: center !important; }
         .product-img-mini {
             width: 48px;
             height: 48px;
             background: #f5f5f7;
-            border-radius: 6px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto;
             font-size: 1.5rem;
             object-fit: cover;
         }
@@ -110,6 +111,7 @@
         .tag-new { background: #e6f7ff; color: #1890ff; }
         .tag-used { background: #fff7e6; color: #fa8c16; }
         .tag-accessory { background: #f6ffed; color: #52c41a; }
+        .tag-parts { background: #f0f5ff; color: #2f54eb; }
 
         .actions-cell { text-align: right !important; }
         .btn-edit { color: #1890ff; background: none; border: none; cursor: pointer; font-family: inherit; margin-right: 15px; }
@@ -127,6 +129,21 @@
             font-size: 0.9rem;
             color: #856404;
         }
+
+        /* Drag & Drop Visuals */
+        .img-drag-item {
+            cursor: move;
+            transition: transform 0.2s, opacity 0.2s;
+            user-select: none;
+        }
+        .img-drag-item.dragging {
+            opacity: 0.4;
+            transform: scale(0.95);
+        }
+        .img-drag-item.drag-over {
+            border-color: #ee4d2d !important;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -139,22 +156,31 @@
             </a>
         </div>
         <nav class="sidebar-menu">
+            <!-- Home Section -->
+            <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                    <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                </a>
+            </div>
+
             <div class="menu-section">
                 <p class="menu-title">เมนูหลัก</p>
                 <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
                 <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
                 <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
                 <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
-                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
                 <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">สินค้า</p>
-                <a href="seller-products.html" class="menu-item active"><span class="menu-icon">🛠️</span> สินค้าของฉัน</a>
-                <a href="#" class="menu-item" onclick="openAddModal()"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-products.html" class="menu-item active"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="javascript:void(0)" onclick="openAddModal()" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="javascript:void(0)" onclick="openCategoryModal()" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
             </div>
         </nav>
     </aside>
@@ -187,10 +213,16 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 <input type="text" id="productSearch" placeholder="ค้นหาชื่อสินค้า, แบรนด์, หมวดหมู่..." oninput="filterProducts()">
             </div>
-            <button class="btn-add-product" onclick="openAddModal()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                เพิ่มสินค้าใหม่
-            </button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-add-product" style="background: #52c41a;" onclick="openCategoryModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-8m0 0V4m0 8h8m-8 0H4"></path></svg>
+                    จัดการหมวดหมู่
+                </button>
+                <button class="btn-add-product" onclick="openAddModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    เพิ่มสินค้าใหม่
+                </button>
+            </div>
         </div>
 
         <div class="card" style="padding: 0; overflow: hidden;">
@@ -199,6 +231,7 @@
                 <button class="tab-btn" data-cat="new">มือ 1</button>
                 <button class="tab-btn" data-cat="used">มือ 2</button>
                 <button class="tab-btn" data-cat="accessory">Accessory</button>
+                <button class="tab-btn" data-cat="parts">อะไหล่</button>
             </div>
             
             <div style="overflow-x: auto;">
@@ -249,10 +282,27 @@
                     </div>
                     <div>
                         <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">หมวดหมู่</label>
-                        <select id="formCategory" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                        <select id="formCategory" onchange="togglePartsFields()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
                             <option value="new">มือ 1</option>
                             <option value="used">มือ 2</option>
                             <option value="accessory">Accessory</option>
+                            <option value="parts">อะไหล่มือถือ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Spare Parts Specific Fields -->
+                <div id="partsFields" style="display: none; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee;">
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">รุ่นโทรศัพท์ (หมวดหลัก)</label>
+                        <select id="formPartModel" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                            <!-- Dynamic models -->
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">ประเภทอะไหล่ (หมวดย่อย)</label>
+                        <select id="formPartType" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                            <!-- Dynamic types -->
                         </select>
                     </div>
                 </div>
@@ -260,6 +310,11 @@
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">คำอธิบาย</label>
                     <textarea id="formDescription" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; resize: none;"></textarea>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">ข้อมูลเพิ่มเติม/สเปก (ถ้าไม่ใส่จะขึ้น "แตะเพื่อดูรูปภาพเพิ่มเติม")</label>
+                    <input type="text" id="formSpecs" placeholder="เช่น แตะเพื่อดูรูปภาพเพิ่มเติม, หน้าจอ 6.1 นิ้ว ..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
                 </div>
 
                 <!-- Image Upload Zone -->
@@ -296,6 +351,65 @@
                     <button type="submit" id="btnSubmitForm" style="background: #ee4d2d; color: #fff; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 600;">บันทึกสินค้า</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Category Management Modal -->
+    <div id="categoryModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: #fff; width: 600px; max-width: 95%; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh;">
+            <div style="padding: 18px 24px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa; flex-shrink: 0;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #333;">จัดการหมวดหมู่อะไหล่</h3>
+                <button onclick="closeCategoryModal()" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #888;">&times;</button>
+            </div>
+            
+            <div style="padding: 24px; overflow-y: auto; flex: 1;">
+                <!-- Main Models Section -->
+                <div style="margin-bottom: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0; color: #ee4d2d;">📱 รุ่นโทรศัพท์ (หมวดหมู่หลัก)</h4>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="newModelInput" placeholder="เพิ่มรุ่นใหม่..." style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem;">
+                            <button onclick="addConfigItem('models')" style="background: #ee4d2d; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">+ เพิ่ม</button>
+                        </div>
+                    </div>
+                    <div id="modelsList" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <!-- Dynamic items -->
+                        <div style="color: #999; font-size: 0.9rem;">กำลังโหลด...</div>
+                    </div>
+                </div>
+
+                <div style="height: 1px; background: #eee; margin-bottom: 30px;"></div>
+
+                <!-- Sub Categories Section -->
+                <div>
+                    <h4 style="margin: 0 0 15px 0; color: #A68A64;">🔧 ประเภทอะไหล่ (หมวดหมู่ย่อย)</h4>
+                    
+                    <div style="background: #fdfaf5; border: 1px solid #f5dab1; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                        <label style="display: block; font-size: 0.8rem; color: #856404; margin-bottom: 8px; font-weight: 600;">1. พิมพ์ชื่อประเภทอะไหล่:</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                            <input type="text" id="newPartTypeInput" placeholder="เช่น หน้าจอ, แบตเตอรี่..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem;">
+                        </div>
+                        
+                        <label style="display: block; font-size: 0.8rem; color: #856404; margin-bottom: 8px; font-weight: 600;">2. เลือกรุ่นที่ต้องการให้แสดง (เลือกได้มากกว่า 1):</label>
+                        <div id="targetModelsCheckboxes" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; max-height: 120px; overflow-y: auto; padding: 5px; border: 1px solid #eee; border-radius: 6px; background: #fff;">
+                            <!-- Checkboxes will be injected here: iPhone, Samsung... -->
+                            <div style="font-size: 0.8rem; color: #999;">กรุณาเพิ่มรุ่นโทรศัพท์ด้านบนก่อน...</div>
+                        </div>
+
+                        <button onclick="addConfigItem('partTypes')" style="width: 100%; background: #A68A64; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background 0.2s;">+ เพิ่มประเภทอะไหล่พร้อมจับคู่รุ่น</button>
+                    </div>
+
+                    <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 10px; font-weight: 600;">📦 รายการประเภทอะไหล่ที่ตั้งค่าไว้:</label>
+                    <div id="partTypesList" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Dynamic items with association tags -->
+                        <div style="color: #999; font-size: 0.9rem;">กำลังโหลด...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 16px 24px; border-top: 1px solid #eee; text-align: right; background: #fcfcfc; flex-shrink: 0;">
+                <button onclick="closeCategoryModal()" style="background: #ee4d2d; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">เสร็จสิ้น</button>
+            </div>
         </div>
     </div>
 

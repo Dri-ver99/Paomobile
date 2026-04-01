@@ -57,17 +57,25 @@ link.addEventListener('click', closeMenu);
 });
 const animatedElements = document.querySelectorAll('[data-animate]');
 const animObserver = new IntersectionObserver((entries) => {
-entries.forEach(entry => {
-if (entry.isIntersecting) {
-const delay = parseInt(entry.target.dataset.delay) || 0;
-setTimeout(() => {
-entry.target.classList.add('visible');
-}, delay);
-animObserver.unobserve(entry.target);
-}
-});
-}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const delay = parseInt(entry.target.dataset.delay) || 0;
+            setTimeout(() => {
+                entry.target.classList.add('visible');
+            }, delay);
+            animObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.1, rootMargin: '50px' });
 animatedElements.forEach(el => animObserver.observe(el));
+// Force visible for anything in initial viewport
+setTimeout(() => {
+    animatedElements.forEach(el => {
+        if (el.getBoundingClientRect().top < window.innerHeight) {
+            el.classList.add('visible');
+        }
+    });
+}, 800);
 const sections = document.querySelectorAll('section[id]');
 const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
 window.addEventListener('scroll', () => {
@@ -274,6 +282,525 @@ badge.textContent = '⚫ ปิดให้บริการ';
 }
 });
 }
-updateBranchStatus();
-setInterval(updateBranchStatus, 60000);
+    updateBranchStatus();
+    setInterval(updateBranchStatus, 60000);
 });
+
+// v1.9.0 - Global Real-time Chat System with Online Status (Fixed Position)
+(function initFloatingChat() {
+    const isSellerPage = window.location.pathname.includes('seller-');
+    if (isSellerPage) return;
+
+    let chatUnsubscribe = null;
+    let statusUnsubscribe = null;
+    let pendingChatFile = null;
+    let pendingChatType = null;
+
+    // --- Build UI ---
+    const chatContainer = document.createElement('div');
+    // Inject Styles Directly
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes chatFadeIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .chat-window.active { animation: chatFadeIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+        .msg-bubble { box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .msg-row.customer .msg-bubble { background: #ee4d2d; color: #fff; border-radius: 18px 18px 4px 18px; }
+        .msg-row.seller .msg-bubble { background: #fff; color: #333; border: 1px solid #eef2f6; border-radius: 18px 18px 18px 4px; }
+        
+        /* Premium Chat Image Thumbnails */
+        .chat-img-thumb { 
+            max-width: 180px; 
+            max-height: 240px; 
+            border-radius: 12px; 
+            display: block; 
+            cursor: zoom-in; 
+            transition: transform 0.2s;
+            object-fit: cover;
+            margin: 2px 0;
+        }
+        .chat-img-thumb:hover { transform: scale(1.02); }
+        
+        /* Lightbox Modal */
+        .img-overlay { display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.9); backdrop-filter:blur(5px); align-items:center; justify-content:center; }
+        .img-overlay-content { max-width:92%; max-height:88%; border-radius:12px; box-shadow:0 10px 50px rgba(0,0,0,0.8); transform:scale(0.85); transition:transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        .img-overlay.active { display:flex; }
+        .img-overlay.active .img-overlay-content { transform:scale(1); }
+        .img-overlay-close { position:absolute; top:20px; right:25px; color:#fff; font-size:40px; cursor:pointer; }
+        
+        .preview-container { display:none; padding:10px 15px; background:#fff; border-top:1px solid #f1f5f9; align-items:center; gap:12px; }
+        .preview-thumb { width:50px; height:50px; border-radius:8px; object-fit:cover; border:2px solid #ee4d2d; }
+    `;
+    document.head.appendChild(style);
+
+    chatContainer.innerHTML = `
+        <div id="chatWindow" class="chat-window" style="border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+            <div class="chat-header">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:34px; height:34px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                        <img src="logo.png" style="width:24px; height:auto;">
+                    </div>
+                    <div>
+                        <div style="font-weight:700; font-size:0.95rem; margin-bottom:1px;">แชทกับ Paomobile</div>
+                        <div style="font-size:0.7rem; opacity:0.8; display:flex; align-items:center; gap:4px;">
+                            <span style="width:6px; height:6px; background:#10b981; border-radius:50%;"></span> ออนไลน์ตอนนี้
+                        </div>
+                    </div>
+                </div>
+                <span class="chat-close-btn" onclick="toggleChat()" style="font-size:1.5rem; cursor:pointer;">&times;</span>
+            </div>
+            <div id="chatMessages" class="chat-messages" style="background:#f1f5f9; padding:20px 15px;">
+                <div style="text-align:center; padding:60px 40px; color:#94a3b8;">
+                    <div class="loading-spinner" style="font-size:1.5rem; margin-bottom:10px;">⏳</div>
+                    กำลังเรียกข้อมูลการสนทนา...
+                </div>
+            </div>
+            
+            <!-- File Preview Area -->
+            <div id="chatPreview" class="preview-container">
+                <img id="previewImg" class="preview-thumb" src="">
+                <div style="flex:1; min-width:0;">
+                    <div id="previewName" style="font-size:0.8rem; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">filename.jpg</div>
+                    <div style="font-size:0.7rem; color:#94a3b8;">เตรียมส่งรูปภาพ...</div>
+                </div>
+                <div class="preview-remove" onclick="removeChatPreview()">✕</div>
+            </div>
+
+            <div class="chat-input-area" style="background:#fff; border-top:1px solid #e2e8f0; padding:12px 14px 14px;">
+                <div style="display:grid; grid-template-columns: auto 1fr; align-items:center; gap:12px;">
+                    <!-- Tools on Left -->
+                    <div class="chat-tools" style="display:flex; gap:12px; color:#64748b; align-items:center;">
+                        <label for="custImageUpload" style="cursor:pointer; font-size:1.3rem; transition: transform 0.2s;" title="ส่งรูปภาพ">🖼️</label>
+                        <input type="file" id="custImageUpload" accept="image/*" style="display:none;" onchange="handleCustomerFileUpload(this, 'image')">
+                        
+                        <label for="custFileUpload" style="cursor:pointer; font-size:1.3rem; transition: transform 0.2s;" title="ส่งไฟล์">📂</label>
+                        <input type="file" id="custFileUpload" style="display:none;" onchange="handleCustomerFileUpload(this, 'file')">
+                        
+                        <span style="cursor:pointer; font-size:1.3rem;" title="อีโมจิ">😊</span>
+                    </div>
+
+                    <!-- Input Pill with Guaranteed Absolute Button -->
+                    <div style="position:relative; background:#f8fafc; border-radius:28px; border:1px solid #e2e8f0; height:46px; display:flex; align-items:center; overflow:hidden;">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="พิมพ์บอกร้านได้เลยค๊าบ..." onkeypress="if(event.key === 'Enter') sendChatMessage()" 
+                            style="width:100%; height:100%; border:none; background:transparent; padding:0 50px 0 16px; font-size:0.92rem; outline:none; color:#1e293b; box-sizing:border-box;">
+                        <button class="btn-send" onclick="sendChatMessage()" 
+                            style="position:absolute; right:4px; top:50%; transform:translateY(-50%); background:#ee4d2d; color:#fff; border:none; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 10px rgba(238,77,45,0.3); z-index:10;">
+                            <span style="font-size:1rem; transform: translateX(1px);">🏹</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chat-floating-btn" id="chatFloatingBtn" onclick="toggleChat()">
+            <div class="chat-tooltip">สวัสดีครับ สอบถามเราได้ที่นี่ ✨</div>
+            <div class="chat-avatar-wrapper">
+                <img src="logo.png" alt="Paomobile Logo">
+                <div class="online-indicator offline" id="chatStatusIndicator"></div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(chatContainer);
+
+    // --- Helpers ---
+    window.removeChatPreview = () => {
+        pendingChatFile = null;
+        pendingChatType = null;
+        document.getElementById('chatPreview').style.display = 'none';
+        document.getElementById('previewImg').src = '';
+    };
+
+    // --- Toggle Chat ---
+    window.toggleChat = () => {
+        const win = document.getElementById('chatWindow');
+        const isOpen = win.classList.toggle('active');
+        if (isOpen) {
+            setupChatSync();
+        } else if (chatUnsubscribe) {
+            chatUnsubscribe();
+            chatUnsubscribe = null;
+        }
+    };
+
+    // --- Seller Status Sync ---
+    function syncSellerStatus() {
+        const indicator = document.getElementById('chatStatusIndicator');
+        if (!indicator) return;
+
+        // Try to get DB
+        if (!window.db) {
+            if (typeof db !== 'undefined') window.db = db;
+            else if (typeof firebase !== 'undefined') window.db = firebase.firestore();
+        }
+        
+        if (!window.db) {
+            setTimeout(syncSellerStatus, 2000);
+            return;
+        }
+
+        if (statusUnsubscribe) statusUnsubscribe();
+        
+        statusUnsubscribe = window.db.collection('status').doc('seller').onSnapshot(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                const lastSeen = data.lastSeen ? data.lastSeen.toDate() : new Date(0);
+                const now = new Date();
+                const diffSeconds = (now - lastSeen) / 1000;
+                
+                // If last active in 5 minutes, consider online
+                if (diffSeconds < 300 && data.isOnline) {
+                    indicator.classList.remove('offline');
+                } else {
+                    indicator.classList.add('offline');
+                }
+            } else {
+                indicator.classList.add('offline');
+            }
+        }, err => console.warn("[StatusSync] Error:", err));
+    }
+
+    // --- Core Functions ---
+    function getChatUser() {
+        const userData = localStorage.getItem('paomobile_user');
+        return userData ? JSON.parse(userData) : null;
+    }
+
+    async function ensureFirebaseAuth() {
+        if (typeof firebase === 'undefined') return false;
+        if (firebase.auth().currentUser) return true;
+        try {
+            await firebase.auth().signInAnonymously();
+            return true;
+        } catch (err) {
+            console.warn("[Chat] Silent Auth failed:", err);
+            return false;
+        }
+    }
+
+    async function setupChatSync() {
+        const user = getChatUser();
+        const msgsArea = document.getElementById('chatMessages');
+
+        if (!user) {
+            msgsArea.innerHTML = `
+                <div style="text-align:center; padding:40px 20px; color:#666;">
+                    <p style="margin-bottom:20px; font-weight:500; color:#475569;">🔔 เข้าสู่ระบบเพื่อถามเราได้ทันทีค๊าบ</p>
+                    <a href="login.html" class="btn btn-sm btn-primary" style="padding:10px 30px; border-radius:30px; text-decoration:none; font-size:0.9rem; background:#ee4d2d; color:#fff; display:inline-block; font-weight:600; box-shadow:0 4px 12px rgba(238,77,45,0.3);">เริ่มการสนทนา</a>
+                </div>
+            `;
+            return;
+        }
+
+        // Try to get DB
+        if (!window.db) {
+            if (typeof db !== 'undefined') window.db = db;
+            else if (typeof firebase !== 'undefined') window.db = firebase.firestore();
+        }
+        
+        if (!window.db) {
+            console.warn("[ChatSync] DB not initialized, retrying...");
+            setTimeout(setupChatSync, 1000);
+            return;
+        }
+
+        await ensureFirebaseAuth();
+        const normalizedEmail = user.email.trim().toLowerCase();
+
+        // Sync Metadata
+        window.db.collection('chats').doc(normalizedEmail).set({
+            userName: user.name || user.email,
+            userAvatar: user.avatar || "",
+            userEmail: normalizedEmail
+        }, { merge: true }).catch(err => {});
+
+        if (chatUnsubscribe) chatUnsubscribe();
+        
+        chatUnsubscribe = window.db.collection('chats').doc(normalizedEmail).collection('messages')
+            .orderBy('timestamp', 'asc')
+            .onSnapshot(snapshot => {
+                if (snapshot.empty) {
+                    msgsArea.innerHTML = `
+                        <div style="text-align:center; padding:60px 20px; color:#94a3b8;">
+                            <div style="font-size:3rem; margin-bottom:15px; filter:grayscale(0.5);">👋</div>
+                            <div style="font-weight:600; color:#475569; margin-bottom:5px;">สวัสดีครับ! ยินดีที่ได้คุยด้วยนะครับ</div>
+                            <div style="font-size:0.85rem; opacity:0.8;">พิมพ์บอกอาการหรือสิ่งที่ต้องการให้เราช่วยได้เลยค๊าบ</div>
+                        </div>
+                    `;
+                    return;
+                }
+                let html = '';
+                snapshot.forEach(doc => {
+                    const msg = doc.data();
+                    const isCustomer = msg.sender === 'customer' || msg.sender === 'user';
+                    
+                    if (msg.type === 'card') {
+                        html += `
+                            <div class="msg-row seller">
+                                <div class="chat-card" style="background:#fff; border-radius:12px; overflow:hidden; border:1px solid #eef2f6;">
+                                    <img src="${msg.cardData.image}" class="chat-card-img" style="border-radius:12px 12px 0 0;">
+                                    <div class="chat-card-info" style="padding:10px;">
+                                        <div class="chat-card-title" style="font-weight:600; color:#1e293b;">${msg.cardData.title}</div>
+                                        <div class="chat-card-price" style="color:#ee4d2d; font-weight:700;">${msg.cardData.price}</div>
+                                    </div>
+                                    <a href="${msg.cardData.link}" class="chat-card-btn" target="_blank" style="display:block; text-align:center; padding:8px; background:#f8fafc; color:#64748b; text-decoration:none; font-size:0.85rem;">ดูรายละเอียด</a>
+                                </div>
+                            </div>
+                        `;
+                    } else if (msg.type === 'image') {
+                        html += `
+                            <div class="msg-row ${isCustomer ? 'customer' : 'seller'}">
+                                <div class="msg-bubble" style="padding:6px; overflow:hidden; background:#fff; border:1px solid #e2e8f0; border-radius:12px;">
+                                    <img src="${msg.fileUrl}" class="chat-img-thumb" title="คลิกเพื่อขยาย" onclick="openImageLarge('${msg.fileUrl}')">
+                                </div>
+                            </div>
+                        `;
+                    } else if (msg.type === 'file') {
+                        html += `
+                            <div class="msg-row ${isCustomer ? 'customer' : 'seller'}">
+                                <div class="msg-bubble" style="padding:12px 16px;">
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <div style="font-size:1.6rem;">📁</div>
+                                        <div style="min-width:0;">
+                                            <div style="font-size:0.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px; color:inherit;">${msg.fileName || 'ไฟล์แนบ'}</div>
+                                            <a href="${msg.fileUrl}" target="_blank" style="font-size:0.75rem; color:#ee4d2d; font-weight:700; text-decoration:none;">📄 ดาวน์โหลดไฟล์</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="msg-row ${isCustomer ? 'customer' : 'seller'}">
+                                <div class="msg-bubble" style="padding:10px 16px; line-height:1.5;">
+                                    ${msg.text}
+                                    <span class="msg-time" style="font-size:0.65rem; opacity:0.6; display:block; text-align:right; margin-top:4px;">${msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...'}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                msgsArea.innerHTML = html;
+                msgsArea.scrollTop = msgsArea.scrollHeight;
+            }, err => {
+                console.error("[Chat] Sync Error:", err);
+            });
+    }
+
+    window.sendChatMessage = async () => {
+        const input = document.getElementById('chatInput');
+        if (!input) return;
+        const text = input.value.trim();
+        
+        // If nothing to send, return
+        if (!text && !pendingChatFile) return;
+
+        const user = getChatUser();
+        if (!user) {
+            alert("🚨 กรุณาเข้าสู่ระบบก่อนนะครับ");
+            window.location.href = "login.html";
+            return;
+        }
+
+        // Discovery DB again
+        if (!window.db) {
+            if (typeof db !== 'undefined') window.db = db;
+            else if (typeof firebase !== 'undefined') window.db = firebase.firestore();
+        }
+        if (!window.db) {
+            alert("🚨 ระบบฐานข้อมูลยังไม่พร้อม กรุณารอสักครู่ค๊าบ");
+            return;
+        }
+
+        const originalText = text;
+        const fileToSend = pendingChatFile;
+        const typeToSend = pendingChatType;
+
+        // Clear input and current preview immediately
+        input.value = '';
+        input.disabled = true;
+        input.style.opacity = '0.7';
+        removeChatPreview();
+
+        try {
+            await ensureFirebaseAuth();
+            const normalizedEmail = user.email.trim().toLowerCase();
+            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+            
+            // 1. Handle File/Image Send
+            if (fileToSend) {
+                const msgsArea = document.getElementById('chatMessages');
+                const loadingId = 'loading-' + Date.now();
+                if (msgsArea) {
+                    const lDiv = document.createElement('div');
+                    lDiv.id = loadingId;
+                    lDiv.className = 'upload-status-bubble';
+                    lDiv.innerHTML = `<div class="msg-row customer"><div class="msg-bubble" style="opacity:0.6; padding:8px 15px;">⏳ กำลังส่งข้อมูล...</div></div>`;
+                    msgsArea.appendChild(lDiv);
+                    msgsArea.scrollTop = msgsArea.scrollHeight;
+                }
+
+                try {
+                    let finalUrl = "";
+                    let finalName = fileToSend.name;
+
+                    if (typeToSend === 'image') {
+                        // --- DIRECT INJECTION MODE ---
+                        // Compress and get Base64 to bypass Storage/CORS issues
+                        finalUrl = await compressImage(fileToSend);
+                    } else {
+                        // For non-image files, we still try Storage but with timeout
+                        if (typeof firebase.storage !== 'function') throw new Error("Storage not available");
+                        const storageRef = firebase.storage().ref().child(`chat_uploads/${normalizedEmail}/${Date.now()}_${fileToSend.name}`);
+                        const uploadTask = await storageRef.put(fileToSend);
+                        finalUrl = await uploadTask.ref.getDownloadURL();
+                    }
+
+                    document.querySelectorAll('[id^="loading-"], .upload-status-bubble').forEach(el => el.remove());
+
+                    await window.db.collection('chats').doc(normalizedEmail).collection('messages').add({
+                        type: typeToSend,
+                        fileUrl: finalUrl,
+                        fileName: finalName,
+                        sender: 'customer',
+                        timestamp: timestamp
+                    });
+
+                    await window.db.collection('chats').doc(normalizedEmail).set({
+                        lastMessage: typeToSend === 'image' ? "📷 ส่งรูปภาพ" : "📁 ส่งไฟล์: " + finalName,
+                        lastTimestamp: timestamp,
+                        unreadCount: firebase.firestore.FieldValue.increment(1)
+                    }, { merge: true });
+
+                } catch (upErr) {
+                    console.error("[Chat] Image Process Failed:", upErr);
+                    document.querySelectorAll('[id^="loading-"], .upload-status-bubble').forEach(el => el.remove());
+                    alert("⚠️ ส่งรูปไม่สำเร็จ: บราวเซอร์ของคุณมีข้อจำกัดสิทธิ์ความปลอดภัย กรุณาลองใช้ขนาดรูปอื่นครับ");
+                }
+            }
+
+            // 2. Handle Text if exists
+            if (originalText) {
+                await window.db.collection('chats').doc(normalizedEmail).collection('messages').add({
+                    text: originalText,
+                    sender: 'customer',
+                    timestamp: timestamp,
+                    type: 'text'
+                });
+
+                await window.db.collection('chats').doc(normalizedEmail).set({
+                    userEmail: normalizedEmail,
+                    userName: user.name || user.email,
+                    userAvatar: user.avatar || "",
+                    lastMessage: originalText,
+                    lastTimestamp: timestamp,
+                    unreadCount: firebase.firestore.FieldValue.increment(1)
+                }, { merge: true });
+            }
+
+        } catch (err) {
+            console.error("[Chat] Send Error:", err);
+            alert("❌ ส่งไม่สำเร็จ: " + (err.message || "เกิดข้อผิดพลาดบางอย่าง"));
+            input.value = originalText; // Restore text
+        } finally {
+            input.disabled = false;
+            input.style.opacity = '1';
+            input.focus();
+        }
+    };
+
+    window.handleCustomerFileUpload = async (input, type) => {
+        const file = input.files[0];
+        if (!file) return;
+
+        pendingChatFile = file;
+        pendingChatType = type;
+
+        // Show Preview UI
+        const previewArea = document.getElementById('chatPreview');
+        const previewImg = document.getElementById('previewImg');
+        const previewName = document.getElementById('previewName');
+
+        if (previewArea && previewImg && previewName) {
+            previewName.innerText = file.name;
+            previewArea.style.display = 'flex';
+            
+            if (type === 'image') {
+                const reader = new FileReader();
+                reader.onload = e => { previewImg.src = e.target.result; };
+                reader.readAsDataURL(file);
+                previewImg.style.display = 'block';
+            } else {
+                previewImg.style.display = 'none';
+            }
+        }
+
+        // Reset input for next selection
+        input.value = '';
+    };
+
+    // --- Heartbeat for Online Status ---
+    async function startCustomerHeartbeat() {
+        const user = getChatUser();
+        if (!user || !user.email) return;
+
+        const sendHeartbeat = () => {
+            if (!window.db) {
+                if (typeof db !== 'undefined') window.db = db;
+                else if (typeof firebase !== 'undefined') window.db = firebase.firestore();
+            }
+            if (!window.db) return;
+            
+            const normalizedEmail = user.email.trim().toLowerCase();
+            window.db.collection('chats').doc(normalizedEmail).set({
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true }).catch(e => {}); // Silent fail
+        };
+
+        // Initial and periodic
+        sendHeartbeat();
+        setInterval(sendHeartbeat, 30000);
+    }
+
+    // Lightbox Modal Helper
+    const lbContainer = document.createElement('div');
+    lbContainer.id = 'chatOverlay';
+    lbContainer.className = 'img-overlay';
+    lbContainer.onclick = (e) => { if(e.target === lbContainer) closeImgOverlay(); };
+    lbContainer.innerHTML = `<span class="img-overlay-close" onclick="closeImgOverlay()">&times;</span><img id="imgOverlaySrc" class="img-overlay-content">`;
+    document.body.appendChild(lbContainer);
+
+    window.openImageLarge = (url) => {
+        document.getElementById('imgOverlaySrc').src = url;
+        document.getElementById('chatOverlay').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    };
+    window.closeImgOverlay = () => {
+        document.getElementById('chatOverlay').classList.remove('active');
+        document.body.style.overflow = '';
+    };
+
+    const compressImage = (file, maxWidth = 600) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height;
+                    if(w > maxWidth) { h = Math.round((h * maxWidth) / w); w = maxWidth; }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img,0,0,w,h);
+                    resolve(canvas.toDataURL('image/jpeg', 0.65));
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    setTimeout(() => {
+        syncSellerStatus();
+        startCustomerHeartbeat();
+    }, 2000);
+})();

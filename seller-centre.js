@@ -97,6 +97,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }, err => {
             console.error("Voucher sync error:", err);
         });
+
+        // Chat Unread Sync
+        db.collection('chats').onSnapshot(snapshot => {
+            const totalUnread = snapshot.docs.reduce((sum, doc) => sum + (doc.data().unreadCount || 0), 0);
+            const badge = document.getElementById('chat-unread-total');
+            if (badge) {
+                if (totalUnread > 0) {
+                    badge.textContent = totalUnread > 99 ? '99+' : totalUnread;
+                    badge.style.display = 'block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }, err => {
+            console.warn("Chat unread sync error:", err);
+        });
     }
 
     function renderQuickVouchers(vouchers) {

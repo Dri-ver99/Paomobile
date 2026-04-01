@@ -17,6 +17,10 @@ const SEARCH_PRODUCTS = [
   { name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", img: "USB-I 12W-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc001", "lightning", "iphone", "อุปกรณ์เสริม", "accessory"] },
   { name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc007", "type c", "อุปกรณ์เสริม", "accessory"] },
   { name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc007", "โปรโมชั่น", "ราคาพิเศษ", "อุปกรณ์เสริม", "accessory"] },
+  // ── Mobile Parts (New Category) ──
+  { name: "จอ iPhone 13 (งานแท้)", price: 3500, brand: "Apple", category: "parts", img: "", emoji: "🔧", tags: ["อะไหล่", "จอ", "iphone", "ไอโฟน", "13", "screen", "display", "ซ่อมจอ"] },
+  { name: "แบตเตอรี่ iPhone 11 (เพิ่มความจุ มอก.)", price: 1200, brand: "Apple", category: "parts", img: "", emoji: "🔋", tags: ["อะไหล่", "แบต", "แบตเตอรี่", "iphone", "ไอโฟน", "11", "battery"] },
+  { name: "ชุดน็อต / อะไหล่ภายในอื่นๆ", price: 150, brand: "Paomobile", category: "parts", img: "", emoji: "🔩", tags: ["อะไหล่", "น็อต", "แพร", "กล้อง", "ฝาหลัง", "ตูดชาร์จ", "ซ่อม"] },
 ];
 
 // ─── Service/page entries ──────────────────────────────────────────────────────
@@ -41,10 +45,11 @@ const SEARCH_SERVICES = [
   { title: "สาขา / แผนที่ร้าน", url: "index.html#branches", icon: "📍", tags: ["สาขา", "ติดต่อ", "ร้านอยู่ไหน", "แผนที่", "ตึกคอม", "นาเกลือ", "สยาม", "แหลมฉบัง", "มหาชล"] },
   { title: "ติดต่อสอบถาม (LINE)", url: "https://line.me/R/ti/p/@pao789", icon: "💬", tags: ["line", "ไลน์", "ติดต่อ", "สอบถาม", "แชท"] },
   { title: "รีวิวลูกค้า", url: "index.html#reviews", icon: "⭐", tags: ["รีวิว", "pantip", "ดีไหม", "ผลงาน", "รีวิวซ่อม"] },
+  { title: "🔧 อะไหล่มือถือ", url: "parts.html", icon: "🛠️", tags: ["อะไหล่", "จอ", "แบต", "เครื่องมือ", "หน้าจอ", "ช่างซ่อม", "parts"] },
 ];
 
 // ─── Category → page mapping ───────────────────────────────────────────────────
-const PRODUCT_PAGE = { new: "new-products.html", used: "used-products.html", accessory: "accessory.html" };
+const PRODUCT_PAGE = { new: "new-products.html", used: "used-products.html", accessory: "accessory.html", parts: "parts.html" };
 
 document.addEventListener('DOMContentLoaded', () => {
   const searchBtn     = document.getElementById('searchBtn');
@@ -101,9 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <p>พิมพ์ชื่อสินค้า, แบรนด์ หรือบริการที่ต้องการค้นหา</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:20px;">
             <span class="search-suggestion" onclick="setSuggestion('iPhone')">iPhone</span>
+            <span class="search-suggestion" onclick="setSuggestion('อะไหล่')">🔧 อะไหล่</span>
             <span class="search-suggestion" onclick="setSuggestion('สายชาร์จ')">สายชาร์จ</span>
             <span class="search-suggestion" onclick="setSuggestion('เปลี่ยนแบต')">เปลี่ยนแบต</span>
-            <span class="search-suggestion" onclick="setSuggestion('Anidary')">Anidary</span>
             <span class="search-suggestion" onclick="setSuggestion('มือ 2')">มือ 2</span>
           </div>
         </div>`;
