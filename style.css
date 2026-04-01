@@ -167,7 +167,7 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 .floating-badge strong { display: block; font-size: 0.95rem; color: var(--text-dark); }
 .floating-badge small { font-size: 0.75rem; color: var(--text-muted); }
     .hero-content { 
-        margin-top: 30px !important; 
+        margin-top: 0 !important; 
         text-align: center !important;
         display: flex !important;
         flex-direction: column !important;
@@ -175,14 +175,14 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         width: 100% !important;
     }
     .badge {
-        margin: 0 auto 20px !important;
+        margin: 0 auto 15px !important;
     }
     .hero-buttons {
         justify-content: center !important;
         width: 100% !important;
     }
-    .fb-1 { left: 5% !important; top: 10% !important; }
-    .fb-2 { right: 5% !important; bottom: 20% !important; }
+    .fb-1 { left: 2% !important; top: 10% !important; }
+    .fb-2 { right: 2% !important; bottom: 35% !important; }
 }
 @media (max-width: 480px) {
     .hero {
