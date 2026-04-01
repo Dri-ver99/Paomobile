@@ -39,10 +39,9 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         overflow: visible !important;
     }
     .why-image img, .why-slider-img {
-        aspect-ratio: 4 / 3 !important;
-        object-fit: cover !important;
         width: 100% !important;
         height: auto !important;
+        max-height: none !important;
         display: block !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -61,16 +60,14 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         align-items: center !important;
         margin: 0 !important;
         padding: 0 !important;
-        opacity: 0.5;
-        transform: scale(0.9);
         transition: all 0.4s ease;
     }
     .whySwiper .swiper-slide-active {
         opacity: 1;
-        transform: scale(1);
     }
     .whySwiper {
         height: auto !important;
+        overflow: hidden !important;
     }
     .why-content {
         text-align: center;
@@ -128,13 +125,13 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
     position: relative;
     width: 100%;
     max-width: 440px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--radius-xl);
-    padding: 12px;
-    box-shadow: 0 40px 100px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.1);
+    background: transparent !important; /* Removed box for mobile */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    border-radius: 0;
+    padding: 0 !important;
+    box-shadow: none !important;
     z-index: 2;
     transform: none; /* Removed tilt for mobile centering */
     margin: 0 auto;
@@ -143,8 +140,9 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 .hero-card:hover { transform: rotateY(0) rotateX(0); }
 .hero-card img {
     width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
+    aspect-ratio: auto;
+    height: auto !important;
+    max-height: none !important;
     border-radius: calc(var(--radius-xl) - 8px);
     display: block;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -1244,22 +1242,21 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 
 @media (max-width: 768px) {
     .showcaseSwiper {
-        width: 100vw !important;
-        margin-left: -24px !important;
-        margin-right: -24px !important;
-        overflow: visible !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        overflow: hidden !important;
     }
     .showcaseSwiper .swiper-slide {
-        opacity: 0.5;
-        transform: scale(0.9);
         transition: all 0.4s ease;
     }
     .showcaseSwiper .swiper-slide-active {
         opacity: 1;
-        transform: scale(1);
     }
     .showcase-img {
-        aspect-ratio: 4 / 3 !important;
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
     }
     .v-banner-content {
         justify-content: center !important;
