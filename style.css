@@ -39,7 +39,7 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         overflow: visible !important;
     }
     .why-image img, .why-slider-img {
-        aspect-ratio: 1 / 1 !important;
+        aspect-ratio: 4 / 3 !important;
         object-fit: cover !important;
         width: 100% !important;
         height: auto !important;
@@ -47,6 +47,7 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         margin: 0 !important;
         padding: 0 !important;
         border-radius: var(--radius-lg);
+        transition: transform 0.4s ease;
     }
     .whySwiper, .whySwiper .swiper-wrapper {
         display: flex !important;
@@ -60,6 +61,13 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         align-items: center !important;
         margin: 0 !important;
         padding: 0 !important;
+        opacity: 0.5;
+        transform: scale(0.9);
+        transition: all 0.4s ease;
+    }
+    .whySwiper .swiper-slide-active {
+        opacity: 1;
+        transform: scale(1);
     }
     .whySwiper {
         height: auto !important;
@@ -128,12 +136,15 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
     padding: 12px;
     box-shadow: 0 40px 100px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(255,255,255,0.1);
     z-index: 2;
-    transform: rotateY(-8deg) rotateX(4deg);
+    transform: none; /* Removed tilt for mobile centering */
+    margin: 0 auto;
     transition: transform 0.5s var(--ease);
 }
 .hero-card:hover { transform: rotateY(0) rotateX(0); }
 .hero-card img {
     width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
     border-radius: calc(var(--radius-xl) - 8px);
     display: block;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -1237,6 +1248,18 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         margin-left: -24px !important;
         margin-right: -24px !important;
         overflow: visible !important;
+    }
+    .showcaseSwiper .swiper-slide {
+        opacity: 0.5;
+        transform: scale(0.9);
+        transition: all 0.4s ease;
+    }
+    .showcaseSwiper .swiper-slide-active {
+        opacity: 1;
+        transform: scale(1);
+    }
+    .showcase-img {
+        aspect-ratio: 4 / 3 !important;
     }
     .v-banner-content {
         justify-content: center !important;
