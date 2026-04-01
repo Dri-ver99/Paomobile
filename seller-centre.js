@@ -14,24 +14,46 @@ document.addEventListener('DOMContentLoaded', () => {
     if (elProd) elProd.textContent = localStorage.getItem('pao_total_products_count') || 17;
 
     // --- v1.2.1 Auth & Firestore Initialization ---
+    // --- v1.2.1 Auth & Firestore Initialization ---
     if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged(user => {
             const statusIndicator = document.getElementById('firestore-status');
+            const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
+            const SELLER_EMAIL = "sattawat2560@gmail.com";
             
-            if (user) {
-                console.log("[v1.2.11] Dashboard User detected:", user.email);
-                if (statusIndicator) {
-                    statusIndicator.style.background = "#1890ff"; // Blue
-                    statusIndicator.innerHTML = `&bull; Firestore: กำลังซิงค์ข้อมูล...`;
-                }
-                if (typeof db !== 'undefined') {
-                    startFirestoreSync();
+            if (user || localAdminActive) {
+                const email = user ? (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "").toLowerCase() : SELLER_EMAIL.toLowerCase();
+                const isAdmin = email === SELLER_EMAIL.toLowerCase();
+                
+                console.log("[v1.2.11] Dashboard Admin detected:", email, "isAdmin:", isAdmin);
+                
+                if (isAdmin) {
+                    if (statusIndicator) {
+                        statusIndicator.style.background = "#1890ff"; // Blue
+                        statusIndicator.innerHTML = `&bull; Admin: ${email}${user ? "" : " (จำสิทธิ์ 🔒)"} - กำลังซิงค์...`;
+                    }
+                    if (typeof db !== 'undefined') {
+                        startFirestoreSync();
+                    }
+                    // Persist for other pages
+                    localStorage.setItem('paomobile_admin_active', 'true');
+                } else {
+                    if (statusIndicator) {
+                        statusIndicator.style.background = "#ff4d4f";
+                        statusIndicator.innerHTML = `&bull; ไม่มีสิทธิ์เข้าถึง (${email}) <button onclick="localStorage.removeItem('paomobile_admin_active'); firebase.auth().signOut().then(() => window.location.reload());" style="margin-left:8px; border:none; background:#888; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;">ออก</button>`;
+                    }
                 }
             } else {
                 console.warn("[v1.2.1] No user logged in.");
+                const isFileProtocol = window.location.protocol === 'file:';
+                
                 if (statusIndicator) {
-                    statusIndicator.style.background = "#faad14";
-                    statusIndicator.innerHTML = `&bull; Firestore: กรุณาล็อกอิน <button onclick="firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())" style="margin-left:8px; border:none; background:#ee4d2d; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;">ล็อกอิน</button>`;
+                    statusIndicator.style.background = isFileProtocol ? "#52c41a" : "#faad14";
+                    if (isFileProtocol) {
+                        statusIndicator.innerHTML = `&bull; โหมด Local: <button onclick="localStorage.setItem('paomobile_admin_active', 'true'); window.location.reload();" style="margin-left:8px; border:none; background:#52c41a; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer; font-weight:700;">🛡️ บังคับสิทธิ์ Admin</button>`;
+                    } else {
+                        statusIndicator.innerHTML = `&bull; Firestore: กรุณาล็อกอิน <button onclick="firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())" style="margin-left:8px; border:none; background:#ee4d2d; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;">ล็อกอิน</button>`;
+                    }
                 }
                 updateDashboard();
             }

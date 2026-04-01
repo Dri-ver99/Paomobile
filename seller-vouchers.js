@@ -27,31 +27,57 @@ document.addEventListener('DOMContentLoaded', () => {
             const logoutBtn = document.getElementById('adminLogoutBtn');
             const saveBtn = document.getElementById('btnSaveVoucher');
 
-            if (user) {
-                console.log("[Auth] User detected:", user.email);
-                if (authEmail) authEmail.textContent = user.email;
-                if (authIndicator) authIndicator.style.background = (user.email.toLowerCase() === SELLER_EMAIL.toLowerCase()) ? '#52c41a' : '#faad14';
+            // Check for persistent Local Storage Admin flag as a bypass for file://
+            const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
+
+            if (user || localAdminActive) {
+                // Determine email (from Firebase OR fallback to Admin if Local Mode)
+                const email = user ? (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "").toLowerCase() : SELLER_EMAIL.toLowerCase();
+                const isAdmin = email === SELLER_EMAIL.toLowerCase();
+
+                console.log("[Auth] User detected:", email, "isAdmin:", isAdmin, "isLocalMode:", !user && localAdminActive);
+                if (authEmail) authEmail.textContent = email + (user ? "" : " (โหมดจำลอง 🔒)");
+                if (authIndicator) authIndicator.style.background = isAdmin ? '#52c41a' : '#faad14';
                 
-                if (user.email.toLowerCase() === SELLER_EMAIL.toLowerCase()) {
+                if (isAdmin) {
                     if (loginBtn) loginBtn.style.display = 'none';
                     if (logoutBtn) logoutBtn.style.display = 'block';
-                    if (saveBtn) saveBtn.disabled = false;
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.style.opacity = '1';
+                        saveBtn.textContent = '💾 บันทึกและเปิดใช้งาน';
+                    }
+                    // Persist for next session
+                    localStorage.setItem('paomobile_admin_active', 'true');
                     startVoucherSync();
                 } else {
-                    // Auth Check for Seller Access (Case-insensitive)
-                    console.warn("Unauthorized Access Attempt:", user.email);
-                    alert("⚠️ คำเตือน: คุณไม่ได้ล็อกอินด้วยสิทธิ์ผู้ขาย (sattawat2560@gmail.com)\n\nEmail ปัจจุบัน: " + user.email + "\nคุณอาจจะไม่สามารถบันทึกข้อมูลได้ครับ");
+                    console.warn("Unauthorized Access Attempt:", email);
+                    alert("⚠️ คำเตือน: คุณไม่ได้ล็อกอินด้วยสิทธิ์ผู้ขาย (sattawat2560@gmail.com)\n\nEmail ปัจจุบัน: " + email + "\nคุณจะไม่สามารถบันทึกหรือดูข้อมูลได้ครับ");
                     if (loginBtn) loginBtn.style.display = 'block';
                     if (logoutBtn) logoutBtn.style.display = 'block';
+                    if (statusEl) statusEl.innerHTML = '<span style="color:#faad14">&bull; Firestore: สิทธิ์ไม่เพียงพอ</span>';
                 }
             } else {
                 console.warn("[Auth] No user logged in.");
-                if (authEmail) authEmail.textContent = "กรุณาล็อกอิน Admin (เพื่อจัดการร้าน)";
+                const isFileProtocol = window.location.protocol === 'file:';
+                
+                if (authEmail) authEmail.textContent = isFileProtocol ? "⚠️ พบบัญชีแอดมินแต่ล็อกอินไม่ได้ (โหมด Local)" : "กรุณาล็อกอิน Admin (เพื่อจัดการร้าน)";
                 if (authIndicator) authIndicator.style.background = '#ff4d4f';
                 if (loginBtn) {
                     loginBtn.style.display = 'block';
-                    loginBtn.innerHTML = '🔑 ล็อกอิน Admin (ใช้บัญชีร้าน)';
-                    loginBtn.style.background = '#ee4d2d';
+                    if (isFileProtocol) {
+                        loginBtn.innerHTML = '🛡️ บังคับล็อกอินแอดมิน (ใช้โหมด Local)';
+                        loginBtn.onclick = () => {
+                            if (confirm("คุณคิอ 'sattawat2560@gmail.com' ใช่หรือไม่?\n\n(เนื่องจากเปิดไฟล์ตรงๆ ระบบ Google ล็อกอินจะใช้ไม่ได้ จึงต้องใช้โหมดบังคับครับ)")) {
+                                localStorage.setItem('paomobile_admin_active', 'true');
+                                window.location.reload();
+                            }
+                        };
+                    } else {
+                        loginBtn.innerHTML = '🔑 ล็อกอิน Admin (ใช้บัญชีร้าน)';
+                        loginBtn.onclick = sellerLogin;
+                    }
+                    loginBtn.style.background = isFileProtocol ? '#52c41a' : '#ee4d2d';
                     loginBtn.style.color = '#fff';
                     loginBtn.style.padding = '8px 15px';
                     loginBtn.style.borderRadius = '8px';
@@ -85,9 +111,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.sellerLogout = function() {
-        firebase.auth().signOut().then(() => {
-            window.location.reload();
-        });
+        if (confirm("ต้องการออกจากระบบใช่หรือไม่?")) {
+            localStorage.removeItem('paomobile_admin_active');
+            firebase.auth().signOut().then(() => {
+                window.location.reload();
+            });
+        }
     };
 
     function startVoucherSync() {
@@ -140,7 +169,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Snapshot error:", err);
             if (statusEl) statusEl.innerHTML = `<span style="color:red">&bull; Firestore Error: ${err.code}</span>`;
             if (err.code === 'permission-denied') {
-                alert("สิทธิ์ไม่ถูกต้อง: ระบบไม่สามารถโหลดข้อมูลคูปองได้ กรุณาใช้เมล sattawat2560@gmail.com เท่านั้นครับ");
+                const currentUser = firebase.auth().currentUser;
+                const email = currentUser ? (currentUser.email || "Unknown") : "Not Logged In";
+                alert("สิทธิ์ไม่ถูกต้อง: ระบบไม่สามารถโหลดข้อมูลได้\n\nอีเมลปัจจุบัน: " + email + "\nกรุณาล็อกอินใหม่ด้วยเมล sattawat2560@gmail.com เท่านั้นครับ");
             }
         });
     }
@@ -227,9 +258,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Error adding voucher:", error);
             if (error.code === 'permission-denied') {
+                const isLocal = localStorage.getItem('paomobile_admin_active') === 'true' && !firebase.auth().currentUser;
                 const currentUser = firebase.auth().currentUser;
-                const emailMsg = currentUser ? currentUser.email : "ไม่ได้ล็อกอิน";
-                alert("❌ บันทึกไม่สำเร็จ: สิทธิ์ไม่ถูกต้อง\n\nกรุณาตรวจสอบว่าคุณล็อกอินด้วยเมล sattawat2560@gmail.com หรือยังค๊าบ\n(Email ปัจจุบัน: " + emailMsg + ")");
+                const emailMsg = currentUser ? currentUser.email : (isLocal ? SELLER_EMAIL : "ไม่ได้ล็อกอิน");
+                
+                let errorMsg = "❌ บันทึกไม่สำเร็จ: สิทธิ์ไม่ถูกต้อง\n\nกรุณาตรวจสอบว่าคุณล็อกอินด้วยเมล sattawat2560@gmail.com หรือยังค๊าบ\n(Email ปัจจุบัน: " + emailMsg + ")";
+                
+                if (isLocal) {
+                    errorMsg += "\n\n⚠️ หมายเหตุ: ขณะนี้คุณกำลังใช้โหมด Local Bypass ข้อมูลจะไม่สามารถเซฟลงถนข้อมูลจริงได้ครับ กรุณารันผ่าน Server ตามที่แนะนำเพื่อบันทึกครับ";
+                }
+                alert(errorMsg);
             } else {
                 alert("เกิดข้อผิดพลาด: " + error.message);
             }

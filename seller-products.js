@@ -24,48 +24,84 @@ function initAuth() {
     firebase.auth().onAuthStateChanged(user => {
         const indicator = document.getElementById('statusIndicator');
         const statusTxt = document.getElementById('statusText');
+        const SELLER_EMAIL = "sattawat2560@gmail.com";
+        const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
         
-        if (user) {
-            // Attempt to get email from primary or provider data
-            const email = (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "").toLowerCase();
-            const isAdmin = email === "sattawat2560@gmail.com";
+        if (user || localAdminActive) {
+            // Attempt to get email from primary or provider data OR local bypass
+            const email = user ? (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "").toLowerCase() : SELLER_EMAIL.toLowerCase();
+            const isAdmin = email === SELLER_EMAIL.toLowerCase();
             
-            console.log("[Auth] User logged in:", email, "isAdmin:", isAdmin, "UID:", user.uid);
+            console.log("[Auth] User logged in:", email, "isAdmin:", isAdmin, "UID:", user ? user.uid : 'LocalMode');
 
             if (isAdmin) {
                 indicator.style.background = "#52c41a";
-                statusTxt.textContent = "แอดมิน: " + (user.displayName || email);
+                statusTxt.textContent = "แอดมิน: " + (user ? (user.displayName || email) : email + " (จำสิทธิ์ 🔒)");
                 const submitBtn = document.getElementById('btnSubmitForm');
                 if (submitBtn) {
                    submitBtn.disabled = false;
                    submitBtn.style.opacity = "1";
+                   submitBtn.textContent = "💾 บันทึกสินค้า";
                 }
+                const catBtn = document.getElementById('btnManageCat');
+                if (catBtn) catBtn.disabled = false;
+                
+                // Persist for other pages
+                localStorage.setItem('paomobile_admin_active', 'true');
             } else {
                 indicator.style.background = "#ff4d4f";
-                const displayInfo = email || user.uid.substring(0,8) + "...";
-                statusTxt.innerHTML = "ไม่มีสิทธิ์ (" + displayInfo + ') <button onclick="logout()" style="border:none; background:#888; color:#fff; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:0.7rem;">Logout</button>';
+                const displayInfo = email || (user ? user.uid.substring(0,8) : "Guest") + "...";
+                statusTxt.innerHTML = "ไม่มีสิทธิ์ (" + displayInfo + ') <button onclick="logout()" style="border:none; background:#888; color:#fff; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:0.7rem;">ออกจากระบบ</button>';
+                const submitBtn = document.getElementById('btnSubmitForm');
+                if (submitBtn) {
+                   submitBtn.disabled = true;
+                   submitBtn.style.opacity = "0.5";
+                   submitBtn.textContent = "🔒 สงวนสิทธิ์สำหรับแอดมิน";
+                }
+                const catBtn = document.getElementById('btnManageCat');
+                if (catBtn) catBtn.disabled = true;
             }
 
             startSync();
             if (typeof startConfigSync === 'function') startConfigSync(); 
         } else {
-            indicator.style.background = "#faad14";
-            statusTxt.innerHTML = 'กรุณาล็อกอิน <button onclick="login()" style="border:none; background:#ee4d2d; color:#fff; padding:2px 8px; border-radius:4px; cursor:pointer;">Login</button>';
+            const isFileProtocol = window.location.protocol === 'file:';
+            indicator.style.background = isFileProtocol ? "#52c41a" : "#faad14";
+            
+            if (isFileProtocol) {
+                statusTxt.innerHTML = '<button onclick="forceAdminLocal()" style="border:none; background:#52c41a; color:#fff; padding:4px 12px; border-radius:4px; cursor:pointer; font-weight:700;">🛡️ บังคับสิทธิ์ Admin (Local)</button>';
+            } else {
+                statusTxt.innerHTML = 'กรุณาล็อกอิน <button onclick="login()" style="border:none; background:#ee4d2d; color:#fff; padding:2px 8px; border-radius:4px; cursor:pointer;">Login</button>';
+            }
         }
     });
 }
+
+window.forceAdminLocal = function() {
+    if (confirm("คุณคิอ 'sattawat2560@gmail.com' ใช่หรือไม่?\n\n(เข้าโหมดจำลองสิทธิ์แอดมินเพื่อจัดการหน้าร้าน)")) {
+        localStorage.setItem('paomobile_admin_active', 'true');
+        window.location.reload();
+    }
+};
 
 function login() {
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.addScope('email');
     provider.setCustomParameters({ prompt: 'select_account' }); // Always ask which account to use
-    firebase.auth().signInWithPopup(provider);
+    firebase.auth().signInWithPopup(provider).catch(err => {
+        if (window.location.protocol === 'file:') {
+            alert("⚠️ ล็อกอินไม่ได้เนื่องจากเปิดไฟล์ตรงๆ กรุณาใช้ปุ่ม 'บังคับสิทธิ์ Admin (Local)' แทนครับ");
+        }
+    });
 }
 
 function logout() {
-    firebase.auth().signOut().then(() => {
-        window.location.reload();
-    });
+    if (confirm("ต้องการออกจากระบบใช่หรือไม่?")) {
+        localStorage.removeItem('paomobile_admin_active');
+        firebase.auth().signOut().then(() => {
+            window.location.reload();
+        });
+    }
 }
 
 const MOCK_PRODUCTS_BASELINE = [
@@ -455,6 +491,11 @@ function startConfigSync() {
             sparePartsConfig = initial;
         }
         refreshCategoryUI();
+    }, err => {
+        console.error("Config Sync Error:", err);
+        if (err.code === 'permission-denied') {
+            console.warn("Permission denied for spare_parts config. Make sure you are logged in as admin.");
+        }
     });
 }
 
