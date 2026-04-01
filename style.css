@@ -1268,6 +1268,13 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         width: 92% !important;
         max-width: 440px !important;
         margin: 0 auto !important;
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        padding: 10px !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        border-radius: var(--radius-xl) !important;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.08) !important;
         overflow: hidden !important;
     }
     .showcaseSwiper .swiper-slide {
