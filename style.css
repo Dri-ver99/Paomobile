@@ -34,7 +34,7 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        padding: 10px !important;
+        padding: 0 !important; /* Zero padding to fill frame */
         background: rgba(255, 255, 255, 0.7) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
@@ -43,12 +43,14 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         box-shadow: 0 15px 35px rgba(0,0,0,0.08) !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
+        height: auto !important;
     }
     .why-image img, .why-slider-img {
         width: 100% !important;
-        aspect-ratio: 1 / 1 !important;
-        object-fit: cover !important;
-        border-radius: calc(var(--radius-xl) - 8px) !important;
+        height: 100% !important;
+        aspect-ratio: 1 / 1 !important; /* Standard square */
+        object-fit: cover !important; /* Fill frame completely */
+        border-radius: var(--radius-xl) !important;
         display: block !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -139,18 +141,20 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
     -webkit-backdrop-filter: blur(20px) !important;
     border: 1px solid rgba(255, 255, 255, 0.4) !important;
     border-radius: var(--radius-xl) !important;
-    padding: 10px !important;
+    padding: 0 !important; /* Zero padding to fill frame */
     box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
     z-index: 2;
     transform: none !important;
     transition: transform 0.5s var(--ease);
+    height: auto !important;
 }
 .hero-card:hover { transform: rotateY(0) rotateX(0); }
 .hero-card img {
     width: 100%;
     aspect-ratio: 1 / 1 !important;
-    object-fit: cover !important;
-    border-radius: calc(var(--radius-xl) - 8px);
+    object-fit: cover !important; /* Fill frame */
+    height: 100% !important;
+    border-radius: var(--radius-xl);
     display: block;
 }
 .floating-badge {
@@ -1268,23 +1272,17 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         background: rgba(255, 255, 255, 0.7) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
-        padding: 10px !important;
+        padding: 0 !important; /* Zero padding to fill frame */
         border: 1px solid rgba(255, 255, 255, 0.4) !important;
         border-radius: var(--radius-xl) !important;
         box-shadow: 0 15px 35px rgba(0,0,0,0.08) !important;
         overflow: hidden !important;
     }
-    .showcaseSwiper .swiper-slide {
-        transition: all 0.4s ease;
-    }
-    .showcaseSwiper .swiper-slide-active {
-        opacity: 1;
-    }
     .showcase-img {
         width: 100% !important;
         aspect-ratio: 1 / 1 !important;
         object-fit: cover !important;
-        border-radius: var(--radius-lg) !important;
+        border-radius: var(--radius-xl) !important;
     }
     .v-banner-content {
         justify-content: center !important;
