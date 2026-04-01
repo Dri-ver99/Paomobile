@@ -46,9 +46,9 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
     }
     .why-image img, .why-slider-img {
         width: 100% !important;
-        height: 100% !important; /* Fixed height for 1:1 */
-        aspect-ratio: 1 / 1 !important;
-        object-fit: cover !important; /* Uniform Square View */
+        height: auto !important;
+        aspect-ratio: unset !important;
+        object-fit: contain !important;
         border-radius: calc(var(--radius-xl) - 8px) !important;
         display: block !important;
         margin: 0 !important;
@@ -149,9 +149,9 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 .hero-card:hover { transform: rotateY(0) rotateX(0); }
 .hero-card img {
     width: 100%;
-    aspect-ratio: 1 / 1 !important; /* Squared uniformity */
-    object-fit: cover !important;
-    height: 100% !important;
+    aspect-ratio: unset !important;
+    object-fit: contain !important;
+    height: auto !important;
     max-height: none !important;
     border-radius: calc(var(--radius-xl) - 8px);
     display: block;
@@ -1285,10 +1285,11 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
     }
     .showcase-img {
         width: 100% !important;
-        height: 100% !important;
-        aspect-ratio: 1 / 1 !important; /* Uniformity */
-        object-fit: cover !important;
+        height: auto !important;
+        aspect-ratio: unset !important;
+        object-fit: contain !important;
         border-radius: var(--radius-lg) !important;
+        background: transparent !important;
     }
     .v-banner-content {
         justify-content: center !important;
