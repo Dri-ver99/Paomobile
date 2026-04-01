@@ -47,9 +47,9 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
     }
     .why-image img, .why-slider-img {
         width: 100% !important;
-        height: 100% !important;
-        aspect-ratio: 1 / 1 !important; /* Standard square */
-        object-fit: cover !important; /* Fill frame completely */
+        height: auto !important;
+        aspect-ratio: auto !important;
+        object-fit: contain !important;
         border-radius: var(--radius-xl) !important;
         display: block !important;
         margin: 0 !important;
@@ -151,9 +151,9 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 .hero-card:hover { transform: rotateY(0) rotateX(0); }
 .hero-card img {
     width: 100%;
-    aspect-ratio: 1 / 1 !important;
-    object-fit: cover !important; /* Fill frame */
-    height: 100% !important;
+    aspect-ratio: auto !important;
+    object-fit: contain !important;
+    height: auto !important;
     border-radius: var(--radius-xl);
     display: block;
 }
@@ -1280,8 +1280,9 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
     }
     .showcase-img {
         width: 100% !important;
-        aspect-ratio: 1 / 1 !important;
-        object-fit: cover !important;
+        aspect-ratio: auto !important;
+        object-fit: contain !important;
+        height: auto !important;
         border-radius: var(--radius-xl) !important;
     }
     .v-banner-content {
