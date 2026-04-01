@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Member Profile - Paomobile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="products.css" />
     <style>
         :root {
-            --member-primary: #f59e0b; /* Golden theme */
+            --member-primary: #f59e0b;
             --member-accent: #ee4d2d;
             --member-bg: #f8fafc;
             --member-card-bg: #ffffff;
@@ -25,37 +29,64 @@
             color: var(--member-text);
         }
 
-        .member-container {
-            max-width: 1400px; /* Full screen feel */
-            margin: 0 auto;
-            padding: 40px;
-            padding-top: 100px; /* Space for navbar */
+        /* --- Critical UI Layering Fix (v1.7.5) --- */
+
+        /* Lockdown ALL potential overlays when hidden */
+        .site-search-overlay,
+        .toast-overlay,
+        .mobile-menu,
+        .cart-sidebar,
+        .cart-overlay {
+            pointer-events: none !important;
+            opacity: 0;
+            visibility: hidden;
+            display: none;
         }
 
-        /* --- Header Section --- */
+        /* Enable only when active class is present */
+        .site-search-overlay.open,
+        .toast-overlay.active,
+        .mobile-menu.open,
+        .cart-sidebar.open,
+        .cart-overlay.open {
+            pointer-events: auto !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: flex !important;
+        }
+
+        .member-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            padding-top: 100px;
+            position: relative;
+            z-index: 1;
+        }
+
         .member-header {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            border-radius: 24px;
-            padding: 60px 50px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            border-radius: 28px;
+            padding: 45px 40px;
             color: white;
             display: flex;
             align-items: center;
-            gap: 32px;
-            margin-bottom: 32px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            gap: 30px;
+            margin-bottom: 35px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255,255,255,0.05);
             position: relative;
             overflow: hidden;
         }
 
-        .member-header::after {
+        .member-header::before {
             content: '';
             position: absolute;
-            top: -50px;
-            right: -50px;
-            width: 200px;
-            height: 200px;
-            background: rgba(245, 158, 11, 0.1);
-            border-radius: 50%;
+            top: -50%;
+            left: -20%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
+            pointer-events: none;
         }
 
         .member-avatar {
@@ -67,14 +98,18 @@
             align-items: center;
             justify-content: center;
             font-size: 3rem;
-            font-weight: 700;
             color: var(--member-primary);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            text-transform: uppercase;
-            position: relative;
             cursor: pointer;
             overflow: hidden;
-            border: 4px solid rgba(255,255,255,0.2);
+            border: 5px solid rgba(255, 255, 255, 0.15);
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            z-index: 2;
+        }
+
+        .member-avatar:hover {
+            transform: scale(1.05);
         }
 
         .member-avatar img {
@@ -83,394 +118,575 @@
             object-fit: cover;
         }
 
-        .member-avatar:hover::after {
-            content: '';
-            position: absolute;
-            background: rgba(0,0,0,0.5) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' fill='%23ffffff' viewBox='0 0 256 256'%3E%3Cpath d='M208,56H181.32L170.5,39.77A16,16,0,0,0,157.18,32H98.82A16,16,0,0,0,85.5,39.77L74.68,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L98.54,50.62a8,8,0,0,1,6.66-3.56h59.6a8,8,0,0,1,6.66,3.56l11.88,17.82A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z'%3E%3C/path%3E%3C/svg%3E") no-repeat center;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.2s ease;
-            pointer-events: none;
+        .member-info-header {
+            z-index: 2;
         }
 
         .member-info-header h1 {
             margin: 0;
             font-size: 2.2rem;
-            font-weight: 700;
-            color: #fff;
+            font-weight: 800;
+            color: #ffffff !important;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            letter-spacing: -0.5px;
         }
 
         .member-info-header p {
-            margin: 8px 0 0;
-            opacity: 0.7;
+            margin: 6px 0 0;
+            color: rgba(255, 255, 255, 0.85) !important;
             font-size: 1.1rem;
-            color: #cbd5e1;
+            font-weight: 500;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.2);
         }
 
-        /* --- Content Layout --- */
         .member-grid {
             display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 32px;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
         }
 
-        @media (max-width: 1024px) {
-            .member-container { padding: 20px; padding-top: 100px; }
-            .member-grid { grid-template-columns: 1fr; }
-            .member-header { flex-direction: column; text-align: center; padding: 40px 20px; }
+        @media (max-width: 900px) {
+            .member-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        /* --- Cards --- */
         .m-card {
             background: white;
-            border-radius: 20px;
-            padding: 32px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-            margin-bottom: 32px;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            margin-bottom: 20px;
             border: 1px solid #f1f5f9;
         }
 
         .m-card-title {
-            font-size: 1.25rem;
             font-weight: 700;
-            margin-bottom: 24px;
-            color: var(--member-text);
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: #1e293b;
         }
 
-        /* --- Profile Form --- */
         .m-form-group {
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .m-form-group label {
             display: block;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             font-weight: 600;
             color: #64748b;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .m-form-group input {
             width: 100%;
-            padding: 12px 16px;
+            padding: 12px;
             border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 1rem;
+            border-radius: 10px;
             outline: none;
-            transition: all 0.2s;
             background: #f8fafc;
+            font-size: 1rem;
         }
 
         .m-form-group input:focus {
             border-color: var(--member-primary);
             background: #fff;
-            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
         }
 
         .btn-save {
-            background: linear-gradient(135deg, #1e293b, #334155);
+            background: #1e293b;
             color: white;
             border: none;
-            padding: 14px 30px;
+            padding: 14px;
             border-radius: 12px;
             font-weight: 700;
             cursor: pointer;
             width: 100%;
-            margin-top: 10px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s;
         }
 
         .btn-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            background: #334155;
+            transform: translateY(-1px);
         }
 
-        /* --- Redeem Coupon Section --- */
+        /* --- Coupon Section --- */
         .redeem-section {
             display: flex;
-            gap: 12px;
-            margin-bottom: 32px;
+            gap: 10px;
+            margin-bottom: 24px;
         }
 
         .redeem-input {
             flex: 1;
-            padding: 14px 20px;
+            padding: 12px;
             border: 2px dashed #e2e8f0;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
+            border-radius: 10px;
+            font-weight: 700;
             outline: none;
             text-transform: uppercase;
-            transition: all 0.2s;
-        }
-
-        .redeem-input:focus {
-            border-color: var(--member-primary);
-            border-style: solid;
         }
 
         .btn-redeem {
             background: var(--member-primary);
             color: white;
             border: none;
-            padding: 0 24px;
-            border-radius: 12px;
+            padding: 0 20px;
+            border-radius: 10px;
             font-weight: 700;
             cursor: pointer;
-            transition: scale 0.2s;
         }
 
-        .btn-redeem:active { scale: 0.96; }
-
-        /* --- Voucher List --- */
         .v-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            flex: 1;
         }
 
-        @media (max-width: 480px) {
-            .v-list { grid-template-columns: 1fr; }
+        .v-list.is-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .v-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .m-card.voucher-card {
+            display: flex;
+            flex-direction: column;
+            min-height: 300px;
         }
 
         .v-card {
             background: #fff;
-            border: 1.5px solid #f1f5f9;
+            border: 1px solid #f1f5f9;
             border-radius: 16px;
             display: flex;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
         }
 
-        .v-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.06); border-color: var(--member-primary); }
+        .v-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
 
         .v-left {
-            width: 120px;
-            padding: 20px;
+            width: 80px;
+            padding: 16px 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             color: white;
             text-align: center;
+            flex-shrink: 0;
             position: relative;
         }
 
-        /* Dashed divider line with dots */
-        .v-left::after {
-            content: '';
-            position: absolute;
-            top: 10px;
-            bottom: 10px;
-            right: -1px;
-            border-right: 2px dashed rgba(0,0,0,0.1);
+        .v-left.discount {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
         }
 
-        .v-dot-top, .v-dot-bottom {
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            background: var(--member-bg);
-            border-radius: 50%;
-            right: -8px;
-            z-index: 10;
+        .v-left.ship {
+            background: linear-gradient(135deg, #0d9488, #0f766e);
         }
-        .v-dot-top { top: -8px; }
-        .v-dot-bottom { bottom: -8px; }
-
-        .v-left.ship { background: linear-gradient(135deg, #0d9488, #2dd4bf); }
-        .v-left.discount { background: linear-gradient(135deg, #f59e0b, #ee4d2d); }
-
-        .v-icon { font-size: 2rem; margin-bottom: 4px; }
-        .v-type { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; }
 
         .v-right {
             flex: 1;
-            padding: 20px 24px;
+            padding: 12px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
+            border-left: 2px dashed #f1f5f9;
+            position: relative;
         }
 
-        .v-info h4 { margin: 0 0 4px; font-size: 1.2rem; font-weight: 700; color: #1e293b; }
-        .v-info p { margin: 0; font-size: 0.9rem; color: #64748b; }
-        .v-tag { display: inline-block; background: #fff7ed; color: #ea580c; padding: 2px 8px; font-size: 0.7rem; border-radius: 6px; font-weight: 700; margin: 8px 0; border: 1px solid #ffedd5; }
+        /* Ticket Notches */
+        .v-right::before, .v-right::after {
+            content: '';
+            position: absolute;
+            left: -9px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border: 1px solid #f1f5f9;
+            border-radius: 50%;
+            z-index: 5;
+        }
+        .v-right::before { top: -9px; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.02); }
+        .v-right::after { bottom: -9px; box-shadow: inset 0 4px 6px rgba(0,0,0,0.02); }
+
+        .v-info h4 {
+            margin: 0 0 2px 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e293b;
+            letter-spacing: -0.3px;
+        }
+
+        .v-info p {
+            margin: 0 0 6px 0;
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .v-expiry {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
 
         .btn-use {
-            color: #ee4d2d;
-            font-weight: 700;
-            font-size: 0.95rem;
-            background: #fff5f2;
-            border: 1.5px solid #fff5f2;
-            padding: 8px 16px;
+            background: #fff1f2;
+            color: #e11d48;
+            border: 1px solid #fecdd3;
+            padding: 6px 14px;
             border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
-        .btn-use:hover { background: #ee4d2d; color: white; }
+        .btn-use:hover {
+            background: #e11d48;
+            color: white;
+            border-color: #e11d48;
+            transform: scale(1.05);
+        }
 
-        .v-empty {
+        .v-badge-expiring {
+            display: inline-flex;
+            align-items: center;
+            background: #fff1f2;
+            color: #e11d48;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            margin-top: 6px;
+            border: 1px solid #fecdd3;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.05);
+        }
+
+        .empty-vouchers {
             text-align: center;
-            padding: 60px 40px;
+            padding: 30px 20px;
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .empty-vouchers-icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            opacity: 0.3;
+            display: block;
+        }
+
+        .empty-vouchers h5 {
+            color: #475569;
+            font-size: 1rem;
+            margin: 0 0 5px 0;
+            font-weight: 600;
+        }
+
+        .empty-vouchers p {
             color: #94a3b8;
-            grid-column: 1 / -1;
-            background: #f1f5f9;
-            border-radius: 20px;
-            border: 2px dashed #e2e8f0;
-        }
-
-        .m-sidebar-footer {
-            margin-top: 24px;
-            text-align: center;
             font-size: 0.85rem;
-            color: #94a3b8;
+            margin: 0;
         }
 
-        /* --- Custom Modal Alert --- */
+        /* Toast */
         .toast-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(8px);
-            z-index: 2000;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
             display: none;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            animation: fadeIn 0.3s ease;
         }
 
         .toast-content {
             background: white;
-            padding: 32px 24px;
-            border-radius: 24px;
-            width: 100%;
-            max-width: 360px;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 350px;
             text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            transform: scale(0.9);
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .toast-icon {
-            width: 64px;
-            height: 64px;
-            background: #fff8e1;
-            color: #f59e0b;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            margin: 0 auto 20px;
-        }
-
-        .toast-icon.success { background: #ecfdf5; color: #10b981; }
-        .toast-icon.error { background: #fef2f2; color: #ef4444; }
-
-        .toast-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 8px;
-        }
-
-        .toast-msg {
-            font-size: 1rem;
-            color: #64748b;
-            margin-bottom: 24px;
-            line-height: 1.5;
         }
 
         .btn-toast {
             background: #1e293b;
             color: white;
             border: none;
-            padding: 12px 32px;
-            border-radius: 12px;
-            font-weight: 700;
-            cursor: pointer;
             width: 100%;
-            transition: opacity 0.2s;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            margin-top: 20px;
+            cursor: pointer;
         }
 
+        .toast-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
+        .toast-icon.success { color: #22c55e; }
+        .toast-icon.error { color: #ef4444; }
+        .toast-icon.info { color: #3b82f6; }
+
+        .toast-overlay.active {
+            display: flex;
+        }
+
+        @keyframes pulse-save {
+            0% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+            }
+        }
+
+        .pulse-active {
+            animation: pulse-save 2s infinite;
+            background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+        }
     </style>
 </head>
+
 <body>
     <nav class="navbar" id="navbar">
-        <div class="container">
-            <a href="25-years.html" class="logo"><img src="logo.png" alt="Paomobile" class="logo-img" /> Pao<span class="accent">mobile</span></a>
-            <ul class="nav-links" id="navLinks"><li><a href="index.html">หน้าหลัก</a></li><li class="has-mega-menu"><a href="index.html#services">บริการ</a><div class="mega-menu"><div class="mega-menu-inner"><div class="mega-column"><span class="mega-title">งานซ่อมมือถือ</span><a href="select-screen-repair.html" class="mega-link">เปลี่ยนจอ / ซ่อมจอแตก</a><a href="select-battery.html" class="mega-link">เปลี่ยนแบตเตอรี่</a><a href="select-board-repair.html" class="mega-link">ซ่อมบอร์ด / เมนบอร์ด</a><a href="select-speaker-repair.html" class="mega-link">ซ่อมลำโพง / ไมค์</a></div><div class="mega-column"><span class="mega-title">บริการเสริม</span><a href="select-glass-film.html" class="mega-link">ติดฟิล์มกระจก</a><a href="select-software.html" class="mega-link">ล้างเครื่อง / ลงโปรแกรม</a><a href="select-unlock.html" class="mega-link">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html" class="mega-link">เคส / อุปกรณ์เสริม</a></div></div></div></li><li><a href="index.html#why-us">ทำไมต้องเรา</a></li><li class="has-mega-menu"><a href="index.html#reviews">รีวิว</a><div class="mega-menu"><div class="mega-menu-inner" style="min-width: 200px;"><div class="mega-column"><a href="index.html#reviews" class="mega-link">รีวิวลูกค้า</a><a href="index.html#showcase" class="mega-link">รีวิวงานซ่อม</a></div></div></div></li><li class="has-mega-menu"><a href="index.html#branches">สาขา</a><div class="mega-menu"><div class="mega-menu-inner"><div class="mega-column"><a href="index.html?branch=0#branches" class="mega-link nav-branch-link" data-branch="0">สาขาตึกคอม</a><a href="index.html?branch=1#branches" class="mega-link nav-branch-link" data-branch="1">สาขานาเกลือ</a><a href="index.html?branch=2#branches" class="mega-link nav-branch-link" data-branch="2">สาขาซอยสยาม</a></div><div class="mega-column"><a href="index.html?branch=3#branches" class="mega-link nav-branch-link" data-branch="3">สาขาตลาดมหาชล</a><a href="index.html?branch=4#branches" class="mega-link nav-branch-link" data-branch="4">สาขาแหลมฉบัง</a><a href="index.html?branch=5#branches" class="mega-link nav-branch-link" data-branch="5">สาขาพรประภานิมิตร</a></div></div></div></li><li class="has-mega-menu"><a href="index.html#contact">ติดต่อ</a><div class="mega-menu"><div class="mega-menu-inner" style="min-width: 200px;"><div class="mega-column"><a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank" class="mega-link">Facebook</a><a href="https://line.me/R/ti/p/@pao789" target="_blank" class="mega-link">Line</a><a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr" target="_blank" class="mega-link">Instagram</a><a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP" target="_blank" class="mega-link">Tiktok</a></div></div></div></li><li class="has-mega-menu"><a href="#">🛒 สั่งของ</a><div class="mega-menu"><div class="mega-menu-inner" style="min-width: 220px;"><div class="mega-column"><a href="new-products.html" class="mega-link">📱 สินค้ามือ 1</a><a href="used-products.html" class="mega-link">🔁 สินค้ามือ 2</a><a href="accessory.html" class="mega-link">&#x1F3A7; Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank" class="mega-link">🛒 Shopee</a></div></div></div></li></ul>
-            <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary nav-btn" id="navCta">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+        <div class="container"><a href="25-years.html" class="logo"><img src="logo.png" alt="Paomobile"
+                    class="logo-img" />
+                Pao<span class="accent">mobile</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li class="has-mega-menu"><a href="index.html#services">บริการ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner">
+                            <div class="mega-column"><span class="mega-title">งานซ่อมมือถือ</span><a
+                                    href="select-screen-repair.html" class="mega-link">เปลี่ยนจอ / ซ่อมจอแตก</a><a
+                                    href="select-battery.html" class="mega-link">เปลี่ยนแบตเตอรี่</a><a
+                                    href="select-board-repair.html" class="mega-link">ซ่อมบอร์ด / เมนบอร์ด</a><a
+                                    href="select-speaker-repair.html" class="mega-link">ซ่อมลำโพง / ไมค์</a></div>
+                            <div class="mega-column"><span class="mega-title">บริการเสริม</span><a
+                                    href="select-glass-film.html" class="mega-link">ติดฟิล์มกระจก</a><a
+                                    href="select-software.html" class="mega-link">ล้างเครื่อง / ลงโปรแกรม</a><a
+                                    href="select-unlock.html" class="mega-link">ปลดล็อครหัสหน้าจอ / gmail</a><a
+                                    href="accessory.html" class="mega-link">เคส / อุปกรณ์เสริม</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="index.html#why-us">ทำไมต้องเรา</a></li>
+                <li class="has-mega-menu"><a href="index.html#reviews">รีวิว</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 200px;">
+                            <div class="mega-column"><a href="index.html#reviews" class="mega-link">รีวิวลูกค้า</a><a
+                                    href="index.html#showcase" class="mega-link">รีวิวงานซ่อม</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="index.html#branches">สาขา</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner">
+                            <div class="mega-column"><a href="index.html?branch=0#branches"
+                                    class="mega-link nav-branch-link" data-branch="0">สาขาตึกคอม</a><a
+                                    href="index.html?branch=1#branches" class="mega-link nav-branch-link"
+                                    data-branch="1">สาขานาเกลือ</a><a href="index.html?branch=2#branches"
+                                    class="mega-link nav-branch-link" data-branch="2">สาขาซอยสยาม</a></div>
+                            <div class="mega-column"><a href="index.html?branch=3#branches"
+                                    class="mega-link nav-branch-link" data-branch="3">สาขาตลาดมหาชล</a><a
+                                    href="index.html?branch=4#branches" class="mega-link nav-branch-link"
+                                    data-branch="4">สาขาแหลมฉบัง</a><a href="index.html?branch=5#branches"
+                                    class="mega-link nav-branch-link" data-branch="5">สาขาพรประภานิมิตร</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="index.html#contact">ติดต่อ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 200px;">
+                            <div class="mega-column"><a href="https://www.facebook.com/profile.php?id=100063764974738"
+                                    target="_blank" class="mega-link">Facebook</a><a href="https://line.me/R/ti/p/@pao789"
+                                    target="_blank" class="mega-link">Line</a><a
+                                    href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                                    target="_blank" class="mega-link">Instagram</a><a
+                                    href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP" target="_blank"
+                                    class="mega-link">Tiktok</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="#">🛒 สั่งของ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 220px;">
+                            <div class="mega-column"><a href="new-products.html" class="mega-link">📱 สินค้ามือ 1</a><a
+                                    href="used-products.html" class="mega-link">🔁 สินค้ามือ 2</a><a href="parts.html"
+                                    class="mega-link">🔧 อะไหล่มือถือ</a><a href="accessory.html"
+                                    class="mega-link">&#x1F3A7; Accessory</a><a
+                                    href="https://s.shopee.co.th/qejQcQeWI" target="_blank"
+                                    class="mega-link">🛒 Shopee</a></div>
+                        </div>
+                    </div>
+                </li>
+            </ul><a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary nav-btn" id="navCta"><svg
+                    width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"
+                    style="vertical-align: middle; margin-right: 4px;">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
                 สอบถามเพิ่มเติม
             </a>
-            <div class="nav-icon-group" style="display:flex; align-items:center; gap: 30px;">
-                <button class="search-icon-btn" id="searchBtn" aria-label="ค้นหา"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+            <div class="nav-icon-group" style="display:flex; align-items:center; gap: 30px;"><button
+                    class="search-icon-btn" id="searchBtn" aria-label="ค้นหา"><svg width="20" height="20"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg></button>
                 <div class="account-menu-wrapper">
-                    <a href="javascript:void(0)" class="account-icon-btn" aria-label="บัญชีผู้ใช้"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></a>
+                    <a href="javascript:void(0)" class="account-icon-btn" aria-label="บัญชีผู้ใช้"><svg width="22"
+                            height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg></a>
                     <div class="account-dropdown">
                         <a href="login.html" class="dropdown-item bold">เข้าสู่ระบบ/สมัครสมาชิก</a>
                         <div class="dropdown-divider"></div>
-                        <a href="promotions.html" class="dropdown-item" style="padding-bottom: 8px;">รับสิทธิประโยชน์สุดพิเศษ <span class="arrow">›</span></a>
-                        <a href="purchases.html" class="dropdown-item" style="color: var(--text) !important; font-size: 0.9em; padding-top: 6px;">การซื้อของฉัน</a>
+                        <a href="promotions.html" class="dropdown-item" style="padding-bottom: 8px;">🎁 รับสิทธิประโยชน์สุดพิเศษ <span class="arrow">›</span></a>
+                        <a href="purchases.html" class="dropdown-item" style="color: var(--text) !important; font-size: 0.9em; padding-top: 6px;">📦 การซื้อของฉัน</a>
                     </div>
                 </div>
-                <button class="cart-icon-btn" id="cartBtn" aria-label="ตะกร้าสินค้า"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg><span class="cart-badge" style="display:none">0</span></button>
-            </div>
-            <button class="menu-toggle" id="menuToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+                <button class="cart-icon-btn" id="cartBtn" aria-label="ตะกร้าสินค้า"><svg width="22" height="22"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <path d="M16 10a4 4 0 01-8 0" />
+                    </svg><span class="cart-badge" style="display:none">0</span></button>
+            </div><button class="menu-toggle" id="menuToggle" aria-label="Menu"><span></span><span></span><span></span></button>
         </div>
     </nav>
-    <aside class="mobile-menu" id="mobileMenu"><div class="mobile-menu-panels" id="mobileMenuPanels"><div class="mobile-panel" id="mainPanel"><div class="mobile-menu-inner"><a href="index.html">หน้าหลัก</a><div class="menu-item-wrapper"><div class="menu-item-parent">บริการ</div><div class="mobile-sub-menu"><a href="select-screen-repair.html">เปลี่ยนจอ / ซ่อมจอแตก</a><a href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a href="select-board-repair.html">ซ่อมบอร์ด / เมนบอร์ด</a><a href="select-speaker-repair.html">ซ่อมลำโพง / ไมค์</a><div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">บริการเสริม</span><a href="select-glass-film.html">ติดฟิล์มกระจก</a><a href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส / อุปกรณ์เสริม</a></div></div><a href="index.html#why-us">ทำไมต้องเรา</a><div class="menu-item-wrapper"><div class="menu-item-parent">รีวิว</div><div class="mobile-sub-menu"><a href="index.html#reviews">รีวิวลูกค้า</a><a href="index.html#showcase">รีวิวงานซ่อม</a></div></div><div class="menu-item-wrapper"><div class="menu-item-parent">สาขา</div><div class="mobile-sub-menu"><a href="index.html?branch=0#branches">สาขาตึกคอม</a><a href="index.html?branch=1#branches">สาขานาเกลือ</a><a href="index.html?branch=2#branches">สาขาซอยสยาม</a><a href="index.html?branch=4#branches">สาขาตลาดมหาชล</a><a href="index.html?branch=5#branches">สาขาแหลมฉบัง</a><a href="index.html?branch=6#branches">สาขาพรประภานิมิตร</a></div></div><div class="menu-item-wrapper"><div class="menu-item-parent">ติดต่อ</div><div class="mobile-sub-menu"><a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank">Facebook</a><a href="https://line.me/R/ti/p/@pao789" target="_blank">Line</a><a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr" target="_blank">Instagram</a><a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP" target="_blank">Tiktok</a></div></div><div class="menu-item-wrapper"><div class="menu-item-parent">🛒 สั่งของ</div><div class="mobile-sub-menu"><a href="new-products.html">📱 สินค้ามือ 1</a><a href="used-products.html">🔁 สินค้ามือ 2</a><a href="accessory.html">🎧 Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a></div></div><a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary mobile-cta"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px; flex-shrink: 0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>สอบถามเพิ่มเติม</span></a></div></div><div class="mobile-panel" id="subPanel"><div class="mobile-panel-header"><button class="mobile-back-btn" id="mobileBackBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg><span>กลับ</span></button><span class="mobile-panel-title" id="subMenuTitle"></span></div><div class="mobile-menu-inner" id="subMenuContent"></div></div></div></aside>
+
+    <div class="mobile-menu-overlay" id="mobileOverlay"></div>
+    <aside class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-panels" id="mobileMenuPanels">
+            <div class="mobile-panel" id="mainPanel">
+                <div class="mobile-menu-inner"><a href="index.html">หน้าหลัก</a>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">บริการ</div>
+                        <div class="mobile-sub-menu"><a href="select-screen-repair.html">เปลี่ยนจอ / ซ่อมจอแตก</a><a
+                                href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a href="select-board-repair.html">ซ่อมบอร์ด /
+                                เมนบอร์ด</a><a href="select-speaker-repair.html">ซ่อมลำโพง / ไมค์</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">บริการเสริม</span><a
+                                href="select-glass-film.html">ติดฟิล์มกระจก</a><a href="select-software.html">ล้างเครื่อง /
+                                ลงโปรแกรม</a><a href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a
+                                href="accessory.html">เคส / อุปกรณ์เสริม</a>
+                        </div>
+                    </div><a href="index.html#why-us">ทำไมต้องเรา</a>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">รีวิว</div>
+                        <div class="mobile-sub-menu"><a href="index.html#reviews">รีวิวลูกค้า</a><a
+                                href="index.html#showcase">รีวิวงานซ่อม</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">สาขา</div>
+                        <div class="mobile-sub-menu"><a href="index.html?branch=0#branches">สาขาตึกคอม</a><a
+                                href="index.html?branch=1#branches">สาขานาเกลือ</a><a
+                                href="index.html?branch=2#branches">สาขาซอยสยาม</a><a
+                                href="index.html?branch=4#branches">สาขาตลาดมหาชล</a><a
+                                href="index.html?branch=5#branches">สาขาแหลมฉบัง</a><a
+                                href="index.html?branch=6#branches">สาขาพรประภานิมิตร</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">ติดต่อ</div>
+                        <div class="mobile-sub-menu"><a href="https://www.facebook.com/profile.php?id=100063764974738"
+                                target="_blank">Facebook</a><a href="https://line.me/R/ti/p/@pao789"
+                                target="_blank">Line</a><a
+                                href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                                target="_blank">Instagram</a><a
+                                href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP"
+                                target="_blank">Tiktok</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">🛒 สั่งของ</div>
+                        <div class="mobile-sub-menu"><a href="new-products.html">📱 สินค้ามือ 1</a><a
+                                href="used-products.html">🔁 สินค้ามือ 2</a><a href="parts.html">🔧 อะไหล่มือถือ</a><a
+                                href="accessory.html">🎧 Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI"
+                                target="_blank">🛒 Shopee</a></div>
+                    </div><a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary mobile-cta"><svg
+                            viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            style="margin-right: 10px; flex-shrink: 0;">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg><span>สอบถามเพิ่มเติม</span></a>
+                </div>
+            </div>
+            <div class="mobile-panel" id="subPanel">
+                <div class="mobile-panel-header"><button class="mobile-back-btn" id="mobileBackBtn"><svg
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg><span>กลับ</span></button><span class="mobile-panel-title" id="subMenuTitle"></span></div>
+                <div class="mobile-menu-inner" id="subMenuContent"></div>
+            </div>
+        </div>
+    </aside>
 
     <div class="cart-overlay" id="cartOverlay"></div>
     <aside class="cart-sidebar" id="cartSidebar">
         <div class="cart-sidebar-header">
             <h3>🛒 ตะกร้าสินค้า</h3>
-            <div class="cart-header-meta">จำนวน: <strong id="cartCount">0 ชิ้น</strong></div>
-            <button class="cart-close-btn" id="cartCloseBtn">✕</button>
+            <div class="cart-header-meta">จำนวน: <strong id="cartCount">0 ชิ้น</strong></div><button class="cart-close-btn"
+                id="cartCloseBtn">✕</button>
         </div>
         <div class="cart-item-list" id="cartItemList">
-            <div class="cart-empty"><span>🛒</span><p>ตะกร้าว่างเปล่า</p></div>
+            <div class="cart-empty"><span>🛒</span>
+                <p>ตะกร้าว่างเปล่า</p>
+            </div>
         </div>
         <div class="cart-sidebar-footer">
-            <div class="cart-total-row"><span>ราคารวมทั้งหมด</span><strong id="cartTotal">฿0</strong></div>
-            <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px">
+            <div class="cart-total-row"><span>ราคารวมทั้งหมด</span><strong id="cartTotal">฿0</strong></div><a
+                href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary"
+                style="width:100%;justify-content:center;margin-top:12px">
                 💬 สั่งซื้อผ่าน LINE @pao789
             </a>
         </div>
     </aside>
 
-    <div class="site-search-overlay" id="searchOverlay">
-        <button class="search-close-btn" id="searchClose" aria-label="Close Search">&#x2715;</button>
-        <div class="search-modal-container">
-            <div class="search-hero-input">
-                <span class="search-hero-icon">&#x1F50D;</span>
-                <input type="text" id="searchInput" placeholder="ค้นหาเครื่องมือ, รุ่นมือถือ..." autocomplete="off">
-                <button class="search-clear-btn" id="searchClear" aria-label="Clear">&#x2715;</button>
-            </div>
-            <div class="search-results-area" id="searchResults"></div>
-        </div>
-    </div>
-
     <div class="member-container">
-        <!-- Header -->
         <div class="member-header">
-            <div class="member-avatar" id="userAvatar" onclick="triggerAvatarUpload()">?</div>
-            <input type="file" id="avatarInput" style="display:none" accept="image/*" onchange="handleAvatarFile(this)">
+            <div class="member-avatar" id="userAvatar" onclick="window.triggerAvatarUpload()">?</div>
+            <input type="file" id="avatarInput" style="display:none" accept="image/*"
+                onchange="window.handleAvatarFile(this)">
             <div class="member-info-header">
                 <h1 id="welcomeName">สวัสดีคุณ Member</h1>
                 <p id="userEmailTag">Member Account</p>
@@ -478,46 +694,40 @@
         </div>
 
         <div class="member-grid">
-            <!-- Left: Sidebar / Profile Info -->
             <div class="member-sidebar">
                 <div class="m-card">
                     <div class="m-card-title">👤 ข้อมูลส่วนตัว</div>
                     <form id="profileForm">
                         <div class="m-form-group">
                             <label>ชื่อ-นามสกุล</label>
-                            <input type="text" id="inputName" placeholder="ระบุชื่อของคุณ" required oninput="syncName(this.value)">
+                            <input type="text" id="inputName" placeholder="ระบุชื่อของคุณ" required
+                                oninput="window.syncName(this.value)">
                         </div>
                         <div class="m-form-group">
                             <label>อีเมล (แก้ไขไม่ได้)</label>
-                            <input type="email" id="inputEmail" readonly style="background: #f9f9f9; color: #999;">
+                            <input type="email" id="inputEmail" readonly style="background: #f1f5f9;">
                         </div>
                         <div class="m-form-group">
                             <label>เบอร์โทรศัพท์</label>
                             <input type="tel" id="inputPhone" placeholder="ระบุเบอร์โทรศัพท์">
                         </div>
-                        <button type="submit" class="btn-save">บันทึกข้อมูล</button>
+                        <button type="submit" class="btn-save" id="btnSave">บันทึกข้อมูล</button>
                     </form>
                 </div>
             </div>
 
-            <!-- Right: Vouchers -->
             <div class="member-content">
-                <div class="m-card">
+                <div class="m-card voucher-card">
                     <div class="m-card-title">🎟️ คูปองของฉัน (My Vouchers)</div>
-
-                    <!-- Redeem Coupon -->
                     <div class="redeem-section">
-                        <input type="text" id="couponInput" class="redeem-input" placeholder="กรอกรหัสคูปองที่นี่ (เช่น WELCOME100)" />
-                        <button class="btn-redeem" onclick="redeemCoupon()">รับคูปอง</button>
+                        <input type="text" id="couponInput" class="redeem-input" placeholder="พิมพ์รหัสที่นี่..."
+                            autocomplete="off" onkeyup="if(event.key==='Enter') window.redeemCoupon()"
+                            onclick="this.focus()">
+                        <button class="btn-redeem" onclick="window.redeemCoupon()">รับคูปอง</button>
                     </div>
 
-                    <div id="voucherList" class="v-list">
-                        <!-- Vouchers injected here -->
-                    </div>
-                </div>
 
-                <div style="text-align: center; color: #94a3b8; font-size: 0.9rem;">
-                    <p>* คูปองจะแสดงเฉพาะรหัสที่คุณเก็บหรือกรอกสำเร็จแล้วเท่านั้น</p>
+                    <div id="voucherList" class="v-list"></div>
                 </div>
             </div>
         </div>
@@ -525,30 +735,36 @@
 
     <div class="toast-overlay" id="customToast">
         <div class="toast-content">
-            <div id="toastIcon" class="toast-icon">🎫</div>
-            <div id="toastTitle" class="toast-title">แจ้งเตือน</div>
-            <div id="toastMsg" class="toast-msg">ข้อความแจ้งเตือน</div>
-            <button class="btn-toast" onclick="hideToast()">ตกลง</button>
+            <div id="toastIcon" class="toast-icon"></div>
+            <h3 id="toastTitle">แจ้งเตือน</h3>
+            <p id="toastMsg"></p>
+            <button class="btn-toast" onclick="window.hideToast()">ตกลง</button>
         </div>
     </div>
 
+    <!-- Scripts Section -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script src="auth.js"></script>
     <script src="script.js"></script>
     <script src="cart.js?v=3"></script>
     <script src="search.js"></script>
-    <script src="auth.js"></script>
+
+    <div class="site-search-overlay" id="searchOverlay">
+        <button class="search-close-btn" id="searchClose" aria-label="Close Search">&#x2715;</button>
+        <div class="search-modal-container">
+            <div class="search-hero-input">
+                <span class="search-hero-icon">&#x1F50D;</span>
+                <input type="text" id="searchInput" placeholder="ค้นหา เครื่องมือ 1, เครื่องมือ 2, รุ่นมือถือ..." autocomplete="off">
+                <button class="search-clear-btn" id="searchClear" aria-label="Clear">&#x2715;</button>
+            </div>
+            <div class="search-results-area" id="searchResults"></div>
+        </div>
+    </div>
+
     <script>
-        // Global variables for profile interaction
-        let userData = JSON.parse(localStorage.getItem('paomobile_user'));
-
-        // Available Coupons Database (Static Fallback)
-        const AVAILABLE_COUPONS = {
-            'WELCOME100': { id: 'v1', code: 'WELCOME100', title: 'ส่วนลด ฿100', desc: 'ยอดสั่งซื้อขั้นต่ำ ฿0', type: 'discount', value: 100, expiry: '2026-12-31', minPurchase: 0 },
-            'PAO50': { id: 'v2', code: 'PAO50', title: 'ส่วนลด ฿50', desc: 'สำหรับลูกค้าใหม่', type: 'discount', value: 50, expiry: '2026-06-30', minPurchase: 0 },
-            'FREESHIP': { id: 'v3', code: 'FREESHIP', title: 'ส่งพัสดุฟรี', desc: 'ลดสูงสุด ฿50', type: 'ship', value: 50, expiry: '2026-12-31', minPurchase: 0 },
-            'MEMBER88': { id: 'v4', code: 'MEMBER88', title: 'ส่วนลด ฿88', desc: 'โค้ดพิเศษสำหรับสมาชิก', type: 'discount', value: 88, expiry: '2026-12-31', minPurchase: 0 }
-        };
-
-        // Firebase Initialization
+        // --- Firebase Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
             authDomain: "paomobile-85e39.firebaseapp.com",
@@ -558,191 +774,249 @@
             appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
             measurementId: "G-BZYNZ9B9LQ"
         };
-        if (!window.firebase) {
-            console.warn("Firebase not loaded yet");
-        } else if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = (window.firebase && firebase.firestore) ? firebase.firestore() : null;
 
-        // --- Custom Toast Helpers ---
-        function showToast(msg, type = 'info', title = 'แจ้งเตือน') {
-            const overlay = document.getElementById('customToast');
-            const iconEl = document.getElementById('toastIcon');
-            const titleEl = document.getElementById('toastTitle');
-            const msgEl = document.getElementById('toastMsg');
+        let isTyping = false;
+        let db = null;
+        let userData = JSON.parse(localStorage.getItem('paomobile_user')) || {};
 
-            iconEl.className = 'toast-icon ' + type;
-            if (type === 'success') iconEl.textContent = '✅';
-            else if (type === 'error') iconEl.textContent = '❌';
-            else iconEl.textContent = '🎫';
-
-            titleEl.textContent = title;
-            msgEl.textContent = msg;
-            overlay.style.display = 'flex';
+        if (window.firebase) {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
         }
 
-        window.hideToast = function() {
-            document.getElementById('customToast').style.display = 'none';
+        // --- UI Functions ---
+        function populateUI(data) {
+            if (!data) return;
+            if (data.name) {
+                const welcome = document.getElementById('welcomeName');
+                const iName = document.getElementById('inputName');
+                if (welcome) welcome.textContent = `สวัสดีคุณ ${data.name}`;
+                if (iName && !isTyping) iName.value = data.name;
+            }
+            if (data.email) {
+                const emailTag = document.getElementById('userEmailTag');
+                const iEmail = document.getElementById('inputEmail');
+                if (emailTag) emailTag.textContent = data.email;
+                if (iEmail) iEmail.value = data.email;
+            }
+            if (data.phone && !isTyping) {
+                const iPhone = document.getElementById('inputPhone');
+                if (iPhone) iPhone.value = data.phone;
+            }
+            renderAvatar(data.avatar || data.photoURL || "");
+        }
+
+        function renderAvatar(base64) {
+            const el = document.getElementById('userAvatar');
+            if(!el) return;
+            if (base64) el.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            else el.innerHTML = userData.name ? userData.name.charAt(0).toUpperCase() : '?';
+        }
+
+        window.syncName = (v) => {
+            const w = document.getElementById('welcomeName');
+            if (w) w.textContent = v ? `สวัสดีคุณ ${v}` : 'สวัสดีคุณ Member';
+            // We only update local object and UI preview, NOT localStorage or Navbar yet
+            userData.name = v;
+            isTyping = true;
+            const btnSave = document.getElementById('btnSave');
+            if (btnSave) btnSave.classList.add('pulse-active');
         };
 
-        window.syncName = function(val) {
-            if (!val) val = "Member";
-            document.getElementById('welcomeName').textContent = `สวัสดีคุณ ${val}`;
-        };
-
-        window.triggerAvatarUpload = function() {
-            const input = document.getElementById('avatarInput');
-            if (input) input.click();
-        };
-
-        window.handleAvatarFile = function(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    userData.avatar = e.target.result;
-                    localStorage.setItem('paomobile_user', JSON.stringify(userData));
-                    renderUserAvatar(userData.avatar);
+        async function compressImage(base64, maxWidth = 300) {
+            return new Promise(res => {
+                const img = new Image(); img.src = base64;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const scale = img.width > maxWidth ? maxWidth / img.width : 1;
+                    canvas.width = img.width * scale; canvas.height = img.height * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    res(canvas.toDataURL('image/jpeg', 0.7));
                 };
-                reader.readAsDataURL(input.files[0]);
-            }
-        };
-
-        function renderUserAvatar(avatarBase64) {
-            const avatarDiv = document.getElementById('userAvatar');
-            if (!avatarDiv) return;
-            if (avatarBase64) {
-                avatarDiv.innerHTML = `<img src="${avatarBase64}" alt="Avatar">`;
-            } else {
-                avatarDiv.textContent = (userData && userData.name) ? userData.name.charAt(0) : '?';
-            }
+            });
         }
 
+        window.triggerAvatarUpload = () => document.getElementById('avatarInput').click();
+        window.handleAvatarFile = async (i) => {
+            if (!i.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const comp = await compressImage(e.target.result);
+                userData.avatar = comp; renderAvatar(comp);
+                // We only update local object and UI preview, NOT localStorage or Navbar yet
+                const btnSave = document.getElementById('btnSave');
+                if (btnSave) btnSave.classList.add('pulse-active');
+            };
+            reader.readAsDataURL(i.files[0]);
+        };
+
+        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
-            if (!userData) {
-                window.location.href = 'login.html';
-                return;
+            populateUI(userData);
+            
+            const pForm = document.getElementById('profileForm');
+            if (pForm) {
+                pForm.addEventListener('input', () => {
+                    isTyping = true;
+                    const btnSave = document.getElementById('btnSave');
+                    if (btnSave) btnSave.classList.add('pulse-active');
+                });
+                
+                pForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = document.getElementById('btnSave');
+                    btn.disabled = true; btn.textContent = '🕒 กำลังจดจำลง Cloud...';
+
+                    const payload = {
+                        name: document.getElementById('inputName').value.trim(),
+                        phone: document.getElementById('inputPhone').value.trim(),
+                        avatar: userData.avatar || "",
+                        email: firebase.auth().currentUser.email,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    try {
+                        await db.collection('users').doc(firebase.auth().currentUser.uid).set(payload, { merge: true });
+                        isTyping = false;
+                        
+                        // Update local userData object to ensure localStorage is consistent
+                        userData.name = payload.name;
+                        userData.phone = payload.phone;
+                        userData.avatar = payload.avatar;
+                        localStorage.setItem('paomobile_user', JSON.stringify(userData));
+                        
+                        // Trigger Global Nav Refresh
+                        if (window.AuthAPI && window.AuthAPI.refreshNav) window.AuthAPI.refreshNav();
+                        
+                        if (window.notifyProfileSave) window.notifyProfileSave();
+                        btn.classList.remove('pulse-active');
+                        showToast('จดจำข้อมูลของคุณเรียบร้อยแล้ว แม้เข้าเครื่องใหม่ระบบก็จะจำเสมอค่ะ!', 'success');
+                    } catch (err) { showToast('บันทึกไม่สำเร็จ: ' + err.message, 'error'); }
+                    btn.disabled = false; btn.textContent = 'บันทึกข้อมูล';
+                });
             }
 
-            renderUserAvatar(userData.avatar);
-            const welcomeEl = document.getElementById('welcomeName');
-            if (welcomeEl) welcomeEl.textContent = `สวัสดีคุณ ${userData.name}`;
-            
-            const emailTagEl = document.getElementById('userEmailTag');
-            if (emailTagEl) emailTagEl.textContent = userData.email || 'ยังไม่ได้ระบุอีเมล';
-            
-            if (document.getElementById('inputName')) document.getElementById('inputName').value = userData.name || '';
-            if (document.getElementById('inputEmail')) document.getElementById('inputEmail').value = userData.email || '';
-            if (document.getElementById('inputPhone')) document.getElementById('inputPhone').value = userData.phone || '';
-
-            document.getElementById('profileForm').addEventListener('submit', (e) => {
-                e.preventDefault();
-                userData.name = document.getElementById('inputName').value;
-                userData.phone = document.getElementById('inputPhone').value;
-                localStorage.setItem('paomobile_user', JSON.stringify(userData));
-                showToast('บันทึกข้อมูลส่วนตัวของคุณเรียบร้อยแล้วครับ', 'success', 'บันทึกสำเร็จ');
-                setTimeout(() => location.reload(), 2000);
-            });
-
-            initVouchers(userData.email);
-        });
-
-        async function initVouchers(email) {
-            const VOUCHER_KEY = 'pao_user_vouchers_' + email;
-            let vouchers = JSON.parse(localStorage.getItem(VOUCHER_KEY)) || [];
-            
-            // Auto Cleanup: Remove expired items from storage
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            
-            vouchers = vouchers.filter(v => {
-                const exp = new Date(v.expiry);
-                return isNaN(exp.getTime()) || exp >= today;
-            });
-
-            // v1.3.1 - Usage Limit Filtering (Firestore Sync)
-            if (db && email) {
-                try {
-                    // Fetch all non-cancelled orders for this user
-                    const ordersSnap = await db.collection('orders')
-                        .where('customerEmail', '==', email) // Using email for matching
-                        .get();
-                    
-                    const usageCounts = {};
-                    ordersSnap.forEach(doc => {
-                        const o = doc.data();
-                        if (o.status !== 'ยกเลิกแล้ว' && o.appliedVoucherCode) {
-                            usageCounts[o.appliedVoucherCode] = (usageCounts[o.appliedVoucherCode] || 0) + 1;
+            firebase.auth().onAuthStateChanged(user => {
+                if (!user) { window.location.href = 'login.html'; return; }
+                if (db) {
+                    db.collection('users').doc(user.uid).onSnapshot(doc => {
+                        if (doc.exists) {
+                            userData = { ...userData, ...doc.data() };
+                            if (!isTyping) {
+                                localStorage.setItem('paomobile_user', JSON.stringify(userData));
+                                populateUI(userData);
+                            }
                         }
                     });
-
-                    // Fetch voucher definitions to get usageLimits
-                    const vouchersSnap = await db.collection('vouchers').get();
-                    const voucherLimits = {};
-                    vouchersSnap.forEach(doc => {
-                        const vData = doc.data();
-                        voucherLimits[vData.code] = vData.usageLimit || 1;
-                    });
-
-                    // Filter vouchers by usage limit
-                    vouchers = vouchers.filter(v => {
-                        const limit = voucherLimits[v.code] || 1;
-                        const used = usageCounts[v.code] || 0;
-                        return used < limit;
-                    });
-                } catch (e) {
-                    console.error("Usage sync failed:", e);
                 }
+                const KEY = 'pao_user_vouchers_' + user.email;
+                const activeVouchers = purgeExpiredVouchers(user.email);
+                renderVouchers(activeVouchers);
+            });
+        });
+
+
+        function purgeExpiredVouchers(email) {
+            const KEY = 'pao_user_vouchers_' + email;
+            let list = JSON.parse(localStorage.getItem(KEY)) || [];
+            const now = new Date();
+            const filtered = list.filter(v => {
+                if (!v.expiry || v.expiry === '-') return true;
+                const expDate = new Date(v.expiry + 'T23:59:59');
+                return expDate >= now;
+            });
+            if (list.length !== filtered.length) {
+                localStorage.setItem(KEY, JSON.stringify(filtered));
             }
-            
-            renderVouchers(vouchers);
+            return filtered;
         }
 
-        function renderVouchers(vouchers) {
-            const list = document.getElementById('voucherList');
-            if (!vouchers || vouchers.length === 0) {
-                list.innerHTML = `
-                    <div class="v-empty">
-                        <div style="font-size: 3rem; margin-bottom: 15px;">🎫</div>
-                        <p style="font-weight: 700; color: #64748b; margin-bottom: 8px;">คุณยังไม่มีคูปอง</p>
-                        <p style="font-size: 0.85rem;">กรอกรหัสคูปองเพื่อรับส่วนลดสุดพิเศษจากเรา!</p>
-                    </div>`;
-                return;
+        // --- Voucher Functions ---
+        window.redeemCoupon = async () => {
+            const input = document.getElementById('couponInput');
+            const code = input.value.trim().toUpperCase();
+            if (!code) { showToast('กรุณากรอกรหัสก่อนครับ', 'error'); return; }
+            const btn = document.querySelector('.btn-redeem');
+            btn.disabled = true;
+
+            try {
+                const snap = await db.collection('vouchers').where('code', '==', code).get();
+                if (snap.empty) showToast('ไม่พบรหัสคูปองนี้ครับ', 'error');
+                else {
+                    const v = snap.docs[0].data();
+                    const user = firebase.auth().currentUser;
+                    const KEY = 'pao_user_vouchers_' + user.email;
+                    let list = JSON.parse(localStorage.getItem(KEY)) || [];
+                    if (!list.some(x => x.code === code)) {
+                        const now = new Date();
+                        if (v.expiry && v.expiry !== '-') {
+                            const expDate = new Date(v.expiry + 'T23:59:59');
+                            if (expDate < now) {
+                                showToast('ขออภัย คูปองนี้หมดอายุการใช้งานแล้วครับ', 'error');
+                                btn.disabled = false;
+                                return;
+                            }
+                        }
+                        await db.collection('vouchers_redemptions').add({
+                            code, email: user.email, at: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        list.push({ ...v, id: snap.docs[0].id });
+                        localStorage.setItem(KEY, JSON.stringify(list));
+                        renderVouchers(list);
+                        showToast('🎉 เก็บคูปองเข้ากระเป๋าสำเร็จ!', 'success');
+                        input.value = '';
+                    } else showToast('คุณมีคูปองนี้แล้วครับ', 'info');
+                }
+            } catch (e) { showToast('ผิดพลาด: ' + e.message, 'error'); }
+            btn.disabled = false;
+        };
+
+        function renderVouchers(list) {
+            const el = document.getElementById('voucherList');
+            if(!el) return;
+            if (list.length === 0) { 
+                el.classList.add('is-empty');
+                el.innerHTML = `
+                    <div class="empty-vouchers">
+                        <span class="empty-vouchers-icon">🎫</span>
+                        <h5>คุณยังไม่มีคูปองตอนนี้</h5>
+                        <p>รวบรวมคูปองส่วนลดเพื่อรับสิทธิพิเศษที่นี่ครับ</p>
+                    </div>
+                `; 
+                return; 
             }
-
-            const today = new Date();
-            today.setHours(0,0,0,0);
-
-            list.innerHTML = vouchers.map(v => {
-                // Near Expiry Logic (v1.2.3)
-                const expDate = new Date(v.expiry);
-                const diffTime = expDate - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const isNearExpiry = diffDays >= 0 && diffDays <= 3;
-                const nearTag = isNearExpiry ? `<div class="v-tag" style="background:#fff2e8; color:#fa541c; border-color:#ffbb96;">🔸 ใกล้หมดอายุ (เหลือ ${diffDays} วัน)</div>` : '';
-                
-                const minText = v.minPurchase > 0 ? `ยอดซื้อขั้นต่ำ ฿${v.minPurchase}` : 'ไม่มีขั้นต่ำ';
-                const formattedExpiry = formatThaiDate(v.expiry);
+            el.classList.remove('is-empty');
+            
+            const now = new Date();
+            el.innerHTML = list.map(i => {
+                let expiryBadge = '';
+                let expiryText = '';
+                if (i.expiry && i.expiry !== '-') {
+                    const expDate = new Date(i.expiry + 'T23:59:59');
+                    const diffTime = expDate - now;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    expiryText = `<div class="v-expiry">หมดอายุ: ${formatThaiDate(i.expiry)}</div>`;
+                    if (diffDays <= 3 && diffDays >= 0) {
+                        expiryBadge = `<div class="v-badge-expiring">🔥 หมดอายุเร็วๆ นี้ (${diffDays} วัน)</div>`;
+                    }
+                }
 
                 return `
                 <div class="v-card">
-                    <div class="v-left ${v.type}">
-                        <div class="v-dot-top"></div>
-                        <div class="v-dot-bottom"></div>
-                        <div class="v-icon">${v.type === 'ship' ? '🚚' : '💰'}</div>
-                        <div class="v-type">${v.type === 'ship' ? 'Free Ship' : 'Cashback'}</div>
+                    <div class="v-left ${i.type === 'ship' ? 'ship' : 'discount'}">
+                        <div style="font-size:1.5rem;font-weight:700;">${i.type === 'ship' ? '🚛' : '฿'}</div>
+                        <div style="font-size:0.75rem;font-weight:800;">${i.type === 'ship' ? 'ส่งฟรี' : 'VOUCHER'}</div>
                     </div>
                     <div class="v-right">
                         <div class="v-info">
-                            <h4>${v.title}</h4>
-                            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
-                                <div class="v-tag">ร้านโค้ดคุ้ม Xtra</div>
-                                ${nearTag}
-                            </div>
-                            <p>${v.desc || minText}</p>
-                            <p style="margin-top:4px; font-size:0.75rem; color:#94a3b8;">หมดอายุ: ${formattedExpiry}</p>
+                            <h4>${(i.code === 'FREESHIP' || i.type === 'ship') ? 'ส่งฟรี' : (i.value ? `ส่วนลด ฿${i.value.toLocaleString()}` : i.code)}</h4>
+                            <p>${i.desc || 'Special Offer'}</p>
+                            ${expiryText}
+                            ${expiryBadge}
                         </div>
-                        <button class="btn-use" onclick="useVoucher('${v.code}')">ใช้เลย</button>
+                        <button class="btn-use" onclick="location.href='index.html'">ใช้เลย</button>
                     </div>
                 </div>
                 `;
@@ -750,115 +1024,32 @@
         }
 
         function formatThaiDate(dateStr) {
-            try {
-                const d = new Date(dateStr);
-                if (isNaN(d.getTime())) return dateStr;
-                return d.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            } catch(e) { return dateStr; }
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
         }
 
-        window.useVoucher = function(code) {
-            // Pre-select this voucher for checkout
-            localStorage.setItem('pao_pending_voucher', code);
-            showToast(`เตรียมใช้คูปอง ${code} เรียบร้อยแล้ว!`, 'success', 'กำลังไปช้อปปิ้ง');
-            setTimeout(() => {
-                location.href = 'index.html';
-            }, 1000);
-        };
-
-        window.redeemCoupon = async function() {
-            const input = document.getElementById('couponInput');
-            const code = input.value.trim().toUpperCase();
+        // --- Toast Functions ---
+        function showToast(m, type = 'info', v = null) {
+            const tEl = document.getElementById('customToast');
+            const iconEl = document.getElementById('toastIcon');
+            if (!tEl || !iconEl) return;
             
-            if (!code) {
-                showToast('กรุณากรอกรหัสคูปองก่อนนะครับ', 'error', 'เกิดข้อผิดพลาด');
-                return;
-            }
+            document.getElementById('toastMsg').textContent = m;
+            document.getElementById('toastTitle').textContent = (v && v.type) ? ((v.type === 'ship') ? 'ส่งฟรี' : (v.value ? `ส่วนลด ฿${v.value.toLocaleString()}` : 'คูปอง')) : (type === 'success' ? 'สำเร็จ' : 'แจ้งเตือน');
+            
+            // Set Icon based on type
+            iconEl.className = 'toast-icon ' + type;
+            if (type === 'success') iconEl.innerHTML = '✅';
+            else if (type === 'error') iconEl.innerHTML = '❌';
+            else iconEl.innerHTML = 'ℹ️';
 
-            const email = userData.email;
-            const VOUCHER_KEY = 'pao_user_vouchers_' + email;
-            let currentVouchers = JSON.parse(localStorage.getItem(VOUCHER_KEY)) || [];
-
-            // Prevent duplicates
-            if (currentVouchers.some(v => v.code === code)) {
-                showToast('คุณเก็บคูปองนี้ไปแล้วครับ!', 'error', 'คูปองซ้ำ');
-                input.value = '';
-                return;
-            }
-
-            let foundVoucher = null;
-
-            // 1. Search in Static Database
-            if (AVAILABLE_COUPONS[code]) {
-                foundVoucher = AVAILABLE_COUPONS[code];
-            } 
-            // 2. Search in Firestore (v1.2.3)
-            else if (db) {
-                try {
-                    const snap = await db.collection('vouchers').where('code', '==', code).get();
-                    if (!snap.empty) {
-                        const vDoc = snap.docs[0];
-                        const vData = vDoc.data();
-                        
-                        // Check expiry in Firestore
-                        const today = new Date();
-                        today.setHours(0,0,0,0);
-                        const exp = new Date(vData.expiry);
-                        
-                        if (!isNaN(exp.getTime()) && exp < today) {
-                            showToast('ขออภัยครับ คูปองนี้หมดอายุไปแล้ว 😭', 'error', 'หมดอายุแล้ว');
-                            input.value = '';
-                            return;
-                        }
-
-                        // v1.3.1 - Redemption Limit Check
-                        const redeemSnap = await db.collection('vouchers_redemptions')
-                            .where('code', '==', code)
-                            .where('email', '==', email)
-                            .get();
-                        
-                        const redemptionLimit = vData.redemptionLimit || 1;
-                        if (redeemSnap.size >= redemptionLimit) {
-                            showToast('คุณเก็บคูปองนี้ครบจำนวนสิทธิ์แล้วครับ', 'error', 'ถึงขีดจำกัดแล้ว');
-                            input.value = '';
-                            return;
-                        }
-
-                        foundVoucher = {
-                            id: vDoc.id,
-                            code: vData.code,
-                            title: vData.title,
-                            desc: vData.desc,
-                            type: vData.type,
-                            value: vData.value,
-                            minPurchase: vData.minPurchase || 0,
-                            expiry: vData.expiry,
-                            usageLimit: vData.usageLimit || 1
-                        };
-
-                        // Record redemption in Firestore
-                        await db.collection('vouchers_redemptions').add({
-                            code: code,
-                            email: email,
-                            at: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                } catch (e) {
-                    console.error("Firestore error:", e);
-                }
-            }
-
-            if (foundVoucher) {
-                currentVouchers.push(foundVoucher);
-                localStorage.setItem(VOUCHER_KEY, JSON.stringify(currentVouchers));
-                
-                showToast('🎉 เก็บคูปองเข้ากระเป๋าสำเร็จแล้ว!', 'success', 'สำเร็จ');
-                input.value = '';
-                renderVouchers(currentVouchers);
-            } else {
-                showToast('รหัสคูปองไม่ถูกต้องครับ ตรวจสอบความถูกต้องอีกครั้งนะ', 'error', 'รหัสไม่ถูกต้อง');
-            }
+            tEl.classList.add('active');
+        }
+        window.hideToast = () => {
+            const tEl = document.getElementById('customToast');
+            if (tEl) tEl.classList.remove('active');
         };
     </script>
 </body>
+
 </html>

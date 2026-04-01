@@ -673,16 +673,39 @@ input, button, select, textarea { font-family: inherit; }
 
 .v-modal-container {
     background: #fff;
-    width: 100%;
-    max-width: 500px;
-    border-radius: 4px;
+    width: 90%;
+    max-width: 520px;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
-    max-height: 85vh;
-    animation: vFadeUp 0.3s ease;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    max-height: 80vh;
+    animation: vFadeUp 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    overflow: hidden;
+    position: relative;
+    z-index: 3001;
+    margin: auto; /* Fallback for flex centering */
 }
-@keyframes vFadeUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+@keyframes vFadeUp { 
+    from { opacity: 0; transform: translateY(20px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+.v-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+    z-index: 3000;
+    padding: 20px;
+}
+.v-modal-overlay.open { display: flex; }
 
 .v-modal-header {
     padding: 16px 20px;
@@ -741,63 +764,171 @@ input, button, select, textarea { font-family: inherit; }
 
 /* Voucher Card Item */
 .v-item-card-wrapper {
-    background: #fff;
+    background: transparent;
     margin-bottom: 12px;
-    border-radius: 2px;
-    overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    border-radius: 4px;
+    overflow: visible;
 }
 
 .v-item-card {
     display: flex;
     cursor: pointer;
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border: 1px solid transparent;
-    transition: border-color 0.2s;
 }
 
+.v-item-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Ticket Cutout Punch-outs (The semi-circles at top and bottom) */
+.v-item-card::before, .v-item-card::after {
+    content: '';
+    position: absolute;
+    left: 102px; /* Matches v-item-left width (110) - half of punch-out width (16/2=8) */
+    width: 16px;
+    height: 16px;
+    background: #f5f5f5; /* Matches modal body background */
+    border-radius: 50%;
+    z-index: 5;
+}
+.v-item-card::before { top: -8px; box-shadow: inset 0 -3px 3px rgba(0,0,0,0.02); }
+.v-item-card::after { bottom: -8px; box-shadow: inset 0 3px 3px rgba(0,0,0,0.02); }
+
 .v-item-left {
-    width: 100px;
-    background: #ee4d2d;
+    width: 110px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee4d2d 100%);
     color: #fff;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 15px 10px;
+    padding: 20px 10px;
     position: relative;
     text-align: center;
+    border-radius: 4px 0 0 4px;
+    overflow: hidden;
 }
-.v-item-left.shipping { background: #00bfa5; } /* Teal for Shipping */
 
+/* Subtle pattern on the colored side */
+.v-item-left::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: radial-gradient(rgba(255,255,255,0.1) 10%, transparent 10%);
+    background-size: 15px 15px;
+    opacity: 0.5;
+}
+
+.v-item-left.shipping { background: linear-gradient(135deg, #26d0ce 0%, #1a9a8b 100%); }
+
+/* Serrated Edge (The dots) */
 .v-item-left::after {
     content: '';
     position: absolute;
-    right: -2px;
-    top: 5px;
-    bottom: 5px;
-    width: 4px;
+    right: -1px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
     background-image: radial-gradient(circle, #f5f5f5 1.5px, transparent 0);
-    background-size: 4px 6px;
+    background-size: 2px 7px;
+    z-index: 4;
 }
-.v-item-icon-box { background: rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.v-item-label { font-size: 0.75rem; font-weight: 400; line-height: 1.2; }
+
+.v-item-icon-box { 
+    background: rgba(255,255,255,0.25); 
+    width: 48px; 
+    height: 48px; 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.v-item-label { 
+    font-size: 0.75rem; 
+    font-weight: 600; 
+    line-height: 1.2; 
+    position: relative;
+    z-index: 2;
+}
 
 .v-item-right {
     flex: 1;
-    padding: 15px 16px;
+    padding: 18px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: relative;
-    border-left: 1px dashed #eee;
+    background: #fff;
+    border-radius: 0 4px 4px 0;
 }
-.v-info-title { font-size: 0.95rem; font-weight: 500; color: #222; margin-bottom: 4px; }
-.v-info-tag { font-size: 0.7rem; color: #ee4d2d; border: 1px solid #ee4d2d; display: inline-block; padding: 0 4px; margin-bottom: 8px; border-radius: 1px; }
-.v-info-expiry { font-size: 0.75rem; color: #888; display: flex; align-items: center; gap: 8px; }
-.v-info-link { color: #05a; text-decoration: none; }
 
-.v-radio-box { padding-left: 10px; }
+.v-info-title { 
+    font-size: 1.05rem; 
+    font-weight: 700; 
+    color: #222; 
+    margin-bottom: 6px; 
+}
+
+.v-info-tag { 
+    font-size: 0.7rem; 
+    color: #ee4d2d; 
+    background: rgba(238, 77, 45, 0.08);
+    border: 1px solid rgba(238, 77, 45, 0.2); 
+    display: inline-block; 
+    padding: 1px 6px; 
+    margin-bottom: 10px; 
+    border-radius: 2px; 
+}
+
+.v-info-expiry { 
+    font-size: 0.75rem; 
+    color: #888; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+}
+
+.v-info-link { color: #0055aa; text-decoration: none; font-weight: 500; }
+.v-info-link:hover { text-decoration: underline; }
+
+.v-radio-box { 
+    padding-left: 15px; 
+}
+
+.v-radio {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.v-radio.selected {
+    border-color: #ee4d2d;
+    background: #ee4d2d;
+}
+
+.v-radio.selected::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
 .v-radio { width: 22px; height: 22px; border: 1px solid #ddd; border-radius: 50%; position: relative; background: #fff; }
 .v-radio.selected { border-color: #ee4d2d; background: #ee4d2d; }
 .v-radio.selected::after {

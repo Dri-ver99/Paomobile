@@ -1296,7 +1296,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getAuth, signInWithRedirect, signInWithPopup, getRedirectResult, GoogleAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
         // Inlined Config for reliability on local files
         const firebaseConfig = {
@@ -1743,19 +1743,36 @@
             }
         }
 
-        // --- Save user data to Firestore (Optimistic & Non-blocking) ---
+        // --- Save user data to Firestore (Version 1.6.0 - Fetch Existing Profile) ---
         async function saveUserToFirestore(user, provider) {
-            console.log("[Auth] Saving local session...");
+            console.log("[Auth] Syncing profile with Cloud...");
 
-            let name = user.displayName;
+            let finalName = user.displayName || 'Member';
+            let finalAvatar = user.photoURL || "";
+
+            // 1. Try to fetch existing custom profile from Firestore first
+            if (db) {
+                try {
+                    const snap = await getDoc(doc(db, "users", user.uid));
+                    if (snap.exists()) {
+                        const existing = snap.data();
+                        if (existing.name) finalName = existing.name;
+                        if (existing.avatar) finalAvatar = existing.avatar;
+                        else if (existing.photoURL) finalAvatar = existing.photoURL;
+                        console.log("[Auth] Restored custom profile from Cloud:", finalName);
+                    }
+                } catch (e) {
+                    console.warn("[Auth] Cloud fetch failed, using Auth defaults:", e);
+                }
+            }
+
             let email = user.email || '';
-
             // Detect and mask virtual emails for phone users
             if (email.endsWith('@paomobile.auth')) {
-                email = email.split('@')[0]; // Mask the domain, keep only phone
-                name = email; // Use full 10-digit phone as name
-            } else if (!name && email) {
-                name = email.split('@')[0];
+                email = email.split('@')[0]; 
+                if (finalName === 'Member' || finalName === user.email) finalName = email; 
+            } else if (finalName === 'Member' && email) {
+                finalName = email.split('@')[0];
             }
 
             const originalEmail = user.email || '';
@@ -1766,22 +1783,28 @@
 
             const userData = {
                 uid: user.uid,
-                name: name || 'Member',
+                name: finalName,
                 email: email,
-                photo: user.photoURL || "",
+                avatar: finalAvatar, // Standardized key used in member.html
+                photo: finalAvatar,
                 isVerified: !!isVerified
             };
 
+            // Save to local session so index.html/member.html see it immediately
             localStorage.setItem('paomobile_user', JSON.stringify(userData));
 
+            // Background update to Firestore for last login
             if (db) {
                 const userRef = doc(db, "users", user.uid);
-                setDoc(userRef, {
-                    ...userData,
-                    photoURL: userData.photo,
-                    provider: provider,
-                    lastLogin: new Date()
-                }, { merge: true });
+                try {
+                    await setDoc(userRef, {
+                        ...userData,
+                        lastLogin: new Date()
+                    }, { merge: true });
+                    console.log("[Auth] Cloud Sync Success.");
+                } catch (e) {
+                    console.error("[Auth] Firestore update failed:", e);
+                }
             }
         }
 

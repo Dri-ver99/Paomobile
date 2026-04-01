@@ -2,62 +2,58 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 1. ข้อมูลผู้ใช้งาน (Users)
+    // 🛡️ Admin Verification - ONLY sattawat2560@gmail.com
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token != null &&
+             request.auth.token.email != null &&
+             request.auth.token.email.toLower() == "sattawat2560@gmail.com";
+    }
+
+    // 1. User Profiles (Users own their data)
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // 2. ข้อมูลคำสั่งซื้อ (Orders)
+    // 2. Orders (Customers create, Admins manage)
     match /orders/{orderId} {
-      // ✅ ทุกคนสั่งซื้อได้ (รองรับทั้ง login และ guest)
       allow create: if true;
-      
-      // ✅ ลูกค้าดูออเดอร์ตัวเองได้
       allow read: if request.auth != null && (
         resource.data.customer == request.auth.uid ||
-        resource.data.customer == request.auth.token.email
+        resource.data.customer == request.auth.token.email ||
+        isAdmin()
       );
-      
-      // ✅ ลูกค้าอัปเดตออเดอร์ตัวเองได้ (ยืนยันชำระเงิน)
       allow update: if (request.auth != null && (
         resource.data.customer == request.auth.uid ||
         resource.data.customer == request.auth.token.email
-      )) || (resource.data.status == "ที่ต้องชำระ");
-
-      // ✅ เฉพาะ Seller ลบออเดอร์ได้
-      allow delete: if request.auth != null && 
-        request.auth.token.email == "sattawat2560@gmail.com";
-
-      // ✅ Seller จัดการได้ทุกอย่าง
-      allow read, write: if request.auth != null && 
-        request.auth.token.email == "sattawat2560@gmail.com";
+      )) || isAdmin() || (resource.data.status == "ที่ต้องชำระ");
+      allow delete: if isAdmin();
+      allow write: if isAdmin();
     }
     
-    // --- ส่วนที่เพิ่มใหม่: ระบบคูปอง (Vouchers) ---
-    
-    // คูปองหลัก (Seller จัดการสร้าง/ลบ)
+    // 3. Vouchers & Promotions (Admins manage)
     match /vouchers/{document=**} {
       allow read: if true;
-      allow write: if request.auth != null && 
-        request.auth.token.email == "sattawat2560@gmail.com";
+      allow write: if isAdmin();
     }
-
-    // ประวัติการเก็บคูปอง (ลูกค้าต้องสามารถบันทึกข้อมูลตอนกดเก็บโค้ดได้)
     match /vouchers_redemptions/{document=**} {
       allow read, write: if request.auth != null;
     }
-    
-    // ตั๋วสแกน QR (สำหรับระบบสแกนรับ 1:1 และหมดอายุใน 1 ชม.)
     match /voucher_qrs/{document=**} {
       allow read: if true;
       allow write: if request.auth != null;
     }
+
+    // ⚙️ Settings (Category management, etc.)
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     
-    // 3. ส่วนอื่นๆ ของระบบ (สินค้า และอื่นๆ)
+    // 4. Products & Settings (Admins manage everything else)
     match /{document=**} {
       allow read: if true;
-      allow write: if request.auth != null && 
-        request.auth.token.email == "sattawat2560@gmail.com";
+      allow write: if isAdmin();
     }
   }
 }

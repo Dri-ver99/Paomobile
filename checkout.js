@@ -194,10 +194,18 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             const email = user ? user.email : '';
             const personalVouchers = JSON.parse(localStorage.getItem('pao_user_vouchers_' + email) || '[]');
             
-            let merged = { ...STATIC_VOUCHERS };
+            // v1.6.0 - Only show vouchers collected from Member (Filter out uncollected static ones)
+            let merged = {}; 
+            
             personalVouchers.forEach(v => {
-                // If personal voucher is missing value/type/minPurchase (e.g. collected before update),
-                // use static definition as fallback if available.
+                // v1.6.2 - Filter out expired vouchers from merging
+                const now = new Date();
+                if (v.expiry && v.expiry !== '-') {
+                    const expDate = new Date(v.expiry + 'T23:59:59');
+                    if (expDate < now) return;
+                }
+
+                // Use static definition as fallback if available for detail consistency
                 const base = STATIC_VOUCHERS[v.code] || { value: 0, type: 'discount', minPurchase: 0 };
                 merged[v.code] = {
                     title: v.title || base.title || 'Voucher',
@@ -246,59 +254,76 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
         }
 
         function renderPersonalVouchers(usageCounts = {}) {
-            const container = document.getElementById('voucherListContainer');
-            if (!container) return;
+            const shipContainer = document.getElementById('shippingVoucherList');
+            const discountContainer = document.getElementById('voucherListContainer');
+            if (!shipContainer || !discountContainer) return;
 
-            const user = JSON.parse(localStorage.getItem('paomobile_user'));
-            const email = user ? user.email : '';
-            
-            // Get all vouchers dynamically merged (v1.5.0)
             const merged = getMergedVouchers();
             const personalVouchers = Object.keys(merged).map(code => ({
                 code: code,
                 ...merged[code]
             }));
 
-            // Combine static with personal for rendering
-            let html = '';
+            let shipHtml = '';
+            let discountHtml = '';
             
             const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
             const today = new Date();
             today.setHours(0,0,0,0);
 
-            // Render All Vouchers (v1.5.0 - Unified loop with usage filter)
             personalVouchers.forEach(v => {
-                // 1. Expiry Check
-                const isExpired = v.expiry && new Date(v.expiry) < today;
+                const now = new Date();
+                const isExpired = v.expiry && v.expiry !== '-' && new Date(v.expiry + 'T23:59:59') < now;
                 if (isExpired) return;
 
-                // 2. Usage Limit Check (v1.3.3)
                 const usedToday = usageCounts[v.code] || 0;
                 const limit = v.usageLimit || 1;
-                if (usedToday >= limit) return; // Hide if already used to the limit
+                if (usedToday >= limit) return;
 
                 const isEligible = subtotal >= (v.minPurchase || 0);
                 const minText = v.minPurchase > 0 ? `ขั้นต่ำ ฿${v.minPurchase.toLocaleString()}` : 'ไม่มีขั้นต่ำ';
-                const opacity = isEligible ? '1' : '0.5';
+                const opacity = isEligible ? '1' : '0.4';
                 const cursor = isEligible ? 'pointer' : 'not-allowed';
-                const warningMsg = isEligible ? '' : `<div style="color:#ee4d2d; font-size:0.7rem; margin-top:2px;">ยอดซื้อไม่ถึงขั้นต่ำ</div>`;
+                const warningMsg = isEligible ? '' : `<div style="color:#ee4d2d; font-size:0.75rem; margin-top:4px; font-weight:500;">ยอดซื้อไม่ถึงขั้นต่ำ ฿${v.minPurchase.toLocaleString()}</div>`;
 
-                const vTypeLabel = (v.type === 'ship') ? 'Free Ship' : (v.isPersonal ? 'Personal' : 'Voucher');
+                const vTypeLabel = (v.type === 'ship') ? 'ส่งฟรี' : (v.isPersonal ? 'ส่วนลด' : 'คูปอง');
+                
+                // Show discount amount as title if available (v1.6.3)
+                let vTitle = (v.code === 'FREESHIP' || v.type === 'ship') ? 'ส่งฟรี' : (v.title || v.code);
+                if (v.type === 'discount' && v.value) {
+                    vTitle = `ส่วนลด ฿${v.value.toLocaleString()}`;
+                }
+                
+                const vExpiry = v.expiry && v.expiry !== '-' ? v.expiry : '31.03.2026';
+                
+                // v1.6.2 - Expiring soon alert (3 days)
+                let expiryAlert = '';
+                if (v.expiry && v.expiry !== '-') {
+                    const expDate = new Date(v.expiry + 'T23:59:59');
+                    const diffDays = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+                    if (diffDays <= 3 && diffDays >= 0) {
+                        expiryAlert = `<div style="color: #e11d48; font-size: 0.75rem; font-weight: 700; margin-top: 2px;">🔥 ใกล้หมดอายุ (${diffDays} วัน)</div>`;
+                    }
+                }
 
-                html += `
+                const cardHtml = `
                     <div class="v-item-card-wrapper" style="opacity: ${opacity}; cursor: ${cursor}">
                         <div class="v-item-card" onclick="${isEligible ? `selectVoucherListItem('${v.code}')` : ''}">
                             <div class="v-item-left ${v.type === 'ship' ? 'shipping' : ''}">
                                 <div class="v-item-icon-box">
-                                    ${v.type === 'ship' ? '<svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M1 3h15v13H1V3zm16 10h4l3-3V7h-7v6zM5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm14 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>' : '<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12.89 3L14.85 3.4L11.11 21L9.15 20.6L12.89 3Z"/></svg>'}
+                                    ${v.type === 'ship' ? 
+                                        '<svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M1 3h15v13H1V3zm16 10h4l3-3V7h-7v6zM5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm14 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>' : 
+                                        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4"></path><path d="M22 15v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4"></path><path d="M2 9a3 3 0 0 1 0 6"></path><path d="M22 9a3 3 0 0 0 0 6"></path><line x1="9" y1="9" x2="15" y2="15"></line><circle cx="9" cy="15" r="1"></circle><circle cx="15" cy="9" r="1"></circle></svg>'
+                                    }
                                 </div>
                                 <div class="v-item-label">${vTypeLabel}</div>
                             </div>
                             <div class="v-item-right">
                                 <div class="v-info-box">
-                                    <div class="v-info-title">${v.title || v.code}</div>
+                                    <div class="v-info-title">${vTitle}</div>
                                     <div class="v-info-tag">${minText}</div>
-                                    <div class="v-info-expiry">ใช้ได้ถึง: ${v.expiry} &nbsp;<a href="#" class="v-info-link">เงื่อนไข</a></div>
+                                    <div class="v-info-expiry">ใช้ได้ถึง: ${vExpiry} &nbsp;<a href="#" class="v-info-link">เงื่อนไข</a></div>
+                                    ${expiryAlert}
                                     ${warningMsg}
                                 </div>
                                 <div class="v-radio-box"><div class="v-radio" data-code="${v.code}"></div></div>
@@ -306,13 +331,16 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         </div>
                     </div>
                 `;
+
+                if (v.type === 'ship') shipHtml += cardHtml;
+                else discountHtml += cardHtml;
             });
             
-            if (html === '') {
-                html = '<div style="padding: 40px; text-align:center; color:#999;">ไม่มีโค้ดส่วนลดที่ใช้งานได้ในขณะนี้</div>';
-            }
+            if (shipHtml === '') shipHtml = '<div style="padding: 10px 0; color:#999; font-size:0.9rem;">ไม่มีโค้ดส่งฟรีที่ใช้งานได้</div>';
+            if (discountHtml === '') discountHtml = '<div style="padding: 10px 0; color:#999; font-size:0.9rem;">ไม่มีคูปองส่วนลดที่ใช้งานได้</div>';
             
-            container.innerHTML = html;
+            shipContainer.innerHTML = shipHtml;
+            discountContainer.innerHTML = discountHtml;
         }
 
         function closeVoucherModal() {
@@ -575,13 +603,14 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                     const globalOrderData = {
                         ...newOrder,
                         customer: getActiveUserId(),
-                        customerEmail: userEmail, // v1.3.1 for voucher limits
+                        customerEmail: userEmail,
+                        customerProfileName: user ? (user.name || "") : "", // v1.7.0 - Capture profile nickname
                         customerName: savedAddress ? savedAddress.name : 'N/A',
                         customerPhone: savedAddress ? savedAddress.phone : 'N/A',
                         customerAddress: savedAddress ? `${savedAddress.addr1} ตำบล${savedAddress.district} อำเภอ${savedAddress.amphoe} จังหวัด${savedAddress.province} ${savedAddress.zip}` : 'N/A',
-                        shippingMethod: shippingMethod, // v1.2.11
-                        paymentMethod: methodLabel,     // v1.2.11
-                        paymentBank: selectedBank,      // v1.2.11
+                        shippingMethod: shippingMethod,
+                        paymentMethod: methodLabel,
+                        paymentBank: selectedBank,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
 

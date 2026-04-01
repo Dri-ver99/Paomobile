@@ -16,7 +16,13 @@ const MOCK_PRODUCTS_BASELINE = [
   { id: "acc-why-cable-1m", name: "สายชาร์จ Why USB 1.0M", price: 159, brand: "Why", category: "accessory", emoji: "🔌", img: "Why-1.jpg", images: ["Why-1.jpg", "Why-2.jpg", "Why-3.jpg", "Why-4.jpg"], description: "สายชาร์จ Why USB ความยาว 1.0 เมตร มีให้เลือก Micro, Type-C และ iPhone", specs: "ประเภทพอร์ต: Micro / Type-C / iPhone", badge: "" },
   { id: "acc-anidary-anc001", name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", emoji: "🔌", img: "USB-I 12W-1.jpg", images: ["USB-I 12W-1.jpg", "USB-I 12W-2.jpg", "USB-I 12W-3.jpg"], description: "สายชาร์จ Anidary ANC001 USB to Lightning คุณภาพสูง ทนทาน", specs: "แตะเพื่อดูรูปภาพเพิ่มเติม", badge: "" },
   { id: "acc-anidary-ctoc", name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", images: ["Anidary Type c To c - 1.jpg", "Anidary Type c To c - 2.jpg", "Anidary Type c To c - 3.jpg", "Anidary Type c To c - 4.jpg"], description: "สายชาร์จ Anidary ANC007 Type C to C ชาร์จเร็วและเสถียร แข็งแรงทนทาน", specs: "แตะเพื่อดูรูปภาพเพิ่มเติม", badge: "" },
-  { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", images: ["Anidary Type c To c - 1.jpg", "Anidary Type c To c - 2.jpg", "Anidary Type c To c - 3.jpg", "Anidary Type c To c - 4.jpg"], description: "โปรโมชั่นพิเศษ! สายชาร์จ Anidary ANC007 Type C to C ในราคาเพียง 1 บาทเท่านั้น!", specs: "แตะเพื่อดูรูปภาพเพิ่มเติม", badge: "โปรโมชั่น 1฿" }
+  { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", images: ["Anidary Type c To c - 1.jpg", "Anidary Type c To c - 2.jpg", "Anidary Type c To c - 3.jpg", "Anidary Type c To c - 4.jpg"], description: "โปรโมชั่นพิเศษ! สายชาร์จ Anidary ANC007 Type C to C ในราคาเพียง 1 บาทเท่านั้น!", specs: "แตะเพื่อดูรูปภาพเพิ่มเติม", badge: "โปรโมชั่น 1฿" },
+  
+  // --- Baseline Spare Parts ---
+  { id: "part-screen-iph13", name: "จอ iPhone 13 (งานแท้)", price: 3500, brand: "Apple", category: "parts", emoji: "🔧", description: "หน้าจอ iPhone 13 งานแท้ สีสันคมชัด ทัชลื่น รับประกัน 6 เดือน", specs: "งานแท้ · รับประกัน 6 เดือน", badge: "ยอดนิยม" },
+  { id: "part-batt-iph11", name: "แบตเตอรี่ iPhone 11 (เพิ่มความจุ)", price: 1200, brand: "Apple", category: "parts", emoji: "🔋", description: "แบตเตอรี่ iPhone 11 เกรดมอก. เพิ่มความจุ ใช้งานได้นานกว่าเดิม", specs: "มอก. · เพิ่มความจุ · รับประกัน 1 ปี", badge: "ขายดี" },
+  { id: "part-screen-s23u", name: "จอ Samsung S23 Ultra (OLED)", price: 6500, brand: "Samsung", category: "parts", emoji: "🔧", description: "หน้าจอ Samsung S23 Ultra งาน OLED สีสวยสดใส รองรับการสแกนนิ้ว", specs: "OLED · รองรับสแกนนิ้ว · รับประกัน 6 เดือน", badge: "เกรดพรีเมียม" },
+  { id: "part-charging-iph12", name: "ชุดแพรชาร์จ iPhone 12", price: 890, brand: "Apple", category: "parts", emoji: "🔌", description: "แพรตูดชาร์จ iPhone 12 แก้ปัญหาชาร์จไม่เข้า ไมค์ไม่ดัง", specs: "ของใหม่ · รับประกัน 3 เดือน", badge: "" }
 ];
 
 const ITEMS_PER_PAGE = 12;
@@ -28,6 +34,7 @@ const ProductSync = {
         this.noResults = document.getElementById('noResults');
         this.searchInput = document.getElementById('productSearch');
         this.currentPage = 1;
+        this.activeFilter = { model: null, type: null };
 
         if (!this.grid) return;
         this.listen();
@@ -37,41 +44,49 @@ const ProductSync = {
     listen: function() {
         const baselineForCategory = MOCK_PRODUCTS_BASELINE.filter(p => p.category === this.category);
         const baselineIds = new Set(baselineForCategory.map(p => p.id));
+        const cacheKey = `pao_cache_${this.category}`;
 
-        if (typeof db === 'undefined' || !db) {
-            // No Firestore — show baseline only
+        // 1. Instant Cache Render
+        try {
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                this.allProducts = JSON.parse(cached);
+                this.render();
+            } else {
+                this.allProducts = baselineForCategory;
+                this.render();
+            }
+        } catch (e) {
             this.allProducts = baselineForCategory;
-            this.currentPage = 1;
             this.render();
-            return;
         }
 
+        if (typeof db === 'undefined' || !db) return;
+
+        // 2. Data Sync (Real-time update)
         db.collection('products')
             .where('category', '==', this.category)
             .onSnapshot(snapshot => {
+                console.log(`[Sync] Real-time data received for ${this.category}: ${snapshot.size} items`);
                 const firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const firestoreIds = new Set(firestoreProducts.map(p => p.id));
 
-                // New Firestore products (not in baseline) go FIRST
                 const newOnes = firestoreProducts.filter(p => !baselineIds.has(p.id));
-                // Baseline products, possibly overridden by Firestore if same ID
                 const mergedBaseline = baselineForCategory.map(p =>
                     firestoreIds.has(p.id) ? firestoreProducts.find(f => f.id === p.id) : p
                 );
 
-                this.allProducts = [...newOnes, ...mergedBaseline];
-                this.currentPage = 1;
+                const finalProducts = [...newOnes, ...mergedBaseline];
+                this.allProducts = finalProducts;
                 this.render();
+                localStorage.setItem(cacheKey, JSON.stringify(finalProducts));
             }, err => {
-                console.error("Firestore Listen Error:", err);
-                this.allProducts = baselineForCategory;
-                this.currentPage = 1;
-                this.render();
+                console.error("[Sync] Firestore Listen Error:", err);
             });
     },
 
     render: function() {
-        if (!this.allProducts) return;
+        if (!this.allProducts || !this.grid) return;
 
         const searchVal = this.searchInput ? this.searchInput.value.toLowerCase() : "";
         let filtered = this.allProducts;
@@ -80,10 +95,18 @@ const ProductSync = {
             filtered = filtered.filter(p =>
                 p.name.toLowerCase().includes(searchVal) ||
                 (p.brand && p.brand.toLowerCase().includes(searchVal)) ||
+                (p.partModel && p.partModel.toLowerCase().includes(searchVal)) ||
+                (p.partType && p.partType.toLowerCase().includes(searchVal)) ||
                 (p.tags && p.tags.some(t => t.toLowerCase().includes(searchVal)))
             );
-            // Reset to page 1 when searching
-            this.currentPage = 1;
+        }
+
+        // Apply Dynamic Category Filter (Real-time persistent)
+        if (this.activeFilter.model && this.activeFilter.type) {
+            filtered = filtered.filter(p => 
+                p.partModel === this.activeFilter.model && 
+                p.partType === this.activeFilter.type
+            );
         }
 
         if (filtered.length === 0) {
@@ -132,8 +155,6 @@ const ProductSync = {
         container.appendChild(prevBtn);
         container.appendChild(info);
         container.appendChild(nextBtn);
-
-        // Append after the grid
         this.grid.parentNode.insertBefore(container, this.grid.nextSibling);
     },
 
@@ -146,19 +167,13 @@ const ProductSync = {
         const priceStr = p.price ? p.price.toLocaleString() : "0";
         const badgeClass = p.badge === 'ใหม่' ? 'new' : (p.badge === 'ขายดี' ? 'hot' : 'used');
         const badgeHTML = p.badge ? `<div class="product-badge ${badgeClass}">${p.badge}</div>` : "";
-
-        let imgHTML = "";
-        if (p.img) {
-            imgHTML = `<img src="${p.img}" alt="${p.name}">`;
-        } else {
-            imgHTML = `<div class="product-emoji-placeholder" style="font-size: 3rem; height: 100%; display: flex; align-items: center; justify-content: center;">${p.emoji || '📦'}</div>`;
-        }
+        let imgHTML = p.img ? `<img src="${p.img}" alt="${p.name}">` : `<div class="product-emoji-placeholder" style="font-size: 3rem; height: 100%; display: flex; align-items: center; justify-content: center;">${p.emoji || '📦'}</div>`;
 
         const detailObj = JSON.stringify({
             id: p.id,
             name: p.name + (this.category === 'used' ? ' (มือ 2)' : ''),
             price: p.price,
-            brand: p.brand || "",
+            brand: p.brand || p.partModel || "",
             img: p.img || "",
             images: p.images || [p.img],
             description: p.description || "",
@@ -175,20 +190,15 @@ const ProductSync = {
         }).replace(/"/g, '&quot;');
 
         return `
-            <div class="product-card" data-name="${p.name.toLowerCase()}" onclick="ProductDetail.open(${detailObj})">
-                <div class="product-img">
-                    ${badgeHTML}
-                    ${imgHTML}
-                </div>
+            <div class="product-card" onclick="ProductDetail.open(${detailObj})">
+                <div class="product-img">${badgeHTML}${imgHTML}</div>
                 <div class="product-info">
-                    <div class="product-brand">${p.brand || ''}</div>
+                    <div class="product-brand">${p.brand || p.partModel || ''}</div>
                     <h3 class="product-name">${p.name}</h3>
-                    <div class="product-specs">${p.specs || ''}</div>
+                    <div class="product-specs">${p.specs || 'แตะเพื่อดูรูปภาพเพิ่มเติม'}</div>
                     <div class="product-price">฿${priceStr}</div>
                 </div>
-                <button class="btn-add-cart" onclick="event.stopPropagation(); CartAPI.add(${cartObj})">
-                    + เพิ่มลงตะกร้า
-                </button>
+                <button class="btn-add-cart" onclick="event.stopPropagation(); CartAPI.add(${cartObj})">+ เพิ่มลงตะกร้า</button>
             </div>
         `;
     },
@@ -196,17 +206,42 @@ const ProductSync = {
     initSearch: function() {
         if (!this.searchInput) return;
         this.searchInput.addEventListener('input', () => this.render());
-
         const clearBtn = document.getElementById('searchClear');
         if (clearBtn) {
-            this.searchInput.addEventListener('input', () => {
-                clearBtn.style.display = this.searchInput.value ? 'block' : 'none';
-            });
-            clearBtn.addEventListener('click', () => {
-                this.searchInput.value = "";
-                clearBtn.style.display = 'none';
-                this.render();
-            });
+            this.searchInput.addEventListener('input', () => clearBtn.style.display = this.searchInput.value ? 'block' : 'none');
+            clearBtn.addEventListener('click', () => { this.searchInput.value = ""; clearBtn.style.display = 'none'; this.render(); });
+        }
+    },
+
+    filterByTag: function(tag) {
+        if (this.searchInput) this.searchInput.value = tag;
+        const sidebarSearch = document.getElementById('sidebarSearch');
+        if (sidebarSearch) sidebarSearch.value = tag;
+        this.render();
+        if (window.innerWidth <= 992) {
+            const grid = document.querySelector('.products-grid');
+            if (grid) grid.scrollIntoView({ behavior: 'smooth' });
+        }
+    },
+
+    filterByDynamicParts: function(model, type) {
+        // Set persistent filter
+        this.activeFilter = { model, type };
+        
+        // Clear search to avoid confusion
+        if (this.searchInput) {
+            this.searchInput.value = "";
+            const clearBtn = document.getElementById('searchClear');
+            if (clearBtn) clearBtn.style.display = 'none';
+        }
+
+        // Trigger real-time render
+        this.currentPage = 1;
+        this.render();
+
+        if (window.innerWidth <= 992) {
+            const grid = document.querySelector('.products-grid');
+            if (grid) grid.scrollIntoView({ behavior: 'smooth' });
         }
     }
 };
