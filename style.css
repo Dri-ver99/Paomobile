@@ -27,6 +27,7 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 }
 @media (max-width: 768px) {
     .why-image {
+        order: -1 !important;
         max-width: 440px !important;
         width: 92% !important;
         margin: 0 auto 20px !important;
@@ -72,15 +73,17 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
     }
     .why-content {
         text-align: center;
-        margin-top: 20px;
+        margin: 20px auto 0 !important;
+        width: 92% !important;
+        max-width: 440px !important;
     }
     .why-features {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
         text-align: left;
-        width: fit-content;
-        margin: 24px auto 0;
+        width: 100% !important;
+        margin: 24px 0 0;
     }
     .wf-item {
         justify-content: flex-start;
