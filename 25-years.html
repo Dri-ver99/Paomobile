@@ -126,7 +126,6 @@
             display: flex;
             transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
             width: 100%;
-            transform: translateX(20%);
             padding: 20px 0;
             will-change: transform;
         }
@@ -942,17 +941,21 @@
     <script>
         let currentSlide = 0;
         const totalSlides = 5;
-        const itemWidth = 65; // Percent width of each slide item
         let autoSlideInterval;
+
+        function getSlideWidth() {
+            return (window.innerWidth <= 768) ? 85 : 65;
+        }
 
         function goToSlide(index) {
             currentSlide = index;
             const track = document.getElementById('sliderTrack');
             const slides = document.querySelectorAll('.slide-item');
             const dots = document.querySelectorAll('.dot');
+            const slideWidth = getSlideWidth();
 
-            // --- Ultimate Centering Formula (65% width) ---
-            const offset = 50 - (currentSlide * itemWidth + (itemWidth / 2));
+            // --- Ultimate Responsive Centering Formula ---
+            const offset = 50 - (index * slideWidth + (slideWidth / 2));
             track.style.transform = `translateX(${offset}%)`;
 
             // Update Focus (Blur/Active) and Dots
@@ -975,6 +978,11 @@
             clearInterval(autoSlideInterval);
             autoSlideInterval = setInterval(autoSlide, 5000);
         }
+
+        // Handle Resize to keep centering perfect
+        window.addEventListener('resize', () => {
+            goToSlide(currentSlide);
+        });
 
         // Start Slider
         autoSlideInterval = setInterval(autoSlide, 5000);
