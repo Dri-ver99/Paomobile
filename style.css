@@ -34,20 +34,25 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
-        padding: 0 !important;
+        padding: 10px !important; /* Premium Glassy Frame Padding */
+        background: rgba(255, 255, 255, 0.7) !important; /* Glassy background */
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        border-radius: var(--radius-xl) !important;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.08) !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
     }
     .why-image img, .why-slider-img {
         width: 100% !important;
-        height: auto !important;
-        max-height: none !important;
-        aspect-ratio: auto !important;
-        object-fit: contain !important;
+        height: 100% !important; /* Fixed height for 1:1 */
+        aspect-ratio: 1 / 1 !important;
+        object-fit: cover !important; /* Uniform Square View */
+        border-radius: calc(var(--radius-xl) - 8px) !important;
         display: block !important;
         margin: 0 !important;
         padding: 0 !important;
-        border-radius: var(--radius-lg);
         transition: transform 0.4s ease;
     }
     .whySwiper, .whySwiper .swiper-wrapper {
@@ -144,9 +149,9 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
 .hero-card:hover { transform: rotateY(0) rotateX(0); }
 .hero-card img {
     width: 100%;
-    aspect-ratio: auto;
-    object-fit: contain;
-    height: auto !important;
+    aspect-ratio: 1 / 1 !important; /* Squared uniformity */
+    object-fit: cover !important;
+    height: 100% !important;
     max-height: none !important;
     border-radius: calc(var(--radius-xl) - 8px);
     display: block;
@@ -1273,10 +1278,10 @@ input, button, select, textarea { font-family: inherit; }a{text-decoration:none;
     }
     .showcase-img {
         width: 100% !important;
-        height: auto !important;
-        max-height: none !important;
-        aspect-ratio: auto !important;
-        object-fit: contain !important;
+        height: 100% !important;
+        aspect-ratio: 1 / 1 !important; /* Uniformity */
+        object-fit: cover !important;
+        border-radius: var(--radius-lg) !important;
     }
     .v-banner-content {
         justify-content: center !important;
