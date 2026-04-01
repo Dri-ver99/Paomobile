@@ -85,14 +85,7 @@
                         memberWrapper.className = 'menu-item-wrapper guest-member-mobile-wrapper';
                         memberWrapper.style.marginTop = '10px';
                         memberWrapper.innerHTML = `
-                            <div class="menu-item-parent">💎 Member</div>
-                            <div class="mobile-sub-menu">
-                                <a href="login.html">🔑 เข้าสู่ระบบ / สมัครสมาชิก</a>
-                                <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div>
-                                <span style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">สิทธิประโยชน์</span>
-                                <a href="member.html">🎁 ตรวจสอบคะแนนสะสม</a>
-                                <a href="promotions.html">🎫 คูปองของฉัน</a>
-                            </div>
+                            <a href="member.html" class="menu-item-link">💎 Member</a>
                         `;
                         wrapper.after(memberWrapper);
                     }
@@ -220,14 +213,7 @@
                     memberWrapper.className = 'menu-item-wrapper dynamic-member-mobile-wrapper';
                     memberWrapper.style.marginTop = '10px';
                     memberWrapper.innerHTML = `
-                        <div class="menu-item-parent">💎 Member</div>
-                        <div class="mobile-sub-menu">
-                            <a href="member.html">👤 โปรไฟล์ของฉัน</a>
-                            <a href="purchases.html">📦 ประวัติการซื้อของฉัน</a>
-                            <a href="promotions.html">🎫 คูปองและสิทธิพิเศษ</a>
-                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div>
-                            <a href="javascript:void(0)" onclick="localStorage.removeItem('paomobile_user'); window.location.reload();" style="color: #ef4444 !important;">🚪 ออกจากระบบ</a>
-                        </div>
+                        <a href="member.html" class="menu-item-link">💎 Member</a>
                     `;
                     wrapper.after(memberWrapper);
                 }

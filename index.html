@@ -31,7 +31,7 @@
             /* Below navbar */
             left: 50%;
             transform: translateX(-50%);
-            width: fit-content;
+            width: 95%; /* Default to wide */
             max-width: 95%;
             z-index: 9998;
             border-radius: 20px;
@@ -40,23 +40,22 @@
             animation: stripAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        @media (min-width: 992px) {
+            .v-banner-strip {
+                width: 95%;
+                max-width: 920px; /* Increased to fit 3 cards + paddings perfectly */
+            }
+        }
+
         .navbar.scrolled~.v-banner-strip {
             top: 85px;
         }
 
         .v-banner-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            padding: 0 65px 0 25px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-
-        .v-banner-content::-webkit-scrollbar {
-            display: none;
+            width: calc(100% - 50px) !important; /* Adjusted to match new button position */
+            margin-left: 10px; /* Slimmer margin */
+            overflow: hidden !important;
+            position: relative;
         }
 
         /* Mini Ticket Card */
@@ -64,13 +63,13 @@
             background: #fff;
             border-radius: 16px;
             display: flex;
-            min-width: 290px;
+            width: 100%; /* Let Swiper control the width */
             height: 72px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
             border: 1px solid rgba(0, 0, 0, 0.02);
             position: relative;
             flex-shrink: 0;
-            transition: transform 0.3s var(--ease);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .v-mini-card:hover {
@@ -216,7 +215,7 @@
 
         .v-banner-close {
             position: absolute;
-            right: 18px;
+            right: 8px; /* Moved further to the right */
             top: 50%;
             transform: translateY(-50%);
             width: 32px;
@@ -281,18 +280,85 @@
         }
 
         @keyframes shineSweep {
-            0% {
-                left: -100%;
-            }
-
-            20% {
-                left: 100%;
-            }
-
-            100% {
-                left: 100%;
-            }
+            0% { left: -100%; }
+            20% { left: 100%; }
+            100% { left: 100%; }
         }
+
+        /* Success Toast Styles */
+        .v-success-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 35px 50px;
+            border-radius: 32px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .v-success-toast.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .v-success-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+            animation: iconPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
+        }
+        .v-success-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .v-success-msg {
+            font-size: 1rem;
+            color: #64748b;
+            text-align: center;
+        }
+        .v-success-val {
+            margin-top: 10px;
+            font-weight: 800;
+            color: #ee4d2d;
+            font-size: 1.2rem;
+            background: #fff5f5;
+            padding: 4px 16px;
+            border-radius: 12px;
+        }
+        @keyframes iconPop {
+            0% { transform: scale(0); rotate: -45deg; }
+            100% { transform: scale(1); rotate: 0deg; }
+        }
+        .v-success-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s;
+        }
+        .v-success-overlay.active { opacity: 1; visibility: visible; }
 
         .v-mini-card {
             position: relative;
@@ -322,6 +388,19 @@
                 top: 85px;
                 width: 98%;
                 border-radius: 20px;
+                height: 84px; /* Fixed height for consistency */
+            }
+
+            .v-banner-content {
+                padding: 0 40px 0 10px !important;
+                height: 100% !important;
+            }
+
+            .swiper-slide {
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                width: 100% !important;
             }
 
             .v-mini-card {
@@ -915,7 +994,7 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
 
             window.claimHomeVoucher = async (code, value, type, btn) => {
                 const userData = localStorage.getItem('paomobile_user');
-                if (!userData) { alert("กรุณาเข้าสู่ระบบก่อนเก็บคูปองนะค๊าบ 😊"); window.location.href = 'login.html'; return; }
+                if (!userData) { alert("กรุณาสมัครสมาชิกหรือเข้าสู่ระบบก่อนเก็บคูปองนะค๊าบ 😊"); window.location.href = 'login.html'; return; }
                 const user = JSON.parse(userData);
                 const storageKey = 'pao_user_vouchers_' + user.email;
                 let myVouchers = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -923,6 +1002,10 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                 btn.innerHTML = '🕒'; btn.style.pointerEvents = 'none';
                 myVouchers.push({ code, value, type, claimedAt: new Date().toISOString() });
                 localStorage.setItem(storageKey, JSON.stringify(myVouchers));
+                
+                // Show Success Toast
+                showClaimSuccess(code, value, type);
+
                 setTimeout(() => {
                     btn.innerHTML = 'เก็บแล้ว'; btn.classList.add('claimed');
                     const remaining = content.querySelectorAll('.vmc-btn:not(.claimed)');
@@ -932,6 +1015,40 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                     }
                 }, 800);
             };
+
+            function showClaimSuccess(code, value, type) {
+                const isShip = type === 'shipping' || type === 'ship';
+                const overlay = document.createElement('div');
+                overlay.className = 'v-success-overlay';
+                const toast = document.createElement('div');
+                toast.className = 'v-success-toast';
+                toast.innerHTML = `
+                    <div class="v-success-icon">
+                        <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="v-success-title">รับคูปองสำเร็จ! 🎉</div>
+                    <div class="v-success-msg">คูปองของคุณถูกเก็บเข้ากระเป๋าแล้ว</div>
+                    <div class="v-success-val">${isShip ? '🎫 คูปองส่งฟรี' : '🎫 ส่วนลด ฿' + value}</div>
+                `;
+                document.body.appendChild(overlay);
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    overlay.classList.add('active');
+                    toast.classList.add('active');
+                }, 10);
+
+                setTimeout(() => {
+                    overlay.classList.remove('active');
+                    toast.classList.remove('active');
+                    setTimeout(() => {
+                        overlay.remove();
+                        toast.remove();
+                    }, 500);
+                }, 3000);
+            }
 
             async function initVoucherStrip() {
                 try {
@@ -957,21 +1074,53 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                     let displayedCount = 0;
                     vouchers.forEach(v => {
                         if (claimedCodes.includes(v.code)) return;
-                        if (displayedCount >= 3) return;
+                        if (displayedCount >= 10) return; // Allow more in slider
                         const isShip = v.type === 'shipping' || v.type === 'ship';
                         html += `
-                    <div class="v-mini-card" style="animation-delay: ${displayedCount * 0.15}s;">
-                        <div class="vmc-left ${isShip ? 'ship' : ''}"><div class="vmc-val">${isShip ? 'FREE' : '฿' + v.value}</div><div class="vmc-label">${isShip ? 'ส่งฟรี' : 'ส่วนลด'}</div></div>
-                        <div class="vmc-right">
-                            <div class="vmc-notches"><div class="vmc-notch-top"></div><div class="vmc-notch-bottom"></div></div>
-                            <div class="vmc-divider"></div>
-                            <div class="vmc-info"><div class="vmc-title">${v.title || 'คูปองพิเศษ'}</div><div class="vmc-desc">โค้ด: ${v.code}</div></div>
-                            <button onclick="claimHomeVoucher('${v.code}', ${v.value}, '${v.type}', this)" class="vmc-btn">เก็บคูปอง</button>
+                    <div class="swiper-slide">
+                        <div class="v-mini-card">
+                            <div class="vmc-left ${isShip ? 'ship' : ''}"><div class="vmc-val">${isShip ? 'FREE' : '฿' + v.value}</div><div class="vmc-label">${isShip ? 'ส่งฟรี' : 'ส่วนลด'}</div></div>
+                            <div class="vmc-right">
+                                <div class="vmc-notches"><div class="vmc-notch-top"></div><div class="vmc-notch-bottom"></div></div>
+                                <div class="vmc-divider"></div>
+                                <div class="vmc-info"><div class="vmc-title">${v.title || 'คูปองพิเศษ'}</div><div class="vmc-desc">โค้ด: ${v.code}</div></div>
+                                <button onclick="claimHomeVoucher('${v.code}', ${v.value}, '${v.type}', this)" class="vmc-btn">เก็บคูปอง</button>
+                            </div>
                         </div>
                     </div>`;
                         displayedCount++;
                     });
-                    if (displayedCount > 0) { content.innerHTML = html; strip.style.display = 'block'; }
+
+                    if (displayedCount > 0) { 
+                        content.innerHTML = `<div class="swiper-wrapper">${html}</div>`; 
+                        strip.style.display = 'block'; 
+                        
+                        // Initialize Swiper for Vouchers
+                        new Swiper(content, { 
+                            direction: 'horizontal',
+                            loop: displayedCount > 3, // Only loop if we have more than 3
+                            slidesPerView: 1,
+                            slidesPerGroup: 1, // Slide 1 by 1
+                            centeredSlides: true,
+                            speed: 800,
+                            autoplay: {
+                                delay: 3500,
+                                disableOnInteraction: false,
+                            },
+                            breakpoints: {
+                                768: {
+                                    slidesPerView: 2,
+                                    spaceBetween: 12,
+                                    centeredSlides: false
+                                },
+                                1024: {
+                                    slidesPerView: 3,
+                                    spaceBetween: 20,
+                                    centeredSlides: false
+                                }
+                            }
+                        });
+                    }
                 } catch (err) { console.error("[Strip] Error:", err); }
             }
             initVoucherStrip();
