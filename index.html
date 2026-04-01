@@ -866,9 +866,17 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
         document.addEventListener("DOMContentLoaded", function () {
             if (typeof Swiper !== 'undefined') {
                 new Swiper('.heroSwiper', { slidesPerView: 1, loop: true, effect: 'fade', fadeEffect: { crossFade: true }, speed: 1500, autoplay: { delay: 3000, disableOnInteraction: false } });
-                new Swiper('.whySwiper', { slidesPerView: 1, loop: true, effect: 'fade', fadeEffect: { crossFade: true }, speed: 1200, autoHeight: true, autoplay: { delay: 3500, disableOnInteraction: false } });
+                new Swiper('.whySwiper', { 
+                    slidesPerView: 1.2, 
+                    centeredSlides: true, 
+                    spaceBetween: 20,
+                    loop: true, 
+                    speed: 1200, 
+                    autoHeight: true, 
+                    autoplay: { delay: 3500, disableOnInteraction: false } 
+                });
                 new Swiper('.showcaseSwiper', { 
-                    slidesPerView: 1.1, 
+                    slidesPerView: 1.2, 
                     centeredSlides: true,
                     spaceBetween: 20, 
                     loop: true, 
