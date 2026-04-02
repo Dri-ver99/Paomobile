@@ -145,19 +145,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 html += `
                     <tr id="row-${id}">
-                        <td>
+                        <td data-label="รหัส / ชื่อ">
                             <div style="font-weight: 600; color: #222;">${v.code}</div>
                             <div style="font-size: 0.8rem; color: #888;">${v.title}</div>
                         </td>
-                        <td><span class="v-type-tag ${typeClass}">${typeLabel}</span></td>
-                        <td><strong style="color: #ee4d2d;">฿${v.value}</strong></td>
-                        <td style="text-align: center; font-size: 0.8rem;">${showHomeIcon}</td>
-                        <td>฿${v.minPurchase || 0}</td>
-                        <td style="color: ${v.isPermanent ? '#27ae60' : 'inherit'}; font-weight: ${v.isPermanent ? '600' : 'normal'};">
+                        <td data-label="ประเภท"><span class="v-type-tag ${typeClass}">${typeLabel}</span></td>
+                        <td data-label="ส่วนลด"><strong style="color: #ee4d2d;">฿${v.value}</strong></td>
+                        <td data-label="หน้าแรก" style="text-align: center; font-size: 0.8rem;">${showHomeIcon}</td>
+                        <td data-label="ขั้นต่ำ">฿${v.minPurchase || 0}</td>
+                        <td data-label="หมดอายุ" style="color: ${v.isPermanent ? '#27ae60' : 'inherit'}; font-weight: ${v.isPermanent ? '600' : 'normal'};">
                             ${v.isPermanent ? '♾️ ถาวร' : formatDate(v.expiry)}
                         </td>
-                        <td>
-                            <div style="display:flex; gap:5px;">
+                        <td data-label="จัดการ">
+                            <div style="display:flex; gap:5px; justify-content: flex-end;">
                                 <button class="btn-gen-qr" onclick="prepareQRModal('${v.code}', '${v.expiry || ''}')" title="สร้าง Secure QR">🎫 สแกน</button>
                                 <button class="btn-gen-qr" style="background:#f39c12" onclick="editVoucher('${id}')" title="จัดการการแสดงผล/แก้ไข">✏️</button>
                                 <button class="btn-delete" onclick="deleteVoucher('${id}', '${v.code}')" title="ลบคูปอง">🗑️</button>

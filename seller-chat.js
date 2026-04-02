@@ -176,9 +176,12 @@
         const chatMain = document.getElementById('chatMain');
         chatMain.innerHTML = `
             <div class="chat-header-shopee">
-                <div class="header-user-info">
-                    <div class="header-user-avatar" style="overflow:hidden;">${avatarHtml}</div>
-                    <div class="header-user-name">${chatData.userName || chatId} <span style="font-size:0.8rem; color:#aaa;">∨</span></div>
+                <div style="display:flex; align-items:center;">
+                    <div class="btn-back-chat" onclick="closeMobileChat()">⬅️</div>
+                    <div class="header-user-info">
+                        <div class="header-user-avatar" style="overflow:hidden;">${avatarHtml}</div>
+                        <div class="header-user-name">${chatData.userName || chatId} <span style="font-size:0.8rem; color:#aaa;">∨</span></div>
+                    </div>
                 </div>
                 <div style="display:flex; gap:15px; align-items:center;">
                     <button onclick="openProductPicker()" style="background:#f1f5f9; border:none; padding:6px 12px; border-radius:4px; font-size:0.8rem; cursor:pointer; font-weight:500; color:#555;">🎁 ส่งสินค้า</button>
@@ -215,6 +218,10 @@
                 </div>
             </div>
         `;
+
+        // v1.8.0 - Mobile Transition
+        const layout = document.querySelector('.chat-layout');
+        if (layout) layout.classList.add('show-chat');
 
         // Mark as Read
         db.collection('chats').doc(chatId).update({ unreadCount: 0 }).catch(e => console.warn("[SellerChat] Unread update failed:", e));
@@ -345,6 +352,12 @@
             e.preventDefault();
             sendReply();
         }
+    };
+
+    window.closeMobileChat = () => {
+        const layout = document.querySelector('.chat-layout');
+        if (layout) layout.classList.remove('show-chat');
+        activeChatId = null; // Clear active chat to allow re-opening same chat on some browsers
     };
 
     function toggleFooter(enabled) {

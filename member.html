@@ -421,33 +421,42 @@
 
         .empty-vouchers {
             text-align: center;
-            padding: 30px 20px;
-            margin: 10px 0;
+            padding: 60px 20px;
+            margin: 20px 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             flex: 1;
+            background: #fff;
+            border-radius: 16px;
         }
 
         .empty-vouchers-icon {
-            font-size: 3.5rem;
-            margin-bottom: 15px;
-            opacity: 0.3;
-            display: block;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.9;
         }
 
         .empty-vouchers h5 {
-            color: #475569;
-            font-size: 1rem;
-            margin: 0 0 5px 0;
-            font-weight: 600;
+            color: #1e293b;
+            font-size: 1.25rem;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+            letter-spacing: -0.01em;
         }
 
         .empty-vouchers p {
             color: #94a3b8;
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             margin: 0;
+            font-weight: 400;
+            max-width: 260px;
+            line-height: 1.5;
         }
 
         /* Toast */
@@ -973,7 +982,15 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                 el.classList.add('is-empty');
                 el.innerHTML = `
                     <div class="empty-vouchers">
-                        <span class="empty-vouchers-icon">🎫</span>
+                        <div class="empty-vouchers-icon">
+                            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="4" y="16" width="56" height="32" rx="6" fill="#FDE68A" fill-opacity="0.4"/>
+                                <path d="M4 32C6.20914 32 8 30.2091 8 28V20C8 18.8954 8.89543 18 10 18H54C55.1046 18 56 18.8954 56 20V28C56 30.2091 57.7909 32 60 32C57.7909 32 56 33.7909 56 36V44C56 45.1046 55.1046 46 54 46H10C8.89543 46 8 45.1046 8 44V36C8 33.7909 6.20914 32 4 32Z" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2.5" stroke-dasharray="4 4"/>
+                                <circle cx="48" cy="32" r="4" fill="#F59E0B" fill-opacity="0.2"/>
+                                <rect x="16" y="26" width="16" height="3" rx="1.5" fill="#F59E0B" fill-opacity="0.3"/>
+                                <rect x="16" y="34" width="24" height="3" rx="1.5" fill="#F59E0B" fill-opacity="0.3"/>
+                            </svg>
+                        </div>
                         <h5>คุณยังไม่มีคูปองตอนนี้</h5>
                         <p>รวบรวมคูปองส่วนลดเพื่อรับสิทธิพิเศษที่นี่ครับ</p>
                     </div>

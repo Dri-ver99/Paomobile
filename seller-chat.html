@@ -251,6 +251,78 @@
 
         /* Product Detail Modal Styles (Common) */
         .product-modal-overlay{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:none;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.3s ease;}.product-modal-overlay.open{display:flex;opacity:1;}.product-modal-container{background:#ffffff;width:100%;max-width:900px;border-radius:32px;padding:40px;position:relative;box-shadow:0 40px 100px rgba(0,0,0,0.25);transform:translateY(20px) scale(0.98);transition:transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);}.product-modal-overlay.open .product-modal-container{transform:translateY(0) scale(1);}.pd-close-btn{position:absolute;top:24px;right:24px;background:#f5f5f7;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.1rem;color:#1d1d1f;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}.pd-close-btn:hover{background:#e8e8ed;transform:rotate(90deg);}.pd-layout{display:flex;gap:40px;align-items:flex-start;}.pd-image-side{flex:1;background:#fbfbfd;border-radius:24px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:8rem;transition:transform 0.5s cubic-bezier(0.16,1,0.3,1);}.product-modal-overlay.open .pd-image-side{transform:scale(1.05);}.pd-info-side{flex:1;display:flex;flex-direction:column;gap:20px;}.pd-brand{font-size:0.9rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:1px;}.pd-name{font-size:2.2rem;font-weight:700;color:#1d1d1f;line-height:1.1;margin-bottom:4px;}.pd-sku{font-size:0.85rem;color:#86868b;margin-bottom:12px;}.pd-price-wrap{display:flex;align-items:baseline;gap:12px;margin-bottom:8px;}.pd-price-original{font-size:1.1rem;color:#86868b;text-decoration:line-through;}.pd-price-promo{font-size:1.8rem;font-weight:700;color:#FF7A28;}.pd-sale-badge{background:#FF7A28;color:#fff;padding:2px 10px;border-radius:6px;font-size:0.75rem;font-weight:700;vertical-align:middle;margin-left:8px;}.pd-shipping{font-size:0.9rem;color:#86868b;margin-bottom:10px;}.pd-selector-item{margin-bottom:24px;}.pd-label{font-size:0.95rem;font-weight:600;color:#1d1d1f;margin-bottom:12px;display:block;}.pd-options{display:flex;flex-wrap:wrap;gap:10px;}.pd-option{padding:10px 18px;border:1.5px solid #d2d2d7;border-radius:12px;font-size:0.9rem;cursor:pointer;transition:all 0.2s;}.pd-option.selected{border-color:#0071e3;background:rgba(0,113,227,0.05);color:#0071e3;font-weight:600;}.pd-option.disabled{opacity:0.5;cursor:not-allowed;background:#f5f5f7;}.pd-qty-group{display:flex;align-items:center;gap:16px;}.pd-qty-btn{width:36px;height:36px;border:1.5px solid #d2d2d7;border-radius:10px;background:#fff;font-size:1.2rem;cursor:pointer;transition:all 0.2s;}.pd-qty-btn:hover{border-color:#1d1d1f;background:#f5f5f7;}.pd-qty-val{font-size:1.1rem;font-weight:600;min-width:30px;text-align:center;}.pd-actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;}.pd-btn{padding:16px;border-radius:14px;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none;}.pd-btn-cart{background:#fff;border:1.5px solid #1d1d1f;color:#1d1d1f;}.pd-btn-cart:hover{background:#f5f5f7;}.pd-btn-buy{background:#1d1d1f;border:none;color:#fff;}.pd-btn-buy:hover{opacity:0.9;}.pd-desc{font-size:0.95rem;color:#48484a;line-height:1.6;margin-top:10px;}.pd-carousel{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:24px;}.pd-main-img{width:100%;height:100%;object-fit:contain;transition:opacity 0.3s ease;}.pd-carousel-prev,.pd-carousel-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.85);border:1px solid rgba(0,0,0,0.1);color:#1d1d1f;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;z-index:10;transition:all 0.2s;box-shadow:0 4px 12px rgba(0,0,0,0.08);}.pd-carousel-prev:hover,.pd-carousel-next:hover{background:#fff;transform:translateY(-50%) scale(1.05);}.pd-carousel-prev{left:16px;}.pd-carousel-next{right:16px;}.pd-carousel-dots{display:flex;justify-content:center;gap:8px;margin-top:16px;position:absolute;bottom:16px;width:100%;}.pd-dot{width:8px;height:8px;border-radius:50%;background:rgba(0,0,0,0.2);cursor:pointer;transition:all 0.2s;}.pd-dot.active{background:#1d1d1f;transform:scale(1.2);}.pd-image-side{position:relative;}
+
+        /* Mobile Optimized Chat View - Single Pane Switching */
+        @media (max-width: 768px) {
+            .chat-layout {
+                margin-left: 0 !important;
+                width: 100% !important;
+                height: calc(100vh - 60px) !important;
+                margin-top: 60px !important;
+                position: relative;
+                overflow: hidden;
+            }
+            .chat-sidebar {
+                width: 100% !important;
+                position: absolute;
+                inset: 0;
+                transition: transform 0.3s ease;
+                z-index: 10;
+            }
+            .chat-main {
+                width: 100% !important;
+                position: absolute;
+                inset: 0;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                z-index: 20;
+            }
+            /* Toggle Classes */
+            .chat-layout.show-chat .chat-sidebar {
+                transform: translateX(-100%);
+            }
+            .chat-layout.show-chat .chat-main {
+                transform: translateX(0);
+            }
+            .sidebar-header-shopee {
+                padding: 15px 20px;
+            }
+            .chat-item-avatar {
+                width: 48px;
+                height: 48px;
+            }
+            .chat-header-shopee {
+                padding: 10px 15px;
+            }
+            .header-user-avatar {
+                width: 36px;
+                height: 36px;
+            }
+            .header-user-name {
+                font-size: 1rem;
+            }
+            .messages-container {
+                padding: 15px 20px;
+            }
+            .msg-bubble {
+                font-size: 1rem;
+                padding: 10px 14px;
+            }
+            .btn-back-chat {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                width: 32px;
+                height: 32px;
+                background: #f8fafc;
+                border-radius: 50%;
+                cursor: pointer;
+                margin-right: 10px;
+                font-size: 1.1rem;
+            }
+        }
+        .btn-back-chat { display: none; }
+
     </style>
 </head>
 <body>
@@ -292,6 +364,11 @@
 
     <header class="top-nav">
         <div class="nav-left">
+            <button class="hamburger-menu" id="mobileMenuBtn" onclick="toggleSellerMobileMenu(true)">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <h2 style="font-size: 1.25rem; font-weight: 600; color: #333;">💬 จัดการแชทลูกค้า (Shopee Style)</h2>
         </div>
     </header>
@@ -414,6 +491,46 @@
                 firebase.auth().signInAnonymously().catch(err => console.error("Seller Auth Error:", err));
             }
         });
+    </script>
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
+        <div class="mobile-sidebar" onclick="event.stopPropagation()">
+            <div class="mobile-sidebar-header">
+                <a href="seller-centre.html" class="logo">
+                    <img src="logo.png" alt="Paomobile">
+                    <span>Seller Centre</span>
+                </a>
+                <div class="mobile-sidebar-close" onclick="toggleSellerMobileMenu(false)">&times;</div>
+            </div>
+            <div class="mobile-sidebar-content">
+                <nav class="sidebar-menu">
+                    <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                        <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                            <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                        </a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">เมนูหลัก</p>
+                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                        <a href="seller-chat.html" class="menu-item active"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
+                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">คำสั่งซื้อ</p>
+                        <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSellerMobileMenu(open) {
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (open) overlay.classList.add('active');
+            else overlay.classList.remove('active');
+        }
     </script>
     <script src="seller-chat.js"></script>
 </body>

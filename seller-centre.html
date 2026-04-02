@@ -166,6 +166,11 @@
     <!-- Top Navigation -->
     <header class="top-nav">
         <div class="nav-left">
+            <button class="hamburger-menu" id="mobileMenuBtn" onclick="toggleSellerMobileMenu(true)">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <h2>ยินดีต้อนรับสู่ Seller Centre</h2>
         </div>
         <div class="nav-right">
@@ -310,6 +315,46 @@
         };
         firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
+    </script>
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
+        <div class="mobile-sidebar" onclick="event.stopPropagation()">
+            <div class="mobile-sidebar-header">
+                <a href="seller-centre.html" class="logo">
+                    <img src="logo.png" alt="Paomobile">
+                    <span>Seller Centre</span>
+                </a>
+                <div class="mobile-sidebar-close" onclick="toggleSellerMobileMenu(false)">&times;</div>
+            </div>
+            <div class="mobile-sidebar-content">
+                <nav class="sidebar-menu">
+                    <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                        <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                            <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                        </a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">เมนูหลัก</p>
+                        <a href="seller-centre.html" class="menu-item active"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                        <a href="seller-chat.html" class="menu-item"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
+                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">คำสั่งซื้อ</p>
+                        <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSellerMobileMenu(open) {
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (open) overlay.classList.add('active');
+            else overlay.classList.remove('active');
+        }
     </script>
     <script src="seller-centre.js?v=1.2.10"></script>
 </body>

@@ -265,17 +265,17 @@ function renderOrders() {
 
                     return `
                         <tr>
-                            <td style="color: #4080ff; font-family: monospace; font-size: 0.95rem;">${order.id}</td>
-                            <td>
+                            <td data-label="หมายเลขคำสั่งซื้อ" style="color: #4080ff; font-family: monospace; font-size: 0.95rem;">${order.id}</td>
+                            <td data-label="สินค้า">
                                 <div style="font-weight: 500;">${firstItemName}${others}</div>
                                 <div style="font-size: 0.8rem; color: #757575; margin-top: 4px;">ลูกค้า: ${order.customerName || 'ไม่ระบุชื่อ'} (${order.customerPhone || '-'})</div>
                                 ${trackingHTML}
                             </td>
-                            <td style="text-align: center; font-weight: 600; font-size: 1rem; color: #ee4d2d;">฿${(order.total || 0).toLocaleString()}</td>
-                            <td style="text-align: center;">
+                            <td data-label="ยอดรวม" style="text-align: center; font-weight: 600; font-size: 1rem; color: #ee4d2d;">฿${(order.total || 0).toLocaleString()}</td>
+                            <td data-label="สถานะ" style="text-align: center;">
                                 <span class="status-tag" style="${getStatusStyle(order.status)}">${order.status}</span>
                             </td>
-                            <td style="text-align: right;">
+                            <td data-label="จัดการ" style="text-align: right;">
                                 ${order.status === 'ที่ต้องชำระ' ? `<span style="font-size:0.8rem; color:#888;">รอการชำระเงิน/AI ตรวจสอบ</span>` : ''}
                                 ${order.status === 'ที่ต้องจัดส่ง' ? `<button class="btn-ship" onclick="shipOrder('${order.id}')">จัดส่ง</button>` : ''}
                                 ${order.status === 'เตรียมจัดส่งแล้ว' ? `<button class="btn-ship" onclick="confirmSent('${order.id}')" style="background: #1890ff;">แจ้งส่งพัสดุ</button>` : ''}

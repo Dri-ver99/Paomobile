@@ -345,7 +345,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
     document.head.appendChild(style);
 
     chatContainer.innerHTML = `
-        <div id="chatWindow" class="chat-window" style="border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.1); overflow: hidden;">
+        <div id="chatWindow" class="chat-window">
             <div class="chat-header">
                 <div style="display:flex; align-items:center; gap:12px;">
                     <div style="width:34px; height:34px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
@@ -377,26 +377,23 @@ badge.textContent = '⚫ ปิดให้บริการ';
                 <div class="preview-remove" onclick="removeChatPreview()">✕</div>
             </div>
 
-            <div class="chat-input-area" style="background:#fff; border-top:1px solid #e2e8f0; padding:12px 14px 14px;">
-                <div style="display:grid; grid-template-columns: auto 1fr; align-items:center; gap:12px;">
-                    <!-- Tools on Left -->
-                    <div class="chat-tools" style="display:flex; gap:12px; color:#64748b; align-items:center;">
-                        <label for="custImageUpload" style="cursor:pointer; font-size:1.3rem; transition: transform 0.2s;" title="ส่งรูปภาพ">🖼️</label>
-                        <input type="file" id="custImageUpload" accept="image/*" style="display:none;" onchange="handleCustomerFileUpload(this, 'image')">
-                        
-                        <span style="cursor:pointer; font-size:1.3rem;" title="อีโมจิ" onclick="toggleEmojiPicker()">😊</span>
+            <div class="chat-input-area">
+                <div class="chat-input-container">
+                    <!-- Tools move back to the left, outside the pill -->
+                    <div class="chat-tools">
+                        <label for="custImageUpload" title="ส่งรูปภาพ">🖼️</label>
+                        <input type="file" id="custImageUpload" accept="image/*" onchange="handleCustomerFileUpload(this, 'image')">
+                        <span title="อีโมจิ" onclick="toggleEmojiPicker()">😊</span>
                     </div>
 
                     <!-- Emoji Picker Grid -->
                     <div id="emojiPicker" class="emoji-picker"></div>
 
-                    <!-- Input Pill with Guaranteed Absolute Button -->
-                    <div style="position:relative; background:#f8fafc; border-radius:28px; border:1px solid #e2e8f0; height:46px; display:flex; align-items:center; overflow:hidden;">
-                        <input type="text" id="chatInput" class="chat-input" placeholder="พิมพ์บอกร้านได้เลยค๊าบ..." onkeypress="if(event.key === 'Enter') sendChatMessage()" 
-                            style="width:100%; height:100%; border:none; background:transparent; padding:0 50px 0 16px; font-size:0.92rem; outline:none; color:#1e293b; box-sizing:border-box;">
-                        <button class="btn-send" onclick="sendChatMessage()" 
-                            style="position:absolute; right:4px; top:50%; transform:translateY(-50%); background:#ee4d2d; color:#fff; border:none; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 10px rgba(238,77,45,0.3); z-index:10;">
-                            <span style="font-size:1rem; transform: translateX(1px);">🏹</span>
+                    <!-- Input Pill with Guaranteed Full Width remaining -->
+                    <div class="chat-input-pill">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="พิมพ์บอกร้านได้เลยค๊าบ..." onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                        <button class="btn-send" onclick="sendChatMessage()">
+                            <span>🏹</span>
                         </button>
                     </div>
                 </div>
