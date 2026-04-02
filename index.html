@@ -1058,9 +1058,17 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                     let vouchers = [];
                     snapshot.forEach(doc => {
                         const data = doc.data();
-                        if (data.expiry && data.expiry >= now) vouchers.push(data);
+                        // Include if permanent OR if not expired
+                        if (data.isPermanent || (data.expiry && data.expiry >= now)) {
+                            vouchers.push(data);
+                        }
                     });
-                    vouchers.sort((a, b) => a.expiry.localeCompare(b.expiry));
+                    // Sort by expiry (permanent goes to the end or start, let's keep them stable)
+                    vouchers.sort((a, b) => {
+                        if (a.isPermanent && !b.isPermanent) return 1;
+                        if (!a.isPermanent && b.isPermanent) return -1;
+                        return (a.expiry || '').localeCompare(b.expiry || '');
+                    });
                     if (vouchers.length === 0) return;
 
                     const userData = localStorage.getItem('paomobile_user');
