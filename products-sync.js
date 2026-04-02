@@ -30,6 +30,7 @@ const ProductSync = {
         this.currentPage = 1;
         this.activeFilter = { model: null, type: null };
         this.deletedIds = [];
+        this.hasLoadedOnce = false; // Initialize the loading state
 
         if (!this.grid) return;
         this.listen();
@@ -86,6 +87,7 @@ const ProductSync = {
 
                 const finalProducts = [...newOnes, ...mergedBaseline];
                 this.allProducts = finalProducts;
+                this.hasLoadedOnce = true; // Mark as successfully loaded from Firestore
                 this.render();
                 localStorage.setItem(cacheKey, JSON.stringify(finalProducts));
                 
@@ -129,7 +131,14 @@ const ProductSync = {
 
         if (filtered.length === 0) {
             this.grid.style.display = 'none';
-            if (this.noResults) this.noResults.style.display = 'block';
+            if (this.noResults) {
+                this.noResults.style.display = 'block';
+                // Only show "No results" if we've actually finished our first real load from Firestore
+                // otherwise keep whatever "Loading" message is in the HTML.
+                if (this.hasLoadedOnce) {
+                    this.noResults.innerHTML = `🔍 ไม่พบ${this.category === 'parts' ? 'อะไหล่' : 'สินค้า'}ที่ค้นหา`;
+                }
+            }
             this.removePagination();
             return;
         }
