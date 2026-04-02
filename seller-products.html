@@ -271,7 +271,8 @@
                     </div>
                     <div>
                         <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">แบรนด์</label>
-                        <input type="text" id="formBrand" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                        <input type="text" id="formBrand" required list="brandsList" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                        <datalist id="brandsList"></datalist>
                     </div>
                 </div>
 
@@ -295,7 +296,7 @@
                 <div id="partsFields" style="display: none; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee;">
                     <div>
                         <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">รุ่นโทรศัพท์ (หมวดหลัก)</label>
-                        <select id="formPartModel" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                        <select id="formPartModel" onchange="updatePartTypeDropdown()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
                             <!-- Dynamic models -->
                         </select>
                     </div>
@@ -396,7 +397,10 @@
                             <div style="font-size: 0.8rem; color: #999;">กรุณาเพิ่มรุ่นโทรศัพท์ด้านบนก่อน...</div>
                         </div>
 
-                        <button onclick="addConfigItem('partTypes')" style="width: 100%; background: #A68A64; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background 0.2s;">+ เพิ่มประเภทอะไหล่พร้อมจับคู่รุ่น</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="partTypeSubmitBtn" onclick="addConfigItem('partTypes')" style="flex: 1; background: #A68A64; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background 0.2s;">+ เพิ่มประเภทอะไหล่พร้อมจับคู่รุ่น</button>
+                            <button id="cancelPartTypeEditBtn" onclick="resetPartTypeMode()" style="display: none; background: #f5f5f5; color: #666; border: 1px solid #ddd; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500;">ยกเลิก</button>
+                        </div>
                     </div>
 
                     <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 10px; font-weight: 600;">📦 รายการประเภทอะไหล่ที่ตั้งค่าไว้:</label>
@@ -410,6 +414,15 @@
             <div style="padding: 16px 24px; border-top: 1px solid #eee; text-align: right; background: #fcfcfc; flex-shrink: 0;">
                 <button onclick="closeCategoryModal()" style="background: #ee4d2d; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">เสร็จสิ้น</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Full Image Viewer Modal (Lightbox) -->
+    <div id="imageViewerModal" class="image-viewer-modal" onclick="closeImageViewer()">
+        <div class="iv-container" onclick="event.stopPropagation()">
+            <button class="iv-close" onclick="closeImageViewer()">&times;</button>
+            <img id="fullSizeImg" src="" class="iv-img" alt="Zoomed view">
+            <div id="ivCaption" class="iv-caption">รูปภาพที่ 1</div>
         </div>
     </div>
 
@@ -429,7 +442,7 @@
         firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
     </script>
-    <script src="seller-products.js?v=1.0.1"></script>
+    <script src="seller-products.js?v=1.0.2"></script>
 </body>
 </html>
 

@@ -914,6 +914,7 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
             let list = JSON.parse(localStorage.getItem(KEY)) || [];
             const now = new Date();
             const filtered = list.filter(v => {
+                if (v.isPermanent) return true; // Permanent vouchers never expire
                 if (!v.expiry || v.expiry === '-') return true;
                 const expDate = new Date(v.expiry + 'T23:59:59');
                 return expDate >= now;
@@ -942,7 +943,8 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                     let list = JSON.parse(localStorage.getItem(KEY)) || [];
                     if (!list.some(x => x.code === code)) {
                         const now = new Date();
-                        if (v.expiry && v.expiry !== '-') {
+                        // Ignore date check if it is permanent
+                        if (!v.isPermanent && v.expiry && v.expiry !== '-') {
                             const expDate = new Date(v.expiry + 'T23:59:59');
                             if (expDate < now) {
                                 showToast('ขออภัย คูปองนี้หมดอายุการใช้งานแล้วครับ', 'error');
@@ -984,7 +986,9 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
             el.innerHTML = list.map(i => {
                 let expiryBadge = '';
                 let expiryText = '';
-                if (i.expiry && i.expiry !== '-') {
+                if (i.isPermanent) {
+                    expiryText = `<div class="v-expiry" style="color:#27ae60; font-weight:600;">♾️ ไม่มีวันหมดอายุ</div>`;
+                } else if (i.expiry && i.expiry !== '-') {
                     const expDate = new Date(i.expiry + 'T23:59:59');
                     const diffTime = expDate - now;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));

@@ -329,6 +329,18 @@ badge.textContent = '⚫ ปิดให้บริการ';
         
         .preview-container { display:none; padding:10px 15px; background:#fff; border-top:1px solid #f1f5f9; align-items:center; gap:12px; }
         .preview-thumb { width:50px; height:50px; border-radius:8px; object-fit:cover; border:2px solid #ee4d2d; }
+
+        /* Emoji Picker Styles */
+        .emoji-picker { display:none; position:absolute; bottom:80px; left:14px; width:220px; background:#fff; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.15); border:1px solid #e2e8f0; padding:12px; z-index:100; grid-template-columns: repeat(4, 1fr); gap:8px; }
+        .emoji-picker.active { display:grid; animation: chatFadeIn 0.2s ease-out; }
+        .emoji-item { cursor:pointer; width:100%; aspect-ratio:1; border-radius:8px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
+        .emoji-item:hover { background:#f1f5f9; transform:scale(1.1); }
+        .emoji-item img { width:85%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
+
+        /* Sticker Message Bubble */
+        .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+        .sticker-img { max-width: 140px; max-height: 140px; cursor: pointer; transition: transform 0.2s; mix-blend-mode: multiply; }
+        .sticker-img:hover { transform: scale(1.05); }
     `;
     document.head.appendChild(style);
 
@@ -372,11 +384,11 @@ badge.textContent = '⚫ ปิดให้บริการ';
                         <label for="custImageUpload" style="cursor:pointer; font-size:1.3rem; transition: transform 0.2s;" title="ส่งรูปภาพ">🖼️</label>
                         <input type="file" id="custImageUpload" accept="image/*" style="display:none;" onchange="handleCustomerFileUpload(this, 'image')">
                         
-                        <label for="custFileUpload" style="cursor:pointer; font-size:1.3rem; transition: transform 0.2s;" title="ส่งไฟล์">📂</label>
-                        <input type="file" id="custFileUpload" style="display:none;" onchange="handleCustomerFileUpload(this, 'file')">
-                        
-                        <span style="cursor:pointer; font-size:1.3rem;" title="อีโมจิ">😊</span>
+                        <span style="cursor:pointer; font-size:1.3rem;" title="อีโมจิ" onclick="toggleEmojiPicker()">😊</span>
                     </div>
+
+                    <!-- Emoji Picker Grid -->
+                    <div id="emojiPicker" class="emoji-picker"></div>
 
                     <!-- Input Pill with Guaranteed Absolute Button -->
                     <div style="position:relative; background:#f8fafc; border-radius:28px; border:1px solid #e2e8f0; height:46px; display:flex; align-items:center; overflow:hidden;">
@@ -398,6 +410,66 @@ badge.textContent = '⚫ ปิดให้บริการ';
             </div>
         </div>
     `;
+    // --- Emoji Picker Implementation ---
+    function renderEmojiPicker() {
+        const picker = document.getElementById('emojiPicker');
+        if (!picker) return;
+        let html = '';
+        for (let i = 1; i <= 16; i++) {
+            html += `<div class="emoji-item" onclick="sendEmojiSticker(${i})"><img src="${i}.png" alt="emoji"></div>`;
+        }
+        picker.innerHTML = html;
+    }
+
+    window.toggleEmojiPicker = () => {
+        const picker = document.getElementById('emojiPicker');
+        if (picker) {
+            picker.classList.toggle('active');
+            if (picker.classList.contains('active') && !picker.innerHTML) {
+                renderEmojiPicker();
+            }
+        }
+    };
+
+    window.sendEmojiSticker = async (index) => {
+        const user = getChatUser();
+        if (!user) {
+            alert("🚨 กรุณาเข้าสู่ระบบก่อนนะครับ");
+            window.location.href = "login.html";
+            return;
+        }
+
+        if (!window.db) {
+            if (typeof db !== 'undefined') window.db = db;
+            else if (typeof firebase !== 'undefined') window.db = firebase.firestore();
+        }
+        
+        const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+        const normalizedEmail = user.email.trim().toLowerCase();
+        
+        toggleEmojiPicker(); // Close picker
+
+        try {
+            await ensureFirebaseAuth();
+            await window.db.collection('chats').doc(normalizedEmail).collection('messages').add({
+                type: 'sticker',
+                fileUrl: `${index}.png`,
+                sender: 'customer',
+                timestamp: timestamp
+            });
+
+            await window.db.collection('chats').doc(normalizedEmail).set({
+                lastMessage: "✨ ส่งสติ๊กเกอร์",
+                lastTimestamp: timestamp,
+                unreadCount: firebase.firestore.FieldValue.increment(1)
+            }, { merge: true });
+            
+        } catch (err) {
+            console.error("[Chat] Sticker Send Error:", err);
+            alert("❌ ส่งสติ๊กเกอร์ไม่สำเร็จครับ");
+        }
+    };
+
     document.body.appendChild(chatContainer);
 
     // --- Helpers ---
@@ -534,13 +606,13 @@ badge.textContent = '⚫ ปิดให้บริการ';
                     if (msg.type === 'card') {
                         html += `
                             <div class="msg-row seller">
-                                <div class="chat-card" style="background:#fff; border-radius:12px; overflow:hidden; border:1px solid #eef2f6;">
+                                <div class="chat-card" style="background:#fff; border-radius:12px; overflow:hidden; border:1px solid #eef2f6; cursor:pointer;" onclick="handleChatCardClick('${msg.cardData.productId}', '${msg.cardData.category}', '${msg.cardData.link}')">
                                     <img src="${msg.cardData.image}" class="chat-card-img" style="border-radius:12px 12px 0 0;">
                                     <div class="chat-card-info" style="padding:10px;">
                                         <div class="chat-card-title" style="font-weight:600; color:#1e293b;">${msg.cardData.title}</div>
                                         <div class="chat-card-price" style="color:#ee4d2d; font-weight:700;">${msg.cardData.price}</div>
                                     </div>
-                                    <a href="${msg.cardData.link}" class="chat-card-btn" target="_blank" style="display:block; text-align:center; padding:8px; background:#f8fafc; color:#64748b; text-decoration:none; font-size:0.85rem;">ดูรายละเอียด</a>
+                                    <div class="chat-card-btn" style="display:block; text-align:center; padding:8px; background:#f8fafc; color:#64748b; text-decoration:none; font-size:0.85rem; border-top:1px solid #f1f5f9;">ดูรายละเอียด</div>
                                 </div>
                             </div>
                         `;
@@ -563,6 +635,14 @@ badge.textContent = '⚫ ปิดให้บริการ';
                                             <a href="${msg.fileUrl}" target="_blank" style="font-size:0.75rem; color:#ee4d2d; font-weight:700; text-decoration:none;">📄 ดาวน์โหลดไฟล์</a>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (msg.type === 'sticker') {
+                        html += `
+                            <div class="msg-row ${isCustomer ? 'customer' : 'seller'} sticker">
+                                <div class="msg-bubble">
+                                    <img src="${msg.fileUrl}" class="sticker-img" onclick="openImageLarge('${msg.fileUrl}')">
                                 </div>
                             </div>
                         `;
@@ -803,4 +883,9 @@ badge.textContent = '⚫ ปิดให้บริการ';
         syncSellerStatus();
         startCustomerHeartbeat();
     }, 2000);
+    window.handleChatCardClick = (productId, category, link) => {
+        // ALWAYS navigate to ensure we follow the "Go to Page" requirement.
+        // ProductSync in the destination page will handle auto-opening the modal.
+        window.location.href = link;
+    };
 })();

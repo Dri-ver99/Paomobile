@@ -118,9 +118,9 @@
             border-bottom: 1px solid #e8e8e8;
             display: flex; align-items: center; justify-content: space-between;
         }
-        .header-user-info { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .header-user-avatar { width: 36px; height: 36px; border-radius: 50%; background: #eee; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #999; font-size: 0.8rem; }
-        .header-user-name { font-weight: 500; font-size: 1rem; color: #222; }
+        .header-user-info { display: flex; align-items: center; gap: 15px; cursor: pointer; }
+        .header-user-avatar { width: 44px; height: 44px; border-radius: 50%; background: #eee; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #999; font-size: 0.9rem; }
+        .header-user-name { font-weight: 600; font-size: 1.15rem; color: #222; }
         
         .messages-container {
             flex: 1; padding: 25px 35px;
@@ -143,13 +143,13 @@
             font-weight: 400; border: 1px solid #eeeeee;
         }
 
-        .msg-row { display: flex; flex-direction: column; max-width: 75%; }
+        .msg-row { display: flex; flex-direction: column; max-width: 85%; }
         .msg-row.user, .msg-row.customer { align-self: flex-start; }
         .msg-row.seller { align-self: flex-end; align-items: flex-end; }
         
         .msg-bubble {
-            padding: 10px 15px; border-radius: 8px;
-            font-size: 0.95rem; line-height: 1.4;
+            padding: 12px 18px; border-radius: 12px;
+            font-size: 1.15rem; line-height: 1.5;
             position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         .user .msg-bubble, .customer .msg-bubble { background: #ffffff; color: #333; border: 1px solid #f0f0f0; border-top-left-radius: 0; }
@@ -202,13 +202,13 @@
 
         .empty-chat { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; background: #fff; }
 
-        /* Expert Card in Chat */
-        .chat-card { width: 260px; border: 1px solid #eee; border-radius: 8px; background: #fff; overflow: hidden; margin-top: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .chat-card-img { width: 100%; height: 150px; object-fit: cover; }
-        .chat-card-info { padding: 12px; }
-        .chat-card-title { font-size: 0.9rem; font-weight: 500; color: #333; margin-bottom: 5px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .chat-card-price { color: var(--shopee-orange); font-weight: 700; font-size: 1rem; }
-        .chat-card-btn { display: block; width: 100%; padding: 8px; text-align: center; background: #fafafa; border-top: 1px solid #eee; color: #555; text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        /* Expert Card in Chat - Enlarged */
+        .chat-card { width: 300px; border: 1px solid #eee; border-radius: 10px; background: #fff; overflow: hidden; margin-top: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .chat-card-img { width: 100%; height: 180px; object-fit: cover; }
+        .chat-card-info { padding: 15px; }
+        .chat-card-title { font-size: 1.05rem; font-weight: 600; color: #333; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .chat-card-price { color: var(--shopee-orange); font-weight: 700; font-size: 1.15rem; }
+        .chat-card-btn { display: block; width: 100%; padding: 10px; text-align: center; background: #fafafa; border-top: 1px solid #eee; color: #555; text-decoration: none; font-size: 0.95rem; font-weight: 600; }
 
         /* Product Picker Modal */
         .picker-modal {
@@ -248,6 +248,9 @@
         .picker-item-price { color: var(--shopee-orange); font-weight: 700; font-size: 1.15rem; margin-top: auto; padding-bottom: 5px; }
         .picker-close { font-size: 1.5rem; cursor: pointer; color: #999; }
         .picker-close:hover { color: #333; }
+
+        /* Product Detail Modal Styles (Common) */
+        .product-modal-overlay{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:none;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity 0.3s ease;}.product-modal-overlay.open{display:flex;opacity:1;}.product-modal-container{background:#ffffff;width:100%;max-width:900px;border-radius:32px;padding:40px;position:relative;box-shadow:0 40px 100px rgba(0,0,0,0.25);transform:translateY(20px) scale(0.98);transition:transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);}.product-modal-overlay.open .product-modal-container{transform:translateY(0) scale(1);}.pd-close-btn{position:absolute;top:24px;right:24px;background:#f5f5f7;border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:1.1rem;color:#1d1d1f;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}.pd-close-btn:hover{background:#e8e8ed;transform:rotate(90deg);}.pd-layout{display:flex;gap:40px;align-items:flex-start;}.pd-image-side{flex:1;background:#fbfbfd;border-radius:24px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:8rem;transition:transform 0.5s cubic-bezier(0.16,1,0.3,1);}.product-modal-overlay.open .pd-image-side{transform:scale(1.05);}.pd-info-side{flex:1;display:flex;flex-direction:column;gap:20px;}.pd-brand{font-size:0.9rem;font-weight:700;color:#86868b;text-transform:uppercase;letter-spacing:1px;}.pd-name{font-size:2.2rem;font-weight:700;color:#1d1d1f;line-height:1.1;margin-bottom:4px;}.pd-sku{font-size:0.85rem;color:#86868b;margin-bottom:12px;}.pd-price-wrap{display:flex;align-items:baseline;gap:12px;margin-bottom:8px;}.pd-price-original{font-size:1.1rem;color:#86868b;text-decoration:line-through;}.pd-price-promo{font-size:1.8rem;font-weight:700;color:#FF7A28;}.pd-sale-badge{background:#FF7A28;color:#fff;padding:2px 10px;border-radius:6px;font-size:0.75rem;font-weight:700;vertical-align:middle;margin-left:8px;}.pd-shipping{font-size:0.9rem;color:#86868b;margin-bottom:10px;}.pd-selector-item{margin-bottom:24px;}.pd-label{font-size:0.95rem;font-weight:600;color:#1d1d1f;margin-bottom:12px;display:block;}.pd-options{display:flex;flex-wrap:wrap;gap:10px;}.pd-option{padding:10px 18px;border:1.5px solid #d2d2d7;border-radius:12px;font-size:0.9rem;cursor:pointer;transition:all 0.2s;}.pd-option.selected{border-color:#0071e3;background:rgba(0,113,227,0.05);color:#0071e3;font-weight:600;}.pd-option.disabled{opacity:0.5;cursor:not-allowed;background:#f5f5f7;}.pd-qty-group{display:flex;align-items:center;gap:16px;}.pd-qty-btn{width:36px;height:36px;border:1.5px solid #d2d2d7;border-radius:10px;background:#fff;font-size:1.2rem;cursor:pointer;transition:all 0.2s;}.pd-qty-btn:hover{border-color:#1d1d1f;background:#f5f5f7;}.pd-qty-val{font-size:1.1rem;font-weight:600;min-width:30px;text-align:center;}.pd-actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;}.pd-btn{padding:16px;border-radius:14px;font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s;text-align:center;text-decoration:none;}.pd-btn-cart{background:#fff;border:1.5px solid #1d1d1f;color:#1d1d1f;}.pd-btn-cart:hover{background:#f5f5f7;}.pd-btn-buy{background:#1d1d1f;border:none;color:#fff;}.pd-btn-buy:hover{opacity:0.9;}.pd-desc{font-size:0.95rem;color:#48484a;line-height:1.6;margin-top:10px;}.pd-carousel{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:24px;}.pd-main-img{width:100%;height:100%;object-fit:contain;transition:opacity 0.3s ease;}.pd-carousel-prev,.pd-carousel-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.85);border:1px solid rgba(0,0,0,0.1);color:#1d1d1f;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.2rem;z-index:10;transition:all 0.2s;box-shadow:0 4px 12px rgba(0,0,0,0.08);}.pd-carousel-prev:hover,.pd-carousel-next:hover{background:#fff;transform:translateY(-50%) scale(1.05);}.pd-carousel-prev{left:16px;}.pd-carousel-next{right:16px;}.pd-carousel-dots{display:flex;justify-content:center;gap:8px;margin-top:16px;position:absolute;bottom:16px;width:100%;}.pd-dot{width:8px;height:8px;border-radius:50%;background:rgba(0,0,0,0.2);cursor:pointer;transition:all 0.2s;}.pd-dot.active{background:#1d1d1f;transform:scale(1.2);}.pd-image-side{position:relative;}
     </style>
 </head>
 <body>
@@ -346,10 +349,52 @@
         </div>
     </div>
 
+    <!-- Product Detail Modal (Ported for Quick View) -->
+    <div class="product-modal-overlay" id="productDetailModal">
+        <div class="product-modal-container">
+            <button class="pd-close-btn" onclick="ProductDetail.close()">✕</button>
+            <div class="pd-layout">
+                <div class="pd-image-side">🛡️</div>
+                <div class="pd-info-side">
+                    <div class="pd-brand">Brand</div>
+                    <h2 class="pd-name">Product Name</h2>
+                    <div class="pd-sku">SKU: N/A</div>
+                    <div class="pd-price-wrap">
+                        <span class="pd-price-original"></span>
+                        <span class="pd-price-promo">฿0</span>
+                        <span class="pd-sale-badge">ลดราคา</span>
+                    </div>
+                    <div class="pd-shipping">ค่าจัดส่งที่คำนวณในขั้นตอนการชำระเงิน</div>
+
+                    <div class="pd-selector-item">
+                        <span class="pd-label">สี</span>
+                        <div class="pd-options"></div>
+                    </div>
+
+                    <div class="pd-selector-item">
+                        <span class="pd-label">ปริมาณ</span>
+                        <div class="pd-qty-group">
+                            <button class="pd-qty-btn" onclick="ProductDetail.updateQty(-1)">−</button>
+                            <span class="pd-qty-val">1</span>
+                            <button class="pd-qty-btn" onclick="ProductDetail.updateQty(1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="pd-actions">
+                        <button class="pd-btn pd-btn-cart" onclick="ProductDetail.addToCart()">เพิ่มลงในตะกร้าสินค้า</button>
+                        <button class="pd-btn pd-btn-buy" onclick="ProductDetail.buyNow()">ซื้อเลย</button>
+                    </div>
+                    <div class="pd-desc"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="product-modal.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",

@@ -17,12 +17,6 @@ const MOCK_PRODUCTS_BASELINE = [
   { id: "acc-anidary-anc001", name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", emoji: "🔌", img: "USB-I 12W-1.jpg", images: ["USB-I 12W-1.jpg", "USB-I 12W-2.jpg", "USB-I 12W-3.jpg"], description: "สายชาร์จ Anidary ANC001 USB to Lightning คุณภาพสูง ทนทาน", specs: "แตะเพื่อดูรูปภาพเพิ่มเติม", badge: "" },
   { id: "acc-anidary-ctoc", name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", images: ["Anidary Type c To c - 1.jpg", "Anidary Type c To c - 2.jpg", "Anidary Type c To c - 3.jpg", "Anidary Type c To c - 4.jpg"], description: "สายชาร์จ Anidary ANC007 Type C to C ชาร์จเร็วและเสถียร แข็งแรงทนทาน", specs: "แตะเพื่อดูรูปภาพเพิ่มเติม", badge: "" },
   { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", images: ["Anidary Type c To c - 1.jpg", "Anidary Type c To c - 2.jpg", "Anidary Type c To c - 3.jpg", "Anidary Type c To c - 4.jpg"], description: "โปรโมชั่นพิเศษ! สายชาร์จ Anidary ANC007 Type C to C ในราคาเพียง 1 บาทเท่านั้น!", specs: "แตะเพื่อดูรูปภาพเพิ่มเติม", badge: "โปรโมชั่น 1฿" },
-  
-  // --- Baseline Spare Parts ---
-  { id: "part-screen-iph13", name: "จอ iPhone 13 (งานแท้)", price: 3500, brand: "Apple", category: "parts", emoji: "🔧", description: "หน้าจอ iPhone 13 งานแท้ สีสันคมชัด ทัชลื่น รับประกัน 6 เดือน", specs: "งานแท้ · รับประกัน 6 เดือน", badge: "ยอดนิยม" },
-  { id: "part-batt-iph11", name: "แบตเตอรี่ iPhone 11 (เพิ่มความจุ)", price: 1200, brand: "Apple", category: "parts", emoji: "🔋", description: "แบตเตอรี่ iPhone 11 เกรดมอก. เพิ่มความจุ ใช้งานได้นานกว่าเดิม", specs: "มอก. · เพิ่มความจุ · รับประกัน 1 ปี", badge: "ขายดี" },
-  { id: "part-screen-s23u", name: "จอ Samsung S23 Ultra (OLED)", price: 6500, brand: "Samsung", category: "parts", emoji: "🔧", description: "หน้าจอ Samsung S23 Ultra งาน OLED สีสวยสดใส รองรับการสแกนนิ้ว", specs: "OLED · รองรับสแกนนิ้ว · รับประกัน 6 เดือน", badge: "เกรดพรีเมียม" },
-  { id: "part-charging-iph12", name: "ชุดแพรชาร์จ iPhone 12", price: 890, brand: "Apple", category: "parts", emoji: "🔌", description: "แพรตูดชาร์จ iPhone 12 แก้ปัญหาชาร์จไม่เข้า ไมค์ไม่ดัง", specs: "ของใหม่ · รับประกัน 3 เดือน", badge: "" }
 ];
 
 const ITEMS_PER_PAGE = 12;
@@ -35,6 +29,7 @@ const ProductSync = {
         this.searchInput = document.getElementById('productSearch');
         this.currentPage = 1;
         this.activeFilter = { model: null, type: null };
+        this.deletedIds = [];
 
         if (!this.grid) return;
         this.listen();
@@ -52,9 +47,11 @@ const ProductSync = {
             if (cached) {
                 this.allProducts = JSON.parse(cached);
                 this.render();
+                this.autoOpenFromUrl();
             } else {
                 this.allProducts = baselineForCategory;
                 this.render();
+                this.autoOpenFromUrl();
             }
         } catch (e) {
             this.allProducts = baselineForCategory;
@@ -62,6 +59,17 @@ const ProductSync = {
         }
 
         if (typeof db === 'undefined' || !db) return;
+
+        // Real-time listener for deletions
+
+        // 1.5 Global Deleted Baseline Listener
+        db.collection('settings').doc('deleted_products').onSnapshot(doc => {
+            if (doc.exists) {
+                this.deletedIds = doc.data().deletedIds || [];
+                // Re-render when deletion list changes
+                if (this.allProducts) this.render();
+            }
+        }, err => console.warn("[Sync] Deleted List Sync Error:", err));
 
         // 2. Data Sync (Real-time update)
         db.collection('products')
@@ -80,6 +88,9 @@ const ProductSync = {
                 this.allProducts = finalProducts;
                 this.render();
                 localStorage.setItem(cacheKey, JSON.stringify(finalProducts));
+                
+                // Deep Linking: Auto-open modal if ID is in the URL
+                this.autoOpenFromUrl();
             }, err => {
                 console.error("[Sync] Firestore Listen Error:", err);
             });
@@ -102,11 +113,18 @@ const ProductSync = {
         }
 
         // Apply Dynamic Category Filter (Real-time persistent)
-        if (this.activeFilter.model && this.activeFilter.type) {
-            filtered = filtered.filter(p => 
-                p.partModel === this.activeFilter.model && 
-                p.partType === this.activeFilter.type
-            );
+        if (this.activeFilter.model) {
+            filtered = filtered.filter(p => p.partModel === this.activeFilter.model);
+            
+            // If sub-type is also selected, filter by it too
+            if (this.activeFilter.type) {
+                filtered = filtered.filter(p => p.partType === this.activeFilter.type);
+            }
+        }
+
+        // Apply Filter for Global Deletions
+        if (this.deletedIds && this.deletedIds.length > 0) {
+            filtered = filtered.filter(p => !this.deletedIds.includes(p.id));
         }
 
         if (filtered.length === 0) {
@@ -224,7 +242,7 @@ const ProductSync = {
         }
     },
 
-    filterByDynamicParts: function(model, type) {
+    filterByDynamicParts: function(model, type = null) {
         // Set persistent filter
         this.activeFilter = { model, type };
         
@@ -243,5 +261,61 @@ const ProductSync = {
             const grid = document.querySelector('.products-grid');
             if (grid) grid.scrollIntoView({ behavior: 'smooth' });
         }
+    },
+
+    autoOpenFromUrl: function() {
+        if (this.__autoOpened) return;
+
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('id');
+        if (!productId) return;
+
+        this.__autoOpened = true;
+        const self = this;
+
+        // Step 2: Open modal once product found — retry until ProductDetail is loaded
+        const openModal = (product) => {
+            const tryOpen = (n) => {
+                if (n <= 0) return;
+                if (window.ProductDetail && typeof window.ProductDetail.open === 'function') {
+                    // For parts: sync sidebar brand
+                    if (self.category === 'parts' && product.partModel) {
+                        self.activeFilter.model = product.partModel;
+                        self.activeFilter.type = product.partType || null;
+                        const brandItem = document.querySelector(`.brand-item[data-brand="${CSS.escape(product.partModel)}"]`);
+                        if (brandItem) {
+                            document.querySelectorAll('.brand-item').forEach(i => i.classList.remove('active'));
+                            brandItem.classList.add('active');
+                        }
+                        self.render();
+                    }
+                    window.ProductDetail.open(product);
+                } else {
+                    setTimeout(() => tryOpen(n - 1), 100);
+                }
+            };
+            tryOpen(30);
+        };
+
+        // Step 1: Wait for allProducts to contain the product, else fall back to Firestore
+        const tryFind = (n) => {
+            const found = self.allProducts && self.allProducts.find(p => p.id === productId);
+            if (found) {
+                openModal(found);
+                return;
+            }
+            if (n > 0) {
+                setTimeout(() => tryFind(n - 1), 150);
+                return;
+            }
+            // Final fallback: fetch directly from Firestore
+            if (typeof db !== 'undefined' && db) {
+                db.collection('products').doc(productId).get().then(doc => {
+                    if (doc.exists) openModal({ id: doc.id, ...doc.data() });
+                }).catch(err => console.warn('[AutoOpen] Firestore fetch failed:', err));
+            }
+        };
+
+        tryFind(20); // retry up to ~3 sec, then Firestore fallback
     }
 };

@@ -1,26 +1,22 @@
 // ─── Product catalogue (mirrors MOCK_PRODUCTS_BASELINE in products-sync.js) ───
 const SEARCH_PRODUCTS = [
-  { name: "iPhone 15 128GB", price: 28900, brand: "Apple", category: "new", img: "", emoji: "📱", tags: ["iphone", "ไอโฟน", "apple", "แอปเปิล", "มือ1", "มือ 1", "a16"] },
-  { name: "iPhone 15 Pro 256GB", price: 42900, brand: "Apple", category: "new", img: "", emoji: "📱", tags: ["iphone", "ไอโฟน", "apple", "แอปเปิล", "มือ1", "มือ 1", "a17", "pro"] },
-  { name: "Samsung Galaxy S24 256GB", price: 29900, brand: "Samsung", category: "new", img: "", emoji: "📲", tags: ["samsung", "ซัมซุง", "galaxy", "s24", "มือ1", "มือ 1", "ai"] },
-  { name: "Xiaomi 14 256GB", price: 24900, brand: "Xiaomi", category: "new", img: "", emoji: "📲", tags: ["xiaomi", "เสียวหมี่", "leica", "มือ1", "มือ 1"] },
-  { name: "iPhone 13 128GB (มือ 2)", price: 14900, brand: "Apple", category: "used", img: "", emoji: "📱", tags: ["iphone", "ไอโฟน", "apple", "มือสอง", "มือ2", "มือ 2"] },
-  { name: "iPhone 12 64GB (มือ 2)", price: 9900, brand: "Apple", category: "used", img: "", emoji: "📱", tags: ["iphone", "ไอโฟน", "apple", "มือสอง", "มือ2", "มือ 2"] },
-  { name: "Samsung Galaxy S23 256GB (มือ 2)", price: 16500, brand: "Samsung", category: "used", img: "", emoji: "📲", tags: ["samsung", "ซัมซุง", "galaxy", "s23", "มือสอง", "มือ2", "มือ 2"] },
-  { name: "Samsung Galaxy A54 128GB (มือ 2)", price: 7900, brand: "Samsung", category: "used", img: "", emoji: "📲", tags: ["samsung", "ซัมซุง", "a54", "มือสอง", "มือ2", "มือ 2"] },
-  { name: "OPPO Reno 8 Pro 256GB (มือ 2)", price: 8500, brand: "OPPO", category: "used", img: "", emoji: "📲", tags: ["oppo", "ออปโป้", "reno", "มือสอง", "มือ2", "มือ 2"] },
-  { name: "สายชาร์จ Why 60W Type C To C", price: 399, brand: "Why", category: "accessory", img: "Why 60W-1 Type C To C - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "why", "60w", "type c", "ชาร์จเร็ว", "อุปกรณ์เสริม", "accessory"] },
-  { name: "ชุดชาร์จ Why 20W Type C To C", price: 599, brand: "Why", category: "accessory", img: "Why 20w-1.jpg", emoji: "🔌", tags: ["ชุดชาร์จ", "why", "20w", "type c", "อุปกรณ์เสริม", "accessory"] },
-  { name: "หูฟัง Anidary ANT004", price: 699, brand: "Anidary", category: "accessory", img: "earphone-1.jpg", emoji: "🎧", tags: ["หูฟัง", "anidary", "earphone", "ant004", "อุปกรณ์เสริม", "accessory"] },
-  { name: "ชุดชาร์จ Anidary ANS006", price: 599, brand: "Anidary", category: "accessory", img: "ANS006-1.jpg", emoji: "🔌", tags: ["ชุดชาร์จ", "anidary", "ans006", "อุปกรณ์เสริม", "accessory"] },
-  { name: "สายชาร์จ Why USB 1.0M", price: 159, brand: "Why", category: "accessory", img: "Why-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "why", "usb", "1m", "micro", "lightning", "อุปกรณ์เสริม", "accessory"] },
-  { name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", img: "USB-I 12W-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc001", "lightning", "iphone", "อุปกรณ์เสริม", "accessory"] },
-  { name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc007", "type c", "อุปกรณ์เสริม", "accessory"] },
-  { name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc007", "โปรโมชั่น", "ราคาพิเศษ", "อุปกรณ์เสริม", "accessory"] },
-  // ── Mobile Parts (New Category) ──
-  { name: "จอ iPhone 13 (งานแท้)", price: 3500, brand: "Apple", category: "parts", img: "", emoji: "🔧", tags: ["อะไหล่", "จอ", "iphone", "ไอโฟน", "13", "screen", "display", "ซ่อมจอ"] },
-  { name: "แบตเตอรี่ iPhone 11 (เพิ่มความจุ มอก.)", price: 1200, brand: "Apple", category: "parts", img: "", emoji: "🔋", tags: ["อะไหล่", "แบต", "แบตเตอรี่", "iphone", "ไอโฟน", "11", "battery"] },
-  { name: "ชุดน็อต / อะไหล่ภายในอื่นๆ", price: 150, brand: "Paomobile", category: "parts", img: "", emoji: "🔩", tags: ["อะไหล่", "น็อต", "แพร", "กล้อง", "ฝาหลัง", "ตูดชาร์จ", "ซ่อม"] },
+  { id: "new-iph15-128", name: "iPhone 15 128GB", price: 28900, brand: "Apple", category: "new", img: "", emoji: "📱", tags: ["iphone", "ไอโฟน", "apple", "แอปเปิล", "มือ1", "มือ 1", "a16"] },
+  { id: "new-iph15pro-256", name: "iPhone 15 Pro 256GB", price: 42900, brand: "Apple", category: "new", img: "", emoji: "📱", tags: ["iphone", "ไอโฟน", "apple", "แอปเปิล", "มือ1", "มือ 1", "a17", "pro"] },
+  { id: "new-s24-256", name: "Samsung Galaxy S24 256GB", price: 29900, brand: "Samsung", category: "new", img: "", emoji: "📲", tags: ["samsung", "ซัมซุง", "galaxy", "s24", "มือ1", "มือ 1", "ai"] },
+  { id: "new-xm14-256", name: "Xiaomi 14 256GB", price: 24900, brand: "Xiaomi", category: "new", img: "", emoji: "📲", tags: ["xiaomi", "เสียวหมี่", "leica", "มือ1", "มือ 1"] },
+  { id: "used-iph13-128", name: "iPhone 13 128GB (มือ 2)", price: 14900, brand: "Apple", category: "used", img: "", emoji: "📱", tags: ["iphone", "ไอโฟน", "apple", "มือสอง", "มือ2", "มือ 2"] },
+  { id: "used-iph12-64", name: "iPhone 12 64GB (มือ 2)", price: 9900, brand: "Apple", category: "used", img: "", emoji: "📱", tags: ["iphone", "ไอโฟน", "apple", "มือสอง", "มือ2", "มือ 2"] },
+  { id: "used-s23-256", name: "Samsung Galaxy S23 256GB (มือ 2)", price: 16500, brand: "Samsung", category: "used", emoji: "📲", tags: ["samsung", "ซัมซุง", "galaxy", "s23", "มือสอง", "มือ2", "มือ 2"] },
+  { id: "used-a54-128", name: "Samsung Galaxy A54 128GB (มือ 2)", price: 7900, brand: "Samsung", category: "used", emoji: "📲", tags: ["samsung", "ซัมซุง", "a54", "มือสอง", "มือ2", "มือ 2"] },
+  { id: "used-reno8pro-256", name: "OPPO Reno 8 Pro 256GB (มือ 2)", price: 8500, brand: "OPPO", category: "used", emoji: "📲", tags: ["oppo", "ออปโป้", "reno", "มือสอง", "มือ2", "มือ 2"] },
+  { id: "acc-why-60w", name: "สายชาร์จ Why 60W Type C To C", price: 399, brand: "Why", category: "accessory", img: "Why 60W-1 Type C To C - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "why", "60w", "type c", "ชาร์จเร็ว", "อุปกรณ์เสริม", "accessory"] },
+  { id: "acc-why-20w", name: "ชุดชาร์จ Why 20W Type C To C", price: 599, brand: "Why", category: "accessory", img: "Why 20w-1.jpg", emoji: "🔌", tags: ["ชุดชาร์จ", "why", "20w", "type c", "อุปกรณ์เสริม", "accessory"] },
+  { id: "acc-headphone-gallery", name: "หูฟัง Anidary ANT004", price: 699, brand: "Anidary", category: "accessory", img: "earphone-1.jpg", emoji: "🎧", tags: ["หูฟัง", "anidary", "earphone", "ant004", "อุปกรณ์เสริม", "accessory"] },
+  { id: "acc-ans006-gallery", name: "ชุดชาร์จ Anidary ANS006", price: 599, brand: "Anidary", category: "accessory", img: "ANS006-1.jpg", emoji: "🔌", tags: ["ชุดชาร์จ", "anidary", "ans006", "อุปกรณ์เสริม", "accessory"] },
+  { id: "acc-why-cable-1m", name: "สายชาร์จ Why USB 1.0M", price: 159, brand: "Why", category: "accessory", img: "Why-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "why", "usb", "1m", "micro", "lightning", "อุปกรณ์เสริม", "accessory"] },
+  { id: "acc-anidary-anc001", name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", img: "USB-I 12W-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc001", "lightning", "iphone", "อุปกรณ์เสริม", "accessory"] },
+  { id: "acc-anidary-ctoc", name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc007", "type c", "อุปกรณ์เสริม", "accessory"] },
+  { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc007", "โปรโมชั่น", "ราคาพิเศษ", "อุปกรณ์เสริม", "accessory"] },
 ];
 
 // ─── Service/page entries ──────────────────────────────────────────────────────
@@ -60,6 +56,46 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchClear   = document.getElementById('searchClear');
 
   if (!searchOverlay) return;
+
+  let deletedIds = [];
+  let firestoreProducts = [];
+  let allSearchableProducts = [...SEARCH_PRODUCTS];
+
+  if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+    const db = firebase.firestore();
+    
+    // 1. Sync Deleted IDs
+    db.collection('settings').doc('deleted_products').onSnapshot(doc => {
+      if (doc.exists) {
+        deletedIds = doc.data().deletedIds || [];
+        updateMergedProducts();
+      }
+    });
+
+    // 2. Sync All Products (Multi-category Search)
+    db.collection('products').onSnapshot(snapshot => {
+      firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log(`[SearchSync] Synced ${firestoreProducts.length} global products`);
+      updateMergedProducts();
+      // Re-trigger search if input has value
+      if (searchInput && searchInput.value) {
+          renderResults(searchInput.value.trim().toLowerCase());
+      }
+    }, err => console.warn("[SearchSync] Product sync error:", err));
+  }
+
+  function updateMergedProducts() {
+      const baselineIds = new Set(SEARCH_PRODUCTS.map(p => p.id));
+      const newFromFirestore = firestoreProducts.filter(p => !baselineIds.has(p.id));
+      
+      // Merge: Baseline (potentially updated by Firestore) + New Firestore ones
+      const merged = SEARCH_PRODUCTS.map(p => {
+          const match = firestoreProducts.find(f => f.id === p.id);
+          return match ? { ...p, ...match } : p;
+      });
+
+      allSearchableProducts = [...merged, ...newFromFirestore];
+  }
 
   // ── Open / close ──────────────────────────────────────────────────────────
   if (searchBtn) {
@@ -116,11 +152,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Filter products
-    const filteredProducts = SEARCH_PRODUCTS.filter(p => {
+    let filteredProducts = allSearchableProducts.filter(p => {
+      // Global Delete Filter
+      if (deletedIds.includes(p.id)) return false;
+
       const q = query;
+      const tags = p.tags || [];
       return p.name.toLowerCase().includes(q)
-        || p.brand.toLowerCase().includes(q)
-        || p.tags.some(t => t.toLowerCase().includes(q));
+        || (p.brand && p.brand.toLowerCase().includes(q))
+        || (p.partModel && p.partModel.toLowerCase().includes(q))
+        || (p.partType && p.partType.toLowerCase().includes(q))
+        || tags.some(t => t.toLowerCase().includes(q));
     });
 
     // Filter services

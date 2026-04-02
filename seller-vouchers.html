@@ -377,8 +377,28 @@
                             <input type="number" id="v-minPurchase" placeholder="0 ถ้าไม่มีขั้นต่ำ" value="0" min="0">
                         </div>
                         <div class="form-group">
-                            <label>วันหมดอายุ</label>
+                            <label style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>วันหมดอายุ</span>
+                                <label style="font-size: 0.75rem; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <input type="checkbox" id="v-isPermanent" onchange="toggleExpiry(this.checked)"> ไม่มีวันหมดอายุ ♾️
+                                </label>
+                            </label>
                             <input type="date" id="v-expiry" required>
+                            <script>
+                                function toggleExpiry(isPermanent) {
+                                    const expiryInput = document.getElementById('v-expiry');
+                                    if (isPermanent) {
+                                        expiryInput.disabled = true;
+                                        expiryInput.value = '';
+                                        expiryInput.required = false;
+                                        expiryInput.style.opacity = '0.5';
+                                    } else {
+                                        expiryInput.disabled = false;
+                                        expiryInput.required = true;
+                                        expiryInput.style.opacity = '1';
+                                    }
+                                }
+                            </script>
                         </div>
                     </div>
                     <button type="submit" class="btn-submit" id="btnSaveVoucher">💾 บันทึกและเปิดใช้งาน</button>

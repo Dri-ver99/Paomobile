@@ -4,8 +4,8 @@
     const style = document.createElement('style');
     style.innerHTML = `
         .chat-img-thumb { 
-            max-width: 180px; 
-            max-height: 240px; 
+            max-width: 280px; 
+            max-height: 350px; 
             border-radius: 12px; 
             display: block; 
             cursor: zoom-in; 
@@ -20,12 +20,33 @@
         .img-overlay.active { display:flex; }
         .img-overlay.active .img-overlay-content { transform:scale(1); }
         .img-overlay-close { position:absolute; top:20px; right:25px; color:#fff; font-size:40px; cursor:pointer; }
+        
+        /* Emoji Picker Styles (Seller Side) - Enlarged */
+        .emoji-picker-seller { display:none; position:absolute; bottom:40px; left:0; width:300px; background:#fff; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.15); border:1px solid #e2e8f0; padding:12px; z-index:100; grid-template-columns: repeat(4, 1fr); gap:12px; }
+        .emoji-picker-seller.active { display:grid; animation: chatFadeIn 0.2s ease-out; }
+        .emoji-item-seller { cursor:pointer; width:100%; aspect-ratio:1; border-radius:8px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
+        .emoji-item-seller:hover { background:#f1f5f9; transform:scale(1.05); }
+        .emoji-item-seller img { width:90%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
+        
+        /* Sticker Message Bubble - Enlarged */
+        .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+        .sticker-img { max-width: 200px; max-height: 200px; cursor: pointer; transition: transform 0.2s; mix-blend-mode: multiply; }
+        .sticker-img:hover { transform: scale(1.05); }
+        @keyframes chatFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Preview UI (Seller Side) */
+        .preview-container-seller { display:none; padding:12px 16px; background:#fff; border-top:1px solid #f1f5f9; align-items:center; gap:12px; }
+        .preview-thumb-seller { width:52px; height:52px; border-radius:8px; object-fit:cover; border:2px solid #ee4d2d; }
+        .preview-remove-seller { cursor:pointer; color:#94a3b8; font-size:1.2rem; transition:color 0.2s; padding:4px; }
+        .preview-remove-seller:hover { color:#ef4444; }
     `;
     document.head.appendChild(style);
     
     let activeChatId = null;
     let messagesUnsubscribe = null;
     let allChats = []; // Global cache for chat list filtering
+    let pendingChatFile = null;
+    let pendingChatType = null;
 
     // 6. Seller Online Heartbeat Logic
     function startHeartbeat() {
@@ -167,9 +188,24 @@
             <div id="chatMessages" class="messages-container">
                 <div style="text-align:center; padding:40px; color:#94a3b8;">กำลังโหลดข้อความ...</div>
             </div>
+            
+            <!-- File Preview Area (Seller Side) -->
+            <div id="sellerChatPreview" class="preview-container-seller">
+                <img id="sellerPreviewImg" class="preview-thumb-seller" src="">
+                <div style="flex:1; min-width:0;">
+                    <div id="sellerPreviewName" style="font-size:0.85rem; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">filename.jpg</div>
+                    <div style="font-size:0.75rem; color:#94a3b8;">เตรียมส่งรูปภาพ...</div>
+                </div>
+                <div class="preview-remove-seller" onclick="removeChatPreview()">✕</div>
+            </div>
+
             <div id="chatFooter" class="chat-footer">
-                <div class="input-tools">
-                    <span>😊</span> <span>🖼️</span> <span>📂</span> <span>✂️</span>
+                <div class="input-tools" style="position:relative;">
+                    <span style="cursor:pointer;" onclick="toggleEmojiPicker()" title="อีโมจิ">😊</span>
+                    <label for="sellerFileUpload" style="cursor:pointer;" title="ส่งรูปภาพ">🖼️</label>
+                    <input type="file" id="sellerFileUpload" accept="image/*" style="display:none;" onchange="handleFileUpload(this, 'image')">
+                    <!-- Emoji Picker Grid -->
+                    <div id="emojiPicker" class="emoji-picker-seller"></div>
                 </div>
                 <div class="input-row">
                     <div class="input-box-wrapper">
@@ -217,13 +253,13 @@
                     if (msg.type === 'card') {
                         html += `
                             <div class="msg-row seller">
-                                <div class="chat-card">
+                                <div class="chat-card" style="cursor:pointer;" onclick="handleChatCardClick('${msg.cardData.productId}', '${msg.cardData.category}', '${msg.cardData.link}')">
                                     <img src="${msg.cardData.image}" class="chat-card-img">
                                     <div class="chat-card-info">
                                         <div class="chat-card-title">${msg.cardData.title}</div>
                                         <div class="chat-card-price">${msg.cardData.price}</div>
                                     </div>
-                                    <a href="${msg.cardData.link}" class="chat-card-btn" target="_blank">ดูรายละเอียด</a>
+                                    <div class="chat-card-btn">ดูรายละเอียด</div>
                                 </div>
                             </div>
                         `;
@@ -257,7 +293,19 @@
                                 </div>
                             </div>
                         `;
-                    } else {
+                    } else if (msg.type === 'sticker') {
+                        html += `
+                            <div class="msg-row ${isSeller ? 'seller' : 'customer'} sticker">
+                                <div class="msg-bubble">
+                                    <img src="${msg.fileUrl}" class="sticker-img" onclick="openImageLarge('${msg.fileUrl}')">
+                                </div>
+                                <div class="msg-meta">
+                                    ${msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+                                    ${isSeller ? '<span class="read-tick">✓✓</span>' : ''}
+                                </div>
+                            </div>
+                        `;
+                    } else if (msg.type === 'text' || msg.text) {
                         html += `
                             <div class="msg-row ${isSeller ? 'seller' : 'customer'}">
                                 <div class="msg-bubble">
@@ -317,34 +365,68 @@
     window.sendReply = async () => {
         const input = document.getElementById('mainChatInput');
         const text = input.value.trim();
-        if (!text || !activeChatId) return;
+        const fileToSend = pendingChatFile;
+        const typeToSend = pendingChatType;
+
+        if (!text && !fileToSend) return;
+        if (!activeChatId) return;
 
         const originalText = text;
         input.value = '';
         input.disabled = true;
+        removeChatPreview();
 
         try {
             const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-            
-            // 1. Add to messages sub-collection
-            await db.collection('chats').doc(activeChatId).collection('messages').add({
-                text: text,
-                sender: 'seller',
-                timestamp: timestamp,
-                type: 'text'
-            });
+            const normalizedEmail = activeChatId.trim().toLowerCase();
 
-            // 2. Update parent chat document
-            await db.collection('chats').doc(activeChatId).update({
-                lastMessage: text,
-                lastTimestamp: timestamp,
-                unreadCount: 0 // Seller replying clears any unread from customer side
-            });
+            // 1. Handle File/Image Send (Base64 Reliable Mode)
+            if (fileToSend) {
+                let finalUrl = "";
+                let finalName = fileToSend.name;
+                if (typeToSend === 'image') {
+                    finalUrl = await compressImage(fileToSend);
+                } else {
+                    // Non-image files use storage
+                    if (typeof firebase.storage !== 'function') throw new Error("Storage not available");
+                    const storageRef = firebase.storage().ref(`chat_uploads/${normalizedEmail}/${Date.now()}_${fileToSend.name}`);
+                    const uploadTask = await storageRef.put(fileToSend);
+                    finalUrl = await uploadTask.ref.getDownloadURL();
+                }
+
+                await db.collection('chats').doc(normalizedEmail).collection('messages').add({
+                    type: typeToSend,
+                    fileUrl: finalUrl,
+                    fileName: finalName,
+                    sender: 'seller',
+                    timestamp: timestamp
+                });
+
+                await db.collection('chats').doc(normalizedEmail).set({
+                    lastMessage: typeToSend === 'image' ? "📷 ส่งรูปภาพ" : "📁 ส่งไฟล์: " + finalName,
+                    lastTimestamp: timestamp,
+                    unreadCount: 0
+                }, { merge: true });
+            }
+
+            // 2. Handle Text if exists
+            if (originalText) {
+                await db.collection('chats').doc(normalizedEmail).collection('messages').add({
+                    text: originalText,
+                    sender: 'seller',
+                    timestamp: timestamp,
+                    type: 'text'
+                });
+
+                await db.collection('chats').doc(normalizedEmail).set({
+                    lastMessage: originalText,
+                    lastTimestamp: timestamp,
+                    unreadCount: 0
+                }, { merge: true });
+            }
 
             input.disabled = false;
             input.focus();
-            
-            // Auto scroll (though onSnapshot also does this)
             const msgsArea = document.getElementById('chatMessages');
             if (msgsArea) msgsArea.scrollTop = msgsArea.scrollHeight;
 
@@ -352,7 +434,7 @@
             console.error("[SellerChat] Send Error:", err);
             input.value = originalText;
             input.disabled = false;
-            alert("❌ ส่งไม่สำเร็จ: " + err.message);
+            alert("❌ ส่งไม่สำเร็จ: " + (err.message || "เกิดข้อผิดพลาด"));
         }
     };
 
@@ -375,10 +457,6 @@
         { id: "acc-anidary-anc001", name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", emoji: "🔌", img: "USB-I 12W-1.jpg", badge: "" },
         { id: "acc-anidary-ctoc", name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", badge: "" },
         { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", badge: "โปรโมชั่น 1฿" },
-        { id: "part-screen-iph13", name: "จอ iPhone 13 (งานแท้)", price: 3500, brand: "Apple", category: "parts", emoji: "🔧", specs: "งานแท้ · รับประกัน 6 เดือน", badge: "ยอดนิยม" },
-        { id: "part-batt-iph11", name: "แบตเตอรี่ iPhone 11 (เพิ่มความจุ)", price: 1200, brand: "Apple", category: "parts", emoji: "🔋", specs: "มอก. · เพิ่มความจุ · รับประกัน 1 ปี", badge: "ขายดี" },
-        { id: "part-screen-s23u", name: "จอ Samsung S23 Ultra (OLED)", price: 6500, brand: "Samsung", category: "parts", emoji: "🔧", specs: "OLED · รองรับสแกนนิ้ว · รับประกัน 6 เดือน", badge: "เกรดพรีเมียม" },
-        { id: "part-charging-iph12", name: "ชุดแพรชาร์จ iPhone 12", price: 890, brand: "Apple", category: "parts", emoji: "🔌", specs: "ของใหม่ · รับประกัน 3 เดือน", badge: "" }
     ];
 
     let allProducts = [];
@@ -458,9 +536,11 @@
         closeProductPicker();
 
         const cardData = {
+            productId: p.id,
+            category: p.category,
             title: p.name,
             price: "฿" + p.price.toLocaleString(),
-            image: p.img || (p.images && p.images[0]) || p.emoji || 'logo.png', // Emoji can act as textual preview if needed, but client expects image URL. Better use logo for safety but pass emoji info.
+            image: p.img || (p.images && p.images[0]) || p.emoji || 'logo.png',
             link: (p.category === 'new' || p.category === 'used' ? p.category + '-products.html' : p.category + '.html') + '?id=' + p.id
         };
 
@@ -522,38 +602,89 @@
         const file = input.files[0];
         if (!file || !activeChatId) return;
 
-        // Reset input for next selection
-        const originalValue = input.value;
-        input.value = '';
+        pendingChatFile = file;
+        pendingChatType = type;
 
-        try {
-            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-            const storageRef = firebase.storage().ref(`chat_uploads/${activeChatId}/${Date.now()}_${file.name}`);
-            
-            // 1. Upload Task
-            const uploadTask = await storageRef.put(file);
-            const downloadURL = await uploadTask.ref.getDownloadURL();
+        const previewArea = document.getElementById('sellerChatPreview');
+        const previewImg = document.getElementById('sellerPreviewImg');
+        const previewName = document.getElementById('sellerPreviewName');
 
-            // 2. Add message info to Firestore
-            await db.collection('chats').doc(activeChatId).collection('messages').add({
-                type: type,
-                fileUrl: downloadURL,
-                fileName: file.name,
-                sender: 'seller',
-                timestamp: timestamp
-            });
-
-            // 3. Update parent chat doc for preview
-            await db.collection('chats').doc(activeChatId).update({
-                lastMessage: type === 'image' ? "📷 ส่งรูปภาพ" : "📁 ส่งไฟล์: " + file.name,
-                lastTimestamp: timestamp,
-                unreadCount: 0
-            });
-
-        } catch (err) {
-            console.error("[SellerChat] Upload Error:", err);
-            alert("อัปโหลดไม่สำเร็จ: " + err.message);
+        if (previewArea && previewImg && previewName) {
+            previewName.innerText = file.name;
+            previewArea.style.display = 'flex';
+            if (type === 'image') {
+                const reader = new FileReader();
+                reader.onload = e => { previewImg.src = e.target.result; };
+                reader.readAsDataURL(file);
+                previewImg.style.display = 'block';
+            } else {
+                previewImg.style.display = 'none';
+            }
         }
+        input.value = '';
+    };
+
+    window.removeChatPreview = () => {
+        pendingChatFile = null;
+        pendingChatType = null;
+        const previewArea = document.getElementById('sellerChatPreview');
+        if (previewArea) {
+            previewArea.style.display = 'none';
+            document.getElementById('sellerPreviewImg').src = '';
+        }
+    };
+
+    window.handleChatCardClick = async (productId, category, link) => {
+        if (window.ProductDetail) {
+            try {
+                // 1. Try to find in UI cache first
+                const cacheKeys = ['pao_cache_parts', 'pao_cache_accessories', 'pao_cache_new', 'pao_cache_used'];
+                for (const key of cacheKeys) {
+                    const cached = localStorage.getItem(key);
+                    if (cached) {
+                        const items = JSON.parse(cached);
+                        const match = items.find(p => p.id === productId);
+                        if (match) {
+                            window.ProductDetail.open(match);
+                            return;
+                        }
+                    }
+                }
+
+                // 2. Fallback: Fetch directly from Firestore for full data
+                const doc = await db.collection('products').doc(productId).get();
+                if (doc.exists) {
+                    window.ProductDetail.open({ id: doc.id, ...doc.data() });
+                    return;
+                }
+            } catch (err) {
+                console.warn("[ChatCard] Modal open failed, navigating:", err);
+            }
+        }
+        // Final fallback: standard navigation
+        window.open(link, '_blank');
+    };
+
+    const compressImage = (file, maxWidth = 600) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height;
+                    if(w > maxWidth) { h = Math.round((h * maxWidth) / w); w = maxWidth; }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img,0,0,w,h);
+                    resolve(canvas.toDataURL('image/jpeg', 0.65));
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
     };
 
     // Lightbox Modal Structure & Logic
@@ -572,6 +703,52 @@
     window.closeImgOverlay = () => {
         document.getElementById('sellerChatOverlay').classList.remove('active');
         document.body.style.overflow = '';
+    };
+
+    // --- Emoji Picker Logic (Seller Side) ---
+    function renderEmojiPicker() {
+        const picker = document.getElementById('emojiPicker');
+        if (!picker) return;
+        let html = '';
+        for (let i = 1; i <= 16; i++) {
+            html += `<div class="emoji-item-seller" onclick="sendEmojiSticker(${i})"><img src="${i}.png" alt="emoji"></div>`;
+        }
+        picker.innerHTML = html;
+    }
+
+    window.toggleEmojiPicker = () => {
+        const picker = document.getElementById('emojiPicker');
+        if (picker) {
+            picker.classList.toggle('active');
+            if (picker.classList.contains('active') && !picker.innerHTML) {
+                renderEmojiPicker();
+            }
+        }
+    };
+
+    window.sendEmojiSticker = async (index) => {
+        if (!activeChatId) return;
+        
+        toggleEmojiPicker(); // Close picker
+
+        try {
+            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection('chats').doc(activeChatId).collection('messages').add({
+                type: 'sticker',
+                fileUrl: `${index}.png`,
+                sender: 'seller',
+                timestamp: timestamp
+            });
+
+            await db.collection('chats').doc(activeChatId).update({
+                lastMessage: "✨ ส่งสติ๊กเกอร์",
+                lastTimestamp: timestamp,
+                unreadCount: 0
+            });
+        } catch (err) {
+            console.error("[SellerChat] Sticker Send Error:", err);
+            alert("❌ ส่งสติ๊กเกอร์ไม่สำเร็จครับ");
+        }
     };
 
     // Initialize only after Firebase setup in HTML is done

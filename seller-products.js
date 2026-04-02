@@ -1,6 +1,8 @@
 let allProducts = [];
+let deletedMockIds = JSON.parse(localStorage.getItem('deleted_mock_ids') || '[]');
 let currentCategory = 'all';
 let sparePartsConfig = { models: [], partTypes: [] };
+let editingOriginalPartType = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initTabs();
@@ -121,13 +123,7 @@ const MOCK_PRODUCTS_BASELINE = [
   { id: "acc-why-cable-1m", name: "สายชาร์จ Why USB 1.0M", price: 159, brand: "Why", category: "accessory", emoji: "🔌", img: "Why-1.jpg", badge: "" },
   { id: "acc-anidary-anc001", name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", emoji: "🔌", img: "USB-I 12W-1.jpg", badge: "" },
   { id: "acc-anidary-ctoc", name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", badge: "" },
-  { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", badge: "โปรโมชั่น 1฿" },
-  
-  // --- Baseline Spare Parts ---
-  { id: "part-screen-iph13", name: "จอ iPhone 13 (งานแท้)", price: 3500, brand: "Apple", category: "parts", emoji: "🔧", specs: "งานแท้ · รับประกัน 6 เดือน", badge: "ยอดนิยม" },
-  { id: "part-batt-iph11", name: "แบตเตอรี่ iPhone 11 (เพิ่มความจุ)", price: 1200, brand: "Apple", category: "parts", emoji: "🔋", specs: "มอก. · เพิ่มความจุ · รับประกัน 1 ปี", badge: "ขายดี" },
-  { id: "part-screen-s23u", name: "จอ Samsung S23 Ultra (OLED)", price: 6500, brand: "Samsung", category: "parts", emoji: "🔧", specs: "OLED · รองรับสแกนนิ้ว · รับประกัน 6 เดือน", badge: "เกรดพรีเมียม" },
-  { id: "part-charging-iph12", name: "ชุดแพรชาร์จ iPhone 12", price: 890, brand: "Apple", category: "parts", emoji: "🔌", specs: "ของใหม่ · รับประกัน 3 เดือน", badge: "" }
+  { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", badge: "โปรโมชั่น 1฿" }
 ];
 
 function startSync() {
@@ -139,16 +135,38 @@ function startSync() {
         return;
     }
 
+    // Sync Global Deleted Mock IDs from Firestore
+    db.collection('settings').doc('deleted_products').onSnapshot(doc => {
+        if (doc.exists) {
+            const globalDeleted = doc.data().deletedIds || [];
+            // Merge with local knowledge just in case
+            deletedMockIds = [...new Set([...deletedMockIds, ...globalDeleted])];
+            localStorage.setItem('deleted_mock_ids', JSON.stringify(deletedMockIds));
+            if (typeof startSync === 'function') startSync(); // Rethink sync if needed
+        }
+    });
+
     db.collection('products').onSnapshot(snapshot => {
         const firestoreProducts = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
 
-        // Merge: start with baseline mock data, then overlay any Firestore products (new additions or edits)
+        // Force Hard Filter for those 4 Ghost IDs (Sync Fix)
+        const ghostIds = [
+            'part-screen-iph13', 'part-batt-iph11', 'part-screen-s23u', 'part-charging-iph12',
+            'part-screen-iph13-orig', 'part-batt-iph11-orig', 'part-screen-s23u-orig', 'part-charging-iph12-orig'
+        ];
+        const cleanFirestore = firestoreProducts.filter(p => !ghostIds.includes(p.id));
+
+        // Merge: start with baseline mock data, then overlay any Firestore products
         const mergedMap = new Map();
-        MOCK_PRODUCTS_BASELINE.forEach(p => mergedMap.set(p.id, p));
-        firestoreProducts.forEach(p => mergedMap.set(p.id, p));
+        MOCK_PRODUCTS_BASELINE.forEach(p => {
+            if (!deletedMockIds.includes(p.id) && !ghostIds.includes(p.id)) {
+                mergedMap.set(p.id, p);
+            }
+        });
+        cleanFirestore.forEach(p => mergedMap.set(p.id, p));
         allProducts = Array.from(mergedMap.values());
 
         // Show migration banner only if there are NO Firestore products at all
@@ -156,16 +174,29 @@ function startSync() {
         migrationBanner.style.display = firestoreProducts.length === 0 ? 'flex' : 'none';
 
         document.getElementById('productCountStatus').textContent = "สินค้าทั้งหมด: " + allProducts.length;
+        updateBrandsDatalist();
         renderProducts();
     }, err => {
         console.error("Firestore error, showing mock data only:", err);
         allProducts = [...MOCK_PRODUCTS_BASELINE];
         document.getElementById('productCountStatus').textContent = "สินค้าทั้งหมด: " + allProducts.length + " (ออฟไลน์)";
+        updateBrandsDatalist();
         renderProducts();
     });
 }
 
+function updateBrandsDatalist() {
+    const datalist = document.getElementById('brandsList');
+    if (!datalist) return;
+    
+    // Get unique non-empty brands from allProducts
+    const brands = [...new Set(allProducts.map(p => p.brand).filter(b => b))].sort();
+    
+    datalist.innerHTML = brands.map(b => `<option value="${b}">`).join('');
+}
+
 function renderProducts() {
+
     const tbody = document.getElementById('product-list-body');
     const searchVal = document.getElementById('productSearch').value.toLowerCase();
 
@@ -268,10 +299,11 @@ function refreshImgPreviews() {
              ondragleave="handleDragLeave(event)"
              ondrop="handleDrop(event, ${i})"
              ondragend="handleDragEnd(event)"
-             style="position:relative; width:70px; height:70px; border-radius:8px; border:2px solid ${i===0?'#ee4d2d':'#ddd'}; overflow:hidden; background:#eee;">
+             style="position:relative; width:70px; height:70px; border-radius:8px; border:2px solid ${i===0?'#ee4d2d':'#ddd'}; overflow:hidden; background:#eee; cursor:zoom-in;"
+             onclick="viewFullImage(${i})">
             <img src="${src}" style="width:100%; height:100%; object-fit:cover;">
             ${i===0 ? '<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(238,77,45,0.85);color:#fff;font-size:0.6rem;text-align:center;padding:2px;">หน้าหลัก</div>' : ''}
-            <button type="button" onclick="removeImg(${i})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;">✕</button>
+            <button type="button" onclick="event.stopPropagation(); removeImg(${i})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:0.7rem;display:flex;align-items:center;justify-content:center;z-index:10;">✕</button>
         </div>
     `).join('');
     // Update hidden inputs
@@ -323,6 +355,30 @@ function handleDragEnd(e) {
 function removeImg(index) {
     uploadedImages.splice(index, 1);
     refreshImgPreviews();
+}
+// ── Image Viewer Functions ─────────────────────────────────────────
+function viewFullImage(index) {
+    const src = uploadedImages[index];
+    if (!src) return;
+    
+    const modal = document.getElementById('imageViewerModal');
+    const fullImg = document.getElementById('fullSizeImg');
+    const caption = document.getElementById('ivCaption');
+    
+    fullImg.src = src;
+    caption.textContent = `รูปภาพที่ ${index + 1} ${index === 0 ? '(รูปหน้าหลัก)' : ''}`;
+    
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('open'), 10);
+}
+
+function closeImageViewer() {
+    const modal = document.getElementById('imageViewerModal');
+    modal.classList.remove('open');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.getElementById('fullSizeImg').src = '';
+    }, 300);
 }
 // ────────────────────────────────────────────────────────────────────
 
@@ -376,9 +432,39 @@ function openEditModal(id) {
     } else {
         uploadedImages = [];
     }
-    refreshImgPreviews();
-
+    refreshPartTypeDropdown(); // Load correct types for the model
+    document.getElementById('formPartType').value = p.partType || ""; // Then set the value
+    
     document.getElementById('productModal').style.display = 'flex';
+}
+
+function updatePartTypeDropdown() {
+    refreshPartTypeDropdown();
+}
+
+function refreshPartTypeDropdown() {
+    const model = document.getElementById('formPartModel').value;
+    const pSelect = document.getElementById('formPartType');
+    if (!pSelect) return;
+
+    // Get current selection to try and preserve it if still valid
+    const currentVal = pSelect.value;
+    
+    let allowedTypes = [];
+    if (model && sparePartsConfig.mappings && sparePartsConfig.mappings[model]) {
+        allowedTypes = sparePartsConfig.mappings[model];
+    } else {
+        // If no model selected or no mapping, show all as fallback
+        allowedTypes = sparePartsConfig.partTypes || [];
+    }
+
+    pSelect.innerHTML = '<option value="">-- เลือกประเภทอะไหล่ --</option>' + 
+        allowedTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+    
+    // Restore value if it's in the new list
+    if (allowedTypes.includes(currentVal)) {
+        pSelect.value = currentVal;
+    }
 }
 
 function closeModal() {
@@ -429,12 +515,48 @@ async function handleFormSubmit(e) {
 
 async function deleteProduct(id) {
     if (!confirm("🚨 ยืนยันการลบสินค้าชิ้นนี้ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้")) return;
+    
+    console.log("[Delete] Attempting to delete:", id);
+    
     try {
+        const isMockHero = MOCK_PRODUCTS_BASELINE.some(m => m.id === id);
+        
+        // If it's a mock product, we track it locally AND globally as deleted
+        if (isMockHero) {
+            if (!deletedMockIds.includes(id)) {
+                deletedMockIds.push(id);
+                localStorage.setItem('deleted_mock_ids', JSON.stringify(deletedMockIds));
+                
+                // Sync to Firestore for other users (Global Deletion)
+                await db.collection('settings').doc('deleted_products').set({
+                    deletedIds: deletedMockIds,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: firebase.auth().currentUser ? firebase.auth().currentUser.email : "admin_local"
+                }, { merge: true });
+            }
+        }
+        
+        // Also try to delete from Firestore (in case it was migrated or added via Firestore)
         await db.collection('products').doc(id).delete();
+        
+        // If snapshot doesn't trigger immediately, refresh manually for baseline views
+        if (isMockHero) {
+            startSync(); 
+        }
+        
     } catch (err) {
-        alert("ลบไม่สำเร็จ: " + err.message);
+        console.error("[Delete] Error:", err);
+        // We only alert if it's NOT a permission error for a mock product that doesn't exist
+        if (err.code === 'permission-denied' && MOCK_PRODUCTS_BASELINE.some(m => m.id === id)) {
+            // Silently handle: Baseline products aren't in Firestore initially, so deletion fails
+            // but we've already marked it as deleted in our settings doc if we have permissions there.
+            startSync();
+        } else {
+            alert("ลบไม่สำเร็จ: " + err.message);
+        }
     }
 }
+window.deleteProduct = deleteProduct;
 
 function filterProducts() {
     renderProducts();
@@ -564,11 +686,9 @@ function refreshCategoryUI() {
         mSelect.innerHTML = '<option value="">-- เลือกรุ่นโทรศัพท์ --</option>' + 
             (sparePartsConfig.models || []).map(m => `<option value="${m}">${m}</option>`).join('');
     }
-    if (pSelect) {
-        // Initial load shows all, but we can filter this dynamically later if needed
-        pSelect.innerHTML = '<option value="">-- เลือกประเภทอะไหล่ --</option>' + 
-            (sparePartsConfig.partTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
-    }
+    
+    // Populate Part Types based on currently selected model in form (if any)
+    refreshPartTypeDropdown();
 }
 
 async function addConfigItem(type) {
@@ -589,39 +709,73 @@ async function addConfigItem(type) {
         if (type === 'models') {
             updates.models = [...currentArr, val];
         } else {
-            // Adding or Updating a Part Type with Mapping
+            // Check if we are RENAMING
+            if (editingOriginalPartType && editingOriginalPartType !== val) {
+                if (!confirm(`คุณต้องการเปลี่ยนชื่อจาก "${editingOriginalPartType}" เป็น "${val}" ใช่หรือไม่?\nการเปลี่ยนชื่อจะส่งผลต่อสินค้าที่มีอยู่ทั้งหมดในระบบครับ`)) {
+                    return; // User canceled
+                }
+            }
+
             const selectedModels = Array.from(document.querySelectorAll('input[name="targetModel"]:checked')).map(cb => cb.value);
             if (selectedModels.length === 0) {
                 alert("กรุณาเลือกรุ่นโทรศัพท์ที่ต้องการให้แสดงอย่างน้อย 1 รุ่นครับ");
                 return;
             }
 
-            // 1. Update partTypes array (if unique)
-            if (!currentArr.includes(val)) {
-                updates.partTypes = [...currentArr, val];
+            // 1. Update partTypes array
+            if (editingOriginalPartType) {
+                // Rename or Update existing
+                updates.partTypes = currentArr.map(item => item === editingOriginalPartType ? val : item);
+                // Ensure uniqueness if they renamed to something already existing (unlikely but safe)
+                updates.partTypes = [...new Set(updates.partTypes)];
+            } else {
+                // Add new
+                if (!currentArr.includes(val)) {
+                    updates.partTypes = [...currentArr, val];
+                }
             }
 
-            // 2. Update mappings object (STRICT SYNC: remove old associations first)
+            // 2. Update mappings object
             const newMappings = { ...(sparePartsConfig.mappings || {}) };
             
-            // First, remove this part type from ALL models to ensure we only have the currently selected ones
-            Object.keys(newMappings).forEach(m => {
-                newMappings[m] = (newMappings[m] || []).filter(item => item !== val);
-            });
+            // If renaming, we must first clear the OLD name from all models
+            if (editingOriginalPartType) {
+                Object.keys(newMappings).forEach(m => {
+                    newMappings[m] = (newMappings[m] || []).filter(item => item !== editingOriginalPartType);
+                });
+            } else {
+                // Just clear this specific name to avoid duplicates before adding
+                Object.keys(newMappings).forEach(m => {
+                    newMappings[m] = (newMappings[m] || []).filter(item => item !== val);
+                });
+            }
 
-            // Then, add it to only the selected models
+            // Then, add the NEW/CURRENT name to only the selected models
             selectedModels.forEach(m => {
                 if (!newMappings[m]) newMappings[m] = [];
                 if (!newMappings[m].includes(val)) newMappings[m].push(val);
             });
             updates.mappings = newMappings;
+
+            // 3. Update all existing PRODUCTS (Data Migration) if renamed
+            if (editingOriginalPartType && editingOriginalPartType !== val) {
+                const batch = db.batch();
+                const productsToUpdate = await db.collection('products').where('partType', '==', editingOriginalPartType).get();
+                productsToUpdate.forEach(doc => {
+                    batch.update(doc.ref, { partType: val });
+                });
+                await batch.commit();
+                console.log(`[Rename] Updated ${productsToUpdate.size} products to new partType: ${val}`);
+            }
         }
 
         await db.collection('settings').doc('spare_parts').update(updates);
+        
+        // Reset form and UI
         input.value = "";
-        // Uncheck all checkboxes if it was a part type
         if (type === 'partTypes') {
             document.querySelectorAll('input[name="targetModel"]').forEach(cb => cb.checked = false);
+            resetPartTypeMode();
         }
     } catch (e) {
         alert("Error: " + e.message);
@@ -630,10 +784,18 @@ async function addConfigItem(type) {
 
 function editMapping(partType) {
     const input = document.getElementById('newPartTypeInput');
+    const submitBtn = document.getElementById('partTypeSubmitBtn');
+    const cancelBtn = document.getElementById('cancelPartTypeEditBtn');
     if (!input) return;
 
-    // 1. Set input value
+    // 1. Set state and UI
+    editingOriginalPartType = partType;
     input.value = partType;
+    if (submitBtn) {
+        submitBtn.textContent = "💾 บันทึกการแก้ไขหมวดหมู่";
+        submitBtn.style.background = "#28a745"; // Green for edit
+    }
+    if (cancelBtn) cancelBtn.style.display = 'block';
 
     // 2. Reset checkboxes
     const checkboxes = document.querySelectorAll('input[name="targetModel"]');
@@ -651,6 +813,22 @@ function editMapping(partType) {
     // 4. Scroll up to the input area for better UX
     input.scrollIntoView({ behavior: 'smooth', block: 'center' });
     input.focus();
+}
+
+function resetPartTypeMode() {
+    editingOriginalPartType = null;
+    const input = document.getElementById('newPartTypeInput');
+    const submitBtn = document.getElementById('partTypeSubmitBtn');
+    const cancelBtn = document.getElementById('cancelPartTypeEditBtn');
+    
+    if (input) input.value = "";
+    if (submitBtn) {
+        submitBtn.textContent = "+ เพิ่มประเภทอะไหล่พร้อมจับคู่รุ่น";
+        submitBtn.style.background = "#A68A64"; // Original brown
+    }
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    
+    document.querySelectorAll('input[name="targetModel"]').forEach(cb => cb.checked = false);
 }
 
 async function deleteConfigItem(type, val) {
@@ -686,6 +864,7 @@ function openCategoryModal() {
 function closeCategoryModal() {
     const modal = document.getElementById('categoryModal');
     if (modal) modal.style.display = 'none';
+    resetPartTypeMode();
 }
 
 function togglePartsFields() {

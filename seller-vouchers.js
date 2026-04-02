@@ -153,7 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td><strong style="color: #ee4d2d;">฿${v.value}</strong></td>
                         <td style="text-align: center; font-size: 0.8rem;">${showHomeIcon}</td>
                         <td>฿${v.minPurchase || 0}</td>
-                        <td>${formatDate(v.expiry)}</td>
+                        <td style="color: ${v.isPermanent ? '#27ae60' : 'inherit'}; font-weight: ${v.isPermanent ? '600' : 'normal'};">
+                            ${v.isPermanent ? '♾️ ถาวร' : formatDate(v.expiry)}
+                        </td>
                         <td>
                             <div style="display:flex; gap:5px;">
                                 <button class="btn-gen-qr" onclick="prepareQRModal('${v.code}', '${v.expiry || ''}')" title="สร้าง Secure QR">🎫 สแกน</button>
@@ -208,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const usageLimit = parseInt(document.getElementById('v-usageLimit').value) || 1;
         const minPurchase = parseInt(document.getElementById('v-minPurchase').value) || 0;
         const expiry = document.getElementById('v-expiry').value;
+        const isPermanent = document.getElementById('v-isPermanent').checked;
         const showOnHomepage = document.getElementById('v-showOnHomepage').checked;
 
         // Basic Validation
@@ -230,7 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 redemptionLimit,
                 usageLimit,
                 minPurchase,
-                expiry,
+                expiry: isPermanent ? '' : expiry,
+                isPermanent: !!isPermanent,
                 showOnHomepage,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -366,7 +370,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('v-redemptionLimit').value = v.redemptionLimit || 1;
         document.getElementById('v-usageLimit').value = v.usageLimit || 1;
         document.getElementById('v-minPurchase').value = v.minPurchase || 0;
-        document.getElementById('v-expiry').value = v.expiry;
+        document.getElementById('v-expiry').value = v.expiry || '';
+        document.getElementById('v-isPermanent').checked = !!v.isPermanent;
+        // Trigger UI update for the checkbox
+        if (typeof toggleExpiry === 'function') toggleExpiry(!!v.isPermanent);
+        
         document.getElementById('v-showOnHomepage').checked = !!v.showOnHomepage;
 
         const saveBtn = document.getElementById('btnSaveVoucher');
