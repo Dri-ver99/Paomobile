@@ -337,10 +337,27 @@ badge.textContent = '⚫ ปิดให้บริการ';
         .emoji-item:hover { background:#f1f5f9; transform:scale(1.1); }
         .emoji-item img { width:85%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
 
-        /* Sticker Message Bubble */
         .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
         .sticker-img { max-width: 140px; max-height: 140px; cursor: pointer; transition: transform 0.2s; mix-blend-mode: multiply; }
         .sticker-img:hover { transform: scale(1.05); }
+
+        /* Mobile Compact Chat */
+        @media (max-width: 600px) {
+            .msg-bubble { 
+                font-size: 0.85rem !important; 
+                padding: 8px 12px !important; 
+                max-width: 85% !important;
+            }
+            .sticker-img { 
+                max-width: 100px !important; 
+                max-height: 100px !important; 
+            }
+            .chat-img-thumb { 
+                max-width: 140px !important; 
+                max-height: 180px !important; 
+            }
+            .msg-time { font-size: 0.6rem !important; }
+        }
     `;
     document.head.appendChild(style);
 
