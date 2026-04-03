@@ -146,8 +146,8 @@
         }
 
         .msg-row { display: flex; flex-direction: column; max-width: 80%; margin: 4px 0; }
-        .msg-row.user, .msg-row.customer { align-self: flex-start; }
-        .msg-row.seller { align-self: flex-end; align-items: flex-end; }
+        .user.msg-row, .customer.msg-row, .msg-row.user, .msg-row.customer { align-self: flex-start; align-items: flex-start; }
+        .seller.msg-row, .msg-row.seller { align-self: flex-end; align-items: flex-end; }
         
         .msg-bubble {
             padding: 10px 16px; border-radius: 18px;
@@ -155,18 +155,19 @@
             position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.06);
             word-wrap: break-word;
         }
-        .user .msg-bubble, .customer .msg-bubble { background: #fffcf8; color: #e64a19; border: 1px solid #ffe4d1; border-bottom-left-radius: 4px; }
-        .seller .msg-bubble { background: #ffffff; color: #333; border: 1px solid #eef2f6; border-bottom-right-radius: 4px; }
+        .user .msg-bubble, .customer .msg-bubble { background: #ffffff !important; color: #000 !important; border: 1px solid #eef2f6 !important; border-bottom-left-radius: 4px !important; }
+        .seller .msg-bubble { background: #fff5f0 !important; color: #000 !important; border: 1px solid #ffe4d1 !important; border-bottom-right-radius: 4px !important; }
         
         .msg-meta { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 0.7rem; color: #94a3b8; font-weight: 500; }
         .seller .msg-meta { justify-content: flex-end; color: #94a3b8; }
         .read-tick { color: #2ecc71; font-weight: 800; }
 
-        .msg-bubble.image-bubble, .msg-bubble.sticker-bubble { 
+        .msg-row.sticker .msg-bubble, .msg-row.image .msg-bubble { 
             background: transparent !important; 
             border: none !important; 
             box-shadow: none !important; 
             padding: 0 !important;
+            overflow: visible !important;
         }
         
         .chat-card { width: 100%; max-width: 280px; border: 1px solid #eef2f6; border-radius: 12px; background: #fff; overflow: hidden; margin-top: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s; }
@@ -176,7 +177,19 @@
         .chat-footer {
             padding: 15px 25px; border-top: 1px solid #e8e8e8;
             display: flex; flex-direction: column; gap: 10px; background: #fff;
+            position: relative;
         }
+
+        .emoji-picker-seller { 
+            display:none; position:absolute; bottom:150px; left:10px; 
+            width:240px; background:#fff; border-radius:20px; 
+            box-shadow:0 10px 40px rgba(0,0,0,0.15); border:1px solid #e2e8f0; 
+            padding:15px; z-index:200; grid-template-columns: repeat(4, 1fr); gap:10px; 
+        }
+        .emoji-picker-seller.active { display:grid; animation: chatFadeIn 0.2s ease-out; }
+        .emoji-item-seller { cursor:pointer; width:100%; aspect-ratio:1; border-radius:12px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
+        .emoji-item-seller:hover { background:#f1f5f9; transform:scale(1.1); }
+        .emoji-item-seller img { width:80%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
         .input-tools { display: flex; gap: 17px; font-size: 1.3rem; color: #8c8c8c; margin-bottom: 5px; }
         .input-tools span { cursor: pointer; transition: color 0.1s; }
         .input-tools span:hover { color: var(--shopee-orange); }
@@ -320,13 +333,12 @@
                 display: flex !important;
                 align-items: center;
                 justify-content: center;
-                width: 32px;
-                height: 32px;
-                background: #f8fafc;
-                border-radius: 50%;
+                background: transparent;
+                border: none;
                 cursor: pointer;
-                margin-right: 10px;
-                font-size: 1.1rem;
+                margin-right: 15px;
+                font-size: 1.4rem;
+                color: #fff;
             }
         }
         .btn-back-chat { display: none; }

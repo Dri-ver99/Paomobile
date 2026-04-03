@@ -214,14 +214,14 @@
                 <div class="preview-remove-seller" onclick="removeChatPreview()">✕</div>
             </div>
 
-            <div id="chatFooter" class="chat-footer" style="padding: 10px 15px; border-top: 1px solid #f1f5f9; background:#fff;">
+            <div id="chatFooter" class="chat-footer" style="padding: 10px 15px; border-top: 1px solid #f1f5f9; background:#fff; position: relative;">
                 <div style="display:flex; align-items:center; gap:10px; width:100%;">
                     <div class="input-tools" style="display:flex; gap:12px; font-size:1.4rem; color:#666;">
                         <label for="sellerFileUpload" style="cursor:pointer;" title="ส่งรูปภาพ">🖼️</label>
                         <input type="file" id="sellerFileUpload" accept="image/*" style="display:none;" onchange="handleFileUpload(this, 'image')">
                         <span style="cursor:pointer;" onclick="toggleEmojiPicker()" title="อีโมจิ">😊</span>
-                        <div id="emojiPicker" class="emoji-picker-seller"></div>
                     </div>
+                    <div id="emojiPicker" class="emoji-picker-seller"></div>
                     <div style="flex:1; background:#f1f5f9; border-radius:30px; display:flex; align-items:center; padding:5px 15px; border:1px solid #eef2f6;">
                         <textarea id="mainChatInput" style="flex:1; background:transparent; border:none; outline:none; resize:none; padding:8px 0; font-size:0.95rem; line-height:1.4; color:#333; height:40px; font-family:inherit;" placeholder="พิมพ์ข้อความตอบกลับ..." onkeypress="handleKeyPress(event)"></textarea>
                         <button onclick="sendReply()" style="background:#ee4d2d; color:#fff; border:none; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-left:10px; font-size:1rem; flex-shrink:0;">🏹</button>

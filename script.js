@@ -303,39 +303,20 @@ badge.textContent = '⚫ ปิดให้บริการ';
     style.innerHTML = `
         @keyframes chatFadeIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .chat-window.active { animation: chatFadeIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
-        .msg-bubble { box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .msg-row.customer .msg-bubble { background: #fffcf8; color: #e64a19; border: 1px solid #ffe4d1; border-radius: 18px 18px 4px 18px; }
-        .msg-row.seller .msg-bubble { background: #fff; color: #333; border: 1px solid #eef2f6; border-radius: 18px 18px 18px 4px; }
+        .msg-row { display: flex; flex-direction: column; width: 100%; margin: 8px 0; }
+        .msg-row.customer { align-items: flex-end; }
+        .msg-row.seller { align-items: flex-start; }
+        .msg-bubble { box-shadow: 0 2px 5px rgba(0,0,0,0.05); max-width: 85%; }
+        .msg-row.customer .msg-bubble { background: #ffffff !important; color: #000 !important; border: 1px solid #eef2f6 !important; border-radius: 18px 18px 4px 18px !important; }
+        .msg-row.seller .msg-bubble { background: #fff5f0 !important; color: #000 !important; border: 1px solid #ffe4d1 !important; border-radius: 18px 18px 18px 4px !important; }
         
-        /* Premium Chat Image Thumbnails */
-        .chat-img-thumb { 
-            max-width: 180px; 
-            max-height: 240px; 
-            border-radius: 12px; 
-            display: block; 
-            cursor: zoom-in; 
-            transition: transform 0.2s;
-            object-fit: cover;
-            margin: 2px 0;
-        }
-        .chat-img-thumb:hover { transform: scale(1.02); }
-        
-        /* Lightbox Modal */
-        .img-overlay { display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.9); backdrop-filter:blur(5px); align-items:center; justify-content:center; }
-        .img-overlay-content { max-width:92%; max-height:88%; border-radius:12px; box-shadow:0 10px 50px rgba(0,0,0,0.8); transform:scale(0.85); transition:transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
-        .img-overlay.active { display:flex; }
-        .img-overlay.active .img-overlay-content { transform:scale(1); }
-        .img-overlay-close { position:absolute; top:20px; right:25px; color:#fff; font-size:40px; cursor:pointer; }
-        
-        .preview-container { display:none; padding:10px 15px; background:#fff; border-top:1px solid #f1f5f9; align-items:center; gap:12px; }
-        .preview-thumb { width:50px; height:50px; border-radius:8px; object-fit:cover; border:2px solid #ee4d2d; }
-
-        /* Emoji Picker Styles */
+        /* Force Sticker Transparency */
+        .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
         .emoji-picker { 
             display:none; 
             position:absolute; 
-            bottom:70px; 
-            left:15px; 
+            bottom:150px; 
+            left:10px; 
             width:240px; 
             background:#fff; 
             border-radius:20px; 
@@ -351,7 +332,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
         .emoji-item:hover { background:#f1f5f9; transform:scale(1.1); }
         .emoji-item img { width:80%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
 
-        .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
+        /* Sticker Image Rendering */
         .sticker-img { 
             max-width: 250px; 
             max-height: 250px; 
@@ -381,8 +362,8 @@ badge.textContent = '⚫ ปิดให้บริการ';
             
             .emoji-picker {
                 width: calc(100% - 30px) !important;
-                left: 15px !important;
-                bottom: 85px !important;
+                bottom: 150px !important;
+                left: 10px !important;
                 grid-template-columns: repeat(4, 1fr) !important;
                 max-height: 280px;
                 overflow-y: auto;

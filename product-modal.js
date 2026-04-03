@@ -80,7 +80,7 @@ window.ProductDetail = {
             /* Responsive (Screen Circle drawing fix) */
             @media (max-width: 768px) {
                 .product-modal-overlay.open {
-                    background: rgba(0, 0, 0, 0.9) !important;
+                    background: rgba(0, 0, 0, 0.95) !important;
                     z-index: 20000 !important;
                 }
                 .product-modal-container {
@@ -91,22 +91,35 @@ window.ProductDetail = {
                     display: flex !important;
                     flex-direction: column !important;
                     padding: 0 !important;
+                    background: #fbfbfd !important; /* Soft background */
                 }
                 .pd-layout {
                     flex-direction: column !important;
                     height: 100% !important;
                     overflow-y: auto !important;
+                    padding: 0 !important;
+                    gap: 0 !important;
                 }
                 .pd-image-side {
                     width: 100% !important;
                     aspect-ratio: 1/1 !important;
-                    padding: 40px 20px 20px !important;
+                    padding: 60px 40px 40px !important;
                     background: #fbfbfd !important;
+                    min-height: auto !important;
                 }
                 .pd-info-side {
-                    padding: 24px !important;
-                    padding-bottom: 120px !important;
+                    padding: 35px 25px 150px 25px !important;
+                    background: #ffffff !important;
+                    border-radius: 35px 35px 0 0 !important;
+                    margin-top: -30px !important;
+                    position: relative !important;
+                    z-index: 5 !important;
+                    box-shadow: 0 -15px 40px rgba(0,0,0,0.06) !important;
                 }
+                .pd-name { font-size: 1.6rem !important; line-height: 1.2 !important; margin-bottom: 6px !important; }
+                .pd-price-promo { font-size: 2.2rem !important; }
+                .pd-desc { font-size: 0.95rem !important; color: #424245 !important; }
+                
                 .pd-close-btn {
                     position: fixed !important;
                     top: 15px !important;
@@ -114,11 +127,12 @@ window.ProductDetail = {
                     width: 44px !important;
                     height: 44px !important;
                     font-size: 1.5rem !important;
-                    color: #333333 !important; /* Premium Grey/Black */
+                    color: #333333 !important;
                     z-index: 20002 !important;
                     background: rgba(255, 255, 255, 0.9) !important;
                     backdrop-filter: blur(10px) !important;
                     box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
+                    border: none !important;
                 }
                 .pd-actions {
                     position: fixed !important;
@@ -131,9 +145,15 @@ window.ProductDetail = {
                     display: grid !important;
                     grid-template-columns: 1fr !important;
                     gap: 12px !important;
-                    border-top: 1px solid #eee !important;
-                    box-shadow: 0 -10px 30px rgba(0,0,0,0.08) !important;
+                    border-top: 1.5px solid #f1f1f1 !important;
+                    box-shadow: 0 -10px 40px rgba(0,0,0,0.08) !important;
                     z-index: 20001 !important;
+                }
+                .pd-actions .btn {
+                    height: 52px !important;
+                    font-size: 1rem !important;
+                    font-weight: 700 !important;
+                    border-radius: 14px !important;
                 }
             }
 
