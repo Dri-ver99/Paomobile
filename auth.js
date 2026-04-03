@@ -66,12 +66,18 @@
                 if (!existingLogin) {
                     const loginBox = document.createElement('div');
                     loginBox.className = 'guest-login-box';
-                    loginBox.style.cssText = 'padding: 15px; margin: 10px 15px; background: #fff; border: 1px dashed var(--gold-primary, #D4A32A); border-radius: 12px; text-align: center;';
+                    loginBox.style.cssText = 'padding: 12px; margin: 0 0 15px 0; background: #fff; border: 1px dashed #D4A32A; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.03);';
+                    
+                    const loginText = document.createElement('span');
+                    loginText.innerHTML = '👤 เข้าสู่ระบบ / สมัครสมาชิก';
+                    loginText.style.cssText = 'font-weight: 600; color: #1e293b; font-size: 0.95rem;';
                     
                     const loginLink = document.createElement('a');
                     loginLink.href = 'login.html';
-                    loginLink.innerHTML = 'เข้าสู่ระบบ / สมัครสมาชิก';
-                    loginLink.style.cssText = 'font-weight: 700; color: var(--gold-primary, #D4A32A); display: block; text-decoration: none; font-size: 1rem;';
+                    loginLink.innerHTML = 'คลิก ›';
+                    loginLink.style.cssText = 'font-weight: 800; color: #ee4d2d; text-decoration: none; font-size: 0.9rem;';
+                    
+                    loginBox.appendChild(loginText);
                     loginBox.appendChild(loginLink);
                     mobileMenu.prepend(loginBox);
                 }
@@ -188,16 +194,17 @@
             
             const header = document.createElement('div');
             header.id = 'mobile-auth-header';
-            header.style.cssText = 'padding: 24px 20px; background: #fff; border-radius: 20px; margin: 10px 15px 20px; border: 1.5px solid #f1f5f9; display: flex; align-items: center; gap: 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.04);';
+            header.style.cssText = 'padding: 12px 14px; background: #fff; border-radius: 15px; margin: 0 0 15px 0; border: 1.5px solid #f1f5f9; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer;';
+            header.onclick = () => window.location.href = 'member.html';
             header.innerHTML = `
-                <div style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 2rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(245,158,11,0.25);">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.05);">
                     ${user.avatar ? `<img src="${user.avatar}" style="width:100%; height:100%; object-fit:cover;">` : `<span style="color:white;">${firstName.charAt(0).toUpperCase()}</span>`}
                 </div>
-                <div style="flex: 1;">
-                    <div style="font-size: 1rem; color: #64748b; margin-bottom: 4px; font-weight: 500;">สวัสดีคุณ</div>
-                    <div style="font-weight: 800; color: #1e293b; font-size: 1.5rem; line-height: 1.1; letter-spacing: -0.5px;">${firstName}</div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 0.8rem; color: #64748b; font-weight: 500; margin-bottom: -1px;">สวัสดีคุณ</div>
+                    <div style="font-weight: 800; color: #1e293b; font-size: 1.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${firstName}</div>
                 </div>
-                <button id="btnMobileLogout" style="background:rgba(239, 68, 68, 0.08); border:none; color: #ef4444; font-size: 0.9rem; font-weight: 700; padding: 10px 14px; border-radius: 50%; display:flex; align-items:center; justify-content:center; width:44px; height:44px; transition: transform 0.2s;">🚪</button>
+                <button id="btnMobileLogout" style="background:rgba(239, 68, 68, 0.06); border:none; color: #ef4444; font-size: 1.1rem; padding: 0; border-radius: 12px; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">🚪</button>
             `;
             mobileMenu.prepend(header);
             document.getElementById('btnMobileLogout')?.addEventListener('click', handleLogout);

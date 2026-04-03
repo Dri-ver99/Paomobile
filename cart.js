@@ -437,6 +437,69 @@
         } else {
             console.log("[Cart] Running in guest mode.");
         }
+
+        // --- Hammer Fix: Premium Mobile Full-Screen Cart ---
+        const style = document.createElement('style');
+        style.textContent = `
+            @media (max-width: 768px) {
+                .cart-sidebar {
+                    width: 100% !important;
+                    height: 100dvh !important;
+                    max-height: 100dvh !important;
+                    border-left: none !important;
+                    border-radius: 0 !important;
+                    z-index: 99999 !important;
+                    transform: translateX(100%) !important;
+                    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                }
+                .cart-sidebar.open {
+                    transform: translateX(0) !important;
+                }
+                .cart-sidebar-header {
+                    padding: 70px 24px 20px !important;
+                    border-bottom: 1.5px solid rgba(0,0,0,0.05) !important;
+                }
+                .cart-sidebar-header h3 {
+                    font-size: 1.4rem !important;
+                    font-weight: 700 !important;
+                }
+                #cartCloseBtn, .cart-close-btn {
+                    position: fixed !important;
+                    top: 15px !important;
+                    right: 15px !important;
+                    width: 44px !important;
+                    height: 44px !important;
+                    background: rgba(255, 255, 255, 0.9) !important;
+                    color: #333333 !important;
+                    border-radius: 50% !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    font-size: 1.2rem !important;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+                    backdrop-filter: blur(10px) !important;
+                    -webkit-backdrop-filter: blur(10px) !important;
+                    z-index: 100000 !important;
+                    border: 1px solid rgba(0,0,0,0.08) !important;
+                    cursor: pointer !important;
+                    transition: all 0.2s ease !important;
+                }
+                #cartCloseBtn:active, .cart-close-btn:active {
+                    transform: scale(0.9);
+                    background: #f0f0f0 !important;
+                }
+                .cart-item-list {
+                    padding: 16px 20px !important;
+                }
+                .cart-sidebar-footer {
+                    padding: 24px !important;
+                    padding-bottom: calc(24px + env(safe-area-inset-bottom)) !important;
+                    border-top: 1.5px solid rgba(0,0,0,0.05) !important;
+                    background: #fff !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     });
 
 })();
