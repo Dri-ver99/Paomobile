@@ -29,8 +29,8 @@
         .emoji-item-seller img { width:90%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
         
         /* Sticker Message Bubble - Enlarged */
-        .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
-        .sticker-img { max-width: 200px; max-height: 200px; cursor: pointer; transition: transform 0.2s; mix-blend-mode: multiply; }
+        .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
+        .sticker-img { max-width: 280px; max-height: 280px; cursor: pointer; transition: transform 0.2s; mix-blend-mode: multiply; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.05)); }
         .sticker-img:hover { transform: scale(1.05); }
         @keyframes chatFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         

@@ -157,15 +157,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (deletedIds.includes(p.id)) return false;
 
       const q = query;
-      const tags = p.tags || [];
+      const tags = Array.isArray(p.tags) ? p.tags : (p.tags ? p.tags.split(',').map(t => t.trim()) : []);
+      const desc = (p.description || '').toLowerCase();
+      const specs = (p.specs || '').toLowerCase();
+
       return p.name.toLowerCase().includes(q)
         || (p.brand && p.brand.toLowerCase().includes(q))
         || (p.partModel && p.partModel.toLowerCase().includes(q))
         || (p.partType && p.partType.toLowerCase().includes(q))
+        || desc.includes(q)
+        || specs.includes(q)
         || tags.some(t => t.toLowerCase().includes(q));
     });
 
-    // Filter services
+    // Filter services (static)
     const filteredServices = SEARCH_SERVICES.filter(s => {
       const q = query;
       return s.title.toLowerCase().includes(q)
@@ -195,18 +200,21 @@ document.addEventListener('DOMContentLoaded', () => {
       filteredProducts.forEach(p => {
         const url = PRODUCT_PAGE[p.category] || 'new-products.html';
         const a = document.createElement('a');
-        a.href = url;
+        // Deep Linking: append ?id=... to auto-open modal on page load
+        a.href = `${url}?id=${p.id}`;
         a.className = 'search-result-item';
+
         // Thumbnail: real image or emoji fallback
         const thumbHTML = p.img
           ? `<img src="${p.img}" alt="${p.name}" class="sr-product-img">`
           : `<div class="sr-icon">${p.emoji || '📦'}</div>`;
+
         a.innerHTML = `
           ${thumbHTML}
           <div class="sr-content">
             <div class="sr-title">${p.name}</div>
-            <div class="sr-brand">${p.brand}</div>
-            <div class="sr-price">฿${p.price.toLocaleString()}</div>
+            <div class="sr-brand">${p.brand || (p.category === 'parts' ? p.partModel : '')}</div>
+            <div class="sr-price">฿${(p.price || 0).toLocaleString()}</div>
           </div>
           <span class="sr-arrow">→</span>`;
         a.addEventListener('click', closeSearch);

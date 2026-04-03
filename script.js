@@ -331,32 +331,55 @@ badge.textContent = '⚫ ปิดให้บริการ';
         .preview-thumb { width:50px; height:50px; border-radius:8px; object-fit:cover; border:2px solid #ee4d2d; }
 
         /* Emoji Picker Styles */
-        .emoji-picker { display:none; position:absolute; bottom:80px; left:14px; width:220px; background:#fff; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.15); border:1px solid #e2e8f0; padding:12px; z-index:100; grid-template-columns: repeat(4, 1fr); gap:8px; }
+        .emoji-picker { 
+            display:none; 
+            position:absolute; 
+            bottom:70px; 
+            left:15px; 
+            width:240px; 
+            background:#fff; 
+            border-radius:20px; 
+            box-shadow:0 10px 40px rgba(0,0,0,0.15); 
+            border:1px solid #e2e8f0; 
+            padding:15px; 
+            z-index:200; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap:10px; 
+        }
         .emoji-picker.active { display:grid; animation: chatFadeIn 0.2s ease-out; }
-        .emoji-item { cursor:pointer; width:100%; aspect-ratio:1; border-radius:8px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
+        .emoji-item { cursor:pointer; width:100%; aspect-ratio:1; border-radius:12px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
         .emoji-item:hover { background:#f1f5f9; transform:scale(1.1); }
-        .emoji-item img { width:85%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
+        .emoji-item img { width:80%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
 
-        .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
-        .sticker-img { max-width: 140px; max-height: 140px; cursor: pointer; transition: transform 0.2s; mix-blend-mode: multiply; }
+        .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
+        .sticker-img { max-width: 180px; max-height: 180px; cursor: pointer; transition: transform 0.2s; mix-blend-mode: multiply; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.05)); }
         .sticker-img:hover { transform: scale(1.05); }
 
-        /* Mobile Compact Chat */
-        @media (max-width: 600px) {
+        /* Mobile Compact Chat Adjustments */
+        @media (max-width: 768px) {
             .msg-bubble { 
-                font-size: 0.85rem !important; 
-                padding: 8px 12px !important; 
-                max-width: 85% !important;
+                font-size: 0.95rem !important; 
+                padding: 10px 14px !important; 
+                max-width: 88% !important;
             }
             .sticker-img { 
-                max-width: 100px !important; 
-                max-height: 100px !important; 
+                max-width: 160px !important; 
+                max-height: 160px !important; 
             }
             .chat-img-thumb { 
-                max-width: 140px !important; 
-                max-height: 180px !important; 
+                max-width: 160px !important; 
+                max-height: 200px !important; 
             }
-            .msg-time { font-size: 0.6rem !important; }
+            .msg-time { font-size: 0.65rem !important; }
+            
+            .emoji-picker {
+                width: calc(100% - 30px) !important;
+                left: 15px !important;
+                bottom: 85px !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                max-height: 280px;
+                overflow-y: auto;
+            }
         }
     `;
     document.head.appendChild(style);
