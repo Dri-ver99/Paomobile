@@ -28,7 +28,7 @@ window.ProductDetail = {
                 height: 100%;
                 background: rgba(0, 0, 0, 0.7);
                 backdrop-filter: blur(4px);
-                z-index: 100000;
+                z-index: 2147483647; /* Absolute maximum possible z-index to overlay everything including navbars */
                 justify-content: center;
                 align-items: center;
                 opacity: 0;
@@ -81,7 +81,7 @@ window.ProductDetail = {
             @media (max-width: 768px) {
                 .product-modal-overlay.open {
                     background: rgba(0, 0, 0, 0.95) !important;
-                    z-index: 100000 !important;
+                    z-index: 2147483647 !important;
                 }
                 .product-modal-container {
                     width: 100% !important;
@@ -103,7 +103,7 @@ window.ProductDetail = {
                 .pd-image-side {
                     width: 100% !important;
                     aspect-ratio: auto !important;
-                    padding: 70px 30px 20px !important;
+                    padding: 140px 20px 10px !important; /* Adjusted to perfectly clear navbar and X button */
                     background: #fbfbfd !important;
                     min-height: auto !important;
                     max-height: 45vh !important;
@@ -130,22 +130,24 @@ window.ProductDetail = {
                 
                 .pd-close-btn {
                     position: fixed !important;
-                    top: 20px !important;
+                    top: 90px !important; /* Positioned below the hamburger menu icons */
                     right: 20px !important;
-                    width: 50px !important;
-                    height: 50px !important;
-                    font-size: 1.8rem !important;
-                    color: #ffffff !important;
-                    z-index: 200005 !important;
-                    background: rgba(0, 0, 0, 0.6) !important;
+                    width: 44px !important;
+                    height: 44px !important;
+                    font-size: 1.5rem !important;
+                    color: #000000 !important;
+                    z-index: 2147483647 !important; 
+                    background: rgba(255, 255, 255, 0.7) !important; /* Translucent glass effect */
                     backdrop-filter: blur(10px) !important;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
-                    border: 2px solid rgba(255,255,255,0.2) !important;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+                    border: 1px solid rgba(0,0,0,0.15) !important;
                     border-radius: 50% !important;
                     display: flex !important;
                     align-items: center !important;
                     justify-content: center !important;
                     cursor: pointer !important;
+                    opacity: 1 !important;
+                    visibility: visible !important;
                 }
                 .pd-actions {
                     position: fixed !important;

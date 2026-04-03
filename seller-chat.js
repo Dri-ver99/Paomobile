@@ -214,7 +214,7 @@
                 <div class="preview-remove-seller" onclick="removeChatPreview()">✕</div>
             </div>
 
-            <div id="chatFooter" class="chat-footer" style="padding: 10px 15px; border-top: 1px solid #f1f5f9; background:#fff; position: relative;">
+            <div id="chatFooter" class="chat-footer" style="padding: 12px 15px 55px; border-top: 1px solid #f1f5f9; background:#fff; position: relative; padding-bottom: calc(55px + env(safe-area-inset-bottom));">
                 <div style="display:flex; align-items:center; gap:10px; width:100%;">
                     <div class="input-tools" style="display:flex; gap:12px; font-size:1.4rem; color:#666;">
                         <label for="sellerFileUpload" style="cursor:pointer;" title="ส่งรูปภาพ">🖼️</label>
@@ -283,9 +283,9 @@
                         `;
                     } else if (msg.type === 'image') {
                         html += `
-                            <div class="msg-row ${isSeller ? 'seller' : 'customer'}">
-                                <div class="msg-bubble image-bubble">
-                                    <img src="${msg.fileUrl}" class="chat-img-thumb" title="คลิกเพื่อขยาย" onclick="openImageLarge('${msg.fileUrl}')">
+                            <div class="msg-row ${isSeller ? 'seller' : 'customer'} sticker">
+                                <div class="msg-bubble" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:4px 0 !important; overflow:visible !important;">
+                                    <img src="${msg.fileUrl}" class="sticker-img" style="mix-blend-mode:multiply !important; filter:contrast(1.1) brightness(1.1) !important;" onclick="openImageLarge('${msg.fileUrl}')">
                                 </div>
                                 <div class="msg-meta">
                                     ${msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
@@ -324,9 +324,15 @@
                             </div>
                         `;
                     } else if (msg.type === 'text' || msg.text) {
+                        const emojiRegex = /^(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff]|[\s])*$/g;
+                        const isBigEmoji = emojiRegex.test(msg.text) && msg.text.length < 10;
+                        const bubbleStyle = isBigEmoji 
+                            ? 'background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important; font-size:2.5rem !important;' 
+                            : '';
+                        
                         html += `
-                            <div class="msg-row ${isSeller ? 'seller' : 'customer'}">
-                                <div class="msg-bubble">
+                            <div class="msg-row ${isSeller ? 'seller' : 'customer'} ${isBigEmoji ? 'sticker' : ''}">
+                                <div class="msg-bubble" style="${bubbleStyle}">
                                     ${msg.text}
                                 </div>
                                 <div class="msg-meta">
