@@ -1357,7 +1357,7 @@ p {
 .mobile-panel {
     min-width: 100%;
     height: 100%;
-    padding: 15px 25px 40px 25px;
+    padding: 0 25px 60px 25px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -1503,10 +1503,10 @@ body.menu-open .navbar .nav-links {
     align-items: center;
     text-decoration: none;
     color: #000;
-    font-size: 17px;
-    font-weight: 700;
-    padding: 8px 0;
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.05);
+    font-size: 19px;
+    font-weight: 800;
+    padding: 18px 0;
+    border-bottom: 1.5px solid rgba(0, 0, 0, 0.04);
 }
 
 .mobile-menu-inner .menu-item-parent::after,
