@@ -155,8 +155,9 @@ window.ProductDetail = {
                     background: #fff !important;
                     padding: 20px 24px !important;
                     padding-bottom: calc(20px + env(safe-area-inset-bottom)) !important;
-                    display: grid !important;
-                    grid-template-columns: 1fr !important;
+                    display: flex !important; /* Flexbox is more reliable for this centering */
+                    flex-direction: column !important;
+                    align-items: center !important;
                     gap: 12px !important;
                     border-top: 1.5px solid #f1f1f1 !important;
                     box-shadow: 0 -10px 40px rgba(0,0,0,0.08) !important;
@@ -167,6 +168,14 @@ window.ProductDetail = {
                     font-size: 1rem !important;
                     font-weight: 700 !important;
                     border-radius: 14px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    text-align: center !important;
+                    width: 90% !important;
+                    max-width: 320px !important;
+                    margin-left: auto !important; /* Force centering */
+                    margin-right: auto !important; /* Force centering */
                 }
             }
 
@@ -237,9 +246,9 @@ window.ProductDetail = {
                             </div>
                         </div>
 
-                        <div class="pd-actions">
-                            <button class="btn btn-ghost" onclick="ProductDetail.addToCart()" style="border:1.5px solid #1d1d1f; color:#1d1d1f">เพิ่มลงในตะกร้าสินค้า</button>
-                            <button class="btn btn-primary" onclick="ProductDetail.buyNow()">ซื้อเลย</button>
+                        <div class="pd-actions" style="display:flex !important; flex-direction:column !important; align-items:center !important; justify-content:center !important; width:100% !important; gap:12px !important; padding: 20px 0 !important; background:#fff !important; border-top:1px solid #eee !important; box-shadow:0 -10px 30px rgba(0,0,0,0.05) !important;">
+                            <button class="btn btn-ghost" onclick="ProductDetail.addToCart()" style="border:1.5px solid #1d1d1f !important; color:#1d1d1f !important; width:90% !important; max-width:320px !important; height:52px !important; border-radius:14px !important; font-weight:700 !important; display:flex !important; align-items:center !important; justify-content:center !important; margin: 0 auto !important;">เพิ่มลงในตะกร้าสินค้า</button>
+                            <button class="btn btn-primary" onclick="ProductDetail.buyNow()" style="width:90% !important; max-width:320px !important; height:52px !important; border-radius:14px !important; font-weight:700 !important; display:flex !important; align-items:center !important; justify-content:center !important; margin: 0 auto !important;">ซื้อเลย</button>
                         </div>
                     </div>
                 </div>
