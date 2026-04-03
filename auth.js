@@ -194,7 +194,19 @@
             
             const header = document.createElement('div');
             header.id = 'mobile-auth-header';
-            header.style.cssText = 'padding: 20px 18px; background: #fff; border-radius: 12px; margin: 0 0 15px 0; border: 1.5px solid #f1f5f9; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); cursor: pointer; width: calc(100% - 60px);';
+            header.style.cssText = `
+                padding: 30px 25px; 
+                background: linear-gradient(to bottom, #fff, #fafafa); 
+                margin: -15px -25px 25px -25px; 
+                border-bottom: 1.5px solid #f1f5f9; 
+                display: flex; 
+                align-items: center; 
+                gap: 20px; 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+                cursor: pointer; 
+                width: 100%;
+                border-radius: 0 0 30px 30px;
+            `;
             header.onclick = () => window.location.href = 'member.html';
             header.innerHTML = `
                 <div style="width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.35rem; flex-shrink: 0; border: 1.5px solid rgba(0,0,0,0.05);">
@@ -203,8 +215,8 @@
                 <div style="flex: 1; min-width: 0;">
                     <div style="display:flex; align-items:center; justify-content:space-between;">
                         <div>
-                            <div style="font-size: 0.75rem; color: #888; font-weight: 500; margin-bottom: 2px;">สวัสดีคุณ</div>
-                            <div style="font-weight: 950; color: #000; font-size: 1.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.5px;">${firstName}</div>
+                            <div style="font-size: 0.85rem; color: #888; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">สวัสดีคุณ</div>
+                            <div style="font-weight: 950; color: #000; font-size: 1.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.5px; line-height: 1.1;">${firstName}</div>
                         </div>
                         <button id="btnMobileLogout" style="background:rgba(239, 68, 68, 0.08); border:none; color: #ef4444; font-size: 1rem; padding: 0; border-radius: 10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; margin-left:10px;">🚪</button>
                     </div>
