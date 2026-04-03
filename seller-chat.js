@@ -205,7 +205,7 @@
             </div>
             
             <!-- File Preview Area (Seller Side) -->
-            <div id="sellerChatPreview" class="preview-container-seller">
+            <div id="sellerChatPreview" class="preview-container-seller" style="display:none;">
                 <img id="sellerPreviewImg" class="preview-thumb-seller" src="">
                 <div style="flex:1; min-width:0;">
                     <div id="sellerPreviewName" style="font-size:0.85rem; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">filename.jpg</div>
@@ -314,8 +314,8 @@
                     } else if (msg.type === 'sticker') {
                         html += `
                             <div class="msg-row ${isSeller ? 'seller' : 'customer'} sticker">
-                                <div class="msg-bubble">
-                                    <img src="${msg.fileUrl}" class="sticker-img" onclick="openImageLarge('${msg.fileUrl}')">
+                                <div class="msg-bubble" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important; overflow:visible !important;">
+                                    <img src="${msg.fileUrl}" class="sticker-img" style="mix-blend-mode:multiply !important; filter:contrast(1.1) brightness(1.1) !important;" onclick="openImageLarge('${msg.fileUrl}')">
                                 </div>
                                 <div class="msg-meta">
                                     ${msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}

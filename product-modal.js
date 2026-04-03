@@ -28,7 +28,7 @@ window.ProductDetail = {
                 height: 100%;
                 background: rgba(0, 0, 0, 0.7);
                 backdrop-filter: blur(4px);
-                z-index: 10000;
+                z-index: 100000;
                 justify-content: center;
                 align-items: center;
                 opacity: 0;
@@ -54,23 +54,23 @@ window.ProductDetail = {
                 transform: translateY(0);
             }
             .pd-close-btn {
-                position: absolute;
+                position: fixed;
                 top: 20px;
                 right: 20px;
-                width: 40px;
-                height: 40px;
-                background: rgba(255, 255, 255, 0.9);
-                border: 1px solid rgba(0, 0, 0, 0.05);
+                width: 44px;
+                height: 44px;
+                background: rgba(0, 0, 0, 0.55);
+                border: 2px solid rgba(255,255,255,0.3);
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 1.2rem;
-                color: #333;
+                font-size: 1.4rem;
+                color: #fff;
                 cursor: pointer;
-                z-index: 10;
+                z-index: 200010;
                 transition: all 0.2s;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
             }
             .pd-close-btn:hover {
                 transform: rotate(90deg);
@@ -81,7 +81,7 @@ window.ProductDetail = {
             @media (max-width: 768px) {
                 .product-modal-overlay.open {
                     background: rgba(0, 0, 0, 0.95) !important;
-                    z-index: 20000 !important;
+                    z-index: 100000 !important;
                 }
                 .product-modal-container {
                     width: 100% !important;
@@ -102,10 +102,18 @@ window.ProductDetail = {
                 }
                 .pd-image-side {
                     width: 100% !important;
-                    aspect-ratio: 1/1 !important;
-                    padding: 60px 40px 40px !important;
+                    aspect-ratio: auto !important;
+                    padding: 70px 30px 20px !important;
                     background: #fbfbfd !important;
                     min-height: auto !important;
+                    max-height: 45vh !important;
+                    overflow: hidden !important;
+                }
+                .pd-image-side img {
+                    max-height: 38vh !important;
+                    width: auto !important;
+                    margin: 0 auto !important;
+                    object-fit: contain !important;
                 }
                 .pd-info-side {
                     padding: 35px 25px 150px 25px !important;
@@ -122,17 +130,22 @@ window.ProductDetail = {
                 
                 .pd-close-btn {
                     position: fixed !important;
-                    top: 15px !important;
-                    right: 15px !important;
-                    width: 44px !important;
-                    height: 44px !important;
-                    font-size: 1.5rem !important;
-                    color: #333333 !important;
-                    z-index: 20002 !important;
-                    background: rgba(255, 255, 255, 0.9) !important;
+                    top: 20px !important;
+                    right: 20px !important;
+                    width: 50px !important;
+                    height: 50px !important;
+                    font-size: 1.8rem !important;
+                    color: #ffffff !important;
+                    z-index: 200005 !important;
+                    background: rgba(0, 0, 0, 0.6) !important;
                     backdrop-filter: blur(10px) !important;
-                    box-shadow: 0 4px 16px rgba(0,0,0,0.15) !important;
-                    border: none !important;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+                    border: 2px solid rgba(255,255,255,0.2) !important;
+                    border-radius: 50% !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    cursor: pointer !important;
                 }
                 .pd-actions {
                     position: fixed !important;
@@ -147,7 +160,7 @@ window.ProductDetail = {
                     gap: 12px !important;
                     border-top: 1.5px solid #f1f1f1 !important;
                     box-shadow: 0 -10px 40px rgba(0,0,0,0.08) !important;
-                    z-index: 20001 !important;
+                    z-index: 100001 !important;
                 }
                 .pd-actions .btn {
                     height: 52px !important;
@@ -195,8 +208,8 @@ window.ProductDetail = {
         modalDiv.id = 'productDetailModal';
         modalDiv.className = 'product-modal-overlay';
         modalDiv.innerHTML = `
+            <button class="pd-close-btn" onclick="ProductDetail.close()">✕</button>
             <div class="product-modal-container">
-                <button class="pd-close-btn" onclick="ProductDetail.close()">✕</button>
                 <div class="pd-layout">
                     <div class="pd-image-side">📦</div>
                     <div class="pd-info-side">

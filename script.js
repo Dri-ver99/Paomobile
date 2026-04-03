@@ -315,8 +315,8 @@ badge.textContent = '⚫ ปิดให้บริการ';
         .emoji-picker { 
             display:none; 
             position:absolute; 
-            bottom:150px; 
-            left:10px; 
+            bottom:70px; 
+            left:5px; 
             width:240px; 
             background:#fff; 
             border-radius:20px; 
@@ -334,14 +334,54 @@ badge.textContent = '⚫ ปิดให้บริการ';
 
         /* Sticker Image Rendering */
         .sticker-img { 
-            max-width: 250px; 
-            max-height: 250px; 
+            max-width: 180px; 
+            max-height: 180px; 
             cursor: pointer; 
             transition: transform 0.2s; 
             mix-blend-mode: multiply; 
             filter: contrast(1.1) brightness(1.1);
         }
         .sticker-img:hover { transform: scale(1.05); }
+        
+        .chat-img-thumb { 
+            max-width: 180px; 
+            max-height: 240px; 
+            border-radius: 8px; 
+            display: block; 
+            cursor: zoom-in; 
+            object-fit: cover;
+        }
+        .chat-img-thumb:hover { transform: scale(1.02); }
+        
+        .preview-container { 
+            display:none; 
+            align-items:center; 
+            gap:12px; 
+            padding:10px 15px; 
+            background:#f8fafc; 
+            border-top:1px solid #e2e8f0; 
+            position: relative;
+        }
+        .preview-thumb { 
+            width:45px; 
+            height:45px; 
+            border-radius:8px; 
+            object-fit:contain; 
+            background:#fff;
+            mix-blend-mode: multiply;
+        }
+        .preview-remove {
+            cursor:pointer;
+            width:24px;
+            height:24px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:rgba(0,0,0,0.05);
+            border-radius:50%;
+            font-size:0.7rem;
+            color:#64748b;
+        }
 
         /* Mobile Compact Chat Adjustments */
         @media (max-width: 768px) {
@@ -396,7 +436,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
             </div>
             
             <!-- File Preview Area -->
-            <div id="chatPreview" class="preview-container">
+            <div id="chatPreview" class="preview-container" style="display:none;">
                 <img id="previewImg" class="preview-thumb" src="">
                 <div style="flex:1; min-width:0;">
                     <div id="previewName" style="font-size:0.8rem; font-weight:600; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">filename.jpg</div>
@@ -666,8 +706,8 @@ badge.textContent = '⚫ ปิดให้บริการ';
                     } else if (msg.type === 'sticker') {
                         html += `
                             <div class="msg-row ${isCustomer ? 'customer' : 'seller'} sticker">
-                                <div class="msg-bubble">
-                                    <img src="${msg.fileUrl}" class="sticker-img" onclick="openImageLarge('${msg.fileUrl}')">
+                                <div class="msg-bubble" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important; overflow:visible !important;">
+                                    <img src="${msg.fileUrl}" class="sticker-img" style="mix-blend-mode:multiply !important; filter:contrast(1.1) brightness(1.1) !important;" onclick="openImageLarge('${msg.fileUrl}')">
                                 </div>
                             </div>
                         `;
