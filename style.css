@@ -1502,10 +1502,10 @@ body.menu-open .navbar .nav-links {
     justify-content: space-between;
     align-items: center;
     text-decoration: none;
-    color: #1d1d1f;
-    font-size: 18px;
-    font-weight: 500;
-    padding: 10px 0;
+    color: #000;
+    font-size: 17px;
+    font-weight: 700;
+    padding: 8px 0;
     border-bottom: 0.5px solid rgba(0, 0, 0, 0.05);
 }
 
