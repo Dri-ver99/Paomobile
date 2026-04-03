@@ -304,7 +304,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
         @keyframes chatFadeIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .chat-window.active { animation: chatFadeIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
         .msg-bubble { box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .msg-row.customer .msg-bubble { background: #ee4d2d; color: #fff; border-radius: 18px 18px 4px 18px; }
+        .msg-row.customer .msg-bubble { background: #fffcf8; color: #e64a19; border: 1px solid #ffe4d1; border-radius: 18px 18px 4px 18px; }
         .msg-row.seller .msg-bubble { background: #fff; color: #333; border: 1px solid #eef2f6; border-radius: 18px 18px 18px 4px; }
         
         /* Premium Chat Image Thumbnails */
@@ -358,7 +358,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
             cursor: pointer; 
             transition: transform 0.2s; 
             mix-blend-mode: multiply; 
-            /* Removed drop-shadow to focus on pure transparency */
+            filter: contrast(1.1) brightness(1.1);
         }
         .sticker-img:hover { transform: scale(1.05); }
 
@@ -702,7 +702,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
                     }
                 });
                 msgsArea.innerHTML = html;
-                msgsArea.scrollTop = msgsArea.scrollHeight;
+                setTimeout(() => { msgsArea.scrollTop = msgsArea.scrollHeight; }, 50);
             }, err => {
                 console.error("[Chat] Sync Error:", err);
             });

@@ -115,12 +115,14 @@
         .chat-main { flex: 1; background: #fff; display: flex; flex-direction: column; }
         .chat-header-shopee {
             padding: 12px 25px;
-            border-bottom: 1px solid #e8e8e8;
+            background: #231f1e;
+            border-bottom: 1px solid #333;
             display: flex; align-items: center; justify-content: space-between;
+            color: #fff;
         }
         .header-user-info { display: flex; align-items: center; gap: 15px; cursor: pointer; }
-        .header-user-avatar { width: 44px; height: 44px; border-radius: 50%; background: #eee; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #999; font-size: 0.9rem; }
-        .header-user-name { font-weight: 600; font-size: 1.15rem; color: #222; }
+        .header-user-avatar { width: 44px; height: 44px; border-radius: 50%; background: #3a3a3a; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #ccc; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); }
+        .header-user-name { font-weight: 600; font-size: 1.15rem; color: #fff; }
         
         .messages-container {
             flex: 1; padding: 25px 35px;
@@ -153,8 +155,8 @@
             position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.06);
             word-wrap: break-word;
         }
-        .user .msg-bubble, .customer .msg-bubble { background: #ffffff; color: #1d1d1f; border: 1px solid #eef2f6; border-bottom-left-radius: 4px; }
-        .seller .msg-bubble { background: var(--shopee-orange); color: #fff; border-bottom-right-radius: 4px; }
+        .user .msg-bubble, .customer .msg-bubble { background: #fffcf8; color: #e64a19; border: 1px solid #ffe4d1; border-bottom-left-radius: 4px; }
+        .seller .msg-bubble { background: #ffffff; color: #333; border: 1px solid #eef2f6; border-bottom-right-radius: 4px; }
         
         .msg-meta { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 0.7rem; color: #94a3b8; font-weight: 500; }
         .seller .msg-meta { justify-content: flex-end; color: #94a3b8; }

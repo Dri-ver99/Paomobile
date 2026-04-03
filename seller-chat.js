@@ -36,7 +36,7 @@
             cursor: pointer; 
             transition: transform 0.2s; 
             mix-blend-mode: multiply; 
-            /* Removed drop-shadow to eliminate unwanted background tint */
+            filter: contrast(1.1) brightness(1.1);
         }
         .sticker-img:hover { transform: scale(1.05); }
         @keyframes chatFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -184,15 +184,20 @@
         chatMain.innerHTML = `
             <div class="chat-header-shopee">
                 <div style="display:flex; align-items:center;">
-                    <div class="btn-back-chat" onclick="closeMobileChat()">⬅️</div>
+                    <div class="btn-back-chat" style="color:#fff; cursor:pointer; margin-right:15px; font-size:1.4rem; background:none; border:none; padding:0; display:flex; align-items:center; justify-content:center;" onclick="closeMobileChat()">⬅️</div>
                     <div class="header-user-info">
-                        <div class="header-user-avatar" style="overflow:hidden;">${avatarHtml}</div>
-                        <div class="header-user-name">${chatData.userName || chatId} <span style="font-size:0.8rem; color:#aaa;">∨</span></div>
+                        <div class="header-user-avatar" style="overflow:hidden; border:1px solid rgba(255,255,255,0.2); background:#333;">${avatarHtml}</div>
+                        <div style="display:flex; flex-direction:column;">
+                            <div class="header-user-name" style="color:#fff;">${chatData.userName || chatId}</div>
+                            <div style="font-size:0.7rem; color:#10b981; display:flex; align-items:center; gap:4px; font-weight:500;">
+                                <span style="width:6px; height:6px; background:#10b981; border-radius:50%;"></span> ออนไลน์ตอนนี้
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div style="display:flex; gap:15px; align-items:center;">
-                    <button onclick="openProductPicker()" style="background:#f1f5f9; border:none; padding:6px 12px; border-radius:4px; font-size:0.8rem; cursor:pointer; font-weight:500; color:#555;">🎁 ส่งสินค้า</button>
-                    <span style="font-size:1.2rem; color:#ccc; cursor:pointer;" onclick="location.reload()">✕</span>
+                    <button onclick="openProductPicker()" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); padding:6px 12px; border-radius:30px; font-size:0.8rem; cursor:pointer; font-weight:600; color:#fff;">🎁 ส่งสินค้า</button>
+                    <span style="font-size:1.6rem; color:#666; cursor:pointer; line-height:1;" onclick="location.reload()">&times;</span>
                 </div>
             </div>
             <div id="chatMessages" class="messages-container">
@@ -209,19 +214,18 @@
                 <div class="preview-remove-seller" onclick="removeChatPreview()">✕</div>
             </div>
 
-            <div id="chatFooter" class="chat-footer">
-                <div class="input-tools" style="position:relative;">
-                    <span style="cursor:pointer;" onclick="toggleEmojiPicker()" title="อีโมจิ">😊</span>
-                    <label for="sellerFileUpload" style="cursor:pointer;" title="ส่งรูปภาพ">🖼️</label>
-                    <input type="file" id="sellerFileUpload" accept="image/*" style="display:none;" onchange="handleFileUpload(this, 'image')">
-                    <!-- Emoji Picker Grid -->
-                    <div id="emojiPicker" class="emoji-picker-seller"></div>
-                </div>
-                <div class="input-row">
-                    <div class="input-box-wrapper">
-                        <textarea id="mainChatInput" class="chat-input-area" placeholder="พิมพ์ข้อความตอบกลับ..." onkeypress="handleKeyPress(event)"></textarea>
+            <div id="chatFooter" class="chat-footer" style="padding: 10px 15px; border-top: 1px solid #f1f5f9; background:#fff;">
+                <div style="display:flex; align-items:center; gap:10px; width:100%;">
+                    <div class="input-tools" style="display:flex; gap:12px; font-size:1.4rem; color:#666;">
+                        <label for="sellerFileUpload" style="cursor:pointer;" title="ส่งรูปภาพ">🖼️</label>
+                        <input type="file" id="sellerFileUpload" accept="image/*" style="display:none;" onchange="handleFileUpload(this, 'image')">
+                        <span style="cursor:pointer;" onclick="toggleEmojiPicker()" title="อีโมจิ">😊</span>
+                        <div id="emojiPicker" class="emoji-picker-seller"></div>
                     </div>
-                    <button class="btn-shopee-send" onclick="sendReply()">ส่ง</button>
+                    <div style="flex:1; background:#f1f5f9; border-radius:30px; display:flex; align-items:center; padding:5px 15px; border:1px solid #eef2f6;">
+                        <textarea id="mainChatInput" style="flex:1; background:transparent; border:none; outline:none; resize:none; padding:8px 0; font-size:0.95rem; line-height:1.4; color:#333; height:40px; font-family:inherit;" placeholder="พิมพ์ข้อความตอบกลับ..." onkeypress="handleKeyPress(event)"></textarea>
+                        <button onclick="sendReply()" style="background:#ee4d2d; color:#fff; border:none; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-left:10px; font-size:1rem; flex-shrink:0;">🏹</button>
+                    </div>
                 </div>
             </div>
         `;
