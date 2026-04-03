@@ -28,9 +28,16 @@
         .emoji-item-seller:hover { background:#f1f5f9; transform:scale(1.05); }
         .emoji-item-seller img { width:90%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
         
-        /* Sticker Message Bubble - Enlarged */
+        /* Sticker Message Bubble - Enlarged & Transparent */
         .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
-        .sticker-img { max-width: 280px; max-height: 280px; cursor: pointer; transition: transform 0.2s; mix-blend-mode: multiply; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.05)); }
+        .sticker-img { 
+            max-width: 280px; 
+            max-height: 280px; 
+            cursor: pointer; 
+            transition: transform 0.2s; 
+            mix-blend-mode: multiply; 
+            /* Removed drop-shadow to eliminate unwanted background tint */
+        }
         .sticker-img:hover { transform: scale(1.05); }
         @keyframes chatFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
@@ -260,7 +267,7 @@
                     if (msg.type === 'card') {
                         html += `
                             <div class="msg-row seller">
-                                <div class="chat-card" style="cursor:pointer;" onclick="handleChatCardClick('${msg.cardData.productId}', '${msg.cardData.category}', '${msg.cardData.link}')">
+                                <div class="chat-card" onclick="handleChatCardClick('${msg.cardData.productId}', '${msg.cardData.category}', '${msg.cardData.link}')">
                                     <img src="${msg.cardData.image}" class="chat-card-img">
                                     <div class="chat-card-info">
                                         <div class="chat-card-title">${msg.cardData.title}</div>
@@ -273,7 +280,7 @@
                     } else if (msg.type === 'image') {
                         html += `
                             <div class="msg-row ${isSeller ? 'seller' : 'customer'}">
-                                <div class="msg-bubble image-bubble" style="padding:6px; overflow:hidden; background:#fff; border: 1px solid #eef2f6; border-radius:12px;">
+                                <div class="msg-bubble image-bubble">
                                     <img src="${msg.fileUrl}" class="chat-img-thumb" title="คลิกเพื่อขยาย" onclick="openImageLarge('${msg.fileUrl}')">
                                 </div>
                                 <div class="msg-meta">

@@ -352,7 +352,14 @@ badge.textContent = '⚫ ปิดให้บริการ';
         .emoji-item img { width:80%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
 
         .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
-        .sticker-img { max-width: 180px; max-height: 180px; cursor: pointer; transition: transform 0.2s; mix-blend-mode: multiply; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.05)); }
+        .sticker-img { 
+            max-width: 250px; 
+            max-height: 250px; 
+            cursor: pointer; 
+            transition: transform 0.2s; 
+            mix-blend-mode: multiply; 
+            /* Removed drop-shadow to focus on pure transparency */
+        }
         .sticker-img:hover { transform: scale(1.05); }
 
         /* Mobile Compact Chat Adjustments */
@@ -363,8 +370,8 @@ badge.textContent = '⚫ ปิดให้บริการ';
                 max-width: 88% !important;
             }
             .sticker-img { 
-                max-width: 160px !important; 
-                max-height: 160px !important; 
+                max-width: 200px !important; 
+                max-height: 200px !important; 
             }
             .chat-img-thumb { 
                 max-width: 160px !important; 

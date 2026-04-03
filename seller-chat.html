@@ -11,8 +11,8 @@
     <style>
         :root {
             --shopee-orange: #ee4d2d;
-            --shopee-bg: #f5f5f5;
-            --seller-bubble: #e1fad4;
+            --shopee-bg: #f8f9fa;
+            --seller-bubble: #ee4d2d;
             --user-bubble: #ffffff;
             --sidebar-active: #f1f1f1;
         }
@@ -143,25 +143,32 @@
             font-weight: 400; border: 1px solid #eeeeee;
         }
 
-        .msg-row { display: flex; flex-direction: column; max-width: 85%; }
+        .msg-row { display: flex; flex-direction: column; max-width: 80%; margin: 4px 0; }
         .msg-row.user, .msg-row.customer { align-self: flex-start; }
         .msg-row.seller { align-self: flex-end; align-items: flex-end; }
         
         .msg-bubble {
-            padding: 12px 18px; border-radius: 12px;
-            font-size: 1.15rem; line-height: 1.5;
-            position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            padding: 10px 16px; border-radius: 18px;
+            font-size: 1rem; line-height: 1.4;
+            position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+            word-wrap: break-word;
         }
-        .user .msg-bubble, .customer .msg-bubble { background: #ffffff; color: #333; border: 1px solid #f0f0f0; border-top-left-radius: 0; }
-        .seller .msg-bubble { background: #e1fad4; color: #333; border-top-right-radius: 0; }
+        .user .msg-bubble, .customer .msg-bubble { background: #ffffff; color: #1d1d1f; border: 1px solid #eef2f6; border-bottom-left-radius: 4px; }
+        .seller .msg-bubble { background: var(--shopee-orange); color: #fff; border-bottom-right-radius: 4px; }
         
-        .msg-meta { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 0.7rem; color: #aaa; }
-        .seller .msg-meta { justify-content: flex-end; }
-        .read-tick { color: #26af11; }
+        .msg-meta { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 0.7rem; color: #94a3b8; font-weight: 500; }
+        .seller .msg-meta { justify-content: flex-end; color: #94a3b8; }
+        .read-tick { color: #2ecc71; font-weight: 800; }
 
-        /* Status Badge Shopee Style */
-        .status-badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; color: #888; background: #eee; border: 1px solid #ddd; }
-        .status-badge.closed { background: #f5f5f5; color: #999; }
+        .msg-bubble.image-bubble, .msg-bubble.sticker-bubble { 
+            background: transparent !important; 
+            border: none !important; 
+            box-shadow: none !important; 
+            padding: 0 !important;
+        }
+        
+        .chat-card { width: 100%; max-width: 280px; border: 1px solid #eef2f6; border-radius: 12px; background: #fff; overflow: hidden; margin-top: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .chat-card:active { transform: scale(0.98); }
 
         /* Input Area Shopee Style */
         .chat-footer {
@@ -426,46 +433,7 @@
         </div>
     </div>
 
-    <!-- Product Detail Modal (Ported for Quick View) -->
-    <div class="product-modal-overlay" id="productDetailModal">
-        <div class="product-modal-container">
-            <button class="pd-close-btn" onclick="ProductDetail.close()">✕</button>
-            <div class="pd-layout">
-                <div class="pd-image-side">🛡️</div>
-                <div class="pd-info-side">
-                    <div class="pd-brand">Brand</div>
-                    <h2 class="pd-name">Product Name</h2>
-                    <div class="pd-sku">SKU: N/A</div>
-                    <div class="pd-price-wrap">
-                        <span class="pd-price-original"></span>
-                        <span class="pd-price-promo">฿0</span>
-                        <span class="pd-sale-badge">ลดราคา</span>
-                    </div>
-                    <div class="pd-shipping">ค่าจัดส่งที่คำนวณในขั้นตอนการชำระเงิน</div>
 
-                    <div class="pd-selector-item">
-                        <span class="pd-label">สี</span>
-                        <div class="pd-options"></div>
-                    </div>
-
-                    <div class="pd-selector-item">
-                        <span class="pd-label">ปริมาณ</span>
-                        <div class="pd-qty-group">
-                            <button class="pd-qty-btn" onclick="ProductDetail.updateQty(-1)">−</button>
-                            <span class="pd-qty-val">1</span>
-                            <button class="pd-qty-btn" onclick="ProductDetail.updateQty(1)">+</button>
-                        </div>
-                    </div>
-
-                    <div class="pd-actions">
-                        <button class="pd-btn pd-btn-cart" onclick="ProductDetail.addToCart()">เพิ่มลงในตะกร้าสินค้า</button>
-                        <button class="pd-btn pd-btn-buy" onclick="ProductDetail.buyNow()">ซื้อเลย</button>
-                    </div>
-                    <div class="pd-desc"></div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
