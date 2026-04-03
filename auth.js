@@ -195,30 +195,47 @@
             const header = document.createElement('div');
             header.id = 'mobile-auth-header';
             header.style.cssText = `
-                padding: 30px 25px; 
-                background: linear-gradient(to bottom, #fff, #fafafa); 
-                margin: -15px -25px 25px -25px; 
-                border-bottom: 1.5px solid #f1f5f9; 
+                position: relative;
+                padding: 18px 20px; 
+                background: linear-gradient(135deg, #1d1d1f 0%, #333 100%); 
+                margin: 15px 0 25px -25px; 
+                border-bottom: 3.5px solid #f59e0b; 
                 display: flex; 
                 align-items: center; 
                 gap: 20px; 
-                box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+                box-shadow: 10px 10px 30px rgba(0,0,0,0.15); 
                 cursor: pointer; 
-                width: 100%;
-                border-radius: 0 0 30px 30px;
+                width: 88%;
+                border-radius: 0 32px 32px 0;
+                overflow: hidden;
             `;
             header.onclick = () => window.location.href = 'member.html';
+            // Fetch real coupon count from localStorage
+            const voucherKey = 'pao_user_vouchers_' + (user.email || '');
+            const voucherList = JSON.parse(localStorage.getItem(voucherKey)) || [];
+            const couponCount = voucherList.length;
+
             header.innerHTML = `
-                <div style="width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.35rem; flex-shrink: 0; border: 1.5px solid rgba(0,0,0,0.05);">
+                <!-- Premium Background Accent -->
+                <div style="position:absolute; top:-20px; right:-20px; width:100px; height:100px; background:rgba(245, 158, 11, 0.08); border-radius:50%; blur(40px);"></div>
+                
+                <!-- Mega Avatar (Fills Height) -->
+                <div style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.8rem; flex-shrink: 0; border: 2.5px solid #fff; box-shadow: 0 0 15px rgba(245, 158, 11, 0.45);">
                     ${user.avatar ? `<img src="${user.avatar}" style="width:100%; height:100%; object-fit:cover;">` : `<span style="color:white;">${firstName.charAt(0).toUpperCase()}</span>`}
                 </div>
-                <div style="flex: 1; min-width: 0;">
+                
+                <div style="flex: 1; min-width: 0; z-index: 1;">
                     <div style="display:flex; align-items:center; justify-content:space-between;">
-                        <div>
-                            <div style="font-size: 0.85rem; color: #888; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">สวัสดีคุณ</div>
-                            <div style="font-weight: 950; color: #000; font-size: 1.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.5px; line-height: 1.1;">${firstName}</div>
+                        <div style="display:flex; flex-direction:column; gap:3px;">
+                            <div style="font-size: 0.65rem; color: #f59e0b; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; display:flex; align-items:center; gap:5px;">
+                                <span>${isAdmin ? '🛡️' : '👤'}</span> ${isAdmin ? 'ADMIN' : 'MEMBER'}
+                            </div>
+                            <div style="font-weight: 950; color: #fff; font-size: 1.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.8px; line-height: 1;">${firstName}</div>
+                            <div style="font-size: 0.72rem; color: rgba(255,255,255,0.7); margin-top: 5px; font-weight: 600; display:flex; align-items:center; gap:4px;">
+                                🎟️ คูปองที่เหลือ: <span style="color:#f59e0b; font-weight:900; font-size:0.85rem;">${couponCount}</span> ใบ
+                            </div>
                         </div>
-                        <button id="btnMobileLogout" style="background:rgba(239, 68, 68, 0.08); border:none; color: #ef4444; font-size: 1rem; padding: 0; border-radius: 10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; margin-left:10px;">🚪</button>
+                        <button id="btnMobileLogout" style="background:rgba(255, 255, 255, 0.1); border:none; color: #fff; font-size: 1.1rem; padding: 0; border-radius: 12px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); border: 1px solid rgba(255,255,255,0.1);">🚪</button>
                     </div>
                 </div>
             `;
