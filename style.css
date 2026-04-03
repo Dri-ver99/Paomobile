@@ -1326,7 +1326,7 @@ p {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100vh;
+    height: 100dvh;
     background: #ffffff;
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
@@ -1357,7 +1357,7 @@ p {
 .mobile-panel {
     min-width: 100%;
     height: 100%;
-    padding: 100px 40px 40px 40px;
+    padding: 15px 25px 40px 25px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -1472,7 +1472,7 @@ body.menu-open .navbar .nav-links {
 .mobile-menu-inner {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 2px;
 }
 
 .mobile-menu-inner>a,
@@ -1503,10 +1503,10 @@ body.menu-open .navbar .nav-links {
     align-items: center;
     text-decoration: none;
     color: #1d1d1f;
-    font-size: 20px;
-    font-weight: 600;
-    padding: 14px 0;
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+    font-size: 18px;
+    font-weight: 500;
+    padding: 10px 0;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.05);
 }
 
 .mobile-menu-inner .menu-item-parent::after,
@@ -3995,22 +3995,27 @@ body.menu-open .navbar .nav-links {
     
     .pd-close-btn {
         position: fixed !important;
-        top: 20px !important;
-        right: 20px !important;
+        top: 15px !important;
+        right: 15px !important;
         background: rgba(255, 255, 255, 0.9) !important;
-        width: 48px !important;
-        height: 48px !important;
-        font-size: 1.6rem !important;
-        color: #333 !important;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.2) !important;
-        z-index: 20001 !important; /* Higher than overlay 10000 */
-        border: 2px solid #fff !important;
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 1.5rem !important;
+        color: #333333 !important; /* Premium Grey/Black */
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+        z-index: 20002 !important;
+        border: 1.5px solid rgba(0,0,0,0.05) !important;
         border-radius: 50% !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        backdrop-filter: blur(8px) !important;
+        backdrop-filter: blur(10px) !important;
         cursor: pointer !important;
+        transition: all 0.2s ease !important;
+    }
+    .pd-close-btn:active {
+        transform: scale(0.9) !important;
+        background: #f0f0f0 !important;
     }
     
     .pd-layout {
