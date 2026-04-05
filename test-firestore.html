@@ -1,0 +1,21 @@
+﻿<!DOCTYPE html>
+<html>
+<body>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+        projectId: "paomobile-85e39"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    db.collection('products').limit(1).get().then(snap => {
+        document.body.innerHTML += "SUCCESS: " + snap.docs.length;
+    }).catch(e => {
+        document.body.innerHTML += "ERROR: " + e.message;
+    });
+</script>
+</body>
+</html>
+
