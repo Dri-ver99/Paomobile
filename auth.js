@@ -66,20 +66,38 @@
                 if (!existingLogin) {
                     const loginBox = document.createElement('div');
                     loginBox.className = 'guest-login-box';
-                    loginBox.style.cssText = 'padding: 14px 18px; margin: 0 0 25px 0; background: #fff; border: 1.5px solid #f1f5f9; border-radius: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.03);';
+                    loginBox.style.cssText = 'padding: 16px 18px; margin: 12px 0 25px 0; background: #fff; border: 2px solid #f1f5f9; border-radius: 15px; display: flex !important; align-items: center; justify-content: space-between; box-shadow: 0 8px 24px rgba(0,0,0,0.08); text-decoration: none; cursor: pointer; transition: all 0.2s; position: relative; z-index: 99999; pointer-events: auto !important;';
                     
                     const loginText = document.createElement('span');
                     loginText.innerHTML = '👤 เข้าสู่ระบบ / สมัครสมาชิก';
-                    loginText.style.cssText = 'font-weight: 700; color: #000; font-size: 0.95rem;';
+                    loginText.style.cssText = 'font-weight: 700; color: #000; font-size: 0.95rem; pointer-events: none;';
                     
-                    const loginLink = document.createElement('a');
-                    loginLink.href = 'login.html';
-                    loginLink.innerHTML = 'คลิก ›';
-                    loginLink.style.cssText = 'font-weight: 800; color: #ee4d2d; text-decoration: none; font-size: 0.9rem;';
+                    const arrow = document.createElement('span');
+                    arrow.innerHTML = '›';
+                    arrow.style.cssText = 'font-weight: 800; color: #ee4d2d; font-size: 1.2rem; margin-right: 2px; pointer-events: none;';
                     
                     loginBox.appendChild(loginText);
-                    loginBox.appendChild(loginLink);
+                    loginBox.appendChild(arrow);
+                    
+                    const doLogin = (e) => {
+                        if (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                        }
+                        window.location.assign('login.html');
+                    };
+                    
+                    loginBox.addEventListener('click', doLogin);
+                    loginBox.addEventListener('touchstart', doLogin, { passive: false });
+                    
                     mobileMenu.prepend(loginBox);
+                    
+                    loginBox.addEventListener('mouseenter', () => loginBox.style.borderColor = '#ee4d2d');
+                    loginBox.addEventListener('mouseleave', () => loginBox.style.borderColor = '#f1f5f9');
+                    
+                    loginBox.addEventListener('mouseenter', () => loginBox.style.borderColor = '#ee4d2d');
+                    loginBox.addEventListener('mouseleave', () => loginBox.style.borderColor = '#f1f5f9');
                 }
 
                 // Member link in mobile sub-menu (Refactored to match parent style)

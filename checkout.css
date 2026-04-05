@@ -762,7 +762,7 @@ input, button, select, textarea { font-family: inherit; }
 .v-list-title { font-size: 0.95rem; color: #333; margin-bottom: 4px; }
 .v-list-subtitle { font-size: 0.8rem; color: #888; margin-bottom: 15px; }
 
-/* Voucher Card Item */
+/* Voucher Card Item - Premium Design Sync with member.html */
 .v-item-card-wrapper {
     background: transparent;
     margin-bottom: 12px;
@@ -774,145 +774,132 @@ input, button, select, textarea { font-family: inherit; }
     display: flex;
     cursor: pointer;
     background: #fff;
+    border: 1px solid #e2e8f0;
     border-radius: 4px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     position: relative;
-    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 1px solid transparent;
+    transition: all 0.2s;
+    overflow: visible; /* Allow notches to be seen correctly */
+    min-height: 88px;
 }
 
 .v-item-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border-color: #cbd5e1;
 }
-
-/* Ticket Cutout Punch-outs (The semi-circles at top and bottom) */
-.v-item-card::before, .v-item-card::after {
-    content: '';
-    position: absolute;
-    left: 102px; /* Matches v-item-left width (110) - half of punch-out width (16/2=8) */
-    width: 16px;
-    height: 16px;
-    background: #f5f5f5; /* Matches modal body background */
-    border-radius: 50%;
-    z-index: 5;
-}
-.v-item-card::before { top: -8px; box-shadow: inset 0 -3px 3px rgba(0,0,0,0.02); }
-.v-item-card::after { bottom: -8px; box-shadow: inset 0 3px 3px rgba(0,0,0,0.02); }
 
 .v-item-left {
-    width: 110px;
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee4d2d 100%);
-    color: #fff;
+    width: 90px;
+    min-width: 90px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 20px 10px;
-    position: relative;
+    color: white;
     text-align: center;
-    border-radius: 4px 0 0 4px;
-    overflow: hidden;
-}
-
-/* Subtle pattern on the colored side */
-.v-item-left::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-image: radial-gradient(rgba(255,255,255,0.1) 10%, transparent 10%);
-    background-size: 15px 15px;
-    opacity: 0.5;
-}
-
-.v-item-left.shipping { background: linear-gradient(135deg, #26d0ce 0%, #1a9a8b 100%); }
-
-/* Serrated Edge (The dots) */
-.v-item-left::after {
-    content: '';
-    position: absolute;
-    right: -1px;
-    top: 10px;
-    bottom: 10px;
-    width: 2px;
-    background-image: radial-gradient(circle, #f5f5f5 1.5px, transparent 0);
-    background-size: 2px 7px;
-    z-index: 4;
-}
-
-.v-item-icon-box { 
-    background: rgba(255,255,255,0.25); 
-    width: 48px; 
-    height: 48px; 
-    border-radius: 50%; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
+    flex-shrink: 0;
     position: relative;
-    z-index: 2;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    gap: 2px;
+    background: #f3a91e; /* Default Discount Orange */
 }
 
-.v-item-label { 
-    font-size: 0.75rem; 
-    font-weight: 600; 
-    line-height: 1.2; 
-    position: relative;
-    z-index: 2;
+.v-item-left.shipping {
+    background: #00bfa5; /* Shopee Green for Free Ship */
+}
+
+/* Icons within cards */
+.v-icon-truck {
+    width: 38px;
+    height: 38px;
+    margin-bottom: 2px;
+}
+
+.v-icon-baht {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.v-item-left span {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .v-item-right {
     flex: 1;
-    padding: 18px 20px;
+    padding: 12px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+    border-left: 1px dashed #e2e8f0;
     position: relative;
+    min-width: 0;
     background: #fff;
-    border-radius: 0 4px 4px 0;
 }
 
-.v-info-title { 
-    font-size: 1.05rem; 
-    font-weight: 700; 
-    color: #222; 
-    margin-bottom: 6px; 
+/* Ticket Notches (The semi-circles at the dashed line) */
+.v-item-right::before,
+.v-item-right::after {
+    content: '';
+    position: absolute;
+    left: -5px;
+    width: 10px;
+    height: 10px;
+    background: #f5f5f5; /* Matches modal body background */
+    border: 1px solid #e2e8f0;
+    border-radius: 50%;
+    z-index: 5;
 }
 
-.v-info-tag { 
-    font-size: 0.7rem; 
-    color: #ee4d2d; 
-    background: rgba(238, 77, 45, 0.08);
-    border: 1px solid rgba(238, 77, 45, 0.2); 
-    display: inline-block; 
-    padding: 1px 6px; 
-    margin-bottom: 10px; 
-    border-radius: 2px; 
+.v-item-right::before {
+    top: -6px;
 }
 
-.v-info-expiry { 
-    font-size: 0.75rem; 
-    color: #888; 
-    display: flex; 
-    align-items: center; 
-    gap: 8px; 
+.v-item-right::after {
+    bottom: -6px;
 }
 
-.v-info-link { color: #0055aa; text-decoration: none; font-weight: 500; }
-.v-info-link:hover { text-decoration: underline; }
+.v-info-box {
+    min-width: 0;
+    flex: 1;
+}
 
-.v-radio-box { 
-    padding-left: 15px; 
+.v-info-title {
+    margin: 0 0 2px 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.v-info-tag {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #ee4d2d;
+    margin-bottom: 2px;
+    display: block;
+}
+
+.v-info-expiry {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 4px;
+}
+
+.v-radio-box {
+    padding-left: 8px;
+    flex-shrink: 0;
 }
 
 .v-radio {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #ddd;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid #ccc;
     border-radius: 50%;
     position: relative;
-    transition: all 0.2s;
+    background: #fff;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .v-radio.selected {
@@ -922,36 +909,16 @@ input, button, select, textarea { font-family: inherit; }
 
 .v-radio.selected::after {
     content: '✓';
-    color: white;
-    font-size: 12px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-.v-radio { width: 22px; height: 22px; border: 1px solid #ddd; border-radius: 50%; position: relative; background: #fff; }
-.v-radio.selected { border-color: #ee4d2d; background: #ee4d2d; }
-.v-radio.selected::after {
-    content: '✓';
     position: absolute;
     inset: 0;
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 700;
 }
 
-.v-item-footer {
-    background: #fff8e1;
-    padding: 8px 16px;
-    font-size: 0.75rem;
-    color: #ee4d2d;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border-top: 1px solid #fff3e0;
-}
 
 .v-modal-footer {
     padding: 12px 20px;

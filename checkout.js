@@ -9,7 +9,8 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
         let cartItems = [];
         let shippingCost = 0;
         let appliedDiscount = 0;
-        let appliedVoucherCode = '';
+        let appliedShipCode = '';
+        let appliedDiscountCode = '';
         let locState = { province:'', amphoe:'', district:'', zip:'' };
         let currentLocTab = 'province';
         let editingAddressIndex = -1;
@@ -105,20 +106,13 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
         function updateTotals() {
             const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
             
-            // Handle Free Shipping Voucher
+            // Handle Shipping Discount
             let finalShipping = shippingCost;
-            let finalDiscount = appliedDiscount;
-            
-            // Check if current voucher is a shipping type (v1.2.2)
-            const merged = getMergedVouchers();
-            const currentV = merged[appliedVoucherCode];
-            const isShipVoucher = appliedVoucherCode === 'FREE' || appliedVoucherCode === 'FREESHIP' || (currentV && currentV.type === 'ship');
-            
-            if (isShipVoucher) {
+            if (appliedShipCode) {
                 finalShipping = 0;
             }
             
-            const total = subtotal + finalShipping - finalDiscount;
+            const total = subtotal + finalShipping - appliedDiscount;
             const count = cartItems.reduce((s, i) => s + i.qty, 0);
 
             // Update UI
@@ -134,15 +128,10 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             const shippingEl = document.getElementById('s-shipping');
             if (shippingEl) shippingEl.textContent = '฿' + finalShipping.toLocaleString();
             
-            // Voucher Display Row (Summary)
+            // Voucher Display Rows (Summary)
             const discountRow = document.getElementById('s-discount-row');
             if (discountRow) {
-                if (isShipVoucher) {
-                    discountRow.style.display = 'flex';
-                    const spanFirst = discountRow.querySelector('span:first-child');
-                    if(spanFirst) spanFirst.textContent = 'ส่วนลดค่าจัดส่ง';
-                    document.getElementById('s-discount').textContent = '-฿' + (shippingCost).toLocaleString();
-                } else if (appliedDiscount > 0) {
+                if (appliedDiscount > 0) {
                     discountRow.style.display = 'flex';
                     const spanFirst = discountRow.querySelector('span:first-child');
                     if(spanFirst) spanFirst.textContent = 'ส่วนลดจากโค้ด';
@@ -152,27 +141,44 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 }
             }
 
+            // Shipping Discount Row (v1.9.0)
+            const shipDiscRow = document.getElementById('s-ship-discount-row');
+            if (shipDiscRow) {
+                if (appliedShipCode) {
+                    shipDiscRow.style.display = 'flex';
+                    document.getElementById('s-ship-discount').textContent = '-฿' + (shippingCost || 0).toLocaleString();
+                } else {
+                    shipDiscRow.style.display = 'none';
+                }
+            }
+
             // Voucher Trigger Button (Main Section)
             const vStatus = document.getElementById('voucherStatus');
             if (vStatus) {
-                if (appliedVoucherCode) {
-                    let label = `${appliedVoucherCode} (-฿${appliedDiscount})`;
-                    if (isShipVoucher) {
-                        label = `ฟรีค่าจัดส่ง (-฿${shippingCost})`;
+                let statusHtml = '';
+                if (appliedShipCode || appliedDiscountCode) {
+                    let labels = [];
+                    if (appliedShipCode) labels.push('ส่งฟรี');
+                    if (appliedDiscountCode) {
+                        const merged = getMergedVouchers();
+                        const v = merged[appliedDiscountCode];
+                        labels.push(v ? `ลด ฿${v.value}` : appliedDiscountCode);
                     }
-                    vStatus.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="border: 1px solid #ee4d2d; color:#ee4d2d; padding: 2px 8px; border-radius: 2px; font-size: 0.85rem;">${label}</span>
-                            <span style="color:#757575; font-size:0.9rem;">แก้ไข</span>
+                    
+                    statusHtml = `
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            ${labels.map(l => `<span style="border: 1px solid #ee4d2d; color:#ee4d2d; padding: 2px 6px; border-radius: 2px; font-size: 0.8rem;">${l}</span>`).join('')}
+                            <span style="color:#757575; font-size:0.9rem; margin-left:4px;">แก้ไข</span>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#757575" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </div>
                     `;
                 } else {
-                    vStatus.innerHTML = `
+                    statusHtml = `
                         <span>กดใช้โค้ด</span>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     `;
                 }
+                vStatus.innerHTML = statusHtml;
             }
 
             const totalEl = document.getElementById('s-total');
@@ -180,42 +186,38 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
         }
 
         // --- Voucher Modal Logic (Shopee Style) ---
-        let tempVoucherCode = '';
-        const STATIC_VOUCHERS = {
-            'FREE': { value: 0, type: 'ship' },
-            'PAO50': { value: 50, type: 'discount' },
-            'PAO100': { value: 100, type: 'discount' },
-            'NEWUSER': { value: 30, type: 'discount' },
-            'SALE10': { value: 10, type: 'discount' }
-        };
-
+        let tempShipCode = '';
+        let tempDiscountCode = '';
+        
         // Get user's personal vouchers and combine with static ones
         function getMergedVouchers() {
             const user = JSON.parse(localStorage.getItem('paomobile_user'));
             const email = user ? user.email : '';
-            const personalVouchers = JSON.parse(localStorage.getItem('pao_user_vouchers_' + email) || '[]');
+            const vKey = 'pao_user_vouchers_' + email;
+            const personalVouchers = JSON.parse(localStorage.getItem(vKey) || '[]');
             
-            // v1.6.0 - Only show vouchers collected from Member (Filter out uncollected static ones)
             let merged = {}; 
             
             personalVouchers.forEach(v => {
-                // v1.6.2 - Filter out expired vouchers from merging
                 const now = new Date();
-                if (v.expiry && v.expiry !== '-') {
+                if (!v.isPermanent && v.expiry && v.expiry !== '-') {
                     const expDate = new Date(v.expiry + 'T23:59:59');
                     if (expDate < now) return;
                 }
 
-                // Use static definition as fallback if available for detail consistency
-                const base = STATIC_VOUCHERS[v.code] || { value: 0, type: 'discount', minPurchase: 0 };
+                // Standardize the voucher object
                 merged[v.code] = {
-                    title: v.title || base.title || 'Voucher',
-                    value: (v.value !== undefined) ? v.value : base.value,
-                    type: (v.type !== undefined) ? v.type : base.type,
-                    minPurchase: (v.minPurchase !== undefined) ? v.minPurchase : (base.minPurchase || 0),
-                    expiry: v.expiry || base.expiry || '-'
+                    code: v.code,
+                    title: v.title || v.name || 'คูปองส่วนลด',
+                    value: v.value || 0,
+                    type: v.type || 'discount',
+                    minPurchase: v.minPurchase || 0,
+                    expiry: v.expiry || '-',
+                    isPermanent: v.isPermanent || false,
+                    desc: v.desc || ''
                 };
             });
+
             return merged;
         }
 
@@ -223,65 +225,58 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             const overlay = document.getElementById('voucherModalOverlay');
             if (overlay) overlay.classList.add('open');
             document.body.style.overflow = 'hidden';
-            tempVoucherCode = appliedVoucherCode;
+            
+            tempShipCode = appliedShipCode;
+            tempDiscountCode = appliedDiscountCode;
 
-            // v1.8.0 - Sync with Firestore before rendering (with 3-second timeout)
+            // v1.8.0 - Sync with Firestore before rendering
             if (window.db) {
                 try {
                     const user = JSON.parse(localStorage.getItem('paomobile_user'));
                     if (user && user.email) {
                         const email = user.email.trim();
+                        const vKey = 'pao_user_vouchers_' + email;
+                        
                         const syncPromise = (async () => {
                             const redemptionsSnap = await db.collection('vouchers_redemptions').where('email', '==', email).get();
-                            const claimedCodes = [...new Set(redemptionsSnap.docs.map(doc => doc.data().code))]; // Unique codes
+                            if (redemptionsSnap.empty) return;
+
+                            const claimedCodes = [...new Set(redemptionsSnap.docs.map(doc => doc.data().code))];
                             
                             let refreshedVouchers = [];
-                            if (claimedCodes.length > 0) {
-                                // v1.8.2 - Batch sync support for 10+ vouchers
-                                const chunkSize = 10;
-                                for (let i = 0; i < claimedCodes.length; i += chunkSize) {
-                                    const chunk = claimedCodes.slice(i, i + chunkSize);
-                                    const vouchersSnap = await db.collection('vouchers').where('code', 'in', chunk).get();
-                                    vouchersSnap.forEach(doc => refreshedVouchers.push({ ...doc.data(), id: doc.id }));
-                                }
+                            const chunkSize = 10;
+                            for (let i = 0; i < claimedCodes.length; i += chunkSize) {
+                                const chunk = claimedCodes.slice(i, i + chunkSize);
+                                const vouchersSnap = await db.collection('vouchers').where('code', 'in', chunk).get();
+                                vouchersSnap.forEach(doc => refreshedVouchers.push({ ...doc.data(), id: doc.id }));
                             }
-                            const vKey = 'pao_user_vouchers_' + email;
-                            localStorage.setItem(vKey, JSON.stringify(refreshedVouchers));
-                            console.log("[v1.8.2] Voucher Cloud Sync Success (Batch):", refreshedVouchers.length);
+
+                            if (refreshedVouchers.length > 0) {
+                                localStorage.setItem(vKey, JSON.stringify(refreshedVouchers));
+                                console.log("[Sync] Cloud refresh success:", refreshedVouchers.length);
+                            }
                         })();
 
-                        await Promise.race([
-                            syncPromise,
-                            new Promise(resolve => setTimeout(resolve, 3000))
-                        ]);
+                        await Promise.race([syncPromise, new Promise(resolve => setTimeout(resolve, 2000))]);
                     }
-                } catch (e) {
-                    console.warn("[v1.8.0] Voucher sync failed or timed out, using cache:", e);
-                }
+                } catch (e) { console.warn("[Sync] Timeout or error, using cache", e); }
             }
             
-            // v1.3.3 - Fetch usage counts from Firestore to hide used vouchers
+            // Usage check
             let usageCounts = {};
             if (window.db) {
                 try {
                     const user = JSON.parse(localStorage.getItem('paomobile_user'));
                     const email = user ? user.email : '';
-                    const snap = await db.collection('orders')
-                        .where('customerEmail', '==', email)
-                        .get();
-                    
+                    const snap = await db.collection('orders').where('customerEmail', '==', email).get();
                     snap.docs.forEach(doc => {
                         const d = doc.data();
-                        if (d.status !== 'ยกเลิกแล้ว' && d.appliedVoucherCode) {
-                            usageCounts[d.appliedVoucherCode] = (usageCounts[d.appliedVoucherCode] || 0) + 1;
-                        }
-                        if (d.status !== 'ยกเลิกแล้ว' && d.voucherCode) {
-                             usageCounts[d.voucherCode] = (usageCounts[d.voucherCode] || 0) + 1;
+                        if (d.status !== 'ยกเลิกแล้ว') {
+                            const code = d.appliedVoucherCode || d.voucherCode;
+                            if (code) usageCounts[code] = (usageCounts[code] || 0) + 1;
                         }
                     });
-                } catch (e) {
-                    console.error("Failed to fetch voucher usage:", e);
-                }
+                } catch (e) { console.error(e); }
             }
 
             renderPersonalVouchers(usageCounts);
@@ -294,79 +289,68 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             if (!shipContainer || !discountContainer) return;
 
             const merged = getMergedVouchers();
-            const personalVouchers = Object.keys(merged).map(code => ({
-                code: code,
-                ...merged[code]
-            }));
+            const personalVouchers = Object.values(merged);
 
             let shipHtml = '';
             let discountHtml = '';
             
             const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
-            const today = new Date();
-            today.setHours(0,0,0,0);
+            const now = new Date();
 
             personalVouchers.forEach(v => {
-                const now = new Date();
-                const isExpired = v.expiry && v.expiry !== '-' && new Date(v.expiry + 'T23:59:59') < now;
-                if (isExpired) return;
-
-                const isShip = v.code === 'FREESHIP' || v.code === 'FREE' || v.type === 'ship';
-                const usedToday = usageCounts[v.code] || 0;
-                const limit = v.usageLimit || 1;
-                if (usedToday >= limit) return;
-
+                const isShip = v.type === 'ship';
                 const isEligible = subtotal >= (v.minPurchase || 0);
+                const usedCount = usageCounts[v.code] || 0;
+                const limit = v.usageLimit || 1;
+                
+                if (usedCount >= limit && !v.isPermanent) return;
+
                 const minText = v.minPurchase > 0 ? `ขั้นต่ำ ฿${v.minPurchase.toLocaleString()}` : 'ไม่มีขั้นต่ำ';
-                const opacity = isEligible ? '1' : '0.4';
+                const opacity = isEligible ? '1' : '0.5';
                 const cursor = isEligible ? 'pointer' : 'not-allowed';
-                const warningMsg = isEligible ? '' : `<div style="color:#ee4d2d; font-size:0.7rem; margin-top:4px; font-weight:500;">ยอดซื้อไม่ถึงขั้นต่ำ ฿${v.minPurchase.toLocaleString()}</div>`;
+                const warningMsg = isEligible ? '' : `<div style="color:#ee4d2d; font-size:0.65rem; margin-top:2px;">ยอดไม่ถึงขั้นต่ำ</div>`;
 
-                const vTypeLabel = isShip ? 'ส่งฟรี' : (v.isPersonal ? 'ส่วนลด' : 'คูปอง');
+                // Title Logic (Match member.html)
+                let vTitle = isShip ? 'โค้ดส่งฟรี' : (v.value ? `ส่วนลด ฿${v.value.toLocaleString()}` : (v.title || 'ส่วนลดพิเศษ'));
                 
-                // Show discount amount as title if available (v1.6.3)
-                let vTitle = isShip ? 'ส่งฟรี' : (v.title || v.code);
-                if (v.type === 'discount' && v.value) {
-                    vTitle = `ส่วนลด ฿${v.value.toLocaleString()}`;
-                }
+                // Expiry Logic
+                let expiryText = v.isPermanent ? 'ไม่มีวันหมดอายุ' : (v.expiry && v.expiry !== '-' ? `หมดอายุ: ${v.expiry}` : 'ใช้ได้ถึง 31.12.2569');
                 
-                const vExpiry = v.expiry && v.expiry !== '-' ? v.expiry : '31.12.2569';
-                
-                // v1.8.2 - Precise Expiring soon alert (Consistent with member.html)
+                // Expiry Alert
                 let expiryAlert = '';
-                if (v.expiry && v.expiry !== '-') {
+                if (!v.isPermanent && v.expiry && v.expiry !== '-') {
                     const expDate = new Date(v.expiry + 'T23:59:59');
-                    const diffTime = expDate - now;
-                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-
-                    if (diffTime > 0 && diffTime < (3 * 24 * 60 * 60 * 1000)) {
-                        let timeStr = diffDays >= 1 ? `${diffDays} วัน` : `${diffHours} ชม.`;
-                        expiryAlert = `<div style="color: #e11d48; font-size: 0.7rem; font-weight: 700; margin-top: 2px;">⏰ จะหมดอายุใน ${timeStr}</div>`;
+                    const diffDays = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+                    if (diffDays <= 3 && diffDays >= 0) {
+                        expiryAlert = `<div style="color: #e11d48; font-size: 0.6rem; font-weight: 700;">🔥 ใกล้หมดอายุ (${diffDays} วัน)</div>`;
                     }
                 }
 
                 const cardHtml = `
-                    <div class="v-item-card-wrapper" style="opacity: ${opacity}; cursor: ${cursor}; margin-bottom: 8px;">
-                        <div class="v-item-card" onclick="${isEligible ? `selectVoucherListItem('${v.code}')` : ''}" style="min-height: 80px; padding: 0;">
-                            <div class="v-item-left ${isShip ? 'shipping' : ''}" style="width: 70px; padding: 10px 5px;">
-                                <div class="v-item-icon-box">
-                                    ${isShip ? 
-                                        '<svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M1 3h15v13H1V3zm16 10h4l3-3V7h-7v6zM5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm14 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>' : 
-                                        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4"></path><path d="M22 15v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4"></path><path d="M2 9a3 3 0 0 1 0 6"></path><path d="M22 9a3 3 0 0 0 0 6"></path><line x1="9" y1="9" x2="15" y2="15"></line><circle cx="9" cy="15" r="1"></circle><circle cx="15" cy="9" r="1"></circle></svg>'
-                                    }
-                                </div>
-                                <div class="v-item-label" style="font-size: 0.65rem;">${vTypeLabel}</div>
+                    <div class="v-item-card-wrapper" style="opacity: ${opacity}; cursor: ${cursor};">
+                        <div class="v-item-card" onclick="${isEligible ? `selectVoucherListItem('${v.code}')` : ''}">
+                            <div class="v-item-left ${isShip ? 'shipping' : ''}">
+                                ${isShip ? `
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="v-icon-truck">
+                                        <rect x="1" y="3" width="15" height="13"></rect>
+                                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                                    </svg>
+                                ` : `<div class="v-icon-baht">฿</div>`}
+                                <span>${isShip ? 'ส่งฟรี' : 'ส่วนลด'}</span>
                             </div>
-                            <div class="v-item-right" style="padding: 10px 15px; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                            <div class="v-item-right">
                                 <div class="v-info-box">
-                                    <div class="v-info-title" style="font-size: 0.85rem; font-weight: 700; margin-bottom: 2px;">${vTitle}</div>
-                                    <div class="v-info-tag" style="font-size: 0.65rem; color:#64748b;">${minText}</div>
-                                    <div class="v-info-expiry" style="font-size: 0.6rem; color:#94a3b8;">ใช้ได้ถึง: ${vExpiry}</div>
+                                    <div class="v-info-title">${vTitle}</div>
+                                    <span class="v-info-tag">${v.code}</span>
+                                    <div class="v-info-expiry">${expiryText}</div>
                                     ${expiryAlert}
                                     ${warningMsg}
                                 </div>
-                                <div class="v-radio-box"><div class="v-radio" data-code="${v.code}"></div></div>
+                                <div class="v-radio-box">
+                                    <div class="v-radio" data-code="${v.code}"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -485,14 +469,22 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
         }
 
         function selectVoucherListItem(code) {
-            tempVoucherCode = (tempVoucherCode === code) ? '' : code;
+            const merged = getMergedVouchers();
+            const v = merged[code];
+            if (!v) return;
+
+            if (v.type === 'ship') {
+                tempShipCode = (tempShipCode === code) ? '' : code;
+            } else {
+                tempDiscountCode = (tempDiscountCode === code) ? '' : code;
+            }
             refreshVoucherListUI();
         }
 
         function refreshVoucherListUI() {
             document.querySelectorAll('.v-radio').forEach(radio => {
                 const code = radio.dataset.code;
-                if (code === tempVoucherCode) {
+                if (code === tempShipCode || code === tempDiscountCode) {
                     radio.classList.add('selected');
                 } else {
                     radio.classList.remove('selected');
@@ -501,33 +493,33 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
         }
 
         async function confirmVoucherSelection() {
-            if (tempVoucherCode) {
-                const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
-                const merged = getMergedVouchers();
-                const vData = merged[tempVoucherCode];
-                
+            const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
+            const merged = getMergedVouchers();
+            
+            // Validate Selections
+            const codesToVerify = [tempShipCode, tempDiscountCode].filter(Boolean);
+            
+            for (const code of codesToVerify) {
+                const vData = merged[code];
                 if (vData && subtotal < (vData.minPurchase || 0)) {
-                    alert(`โค้ดนี้ใช้ได้เมื่อมียอดซื้อขั้นต่ำ ฿${vData.minPurchase.toLocaleString()} ขึ้นไปครับ`);
+                    alert(`โค้ด ${code} ใช้ได้เมื่อมียอดซื้อขั้นต่ำ ฿${vData.minPurchase.toLocaleString()} ขึ้นไปครับ`);
                     return;
                 }
 
-                // v1.3.1 - Usage Limit Check (Firestore)
-                if (window.db && tempVoucherCode) {
+                if (window.db) {
                     try {
                         const user = JSON.parse(localStorage.getItem('paomobile_user'));
                         const email = user ? user.email : '';
-                        
-                        // Count existing non-cancelled orders for this code/user
                         const snap = await db.collection('orders')
                             .where('customerEmail', '==', email)
-                            .where('appliedVoucherCode', '==', tempVoucherCode)
+                            .where('appliedVoucherCode', '==', code) // We'll keep checking against single field for legacy sync
                             .get();
                         
                         const usedCount = snap.docs.filter(doc => doc.data().status !== 'ยกเลิกแล้ว').length;
                         const limit = vData.usageLimit || 1;
 
-                        if (usedCount >= limit) {
-                            alert(`ขออภัยครับ คุณใช้สิทธิ์โค้ด ${tempVoucherCode} ครบ ${limit} ครั้งตามกำหนดแล้วครับ`);
+                        if (usedCount >= limit && !vData.isPermanent) {
+                            alert(`ขออภัยครับ คุณใช้สิทธิ์โค้ด ${code} ครบ ${limit} ครั้งตามกำหนดแล้วครับ`);
                             return;
                         }
                     } catch (e) {
@@ -536,10 +528,14 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 }
             }
 
-            appliedVoucherCode = tempVoucherCode;
-            const merged = getMergedVouchers();
-            const vData = merged[appliedVoucherCode];
-            appliedDiscount = vData ? vData.value : 0;
+            appliedShipCode = tempShipCode;
+            appliedDiscountCode = tempDiscountCode;
+            
+            const vShip = merged[appliedShipCode];
+            const vDisc = merged[appliedDiscountCode];
+            
+            appliedDiscount = vDisc ? vDisc.value : 0;
+            
             updateTotals();
             closeVoucherModal();
         }
@@ -576,8 +572,12 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         }
                         
                         if (canUse) {
-                            appliedVoucherCode = pendingCode;
-                            appliedDiscount = vData.value || 0;
+                            if (vData.type === 'ship') {
+                                appliedShipCode = pendingCode;
+                            } else {
+                                appliedDiscountCode = pendingCode;
+                                appliedDiscount = vData.value || 0;
+                            }
                             console.log("[Checkout] Auto-applied pending voucher:", pendingCode);
                             updateTotals(); // Ensure UI updates
                         }
@@ -679,7 +679,9 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 method: methodLabel,
                 paymentMethod: methodLabel,    // v1.2.13
                 paymentBank: selectedBank,      // v1.2.13
-                voucherCode: appliedVoucherCode,
+                voucherCode: appliedDiscountCode || appliedShipCode,
+                appliedShipCode: appliedShipCode, // v1.9.0
+                appliedDiscountCode: appliedDiscountCode, // v1.9.0
                 discountAmount: appliedDiscount,
                 orderSource: orderSourceStr
             };
@@ -739,17 +741,26 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                     allOrders.unshift(globalOrderData);
                     localStorage.setItem('pao_global_orders', JSON.stringify(allOrders));
 
-                    // 2.1 Check and remove used personal voucher (v1.2.1)
-                    if (appliedVoucherCode) {
+                    // 2.1 Check and remove used personal vouchers (v1.9.0)
+                    const codesToConsume = [appliedShipCode, appliedDiscountCode].filter(Boolean);
+                    if (codesToConsume.length > 0) {
                         const user = JSON.parse(localStorage.getItem('paomobile_user'));
                         const email = user ? user.email : '';
                         const V_KEY = 'pao_user_vouchers_' + email;
                         let pVouchers = JSON.parse(localStorage.getItem(V_KEY)) || [];
-                        const vIdx = pVouchers.findIndex(v => v.code === appliedVoucherCode);
-                        if (vIdx !== -1) {
-                            pVouchers.splice(vIdx, 1);
+                        
+                        let changed = false;
+                        codesToConsume.forEach(code => {
+                            const vIdx = pVouchers.findIndex(v => v.code === code);
+                            if (vIdx !== -1) {
+                                pVouchers.splice(vIdx, 1);
+                                changed = true;
+                                console.log("[Checkout] Personal voucher consumed:", code);
+                            }
+                        });
+                        
+                        if (changed) {
                             localStorage.setItem(V_KEY, JSON.stringify(pVouchers));
-                            console.log("[Checkout] Personal voucher consumed:", appliedVoucherCode);
                         }
                     }
 
