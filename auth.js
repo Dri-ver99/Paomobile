@@ -272,17 +272,9 @@
             }
         }
 
-        // Global Chat Metadata Sync (Ensure Seller sees latest Photo/Name)
-        if (typeof firebase !== 'undefined' && firebase.apps.length > 0 && user && user.email) {
-            const db = firebase.firestore();
-            const normalizedEmail = user.email.trim().toLowerCase();
-            db.collection('chats').doc(normalizedEmail).set({
-                userName: user.name || user.email,
-                userAvatar: user.avatar || "",
-                userEmail: normalizedEmail,
-                // don't overwrite lastMessage or lastTimestamp here
-            }, { merge: true }).catch(err => console.warn("[AuthSync] Chat metadata sync failed:", err));
-        }
+        // ── Removed Aggressive Chat Metadata Sync ──────────────────
+        // (Previously caused excessive writes on every page load)
+        // ───────────────────────────────────────────────────────────
 
         isUpdating = false;
     }

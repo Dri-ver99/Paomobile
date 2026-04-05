@@ -50,7 +50,35 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    // 4. Products & Settings (Admins manage everything else)
+    // 5. Chat System
+    match /chats/{chatId} {
+      // Allow user to read/write if the chatId matches their email OR if they are the Admin
+      allow read, write: if (request.auth != null && (
+        chatId.lower() == request.auth.token.email.lower() || 
+        isAdmin()
+      )) || (
+        // Fallback for cases where email might not be in token (e.g. some manual providers)
+        // or if rules need to be more permissive for initial setup
+        isAdmin()
+      );
+      
+      match /messages/{messageId} {
+        allow read, write: if (request.auth != null && (
+          chatId.lower() == request.auth.token.email.lower() || 
+          isAdmin()
+        )) || (
+          isAdmin()
+        );
+      }
+    }
+
+    // 6. Online Status
+    match /status/{document=**} {
+      allow read: if true;
+      allow write: if true; // Simple status updates
+    }
+    
+    // 7. General Fallback (Admins manage everything else)
     match /{document=**} {
       allow read: if true;
       allow write: if isAdmin();

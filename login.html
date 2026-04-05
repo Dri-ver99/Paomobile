@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -2002,6 +2002,16 @@
         function wait(ms) { return new Promise(res => setTimeout(res, ms)); }
     </script>
 
-</body>
+<div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
+            aria-label="Close Search">&#x2715;</button>
+        <div class="search-modal-container">
+            <div class="search-hero-input"><span class="search-hero-icon">&#x1F50D;</span><input type="text"
+                    id="searchInput" placeholder="ค้นหา เครื่องมือ 1, เครื่องมือ 2, รุ่นมือถือ..."
+                    autocomplete="off"><button class="search-clear-btn" id="searchClear"
+                    aria-label="Clear">&#x2715;</button></div>
+            <div class="search-results-area" id="searchResults"></div>
+        </div>
+    </div>
+    <script src="search.js"></script></body>
 
 </html>

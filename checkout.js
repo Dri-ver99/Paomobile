@@ -91,12 +91,12 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         <img src="${item.img || 'logo.png'}" class="co-item-img" onerror="this.src='logo.png'">
                         <div class="co-item-info">
                             <div class="co-item-name">${item.name}</div>
-                            <div class="co-item-variation">${item.variation || ''}</div>
+                            <div class="co-item-variation">${item.variationName || ''}</div>
                         </div>
                     </div>
-                    <div class="co-item-price" data-label="ราคาต่อชิ้น">฿${item.price.toLocaleString()}</div>
-                    <div class="co-item-qty" data-label="จำนวน">${item.qty}</div>
-                    <div class="co-item-subtotal" data-label="ราคารวม">฿${(item.price * item.qty).toLocaleString()}</div>
+                    <div class="co-item-price" data-label="ราคาต่อชิ้น">฿${(item.price || 0).toLocaleString()}</div>
+                    <div class="co-item-qty" data-label="จำนวน">${item.qty || 1}</div>
+                    <div class="co-item-subtotal" data-label="ราคารวม">฿${((Number(String(item.price).replace(/,/g, '')) || 0) * (item.qty || 1)).toLocaleString()}</div>
                 </div>
             `).join('');
         }
@@ -112,8 +112,9 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             // Check if current voucher is a shipping type (v1.2.2)
             const merged = getMergedVouchers();
             const currentV = merged[appliedVoucherCode];
+            const isShipVoucher = appliedVoucherCode === 'FREE' || appliedVoucherCode === 'FREESHIP' || (currentV && currentV.type === 'ship');
             
-            if (appliedVoucherCode === 'FREE' || (currentV && currentV.type === 'ship')) {
+            if (isShipVoucher) {
                 finalShipping = 0;
             }
             
@@ -136,7 +137,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             // Voucher Display Row (Summary)
             const discountRow = document.getElementById('s-discount-row');
             if (discountRow) {
-                if (appliedVoucherCode === 'FREE' || (currentV && currentV.type === 'ship')) {
+                if (isShipVoucher) {
                     discountRow.style.display = 'flex';
                     const spanFirst = discountRow.querySelector('span:first-child');
                     if(spanFirst) spanFirst.textContent = 'ส่วนลดค่าจัดส่ง';
@@ -156,7 +157,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             if (vStatus) {
                 if (appliedVoucherCode) {
                     let label = `${appliedVoucherCode} (-฿${appliedDiscount})`;
-                    if (appliedVoucherCode === 'FREE' || (currentV && currentV.type === 'ship')) {
+                    if (isShipVoucher) {
                         label = `ฟรีค่าจัดส่ง (-฿${shippingCost})`;
                     }
                     vStatus.innerHTML = `
@@ -223,6 +224,41 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             if (overlay) overlay.classList.add('open');
             document.body.style.overflow = 'hidden';
             tempVoucherCode = appliedVoucherCode;
+
+            // v1.8.0 - Sync with Firestore before rendering (with 3-second timeout)
+            if (window.db) {
+                try {
+                    const user = JSON.parse(localStorage.getItem('paomobile_user'));
+                    if (user && user.email) {
+                        const email = user.email.trim();
+                        const syncPromise = (async () => {
+                            const redemptionsSnap = await db.collection('vouchers_redemptions').where('email', '==', email).get();
+                            const claimedCodes = [...new Set(redemptionsSnap.docs.map(doc => doc.data().code))]; // Unique codes
+                            
+                            let refreshedVouchers = [];
+                            if (claimedCodes.length > 0) {
+                                // v1.8.2 - Batch sync support for 10+ vouchers
+                                const chunkSize = 10;
+                                for (let i = 0; i < claimedCodes.length; i += chunkSize) {
+                                    const chunk = claimedCodes.slice(i, i + chunkSize);
+                                    const vouchersSnap = await db.collection('vouchers').where('code', 'in', chunk).get();
+                                    vouchersSnap.forEach(doc => refreshedVouchers.push({ ...doc.data(), id: doc.id }));
+                                }
+                            }
+                            const vKey = 'pao_user_vouchers_' + email;
+                            localStorage.setItem(vKey, JSON.stringify(refreshedVouchers));
+                            console.log("[v1.8.2] Voucher Cloud Sync Success (Batch):", refreshedVouchers.length);
+                        })();
+
+                        await Promise.race([
+                            syncPromise,
+                            new Promise(resolve => setTimeout(resolve, 3000))
+                        ]);
+                    }
+                } catch (e) {
+                    console.warn("[v1.8.0] Voucher sync failed or timed out, using cache:", e);
+                }
+            }
             
             // v1.3.3 - Fetch usage counts from Firestore to hide used vouchers
             let usageCounts = {};
@@ -239,7 +275,6 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         if (d.status !== 'ยกเลิกแล้ว' && d.appliedVoucherCode) {
                             usageCounts[d.appliedVoucherCode] = (usageCounts[d.appliedVoucherCode] || 0) + 1;
                         }
-                        // Support legacy field name too
                         if (d.status !== 'ยกเลิกแล้ว' && d.voucherCode) {
                              usageCounts[d.voucherCode] = (usageCounts[d.voucherCode] || 0) + 1;
                         }
@@ -249,7 +284,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 }
             }
 
-            renderPersonalVouchers(usageCounts); // Inject personal vouchers into UI
+            renderPersonalVouchers(usageCounts);
             refreshVoucherListUI();
         }
 
@@ -276,6 +311,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 const isExpired = v.expiry && v.expiry !== '-' && new Date(v.expiry + 'T23:59:59') < now;
                 if (isExpired) return;
 
+                const isShip = v.code === 'FREESHIP' || v.code === 'FREE' || v.type === 'ship';
                 const usedToday = usageCounts[v.code] || 0;
                 const limit = v.usageLimit || 1;
                 if (usedToday >= limit) return;
@@ -284,45 +320,49 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 const minText = v.minPurchase > 0 ? `ขั้นต่ำ ฿${v.minPurchase.toLocaleString()}` : 'ไม่มีขั้นต่ำ';
                 const opacity = isEligible ? '1' : '0.4';
                 const cursor = isEligible ? 'pointer' : 'not-allowed';
-                const warningMsg = isEligible ? '' : `<div style="color:#ee4d2d; font-size:0.75rem; margin-top:4px; font-weight:500;">ยอดซื้อไม่ถึงขั้นต่ำ ฿${v.minPurchase.toLocaleString()}</div>`;
+                const warningMsg = isEligible ? '' : `<div style="color:#ee4d2d; font-size:0.7rem; margin-top:4px; font-weight:500;">ยอดซื้อไม่ถึงขั้นต่ำ ฿${v.minPurchase.toLocaleString()}</div>`;
 
-                const vTypeLabel = (v.type === 'ship') ? 'ส่งฟรี' : (v.isPersonal ? 'ส่วนลด' : 'คูปอง');
+                const vTypeLabel = isShip ? 'ส่งฟรี' : (v.isPersonal ? 'ส่วนลด' : 'คูปอง');
                 
                 // Show discount amount as title if available (v1.6.3)
-                let vTitle = (v.code === 'FREESHIP' || v.type === 'ship') ? 'ส่งฟรี' : (v.title || v.code);
+                let vTitle = isShip ? 'ส่งฟรี' : (v.title || v.code);
                 if (v.type === 'discount' && v.value) {
                     vTitle = `ส่วนลด ฿${v.value.toLocaleString()}`;
                 }
                 
-                const vExpiry = v.expiry && v.expiry !== '-' ? v.expiry : '31.03.2026';
+                const vExpiry = v.expiry && v.expiry !== '-' ? v.expiry : '31.12.2569';
                 
-                // v1.6.2 - Expiring soon alert (3 days)
+                // v1.8.2 - Precise Expiring soon alert (Consistent with member.html)
                 let expiryAlert = '';
                 if (v.expiry && v.expiry !== '-') {
                     const expDate = new Date(v.expiry + 'T23:59:59');
-                    const diffDays = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
-                    if (diffDays <= 3 && diffDays >= 0) {
-                        expiryAlert = `<div style="color: #e11d48; font-size: 0.75rem; font-weight: 700; margin-top: 2px;">🔥 ใกล้หมดอายุ (${diffDays} วัน)</div>`;
+                    const diffTime = expDate - now;
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+
+                    if (diffTime > 0 && diffTime < (3 * 24 * 60 * 60 * 1000)) {
+                        let timeStr = diffDays >= 1 ? `${diffDays} วัน` : `${diffHours} ชม.`;
+                        expiryAlert = `<div style="color: #e11d48; font-size: 0.7rem; font-weight: 700; margin-top: 2px;">⏰ จะหมดอายุใน ${timeStr}</div>`;
                     }
                 }
 
                 const cardHtml = `
-                    <div class="v-item-card-wrapper" style="opacity: ${opacity}; cursor: ${cursor}">
-                        <div class="v-item-card" onclick="${isEligible ? `selectVoucherListItem('${v.code}')` : ''}">
-                            <div class="v-item-left ${v.type === 'ship' ? 'shipping' : ''}">
+                    <div class="v-item-card-wrapper" style="opacity: ${opacity}; cursor: ${cursor}; margin-bottom: 8px;">
+                        <div class="v-item-card" onclick="${isEligible ? `selectVoucherListItem('${v.code}')` : ''}" style="min-height: 80px; padding: 0;">
+                            <div class="v-item-left ${isShip ? 'shipping' : ''}" style="width: 70px; padding: 10px 5px;">
                                 <div class="v-item-icon-box">
-                                    ${v.type === 'ship' ? 
-                                        '<svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M1 3h15v13H1V3zm16 10h4l3-3V7h-7v6zM5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm14 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>' : 
-                                        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4"></path><path d="M22 15v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4"></path><path d="M2 9a3 3 0 0 1 0 6"></path><path d="M22 9a3 3 0 0 0 0 6"></path><line x1="9" y1="9" x2="15" y2="15"></line><circle cx="9" cy="15" r="1"></circle><circle cx="15" cy="9" r="1"></circle></svg>'
+                                    ${isShip ? 
+                                        '<svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M1 3h15v13H1V3zm16 10h4l3-3V7h-7v6zM5 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm14 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>' : 
+                                        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4"></path><path d="M22 15v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4"></path><path d="M2 9a3 3 0 0 1 0 6"></path><path d="M22 9a3 3 0 0 0 0 6"></path><line x1="9" y1="9" x2="15" y2="15"></line><circle cx="9" cy="15" r="1"></circle><circle cx="15" cy="9" r="1"></circle></svg>'
                                     }
                                 </div>
-                                <div class="v-item-label">${vTypeLabel}</div>
+                                <div class="v-item-label" style="font-size: 0.65rem;">${vTypeLabel}</div>
                             </div>
-                            <div class="v-item-right">
+                            <div class="v-item-right" style="padding: 10px 15px; flex:1; display:flex; align-items:center; justify-content:space-between;">
                                 <div class="v-info-box">
-                                    <div class="v-info-title">${vTitle}</div>
-                                    <div class="v-info-tag">${minText}</div>
-                                    <div class="v-info-expiry">ใช้ได้ถึง: ${vExpiry} &nbsp;<a href="#" class="v-info-link">เงื่อนไข</a></div>
+                                    <div class="v-info-title" style="font-size: 0.85rem; font-weight: 700; margin-bottom: 2px;">${vTitle}</div>
+                                    <div class="v-info-tag" style="font-size: 0.65rem; color:#64748b;">${minText}</div>
+                                    <div class="v-info-expiry" style="font-size: 0.6rem; color:#94a3b8;">ใช้ได้ถึง: ${vExpiry}</div>
                                     ${expiryAlert}
                                     ${warningMsg}
                                 </div>
@@ -332,7 +372,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                     </div>
                 `;
 
-                if (v.type === 'ship') shipHtml += cardHtml;
+                if (isShip) shipHtml += cardHtml;
                 else discountHtml += cardHtml;
             });
             
@@ -361,17 +401,86 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             }
         }
 
-        function applyModalVoucherManual() {
+        async function applyModalVoucherManual() {
             const input = document.getElementById('modalVoucherInput');
             if (!input) return;
             const code = input.value.trim().toUpperCase();
-            const merged = getMergedVouchers();
-            if (merged[code] !== undefined) {
-                selectVoucherListItem(code);
-                input.value = '';
-                toggleModalApplyBtn();
-            } else {
-                alert('ไม่พบโค้ดส่วนลดนี้ครับ');
+            if (!code) return;
+
+            const btn = document.getElementById('modalApplyBtn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '...';
+
+            try {
+                // 1. Check if user already has it locally (quick check)
+                const merged = getMergedVouchers();
+                if (merged[code] !== undefined) {
+                    selectVoucherListItem(code);
+                    input.value = '';
+                    toggleModalApplyBtn();
+                } else if (window.db) {
+                    // 2. Not found locally, try to find in Firestore 'vouchers' (Seller Created)
+                    const user = JSON.parse(localStorage.getItem('paomobile_user'));
+                    if (!user || !user.email) {
+                        alert("กรุณาเข้าสู่ระบบเพื่อรับคูปองครับ");
+                        return;
+                    }
+
+                    const snap = await db.collection('vouchers').where('code', '==', code).get();
+                    if (snap.empty) {
+                        alert('ไม่พบรหัสโค้ดนี้ในระบบครับ');
+                    } else {
+                        const vData = snap.docs[0].data();
+                        const email = user.email;
+                        const now = new Date();
+
+                        // v1.8.5 - Strict Expiration Check (Matching member.html)
+                        if (!vData.isPermanent && vData.expiry && vData.expiry !== '-') {
+                            const expDate = new Date(vData.expiry + 'T23:59:59');
+                            if (expDate < now) {
+                                alert('ขออภัย คูปองนี้หมดอายุการใช้งานแล้วครับ ⏰');
+                                return;
+                            }
+                        }
+                        
+                        // 3. Redeem now in Cloud
+                        const checkSnap = await db.collection('vouchers_redemptions')
+                            .where('code', '==', code)
+                            .where('email', '==', email)
+                            .get();
+                        
+                        if (checkSnap.empty) {
+                            await db.collection('vouchers_redemptions').add({
+                                code, email, at: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            console.log("[v1.8.5] Redeemed via Checkout:", code);
+                        }
+
+                        // 4. v1.8.5 - INSTANT SYNC: Manually update local cache to avoid fetch latency
+                        const vKey = 'pao_user_vouchers_' + email;
+                        let personalVouchers = JSON.parse(localStorage.getItem(vKey) || '[]');
+                        if (!personalVouchers.some(v => v.code === code)) {
+                            personalVouchers.push({ ...vData, id: snap.docs[0].id });
+                            localStorage.setItem(vKey, JSON.stringify(personalVouchers));
+                        }
+
+                        // 5. Update UI & Select
+                        renderPersonalVouchers(); // Uses newly updated localStorage
+                        selectVoucherListItem(code);
+                        input.value = '';
+                        toggleModalApplyBtn();
+                        alert(`ยินดีด้วย! 🎉 เก็บโค้ด "${vData.title || code}" สำเร็จและใช้ได้ทันทีครับ!`);
+                    }
+                } else {
+                    alert('ไม่พบรหัสโค้ดนี้ และไม่สามารถเชื่อมต่อฐานข้อมูลได้ครับ');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('เกิดข้อผิดพลาดในการตรวจสอบคูปอง: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         }
 
@@ -550,6 +659,9 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             const total = Math.max(0, subtotal + shippingCost - appliedDiscount);
             const orderId = 'PAO-' + Date.now().toString(36).toUpperCase().slice(-8);
             
+            const orderSourceSet = new Set(cartItems.map(i => i.source).filter(Boolean));
+            const orderSourceStr = orderSourceSet.size > 0 ? Array.from(orderSourceSet).join(', ') : 'ไม่ระบุหน้า';
+
             const newOrder = {
                 id: orderId,
                 orderDate: new Date().toISOString(),
@@ -558,14 +670,18 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                     name: i.name,
                     price: i.price,
                     qty: i.qty,
-                    img: i.img || 'logo.png'
+                    variationName: i.variationName || "",
+                    img: i.img || 'logo.png',
+                    source: i.source || 'ไม่ระบุ'
                 })),
+                orderPage: window.location.pathname.split('/').pop() || 'index.html',
                 total: total,
                 method: methodLabel,
                 paymentMethod: methodLabel,    // v1.2.13
                 paymentBank: selectedBank,      // v1.2.13
                 voucherCode: appliedVoucherCode,
-                discountAmount: appliedDiscount
+                discountAmount: appliedDiscount,
+                orderSource: orderSourceStr
             };
 
             // Use Direct Cloud Sync Logic (Simple & Robust)

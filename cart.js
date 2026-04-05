@@ -13,7 +13,7 @@
 
     async function initFirebase() {
         if (initPromise) return initPromise;
-        
+
         initPromise = (async () => {
             if (db) return true;
             try {
@@ -22,7 +22,7 @@
                 db = mod.db;
                 auth = mod.auth;
                 const { onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js");
-                
+
                 return new Promise((resolve) => {
                     onAuthStateChanged(auth, async (user) => {
                         authReady = true;
@@ -40,7 +40,7 @@
                 return false;
             }
         })();
-        
+
         return initPromise;
     }
 
@@ -57,7 +57,7 @@
         if (!db) return;
         const { doc, getDoc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js");
         const cartDoc = doc(db, 'carts', uid);
-        
+
         try {
             const snap = await getDoc(cartDoc);
             let remoteCart = [];
@@ -68,7 +68,7 @@
 
             const localCart = getLocalCart();
             let merged = [...remoteCart];
-            
+
             console.log("[Cart] Merging scoped cart data...");
             localCart.forEach(lItem => {
                 const idx = merged.findIndex(rItem => rItem.id === lItem.id);
@@ -92,10 +92,10 @@
 
     async function pushToFirestore() {
         const userData = localStorage.getItem(USER_KEY);
-        if (!userData) return; 
-        
+        if (!userData) return;
+
         let user;
-        try { user = JSON.parse(userData); } catch(e) { return; }
+        try { user = JSON.parse(userData); } catch (e) { return; }
         if (!user || (!user.uid && !user.id)) return;
         const uid = user.uid || user.id;
 
@@ -161,7 +161,7 @@
             const cart = getLocalCart();
             const idx = cart.findIndex(i => i.id === id);
             if (idx < 0) return;
-            
+
             if (qty <= 0) {
                 if (document.getElementById('deleteConfirmModal')) {
                     CartUI.close(); // Close sidebar so modal is visible
@@ -171,7 +171,7 @@
                 await CartAPI._doRemove(id);
                 return;
             }
-            
+
             cart[idx].qty = qty;
             saveLocalCart(cart);
             CartUI.update();
@@ -228,7 +228,7 @@
                 setTimeout(() => btn.classList.remove('cart-flash'), 600);
             });
         },
-        open()  { if (typeof closeMenu === 'function') closeMenu(); document.getElementById('cartSidebar')?.classList.add('open'); document.getElementById('cartOverlay')?.classList.add('open'); CartUI.renderSidebar(); },
+        open() { if (typeof closeMenu === 'function') closeMenu(); document.getElementById('cartSidebar')?.classList.add('open'); document.getElementById('cartOverlay')?.classList.add('open'); CartUI.renderSidebar(); },
         close() { document.getElementById('cartSidebar')?.classList.remove('open'); document.getElementById('cartOverlay')?.classList.remove('open'); },
         renderSidebar() {
             const list = document.getElementById('cartItemList');
@@ -269,7 +269,7 @@
                 // Remove existing LINE button if present
                 const lineBtn = footer.querySelector('a[href*="line.me"]');
                 if (lineBtn) lineBtn.remove();
-                
+
                 // Check if cart link already exists, otherwise create it
                 let cartLink = footer.querySelector('a[href="cart.html"]');
                 if (!cartLink) {
@@ -348,7 +348,7 @@
                         `).join('')}
                     </div>
                 `;
-                
+
                 // Update footer selection state
                 const selectAllFooter = document.getElementById('selectAllFooter');
                 if (selectAllFooter) selectAllFooter.checked = allSelected;
@@ -356,10 +356,10 @@
             const total = CartAPI.total();
             const count = CartAPI.count();
             const totalItemsCount = CartAPI.countAll();
-            
+
             if (totalEl) totalEl.textContent = '฿' + total.toLocaleString();
             if (countEl) countEl.textContent = count;
-            
+
             // Update total summary count in footer if exists
             const summaryCountEl = document.getElementById('cartSummaryCount');
             if (summaryCountEl) summaryCountEl.textContent = totalItemsCount;
@@ -389,7 +389,7 @@
             const modal = document.getElementById('deleteConfirmModal');
             const nameEl = document.getElementById('deleteItemName');
             const confirmBtn = document.getElementById('confirmDeleteBtn');
-            
+
             if (modal && nameEl && confirmBtn) {
                 nameEl.textContent = name;
                 confirmBtn.onclick = () => {
@@ -407,14 +407,24 @@
         }
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
+    function initCartUI() {
         CartUI.update();
         document.querySelectorAll('.cart-icon-btn').forEach(btn => {
             btn.addEventListener('click', CartUI.open);
         });
         document.getElementById('cartOverlay')?.addEventListener('click', CartUI.close);
         document.getElementById('cartCloseBtn')?.addEventListener('click', CartUI.close);
-        
+    }
+
+    // Robust init: handle both pre/post DOMContentLoaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCartUI);
+    } else {
+        initCartUI();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+
         // Product search
         const searchInput = document.getElementById('productSearch');
         if (searchInput) {
