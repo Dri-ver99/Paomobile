@@ -33,10 +33,12 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
+
         .slip-lightbox.show {
             display: flex;
             opacity: 1;
         }
+
         .slip-lightbox-content {
             position: relative;
             max-width: 90%;
@@ -44,20 +46,23 @@
             background: #fff;
             padding: 10px;
             border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             transform: scale(0.9);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             cursor: default;
         }
+
         .slip-lightbox.show .slip-lightbox-content {
             transform: scale(1);
         }
+
         .slip-lightbox-img {
             display: block;
             max-width: 100%;
             max-height: calc(90vh - 40px);
             border-radius: 8px;
         }
+
         .slip-lightbox-close {
             position: absolute;
             top: -15px;
@@ -72,7 +77,7 @@
             justify-content: center;
             font-size: 24px;
             cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             border: 2px solid #fff;
             z-index: 100;
         }
@@ -87,13 +92,86 @@
                 <img src="logo.png" alt="Paomobile" class="logo-img" />
                 Pao<span class="accent">mobile</span>
             </a>
-            <ul class="nav-links" id="navLinks"><li><a href="index.html">หน้าหลัก</a></li><li class="has-mega-menu"><a href="index.html#services">บริการ</a><div class="mega-menu"><div class="mega-menu-inner"><div class="mega-column"><span class="mega-title">งานซ่อมมือถือ</span><a href="select-screen-repair.html" class="mega-link">เปลี่ยนจอ / ซ่อมจอแตก</a><a href="select-battery.html" class="mega-link">เปลี่ยนแบตเตอรี่</a><a href="select-board-repair.html" class="mega-link">ซ่อมบอร์ด / เมนบอร์ด</a><a href="select-speaker-repair.html" class="mega-link">ซ่อมลำโพง / ไมค์</a></div><div class="mega-column"><span class="mega-title">บริการเสริม</span><a href="select-glass-film.html" class="mega-link">ติดฟิล์มกระจก</a><a href="select-software.html" class="mega-link">ล้างเครื่อง / ลงโปรแกรม</a><a href="select-unlock.html" class="mega-link">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html" class="mega-link">เคส / อุปกรณ์เสริม</a></div></div></div></li><li><a href="index.html#why-us">ทำไมต้องเรา</a></li><li class="has-mega-menu"><a href="index.html#reviews">รีวิว</a><div class="mega-menu"><div class="mega-menu-inner" style="min-width: 200px;"><div class="mega-column"><a href="index.html#reviews" class="mega-link">รีวิวลูกค้า</a><a href="index.html#showcase" class="mega-link">รีวิวงานซ่อม</a></div></div></div></li><li class="has-mega-menu"><a href="index.html#branches">สาขา</a><div class="mega-menu"><div class="mega-menu-inner"><div class="mega-column"><a href="index.html?branch=0#branches" class="mega-link nav-branch-link" data-branch="0">สาขาตึกคอม</a><a href="index.html?branch=1#branches" class="mega-link nav-branch-link" data-branch="1">สาขานาเกลือ</a><a href="index.html?branch=2#branches" class="mega-link nav-branch-link" data-branch="2">สาขาซอยสยาม</a></div><div class="mega-column"><a href="index.html?branch=3#branches" class="mega-link nav-branch-link"
-data-branch="3">สาขาตลาดมหาชล</a><a href="index.html?branch=4#branches" class="mega-link nav-branch-link"
-data-branch="4">สาขาแหลมฉบัง</a><a href="index.html?branch=5#branches" class="mega-link nav-branch-link"
-data-branch="5">สาขาพรประภานิมิตร</a></div></div></div></li><li class="has-mega-menu"><a href="index.html#contact">ติดต่อ</a><div class="mega-menu"><div class="mega-menu-inner" style="min-width: 200px;"><div class="mega-column"><a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank"
-class="mega-link">Facebook</a><a href="https://line.me/R/ti/p/@pao789" target="_blank" class="mega-link">Line</a><a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
-target="_blank" class="mega-link">Instagram</a><a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP" target="_blank"
-class="mega-link">Tiktok</a></div></div></div></li><li class="has-mega-menu"><a href="#">🛒 สั่งของ</a><div class="mega-menu"><div class="mega-menu-inner" style="min-width: 220px;"><div class="mega-column"><a href="new-products.html" class="mega-link">📱 สินค้ามือ 1</a><a href="used-products.html" class="mega-link">🔁 สินค้ามือ 2</a><a href="parts.html" class="mega-link">🔧 อะไหล่มือถือ</a><a href="accessory.html" class="mega-link">&#x1F3A7; Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank" class="mega-link">🛒 Shopee</a></div></div></div></li></ul>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li class="has-mega-menu"><a href="index.html#services">บริการ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner">
+                            <div class="mega-column"><span class="mega-title">เลือกรุ่นโทรศัพท์</span><a href="iphone.html"
+                                    class="mega-link">iPhone / iPad</a><a href="samsung.html"
+                                    class="mega-link">Samsung</a><a href="xiaomi.html" class="mega-link">Xiaomi /
+                                    POCO</a><a href="oppo.html" class="mega-link">OPPO</a><a href="vivo.html"
+                                    class="mega-link">Vivo</a><a href="huawei.html" class="mega-link">Huawei</a><a
+                                    href="realme.html" class="mega-link">Realme</a><a href="oneplus.html"
+                                    class="mega-link">OnePlus</a><a href="nokia.html" class="mega-link">Nokia</a></div>
+                            <div class="mega-column"><span class="mega-title">งานซ่อมมือถือ</span><a
+                                    href="https://line.me/R/ti/p/@pao789" target="_blank" class="mega-link">สายแพร Z
+                                    flip ,Fold</a><a href="select-green-line.html"
+                                    class="mega-link">แก้หน้าจอเป็นเส้น</a><a href="select-glass-repair.html"
+                                    class="mega-link">ลอกกระจกหน้าจอ</a><a href="select-board-repair.html"
+                                    class="mega-link">ซ่อมบอร์ดดับ</a><a href="select-screen-repair.html"
+                                    class="mega-link">เปลี่ยนหน้าจอ</a><a href="select-battery.html"
+                                    class="mega-link">เปลี่ยนแบตเตอรี่</a><a href="select-charging.html"
+                                    class="mega-link">อาการชาร์จไม่เข้า</a><a href="select-housing.html"
+                                    class="mega-link">เปลี่ยนฝาหลัง บอดี้ชุด</a></div>
+                            <div class="mega-column"><span class="mega-title">บริการเสริม</span><a
+                                    href="select-glass-film.html" class="mega-link">ติดฟิล์มกระจก</a><a
+                                    href="select-software.html" class="mega-link">ล้างเครื่อง / ลงโปรแกรม</a><a
+                                    href="select-unlock.html" class="mega-link">ปลดล็อครหัสหน้าจอ / gmail</a><a
+                                    href="accessory.html" class="mega-link">เคส / อุปกรณ์เสริม</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="index.html#why-us">ทำไมต้องเรา</a></li>
+                <li class="has-mega-menu"><a href="index.html#reviews">รีวิว</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 200px;">
+                            <div class="mega-column"><a href="index.html#reviews" class="mega-link">รีวิวลูกค้า</a><a
+                                    href="index.html#showcase" class="mega-link">รีวิวงานซ่อม</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="index.html#branches">สาขา</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner">
+                            <div class="mega-column"><a href="index.html?branch=0#branches"
+                                    class="mega-link nav-branch-link" data-branch="0">สาขาตึกคอม</a><a
+                                    href="index.html?branch=1#branches" class="mega-link nav-branch-link"
+                                    data-branch="1">สาขานาเกลือ</a><a href="index.html?branch=2#branches"
+                                    class="mega-link nav-branch-link" data-branch="2">สาขาซอยสยาม</a></div>
+                            <div class="mega-column"><a href="index.html?branch=3#branches"
+                                    class="mega-link nav-branch-link" data-branch="3">สาขาตลาดมหาชล</a><a
+                                    href="index.html?branch=4#branches" class="mega-link nav-branch-link"
+                                    data-branch="4">สาขาแหลมฉบัง</a><a href="index.html?branch=5#branches"
+                                    class="mega-link nav-branch-link" data-branch="5">สาขาพรประภานิมิตร</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="index.html#contact">ติดต่อ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 200px;">
+                            <div class="mega-column"><a href="https://www.facebook.com/profile.php?id=100063764974738"
+                                    target="_blank" class="mega-link">Facebook</a><a
+                                    href="https://line.me/R/ti/p/@pao789" target="_blank" class="mega-link">Line</a><a
+                                    href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                                    target="_blank" class="mega-link">Instagram</a><a
+                                    href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP"
+                                    target="_blank" class="mega-link">Tiktok</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="#">🛒 สั่งของ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 220px;">
+                            <div class="mega-column"><a href="new-products.html" class="mega-link">📱 สินค้ามือ 1</a><a
+                                    href="used-products.html" class="mega-link">🔁 สินค้ามือ 2</a><a href="parts.html"
+                                    class="mega-link">🔧 อะไหล่มือถือ</a><a href="accessory.html"
+                                    class="mega-link">&#x1F3A7; Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI"
+                                    target="_blank" class="mega-link">🛒 Shopee</a></div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
             <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary nav-btn" id="navCta">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
@@ -143,7 +221,109 @@ class="mega-link">Tiktok</a></div></div></div></li><li class="has-mega-menu"><a 
 
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" id="mobileOverlay"></div>
-    <aside class="mobile-menu" id="mobileMenu"><div class="mobile-menu-panels" id="mobileMenuPanels"><div class="mobile-panel" id="mainPanel"><div class="mobile-menu-inner"><a href="index.html">หน้าหลัก</a><div class="menu-item-wrapper"><div class="menu-item-parent">บริการ</div><div class="mobile-sub-menu"><a href="select-screen-repair.html">เปลี่ยนจอ / ซ่อมจอแตก</a><a href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a href="select-board-repair.html">ซ่อมบอร์ด / เมนบอร์ด</a><a href="select-speaker-repair.html">ซ่อมลำโพง / ไมค์</a><div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">บริการเสริม</span><a href="select-glass-film.html">ติดฟิล์มกระจก</a><a href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส / อุปกรณ์เสริม</a></div></div><a href="index.html#why-us">ทำไมต้องเรา</a><div class="menu-item-wrapper"><div class="menu-item-parent">รีวิว</div><div class="mobile-sub-menu"><a href="index.html#reviews">รีวิวลูกค้า</a><a href="index.html#showcase">รีวิวงานซ่อม</a></div></div><div class="menu-item-wrapper"><div class="menu-item-parent">สาขา</div><div class="mobile-sub-menu"><a href="index.html?branch=0#branches">สาขาตึกคอม</a><a href="index.html?branch=1#branches">สาขานาเกลือ</a><a href="index.html?branch=2#branches">สาขาซอยสยาม</a><a href="index.html?branch=4#branches">สาขาตลาดมหาชล</a><a href="index.html?branch=5#branches">สาขาแหลมฉบัง</a><a href="index.html?branch=6#branches">สาขาพรประภานิมิตร</a></div></div><div class="menu-item-wrapper"><div class="menu-item-parent">ติดต่อ</div><div class="mobile-sub-menu"><a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank">Facebook</a><a href="https://line.me/R/ti/p/@pao789" target="_blank">Line</a><a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr" target="_blank">Instagram</a><a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP" target="_blank">Tiktok</a></div></div><div class="menu-item-wrapper"><div class="menu-item-parent">🛒 สั่งของ</div><div class="mobile-sub-menu"><a href="new-products.html">📱 สินค้ามือ 1</a><a href="used-products.html">🔁 สินค้ามือ 2</a><a href="parts.html">🔧 อะไหล่มือถือ</a><a href="accessory.html">🎧 Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a></div></div><a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary mobile-cta"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px; flex-shrink: 0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>สอบถามเพิ่มเติม</span></a></div></div><div class="mobile-panel" id="subPanel"><div class="mobile-panel-header"><button class="mobile-back-btn" id="mobileBackBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg><span>กลับ</span></button><span class="mobile-panel-title" id="subMenuTitle"></span></div><div class="mobile-menu-inner" id="subMenuContent"></div></div></div></aside>
+    <aside class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-panels" id="mobileMenuPanels">
+            <div class="mobile-panel" id="mainPanel">
+                <div class="mobile-menu-inner"><a href="index.html">หน้าหลัก</a>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">บริการ</div>
+                        <div class="mobile-sub-menu"><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin:8px 0 4px; display:block; font-weight:600;">เลือกรุ่นโทรศัพท์</span><a
+                                href="iphone.html">iPhone / iPad</a><a href="samsung.html">Samsung</a><a
+                                href="xiaomi.html">Xiaomi / POCO</a><a href="oppo.html">OPPO</a><a
+                                href="vivo.html">Vivo</a><a href="huawei.html">Huawei</a><a
+                                href="realme.html">Realme</a><a href="oneplus.html">OnePlus</a><a
+                                href="nokia.html">Nokia</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">งานซ่อมมือถือ</span><a
+                                href="https://line.me/R/ti/p/@pao789" target="_blank">สายแพร Z flip ,Fold</a><a
+                                href="select-green-line.html">แก้หน้าจอเป็นเส้น</a><a
+                                href="select-glass-repair.html">ลอกกระจกหน้าจอ</a><a
+                                href="select-board-repair.html">ซ่อมบอร์ดดับ</a><a
+                                href="select-screen-repair.html">เปลี่ยนหน้าจอ</a><a
+                                href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a
+                                href="select-charging.html">อาการชาร์จไม่เข้า</a><a
+                                href="select-housing.html">เปลี่ยนฝาหลัง บอดี้ชุด</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">บริการเสริม</span><a
+                                href="select-glass-film.html">ติดฟิล์มกระจก</a><a
+                                href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a
+                                href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส /
+                                อุปกรณ์เสริม</a>
+                        </div>
+                    </div><a href="index.html#why-us">ทำไมต้องเรา</a>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">รีวิว</div>
+                        <div class="mobile-sub-menu"><a href="index.html#reviews">รีวิวลูกค้า</a><a
+                                href="index.html#showcase">รีวิวงานซ่อม</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">สาขา</div>
+                        <div class="mobile-sub-menu"><a href="index.html?branch=0#branches">สาขาตึกคอม</a><a
+                                href="index.html?branch=1#branches">สาขานาเกลือ</a><a
+                                href="index.html?branch=2#branches">สาขาซอยสยาม</a><a
+                                href="index.html?branch=4#branches">สาขาตลาดมหาชล</a><a
+                                href="index.html?branch=5#branches">สาขาแหลมฉบัง</a><a
+                                href="index.html?branch=6#branches">สาขาพรประภานิมิตร</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">ติดต่อ</div>
+                        <div class="mobile-sub-menu"><a href="https://www.facebook.com/profile.php?id=100063764974738"
+                                target="_blank">Facebook</a><a href="https://line.me/R/ti/p/@pao789"
+                                target="_blank">Line</a><a
+                                href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                                target="_blank">Instagram</a><a
+                                href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP"
+                                target="_blank">Tiktok</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">🛒 สั่งของ</div>
+                        <div class="mobile-sub-menu"><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin:8px 0 4px; display:block; font-weight:600;">เลือกรุ่นโทรศัพท์</span><a
+                                href="iphone.html">iPhone / iPad</a><a href="samsung.html">Samsung</a><a
+                                href="xiaomi.html">Xiaomi / POCO</a><a href="oppo.html">OPPO</a><a
+                                href="vivo.html">Vivo</a><a href="huawei.html">Huawei</a><a
+                                href="realme.html">Realme</a><a href="oneplus.html">OnePlus</a><a
+                                href="nokia.html">Nokia</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">งานซ่อมมือถือ</span><a
+                                href="https://line.me/R/ti/p/@pao789" target="_blank">สายแพร Z flip ,Fold</a><a
+                                href="select-green-line.html">แก้หน้าจอเป็นเส้น</a><a
+                                href="select-glass-repair.html">ลอกกระจกหน้าจอ</a><a
+                                href="select-board-repair.html">ซ่อมบอร์ดดับ</a><a
+                                href="select-screen-repair.html">เปลี่ยนหน้าจอ</a><a
+                                href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a
+                                href="select-charging.html">อาการชาร์จไม่เข้า</a><a
+                                href="select-housing.html">เปลี่ยนฝาหลัง บอดี้ชุด</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">บริการเสริม</span><a
+                                href="select-glass-film.html">ติดฟิล์มกระจก</a><a
+                                href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a
+                                href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส /
+                                อุปกรณ์เสริม</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div>
+                            <a href="new-products.html">📱 สินค้ามือ 1</a><a href="used-products.html">🔁 สินค้ามือ 2</a><a
+                                href="parts.html">🔧 อะไหล่มือถือ</a><a href="accessory.html">🎧 Accessory</a><a
+                                href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a>
+                        </div>
+                    </div><a href="https://line.me/R/ti/p/@pao789" target="_blank"
+                        class="btn btn-primary mobile-cta"><svg viewBox="0 0 24 24" width="20" height="20"
+                            stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"
+                            stroke-linejoin="round" style="margin-right: 10px; flex-shrink: 0;">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg><span>สอบถามเพิ่มเติม</span></a>
+                </div>
+            </div>
+            <div class="mobile-panel" id="subPanel">
+                <div class="mobile-panel-header"><button class="mobile-back-btn" id="mobileBackBtn"><svg
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg><span>กลับ</span></button><span class="mobile-panel-title" id="subMenuTitle"></span></div>
+                <div class="mobile-menu-inner" id="subMenuContent"></div>
+            </div>
+        </div>
+    </aside>
 
     <main class="purchases-container"
         style="padding-top: 100px; background-color: #ffffff; min-height: calc(100vh - 400px);">
@@ -161,18 +341,23 @@ class="mega-link">Tiktok</a></div></div></div></li><li class="has-mega-menu"><a 
         <!-- Order Search -->
         <div class="order-search">
             <div class="order-search-inner" style="background: #f5f5f5; border: 1px solid #e8e8e8;">
-                <span class="order-search-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                <span class="order-search-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg></span>
                 <input type="text" id="orderSearchInput" placeholder="คุณสามารถค้นหาด้วยรหัสคำสั่งซื้อ หรือชื่อสินค้า"
                     class="order-search-input">
             </div>
         </div>
- 
+
         <div id="ordersList">
             <!-- Dynamic Content Injected Here -->
         </div>
 
         <!-- Cancel Order Modal -->
-        <div class="cancel-modal-overlay" id="cancelModalOverlay" style="display: none;" onclick="closeCancelModal()"></div>
+        <div class="cancel-modal-overlay" id="cancelModalOverlay" style="display: none;" onclick="closeCancelModal()">
+        </div>
         <div class="cancel-modal" id="cancelModal" style="display: none;">
             <div class="cancel-modal-header">
                 <h3>กรุณาเลือกเหตุผลในการยกเลิก</h3>
@@ -180,24 +365,29 @@ class="mega-link">Tiktok</a></div></div></div></li><li class="has-mega-menu"><a 
             <div class="cancel-modal-body">
                 <div class="cancel-warning-box">
                     <span class="warning-icon">🔔</span>
-                    <p>กรุณาเลือกเหตุผลที่คุณต้องการยกเลิกคำสั่งซื้อ สินค้าทุกชิ้นในคำสั่งซื้อนี้จะถูกยกเลิก โปรดทราบว่าคุณจะไม่สามารถแก้ไขคำขอยกเลิกได้หลังกดยืนยันแล้ว</p>
+                    <p>กรุณาเลือกเหตุผลที่คุณต้องการยกเลิกคำสั่งซื้อ สินค้าทุกชิ้นในคำสั่งซื้อนี้จะถูกยกเลิก
+                        โปรดทราบว่าคุณจะไม่สามารถแก้ไขคำขอยกเลิกได้หลังกดยืนยันแล้ว</p>
                 </div>
-                
+
                 <div class="cancel-radio-group">
                     <label class="cancel-radio-label">
-                        <input type="radio" name="cancelReason" value="ต้องการเปลี่ยนที่อยู่ในการจัดส่ง" onchange="enableCancelConfirmBtn()">
+                        <input type="radio" name="cancelReason" value="ต้องการเปลี่ยนที่อยู่ในการจัดส่ง"
+                            onchange="enableCancelConfirmBtn()">
                         ต้องการเปลี่ยนที่อยู่ในการจัดส่ง
                     </label>
                     <label class="cancel-radio-label">
-                        <input type="radio" name="cancelReason" value="ต้องการเพิ่ม/เปลี่ยนโค้ดส่วนลด" onchange="enableCancelConfirmBtn()">
+                        <input type="radio" name="cancelReason" value="ต้องการเพิ่ม/เปลี่ยนโค้ดส่วนลด"
+                            onchange="enableCancelConfirmBtn()">
                         ต้องการเพิ่ม/เปลี่ยนโค้ดส่วนลด
                     </label>
                     <label class="cancel-radio-label">
-                        <input type="radio" name="cancelReason" value="ต้องการแก้ไขรายละเอียดคำสั่งซื้อ" onchange="enableCancelConfirmBtn()">
+                        <input type="radio" name="cancelReason" value="ต้องการแก้ไขรายละเอียดคำสั่งซื้อ"
+                            onchange="enableCancelConfirmBtn()">
                         ต้องการแก้ไขรายละเอียดคำสั่งซื้อ (เปลี่ยนขนาด, สี, จำนวน เป็นต้น)
                     </label>
                     <label class="cancel-radio-label">
-                        <input type="radio" name="cancelReason" value="ไม่ต้องการซื้อสินค้านี้แล้ว" onchange="enableCancelConfirmBtn()">
+                        <input type="radio" name="cancelReason" value="ไม่ต้องการซื้อสินค้านี้แล้ว"
+                            onchange="enableCancelConfirmBtn()">
                         ไม่ต้องการซื้อสินค้านี้แล้ว
                     </label>
                     <label class="cancel-radio-label">
@@ -208,31 +398,63 @@ class="mega-link">Tiktok</a></div></div></div></li><li class="has-mega-menu"><a 
             </div>
             <div class="cancel-modal-footer">
                 <button class="btn-cancel-notyet" onclick="closeCancelModal()">ยังไม่ใช่เดี๋ยวนี้</button>
-                <button class="btn-cancel-confirm" id="btnConfirmCancel" disabled onclick="executeCancelOrder()">ยกเลิกคำสั่งซื้อ</button>
+                <button class="btn-cancel-confirm" id="btnConfirmCancel" disabled
+                    onclick="executeCancelOrder()">ยกเลิกคำสั่งซื้อ</button>
             </div>
         </div>
 
         <!-- Change Payment Modal -->
-        <div class="cancel-modal-overlay" id="paymentModalOverlay" style="display: none;" onclick="closePaymentModal()"></div>
+        <div class="cancel-modal-overlay" id="paymentModalOverlay" style="display: none;" onclick="closePaymentModal()">
+        </div>
         <div class="cancel-modal" id="paymentModal" style="display: none; max-width: 600px;">
             <div class="cancel-modal-header" style="padding: 24px;">
                 <h3 style="font-size: 1.15rem;">เปลี่ยนช่องทางการชำระเงิน</h3>
             </div>
             <div class="cancel-modal-body" style="padding: 0 24px 20px;">
                 <div style="display: flex; gap: 24px; flex-wrap: wrap;">
-                    <div style="width: 140px; flex-shrink: 0; color: #333; font-weight: 500; padding-top: 8px;">วิธีการชำระเงิน</div>
+                    <div style="width: 140px; flex-shrink: 0; color: #333; font-weight: 500; padding-top: 8px;">
+                        วิธีการชำระเงิน</div>
                     <div style="flex: 1; min-width: 250px;">
-                        <div class="payment-options-grid" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px;">
-                            <button class="pm-opt-btn" onclick="selectChangePayment('โอนเงินผ่านธนาคาร (กสิกรไทย)')">โอนเงินผ่านธนาคาร (กสิกรไทย)<div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div></button>
-                            <button class="pm-opt-btn" onclick="selectChangePayment('โอนเงินผ่านธนาคาร (ไทยพาณิชย์)')">โอนเงินผ่านธนาคาร (ไทยพาณิชย์)<div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div></button>
-                            <button class="pm-opt-btn active" onclick="selectChangePayment('QR พร้อมเพย์')">QR พร้อมเพย์<div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div></button>
-                            <button class="pm-opt-btn" onclick="selectChangePayment('เก็บเงินปลายทาง')">เก็บเงินปลายทาง<div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div></button>
-                            <button class="pm-opt-btn" onclick="selectChangePayment('ติดต่อผู้ขาย LINE')">ติดต่อผู้ขาย LINE<div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div></button>
+                        <div class="payment-options-grid"
+                            style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px;">
+                            <button class="pm-opt-btn"
+                                onclick="selectChangePayment('โอนเงินผ่านธนาคาร (กสิกรไทย)')">โอนเงินผ่านธนาคาร
+                                (กสิกรไทย)<div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24"
+                                        fill="none" stroke="white" stroke-width="3" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg></div></button>
+                            <button class="pm-opt-btn"
+                                onclick="selectChangePayment('โอนเงินผ่านธนาคาร (ไทยพาณิชย์)')">โอนเงินผ่านธนาคาร
+                                (ไทยพาณิชย์)<div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24"
+                                        fill="none" stroke="white" stroke-width="3" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg></div></button>
+                            <button class="pm-opt-btn active" onclick="selectChangePayment('QR พร้อมเพย์')">QR พร้อมเพย์
+                                <div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                        stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg></div></button>
+                            <button class="pm-opt-btn" onclick="selectChangePayment('เก็บเงินปลายทาง')">เก็บเงินปลายทาง
+                                <div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                        stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg></div></button>
+                            <button class="pm-opt-btn" onclick="selectChangePayment('ติดต่อผู้ขาย LINE')">ติดต่อผู้ขาย
+                                LINE<div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                        stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg></div></button>
                         </div>
                     </div>
                 </div>
-                <div style="border-top: 1px dashed #e8e8e8; padding-top: 24px; display: flex; align-items: center; gap: 16px;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ee4d2d" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4" fill="#ee4d2d"></circle></svg>
+                <div
+                    style="border-top: 1px dashed #e8e8e8; padding-top: 24px; display: flex; align-items: center; gap: 16px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ee4d2d" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="4" fill="#ee4d2d"></circle>
+                    </svg>
                     <span id="selectedPaymentText" style="color: #333; font-size: 0.95rem;">QR พร้อมเพย์</span>
                 </div>
             </div>
@@ -243,16 +465,63 @@ class="mega-link">Tiktok</a></div></div></div></li><li class="has-mega-menu"><a 
         </div>
     </main>
 
-    <footer class="footer"><div class="container"><div class="footer-top"><div class="footer-brand"><div class="logo"><img src="logo.png" alt="Paomobile" class="logo-img" />
-Pao<span class="accent">mobile</span></div><p>ร้านซ่อมมือถือครบวงจร รับซ่อมทุกยี่ห้อ ทุกอาการ ด้วยอะไหล่แท้ รับประกันงานซ่อมทุกชิ้น</p><div class="footer-social"><a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path
-d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg></a><a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
-target="_blank" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path
-d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg></a><a href="https://line.me/R/ti/p/@pao789" target="_blank" aria-label="LINE"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path
-d="M19.365 9.864c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-2.05v.744h2.05c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-3.426a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h3.426zm-4.91 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108h-1.272a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zm-2.594 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H10.59a.106.106 0 01-.086-.044l-1.99-2.696v2.632c0 .06-.048.108-.108.108H7.134a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272c.034 0 .066.016.086.044l1.99 2.694V9.972c0-.06.048-.108.108-.108h1.272zm-5.648 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H4.941a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zM24 10.62C24 5.076 18.614 .573 12 .573S0 5.076 0 10.62c0 4.962 4.402 9.122 10.348 9.908.403.087.952.266 1.09.61.126.314.082.804.04 1.12l-.164 1.022c-.054.314-.248 1.228 1.076.67 1.324-.56 7.146-4.208 9.752-7.204C23.464 15.254 24 13.046 24 10.62z" /></svg></a><a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP" target="_blank"
-aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path
-d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" /></svg></a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank" aria-label="Shopee"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a4 4 0 0 0-4 4h1.5a2.5 2.5 0 0 1 5 0H16a4 4 0 0 0-4-4z" /><path
-d="M4.5 6A1.5 1.5 0 0 0 3 7.5v13A1.5 1.5 0 0 0 4.5 22h15a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 19.5 6h-15zm7.5 4.5c-1.5 0-2.7.5-3.4 1.3-.5.5-.6 1.1-.6 1.5 0 .7.4 1.2.9 1.5.5.3 1.1.4 1.7.5.6.1 1.2.2 1.6.4.4.2.5.4.5.7 0 .3-.1.5-.4.7-.3.2-.8.4-1.5.4-.8 0-1.4-.2-1.8-.5-.3-.2-.5-.5-.6-.9H7.4c.1.8.5 1.5 1.1 1.9.7.5 1.7.8 2.8.8 1.5 0 2.7-.4 3.4-1.2.5-.5.7-1.2.7-1.7 0-.7-.3-1.2-.9-1.6-.5-.3-1.1-.5-1.7-.6-.6-.1-1.2-.2-1.6-.4-.4-.2-.5-.4-.5-.6 0-.3.2-.5.5-.7.3-.2.8-.3 1.3-.3.7 0 1.2.2 1.5.4.2.2.4.4.5.7h1.5c-.1-.7-.4-1.3-1-1.7-.6-.5-1.5-.8-2.5-.8z" /></svg></a></div></div><div class="footer-col"><h4>บริการ</h4><a href="select-screen-repair.html">ซ่อมจอ / เปลี่ยนจอ</a><a href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a href="select-board-repair.html">ซ่อมบอร์ด</a><a href="select-speaker-repair.html">ซ่อมลำโพง / ไมค์</a></div><div class="footer-col"><h4>บริการเสริม</h4><a href="select-glass-film.html">ติดฟิล์มกระจก</a><a href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส / อุปกรณ์เสริม</a></div><div class="footer-col"><h4>ติดต่อเรา</h4><a href="index.html#branches">📍 6 สาขาทั่วชลบุรี</a><a href="https://line.me/R/ti/p/@pao789">💬 LINE: @pao789</a><a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank">📘 Facebook</a><a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
-target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a></div></div></div></footer>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <div class="logo"><img src="logo.png" alt="Paomobile" class="logo-img" />
+                        Pao<span class="accent">mobile</span></div>
+                    <p>ร้านซ่อมมือถือครบวงจร รับซ่อมทุกยี่ห้อ ทุกอาการ ด้วยอะไหล่แท้ รับประกันงานซ่อมทุกชิ้น</p>
+                    <div class="footer-social"><a href="https://www.facebook.com/profile.php?id=100063764974738"
+                            target="_blank" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                            </svg></a><a
+                            href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                            target="_blank" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                            </svg></a><a href="https://line.me/R/ti/p/@pao789" target="_blank" aria-label="LINE"><svg
+                                width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M19.365 9.864c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-2.05v.744h2.05c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-3.426a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h3.426zm-4.91 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108h-1.272a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zm-2.594 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H10.59a.106.106 0 01-.086-.044l-1.99-2.696v2.632c0 .06-.048.108-.108.108H7.134a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272c.034 0 .066.016.086.044l1.99 2.694V9.972c0-.06.048-.108.108-.108h1.272zm-5.648 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H4.941a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zM24 10.62C24 5.076 18.614 .573 12 .573S0 5.076 0 10.62c0 4.962 4.402 9.122 10.348 9.908.403.087.952.266 1.09.61.126.314.082.804.04 1.12l-.164 1.022c-.054.314-.248 1.228 1.076.67 1.324-.56 7.146-4.208 9.752-7.204C23.464 15.254 24 13.046 24 10.62z" />
+                            </svg></a><a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP"
+                            target="_blank" aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+                            </svg></a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank"
+                            aria-label="Shopee"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 1a4 4 0 0 0-4 4h1.5a2.5 2.5 0 0 1 5 0H16a4 4 0 0 0-4-4z" />
+                                <path
+                                    d="M4.5 6A1.5 1.5 0 0 0 3 7.5v13A1.5 1.5 0 0 0 4.5 22h15a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 19.5 6h-15zm7.5 4.5c-1.5 0-2.7.5-3.4 1.3-.5.5-.6 1.1-.6 1.5 0 .7.4 1.2.9 1.5.5.3 1.1.4 1.7.5.6.1 1.2.2 1.6.4.4.2.5.4.5.7 0 .3-.1.5-.4.7-.3.2-.8.4-1.5.4-.8 0-1.4-.2-1.8-.5-.3-.2-.5-.5-.6-.9H7.4c.1.8.5 1.5 1.1 1.9.7.5 1.7.8 2.8.8 1.5 0 2.7-.4 3.4-1.2.5-.5.7-1.2.7-1.7 0-.7-.3-1.2-.9-1.6-.5-.3-1.1-.5-1.7-.6-.6-.1-1.2-.2-1.6-.4-.4-.2-.5-.4-.5-.6 0-.3.2-.5.5-.7.3-.2.8-.3 1.3-.3.7 0 1.2.2 1.5.4.2.2.4.4.5.7h1.5c-.1-.7-.4-1.3-1-1.7-.6-.5-1.5-.8-2.5-.8z" />
+                            </svg></a></div>
+                </div>
+                <div class="footer-col">
+                    <h4>บริการ</h4><a href="select-screen-repair.html">ซ่อมจอ / เปลี่ยนจอ</a><a
+                        href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a
+                        href="select-board-repair.html">ซ่อมบอร์ด</a><a href="select-speaker-repair.html">ซ่อมลำโพง /
+                        ไมค์</a>
+                </div>
+                <div class="footer-col">
+                    <h4>บริการเสริม</h4><a href="select-glass-film.html">ติดฟิล์มกระจก</a><a
+                        href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a
+                        href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส /
+                        อุปกรณ์เสริม</a>
+                </div>
+                <div class="footer-col">
+                    <h4>ติดต่อเรา</h4><a href="index.html#branches">📍 6 สาขาทั่วชลบุรี</a><a
+                        href="https://line.me/R/ti/p/@pao789">💬 LINE: @pao789</a><a
+                        href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank">📘 Facebook</a><a
+                        href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                        target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</a><a
+                        href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <!-- Search Modal -->
     <div class="site-search-overlay" id="searchOverlay">
@@ -319,7 +588,7 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                         if (elapsed > 30 * 60 * 1000) {
                             o.status = 'ยกเลิกแล้ว';
                             updated = true;
-                            
+
                             // Sync to Cloud
                             const userId = getActiveUserId();
                             if (userId !== 'guest' && typeof db !== 'undefined' && db.collection) {
@@ -374,16 +643,16 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                             ...doc.data(),
                             id: doc.id
                         }));
-                        
+
                         // Merge with local (local as priority for unsynced orders if any)
                         const localOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
-                        
+
                         // Deduplicate: Use Map with ID as key
                         const mergedMap = new Map();
-                        
+
                         // Pass 1: Local
                         localOrders.forEach(o => mergedMap.set(o.id, o));
-                        
+
                         // Pass 2: Cloud 
                         cloudOrders.forEach(o => {
                             if (mergedMap.has(o.id)) {
@@ -395,8 +664,8 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                             }
                             mergedMap.set(o.id, o);
                         });
-                        
-                        ordersData = Array.from(mergedMap.values()).sort((a,b) => {
+
+                        ordersData = Array.from(mergedMap.values()).sort((a, b) => {
                             const dateA = new Date(a.orderDate || a.createdAt?.toDate?.() || 0);
                             const dateB = new Date(b.orderDate || b.createdAt?.toDate?.() || 0);
                             return dateB - dateA; // Newest first
@@ -419,14 +688,14 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                 const params = new URLSearchParams(window.location.search);
                 const targetTab = params.get('tab');
                 if (targetTab) {
-                    const tabMap = { 
-                        'pay': 'pay', 
+                    const tabMap = {
+                        'pay': 'pay',
                         'unpaid': 'pay', // v1.2.11 support both
-                        'ship': 'ship', 
-                        'receive': 'receive', 
-                        'completed': 'completed', 
-                        'cancel': 'cancel', 
-                        'return': 'return' 
+                        'ship': 'ship',
+                        'receive': 'receive',
+                        'completed': 'completed',
+                        'cancel': 'cancel',
+                        'return': 'return'
                     };
                     const filter = tabMap[targetTab] || 'all';
                     document.querySelectorAll('.order-tab').forEach(t => {
@@ -488,7 +757,7 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                     else if (s === 'ยกเลิกแล้ว') counts.cancel++;
                     else if (s === 'คืนเงิน/คืนสินค้า') counts.return++;
                 });
-                
+
                 document.querySelectorAll('.order-tab').forEach(tab => {
                     const f = tab.dataset.filter;
                     const baseLabels = { all: 'ทั้งหมด', pay: 'ที่ต้องชำระ', ship: 'ที่ต้องจัดส่ง', receive: 'ที่ต้องได้รับ', completed: 'สำเร็จแล้ว', cancel: 'ยกเลิกแล้ว', return: 'คืนเงิน/คืนสินค้า' };
@@ -628,17 +897,17 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
             }
 
             // Expiration Process runs during startCloudSync and loadLocalOnly
-            
+
             // Automatic loading is now handled by startCloudSync()
-            
+
             // Click to copy function
-            window.copyTrackingNumber = function(num, el) {
+            window.copyTrackingNumber = function (num, el) {
                 navigator.clipboard.writeText(num).then(() => {
                     const originalColor = el.style.color;
                     const originalBg = el.style.background;
                     el.style.color = '#fff';
                     el.style.background = '#ee4d2d';
-                    
+
                     const tooltip = document.createElement('div');
                     tooltip.innerText = 'คัดลอกเรียบร้อย!';
                     tooltip.style.position = 'fixed';
@@ -653,7 +922,7 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                     tooltip.style.fontSize = '0.9rem';
                     tooltip.style.pointerEvents = 'none';
                     document.body.appendChild(tooltip);
-                    
+
                     setTimeout(() => {
                         el.style.color = originalColor;
                         el.style.background = originalBg;
@@ -667,7 +936,7 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
             // Search event
             const searchInputEl = document.getElementById('orderSearchInput');
             if (searchInputEl) {
-                searchInputEl.addEventListener('input', function() {
+                searchInputEl.addEventListener('input', function () {
                     const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
                     renderOrders(ordersData, activeTab);
                 });
@@ -684,7 +953,7 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
             });
 
             // Listen for localStorage changes from seller dashboard (cross-tab)
-            window.addEventListener('storage', function(e) {
+            window.addEventListener('storage', function (e) {
                 if (e.key === getOrdersKey() || e.key === 'pao_global_orders') {
                     const freshOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
                     if (freshOrders.length > 0) {
@@ -698,7 +967,7 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                 }
             });
 
-            setInterval(function() {
+            setInterval(function () {
                 let changed = false;
 
                 // 1. Check expiration continuously in the background
@@ -706,7 +975,7 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                     const oldStatusStr = JSON.stringify(ordersData.map(o => o.status));
                     ordersData = processExpirations(ordersData);
                     const newStatusStr = JSON.stringify(ordersData.map(o => o.status));
-                    
+
                     if (oldStatusStr !== newStatusStr) {
                         changed = true;
                     }
@@ -719,24 +988,24 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
             }, 3000);
 
 
-            window.buyAgain = function(orderId) {
+            window.buyAgain = function (orderId) {
                 const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
                 const currentOrders = JSON.parse(rawOrders);
                 let order = currentOrders.find(o => o.id === orderId);
-                
+
                 // Fallback to mock data check if not found in real orders
                 if (!order) {
                     order = mockData.find(o => o.id === orderId);
                 }
-                
+
                 if (!order) {
                     alert('เกิดข้อผิดพลาด ไม่พบข้อมูลคำสั่งซื้อ');
                     return;
                 }
-                
+
                 const cartKey = 'pao_cart_' + getActiveUserId();
                 let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
-                
+
                 order.items.forEach(item => {
                     const idx = cart.findIndex(i => i.name === item.name && i.variation === item.variation);
                     if (idx >= 0) {
@@ -754,13 +1023,13 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                         });
                     }
                 });
-                
+
                 localStorage.setItem(cartKey, JSON.stringify(cart));
                 window.location.href = 'cart.html';
             };
 
             // Dropdown Toggle
-            window.toggleDropdown = function(orderId, event) {
+            window.toggleDropdown = function (orderId, event) {
                 event.stopPropagation();
                 const dropdown = document.getElementById('dropdown-' + orderId);
                 if (dropdown) {
@@ -769,49 +1038,49 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                     dropdown.style.display = isVisible ? 'none' : 'block';
                 }
             };
-            
-            document.addEventListener('click', function(e) {
+
+            document.addEventListener('click', function (e) {
                 document.querySelectorAll('.more-dropdown').forEach(el => el.style.display = 'none');
             });
 
             // Cancel Order Logic
             let currentCancelOrderId = null;
 
-            window.enableCancelConfirmBtn = function() {
+            window.enableCancelConfirmBtn = function () {
                 const btn = document.getElementById('btnConfirmCancel');
-                if(btn) btn.disabled = false;
+                if (btn) btn.disabled = false;
             };
 
-            window.cancelOrderUser = function(orderId) {
+            window.cancelOrderUser = function (orderId) {
                 currentCancelOrderId = orderId;
                 const overlay = document.getElementById('cancelModalOverlay');
                 const modal = document.getElementById('cancelModal');
                 const btnConfirm = document.getElementById('btnConfirmCancel');
-                
-                if(overlay && modal) {
+
+                if (overlay && modal) {
                     overlay.style.display = 'block';
                     modal.style.display = 'block';
                 }
-                if(btnConfirm) btnConfirm.disabled = true;
-                
+                if (btnConfirm) btnConfirm.disabled = true;
+
                 document.querySelectorAll('input[name="cancelReason"]').forEach(el => el.checked = false);
             };
 
-            window.closeCancelModal = function() {
+            window.closeCancelModal = function () {
                 const overlay = document.getElementById('cancelModalOverlay');
                 const modal = document.getElementById('cancelModal');
-                if(overlay) overlay.style.display = 'none';
-                if(modal) modal.style.display = 'none';
+                if (overlay) overlay.style.display = 'none';
+                if (modal) modal.style.display = 'none';
                 currentCancelOrderId = null;
             };
 
-            window.executeCancelOrder = function() {
+            window.executeCancelOrder = function () {
                 if (!currentCancelOrderId) return;
-                
+
                 const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
                 let currentOrders = JSON.parse(rawOrders);
                 let order = currentOrders.find(o => o.id === currentCancelOrderId);
-                
+
                 if (order) {
                     order.status = 'ยกเลิกแล้ว';
                     // Optional: You could save the selected reason to the order object here:
@@ -827,11 +1096,11 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                             go.status = 'ยกเลิกแล้ว';
                             localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
                         }
-                    } catch(e){}
-                    
+                    } catch (e) { }
+
                     renderOrders(currentOrders, document.querySelector('.order-tab.active')?.dataset.filter || 'all');
                 }
-                
+
                 closeCancelModal();
             };
 
@@ -839,23 +1108,23 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
             let currentChangePaymentOrderId = null;
             let newlySelectedPayment = 'QR พร้อมเพย์';
 
-            window.goToPayment = function(order) {
+            window.goToPayment = function (order) {
                 if (!order || !order.id) return;
                 const pm = (order.paymentMethod || order.method || '').toLowerCase();
                 const pb = (order.paymentBank || '').toLowerCase();
                 const combined = pm + ' ' + pb;
                 const total = order.total || 0;
                 const ref = order.id;
-                
+
                 // Check if it's a bank transfer
-                const isTransfer = combined.includes('โอน') || 
-                                   combined.includes('bank') || 
-                                   combined.includes('transfer') || 
-                                   combined.includes('ไทยพาณิชย์') || 
-                                   combined.includes('scb') ||
-                                   combined.includes('กสิกร') ||
-                                   combined.includes('kbank');
-                
+                const isTransfer = combined.includes('โอน') ||
+                    combined.includes('bank') ||
+                    combined.includes('transfer') ||
+                    combined.includes('ไทยพาณิชย์') ||
+                    combined.includes('scb') ||
+                    combined.includes('กสิกร') ||
+                    combined.includes('kbank');
+
                 if (isTransfer) {
                     let bank = 'scb';
                     if (combined.includes('กสิกร') || combined.includes('kbank')) bank = 'kbank';
@@ -866,16 +1135,16 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                 }
             };
 
-            window.changePaymentUser = function(id, currentMethod) {
+            window.changePaymentUser = function (id, currentMethod) {
                 currentChangePaymentOrderId = id;
                 const overlay = document.getElementById('paymentModalOverlay');
                 const modal = document.getElementById('paymentModal');
-                if(overlay && modal) {
+                if (overlay && modal) {
                     overlay.style.display = 'block';
                     modal.style.display = 'block';
                     // We need to find the correct label for selection if it's a bank transfer
                     let initialSelection = currentMethod || 'QR พร้อมเพย์';
-                    
+
                     // If current storage says "โอนเงินผ่านธนาคาร" we need to check which bank to highlight
                     if (initialSelection === 'โอนเงินผ่านธนาคาร') {
                         const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
@@ -886,30 +1155,30 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                             else if (order.paymentBank.toLowerCase() === 'kbank') initialSelection = 'โอนเงินผ่านธนาคาร (กสิกรไทย)';
                         }
                     }
-                    
+
                     selectChangePayment(initialSelection);
                 }
                 // Close dropdown
                 document.querySelectorAll('.more-dropdown').forEach(el => el.style.display = 'none');
             };
 
-            window.closePaymentModal = function() {
+            window.closePaymentModal = function () {
                 const overlay = document.getElementById('paymentModalOverlay');
                 const modal = document.getElementById('paymentModal');
-                if(overlay) overlay.style.display = 'none';
-                if(modal) modal.style.display = 'none';
+                if (overlay) overlay.style.display = 'none';
+                if (modal) modal.style.display = 'none';
                 currentChangePaymentOrderId = null;
             };
 
-            window.selectChangePayment = function(method) {
+            window.selectChangePayment = function (method) {
                 newlySelectedPayment = method;
                 document.querySelectorAll('.pm-opt-btn').forEach(btn => {
                     // Extract text content excluding the SVG tick
                     const btnText = btn.cloneNode(true);
                     const tick = btnText.querySelector('.pm-tick');
-                    if(tick) tick.remove();
-                    
-                    if(btnText.innerText.trim() === method) {
+                    if (tick) tick.remove();
+
+                    if (btnText.innerText.trim() === method) {
                         btn.classList.add('active');
                     } else {
                         btn.classList.remove('active');
@@ -918,16 +1187,16 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                 document.getElementById('selectedPaymentText').innerText = method;
             };
 
-            window.executeChangePayment = function() {
+            window.executeChangePayment = function () {
                 if (!currentChangePaymentOrderId) return;
-                
+
                 const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
                 let currentOrders = JSON.parse(rawOrders);
                 let order = currentOrders.find(o => o.id === currentChangePaymentOrderId);
-                
+
                 if (order) {
                     order.paymentMethod = newlySelectedPayment;
-                    
+
                     if (newlySelectedPayment.includes('ไทยพาณิชย์')) {
                         order.paymentMethod = 'โอนเงินผ่านธนาคาร';
                         order.paymentBank = 'SCB';
@@ -945,7 +1214,7 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                     // It is already preserved as we are not modifying it.
 
                     localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
-                    
+
                     // Global sync
                     try {
                         let globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
@@ -953,17 +1222,17 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                         if (go) {
                             go.paymentMethod = order.paymentMethod;
                             go.paymentBank = order.paymentBank;
-                            if(order.status) go.status = order.status;
+                            if (order.status) go.status = order.status;
                             localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
                         }
-                    } catch(e){}
-                    
+                    } catch (e) { }
+
                     renderOrders(currentOrders, document.querySelector('.order-tab.active')?.dataset.filter || 'all');
                 }
                 closePaymentModal();
             };
             // Slip Lightbox Functions
-            window.viewSlipLightbox = function(url) {
+            window.viewSlipLightbox = function (url) {
                 const lightbox = document.getElementById('slipLightbox');
                 const img = document.getElementById('lightboxImg');
                 if (lightbox && img) {
@@ -973,7 +1242,7 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                 }
             };
 
-            window.closeSlipLightbox = function() {
+            window.closeSlipLightbox = function () {
                 const lightbox = document.getElementById('slipLightbox');
                 if (lightbox) {
                     lightbox.classList.remove('show');
@@ -986,4 +1255,3 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
 </body>
 
 </html>
-

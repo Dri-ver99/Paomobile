@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusText = document.getElementById('statusText');
     const statusIndicator = document.getElementById('statusIndicator');
     
-    if (typeof updateSidebarActiveState === 'function') updateSidebarActiveState();
+    if (window.updateSidebarActiveState) window.updateSidebarActiveState();
 
     // --- v1.2.11 Instant Local Load ---
     updateDashboard();
@@ -17,50 +17,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- v1.2.1 Auth & Firestore Initialization ---
     if (typeof firebase !== 'undefined' && firebase.auth) {
         firebase.auth().onAuthStateChanged(user => {
-            const statusIndicator = document.getElementById('firestore-status');
+            const authEmail = document.getElementById('authEmail');
+            const authIndicator = document.getElementById('authIndicator');
+            const loginBtn = document.getElementById('adminLoginBtn');
+            const logoutBtn = document.getElementById('adminLogoutBtn');
+            
             const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
             const SELLER_EMAIL = "sattawat2560@gmail.com";
             
             if (user || localAdminActive) {
                 const email = user ? (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "").toLowerCase() : SELLER_EMAIL.toLowerCase();
-                const isAdmin = email === SELLER_EMAIL.toLowerCase();
+                const isAdmin = email.trim() === SELLER_EMAIL.toLowerCase().trim();
                 
-                console.log("[v1.2.11] Dashboard Admin detected:", email, "isAdmin:", isAdmin);
-                
+                if (authEmail) authEmail.textContent = email + (user ? "" : " (จำสิทธิ์ 🔒)");
+                if (authIndicator) {
+                    authIndicator.classList.remove('online', 'warning', 'offline');
+                    authIndicator.classList.add(isAdmin ? 'online' : 'warning');
+                }
+
                 if (isAdmin) {
-                    if (statusIndicator) {
-                        statusIndicator.style.background = "#1890ff"; // Blue
-                        statusIndicator.innerHTML = `&bull; Admin: ${email}${user ? "" : " (จำสิทธิ์ 🔒)"} - กำลังซิงค์...`;
-                    }
-                    if (typeof db !== 'undefined') {
-                        startFirestoreSync();
-                    }
-                    // Persist for other pages
+                    if (loginBtn) loginBtn.style.display = 'none';
+                    if (logoutBtn) logoutBtn.style.display = 'block';
+                    if (typeof db !== 'undefined') startFirestoreSync();
                     localStorage.setItem('paomobile_admin_active', 'true');
                 } else {
-                    if (statusIndicator) {
-                        statusIndicator.style.background = "#ff4d4f";
-                        statusIndicator.innerHTML = `&bull; ไม่มีสิทธิ์เข้าถึง (${email}) <button onclick="localStorage.removeItem('paomobile_admin_active'); firebase.auth().signOut().then(() => window.location.reload());" style="margin-left:8px; border:none; background:#888; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;">ออก</button>`;
-                    }
+                    if (loginBtn) loginBtn.style.display = 'block';
+                    if (logoutBtn) logoutBtn.style.display = 'block';
                 }
             } else {
-                console.warn("[v1.2.1] No user logged in.");
                 const isFileProtocol = window.location.protocol === 'file:';
-                
-                if (statusIndicator) {
-                    statusIndicator.style.background = isFileProtocol ? "#52c41a" : "#faad14";
-                    if (isFileProtocol) {
-                        statusIndicator.innerHTML = `&bull; โหมด Local: <button onclick="localStorage.setItem('paomobile_admin_active', 'true'); window.location.reload();" style="margin-left:8px; border:none; background:#52c41a; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer; font-weight:700;">🛡️ บังคับสิทธิ์ Admin</button>`;
-                    } else {
-                        statusIndicator.innerHTML = `&bull; Firestore: กรุณาล็อกอิน <button onclick="firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())" style="margin-left:8px; border:none; background:#ee4d2d; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;">ล็อกอิน</button>`;
-                    }
-                }
+                if (authEmail) authEmail.textContent = isFileProtocol ? "โหมด Local" : "กรุณาล็อกอิน Admin";
+                if (authIndicator) authIndicator.className = 'admin-status-dot offline';
+                if (loginBtn) loginBtn.style.display = 'block';
+                if (logoutBtn) logoutBtn.style.display = 'none';
                 updateDashboard();
             }
         });
     } else {
         updateDashboard();
     }
+
+    window.sellerLogin = () => {
+        firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert("Login Error: " + err.message));
+    };
+
+    window.sellerLogout = () => {
+        localStorage.removeItem('paomobile_admin_active');
+        firebase.auth().signOut().then(() => window.location.reload());
+    };
 
     function startFirestoreSync() {
         console.log("[v1.2.1] Starting real-time sync...");
@@ -80,40 +84,54 @@ document.addEventListener('DOMContentLoaded', () => {
             
             ordersData = processExpirations(fetchedOrders);
             
-            const statusIndicator = document.getElementById('firestore-status');
-            if (statusIndicator) {
-                statusIndicator.style.background = "#52c41a"; // Green
-                statusIndicator.innerHTML = `&bull; Firestore: เชื่อมต่อแล้ว (v1.2.10) - พบ ${ordersData.length} ออเดอร์`;
-            }
+            const authIndicator = document.getElementById('authIndicator');
+            if (authIndicator) authIndicator.className = 'admin-status-dot online';
             
             localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
+            const statusToast = document.getElementById('firestore-status');
+            if (statusToast) {
+                statusToast.innerHTML = '<span style="color:#52c41a;">&bull;</span> Firestore: เชื่อมต่อสำเร็จ';
+                statusToast.style.borderColor = '#b7eb8f';
+                statusToast.style.background = '#f6ffed';
+            }
             updateDashboard();
         }, (err) => {
             console.error("[v1.2.10] Sync Error:", err);
-            const statusIndicator = document.getElementById('firestore-status');
-            if (statusIndicator) {
-                statusIndicator.style.background = "#ff4d4f"; // Red
-                statusIndicator.innerHTML = `&bull; Firestore: Error v1.2.10 (${err.code})`;
-            }
+            const authIndicator = document.getElementById('authIndicator');
+            if (authIndicator) authIndicator.className = 'admin-status-dot offline';
             updateDashboard();
         });
 
         // Products Sync (for stats)
         db.collection('products').onSnapshot(snapshot => {
+            let outOfStockCount = 0;
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                if (data.stock === 0 || data.stock === "0") {
+                    outOfStockCount++;
+                }
+            });
             const count = snapshot.size;
-            // Use 17 as baseline if collection is empty
             const totalProductsCount = count > 0 ? count : 17; 
-            const el = document.getElementById('insight-products');
-            if (el) el.textContent = totalProductsCount;
+            
             localStorage.setItem('pao_total_products_count', totalProductsCount);
+            localStorage.setItem('pao_outstock_count', outOfStockCount);
+            
+            const elTotalProducts = document.getElementById('stat-total-products');
+            if (elTotalProducts) elTotalProducts.textContent = totalProductsCount;
+            const elOutstock = document.getElementById('stat-outstock');
+            if (elOutstock) elOutstock.textContent = outOfStockCount;
         }, err => {
-            console.warn("[v1.2.11] Product sync failed, using baseline:", err);
-            const el = document.getElementById('insight-products');
-            if (el) el.textContent = 17;
+            console.warn("[v1.2.11] Product sync failed:", err);
         });
 
-        // Vouchers Sync (for Quick QR)
+        // Vouchers Sync (for stats count)
         db.collection('vouchers').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            const elVouchers = document.getElementById('stat-vouchers');
+            if (elVouchers) elVouchers.textContent = snapshot.size;
+            localStorage.setItem('pao_total_vouchers_count', snapshot.size);
+            
+            // Still render quick vouchers in case the UI element gets re-added later
             const vouchers = snapshot.docs.map(doc => doc.data());
             renderQuickVouchers(vouchers);
         }, err => {
@@ -302,17 +320,48 @@ function updateDashboard() {
     });
 
     // 2. Update Business Insights (Sales & Products)
-    const totalSales = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let todayOrdersCount = 0;
+    let todaySalesTotal = 0;
+    let totalSales = 0;
+
+    orders.forEach(order => {
+        let orderDate = null;
+        if (order.createdAt && order.createdAt.toDate) {
+            orderDate = order.createdAt.toDate();
+        } else if (order.createdAt && order.createdAt.seconds) {
+            orderDate = new Date(order.createdAt.seconds * 1000);
+        } else if (order.orderDate) {
+            orderDate = new Date(order.orderDate);
+        }
+
+        if (order.status !== 'ยกเลิกแล้ว') {
+            totalSales += (order.total || 0);
+            if (orderDate && orderDate >= today) {
+                todayOrdersCount++;
+                todaySalesTotal += (order.total || 0);
+            }
+        }
+    });
+
     const cachedProductCount = localStorage.getItem('pao_total_products_count') || 17;
+    const cachedVouchersCount = localStorage.getItem('pao_total_vouchers_count') || 0; 
+    const cachedOutstockCount = localStorage.getItem('pao_outstock_count') || 0; 
 
     const elements = [
         { el: document.getElementById('stat-unpaid'), val: stats.unpaid },
-        { el: document.getElementById('stat-to-ship'), val: stats.toShip },
+        { el: document.getElementById('stat-toship'), val: stats.toShip },
         { el: document.getElementById('stat-processed'), val: stats.processed },
-        { el: document.getElementById('stat-refund'), val: stats.refund },
-        { el: document.getElementById('insight-sales'), val: '฿' + (totalSales || 0).toLocaleString() },
-        { el: document.getElementById('insight-orders'), val: orders.length },
-        { el: document.getElementById('insight-products'), val: cachedProductCount }
+        { el: document.getElementById('stat-cancelled'), val: stats.refund },
+        { el: document.getElementById('stat-total-products'), val: cachedProductCount },
+        { el: document.getElementById('insight-products'), val: cachedProductCount },
+        { el: document.getElementById('stat-vouchers'), val: cachedVouchersCount },
+        { el: document.getElementById('insight-today-orders'), val: todayOrdersCount },
+        { el: document.getElementById('insight-today-sales'), val: '฿' + todaySalesTotal.toLocaleString() },
+        { el: document.getElementById('insight-total-orders'), val: orders.length },
+        { el: document.getElementById('insight-sales'), val: '฿' + totalSales.toLocaleString() }
     ];
 
     elements.forEach(item => {
@@ -350,6 +399,7 @@ function renderRecentOrders(orders) {
                 <tr style="text-align: left; border-bottom: 1px solid #eee; color: #888;">
                     <th style="padding: 10px 0;">รหัสสั่งซื้อ</th>
                     <th style="padding: 10px 0;">สินค้า</th>
+                    <th style="padding: 10px 0;">ลูกค้า & ที่มา</th>
                     <th style="padding: 10px 0; text-align: center;">ยอดรวม</th>
                     <th style="padding: 10px 0; text-align: right;">สถานะ</th>
                     <th style="padding: 10px 0; text-align: right;">จัดการ</th>
@@ -361,13 +411,32 @@ function renderRecentOrders(orders) {
                     const firstItemName = items.length > 0 ? items[0].name : (order.status === 'DEBUG-TEST' ? 'รายการทดสอบ (Debug)' : 'ไม่ระบุสินค้า');
                     const others = items.length > 1 ? ` และอีก ${items.length - 1} รายการ` : '';
                     const orderTotal = typeof order.total === 'number' ? order.total.toLocaleString() : '0';
-                    
+                    const sourceCounts = {};
+                    items.forEach(it => {
+                        const s = it.source || 'ไม่ระบุ';
+                        sourceCounts[s] = (sourceCounts[s] || 0) + (it.qty || 1);
+                    });
+
+                    const sourcePills = Object.keys(sourceCounts).map(s => {
+                        let label = s.trim();
+                        let count = sourceCounts[s];
+                        let color = '#757575', bg = '#f5f5f5', border = '#ddd';
+                        if (label === 'parts') { label = 'อะไหล่'; color = '#d97706'; bg = '#fef3c7'; border = '#fde68a'; }
+                        else if (label === 'used') { label = 'มือสอง'; color = '#059669'; bg = '#d1fae5'; border = '#a7f3d0'; }
+                        else if (label === 'accessory') { label = 'อุปกรณ์'; color = '#2563eb'; bg = '#dbeafe'; border = '#bfdbfe'; }
+                        return `<span style="display:inline-block; margin-top:4px; padding: 2px 6px; font-size: 0.7rem; border-radius: 4px; background:${bg}; color:${color}; border:1px solid ${border}; font-weight:600;">${label} (${count})</span>`;
+                    }).join(' ');
+
                     return `
                         <tr style="border-bottom: 1px solid #fafafa;">
                             <td style="padding: 12px 0; color: #4080ff; font-family: monospace;">${order.id}</td>
+                            <td style="padding: 12px 0; max-width: 180px;">
+                                <div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${firstItemName}${others}">${firstItemName}${others}</div>
+                            </td>
                             <td style="padding: 12px 0;">
-                                <div style="font-weight: 500;">${firstItemName}${others}</div>
-                                <div style="font-size: 0.75rem; color: #999;">ลูกค้า: ${order.customerName || 'ไม่ระบุชื่อ'} (${order.customerPhone || '-'})</div>
+                                <div style="font-size: 0.8rem; color: #333;">${order.customerName || 'ไม่ระบุชื่อ'}</div>
+                                <div style="font-size: 0.75rem; color: #999;">${order.customerPhone || '-'}</div>
+                                <div>${sourcePills}</div>
                             </td>
                             <td style="padding: 12px 0; text-align: center; font-weight: 600;">฿${orderTotal}</td>
                             <td style="padding: 12px 0; text-align: right;">
@@ -414,7 +483,7 @@ function getStatusStyle(status) {
 
 // Order Management Actions
 function shipOrder(orderId) {
-    if(!confirm('ยืนยันแจ้งส่งพัสดุ หมายเลข ' + orderId + ' ?\nสถานะจะเปลี่ยนเป็น "ที่ต้องได้รับ" คับ')) return;
+    if(!confirm('ยืนยันแจ้งเลขพัสดุ หมายเลข ' + orderId + ' ?\nสถานะจะเปลี่ยนเป็น "ที่ต้องได้รับ" คับ')) return;
     
     if (typeof db !== 'undefined') {
         db.collection('orders').doc(orderId).update({ status: 'ที่ต้องได้รับ' })
@@ -435,47 +504,116 @@ function viewOrderDetails(orderId) {
     const order = orders.find(o => o.id === orderId);
     
     if (order) {
-        document.getElementById('modalCustomerName').textContent = order.customerName || 'N/A';
-        document.getElementById('modalCustomerPhone').textContent = order.customerPhone || 'N/A';
-        document.getElementById('modalCustomerAddress').textContent = order.customerAddress || 'ไม่มีข้อมูลที่อยู่จัดส่ง';
+        // Populate standard fields (v1.7.6 Updated IDs)
+        document.getElementById('modalCustomerName').textContent = order.customerName || 'ไม่ระบุชื่อ';
         
-        document.getElementById('orderDetailsModal').style.display = 'flex';
+        const profileEl = document.getElementById('modalCustomerProfile');
+        profileEl.textContent = order.customerProfileName || order.customerNickname || order.customerEmail || 'ไม่มีข้อมูล';
+        profileEl.onclick = () => {
+            if (order.customerEmail) {
+                window.location.href = `seller-chat.html?id=${order.customerEmail.toLowerCase().trim()}`;
+            }
+        };
+
+        const addrEl = document.getElementById('modalCustomerAddress');
+        if (addrEl) addrEl.textContent = order.customerAddress || 'ไม่มีข้อมูลที่อยู่จัดส่ง';
+        
+        const payMethod = order.paymentMethod || order.method || '-';
+        const payBank = order.paymentBank || '';
+        const paySlip = order.paymentSlip || order.paymentSlipUrl || '';
+        
+        let paymentFullText = payMethod;
+        if (payBank && payBank !== 'N/A' && payBank !== '-') {
+            paymentFullText += ` (${payBank})`;
+        }
+        document.getElementById('modalPaymentFull').textContent = paymentFullText;
+        
+        const slipGroup = document.getElementById('slipInfoGroup');
+        const slipThumb = document.getElementById('modalSlipThumb');
+        const slipLink = document.getElementById('modalSlipLink');
+        
+        if (paySlip && paySlip !== 'N/A' && paySlip !== '') {
+            slipGroup.style.display = 'block';
+            if (slipThumb) slipThumb.src = paySlip;
+            if (slipLink) {
+                slipLink.onclick = (e) => {
+                    e.preventDefault();
+                    viewSlipLightbox(paySlip);
+                };
+            }
+        } else {
+            slipGroup.style.display = 'none';
+        }
+
+        const vGroup = document.getElementById('voucherInfoGroup');
+        const vCode = order.appliedVoucherCode || order.voucherCode || '';
+        if (vCode) {
+            vGroup.style.display = 'block';
+            const codeSpan = document.getElementById('modalVoucherCode');
+            if (codeSpan) codeSpan.textContent = vCode;
+        } else {
+            vGroup.style.display = 'none';
+        }
+
+        const netTotalEl = document.getElementById('modalNetTotal');
+        if (netTotalEl) netTotalEl.textContent = `฿${(order.total || 0).toLocaleString()}`;
+
+        // Source Breakdown & Page Entry (v1.7.7)
+        const sourceCounts = {};
+        (order.items || []).forEach(it => {
+            const s = it.source || 'ไม่ระบุ';
+            sourceCounts[s] = (sourceCounts[s] || 0) + (it.qty || 1);
+        });
+
+        const breakdownArea = document.getElementById('modalSourceBreakdown');
+        if (breakdownArea) {
+            breakdownArea.innerHTML = Object.keys(sourceCounts).map(s => {
+                let label = s.trim();
+                let count = sourceCounts[s];
+                let color = '#757575', bg = '#f5f5f5', border = '#ddd';
+                if (label === 'parts') { label = 'อะไหล่'; color = '#d97706'; bg = '#fef3c7'; border = '#fde68a'; }
+                else if (label === 'used') { label = 'มือสอง'; color = '#059669'; bg = '#d1fae5'; border = '#a7f3d0'; }
+                else if (label === 'accessory') { label = 'อุปกรณ์'; color = '#2563eb'; bg = '#dbeafe'; border = '#bfdbfe'; }
+                return `<span style="padding: 2px 8px; font-size: 0.75rem; border-radius: 6px; background:${bg}; color:${color}; border:1px solid ${border}; font-weight:700;">${label} (${count})</span>`;
+            }).join('');
+        }
+
+        const pageEl = document.getElementById('modalOrderPage');
+        if (pageEl) {
+            const map = {
+                'index.html': 'หน้าหลัก',
+                'parts.html': 'เลือกซื้ออะไหล่',
+                'accessory.html': 'อุปกรณ์เสริม',
+                'new-products.html': 'มือถือกดซื้อเอง',
+                'used-products.html': 'มือถือมือสอง',
+                'checkout.html': 'หน้ารถเข็น/สั่งโดยตรง'
+            };
+            pageEl.textContent = map[order.orderPage] || order.orderPage || 'ไม่ระบุ';
+        }
+        
+        document.getElementById('orderDetailModal').style.display = 'flex';
     }
 }
 
-function closeOrderDetails() {
-    document.getElementById('orderDetailsModal').style.display = 'none';
+function closeOrderDetailModal() {
+    document.getElementById('orderDetailModal').style.display = 'none';
 }
 
-function updateSidebarActiveState() {
-    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab');
-    
-    document.querySelectorAll('.menu-item').forEach(item => {
-        const itemHref = item.getAttribute('href');
-        if (!itemHref) return;
-        
-        const itemPath = itemHref.split('?')[0];
-        const itemParams = new URLSearchParams(itemHref.split('?')[1] || '');
-        const itemTab = itemParams.get('tab');
-        
-        item.classList.remove('active');
-        
-        // Match path
-        if (currentPath === itemPath) {
-            // Match tab if specified in link
-            if (itemTab) {
-                if (tab === itemTab) {
-                    item.classList.add('active');
-                }
-            } else if (!tab && itemPath === 'seller-orders.html') {
-                // Main orders link (no tab in link AND no tab in URL)
-                item.classList.add('active');
-            } else if (itemPath === 'seller-centre.html') {
-                // Dashboard link
-                item.classList.add('active');
-            }
-        }
-    });
+function viewSlipLightbox(url) {
+    const lb = document.getElementById('slipLightbox');
+    const img = document.getElementById('lightboxImg');
+    if (lb && img) {
+        img.src = url;
+        lb.style.display = 'flex';
+        setTimeout(() => lb.style.opacity = '1', 10);
+    }
 }
+
+function closeSlipLightbox() {
+    const lb = document.getElementById('slipLightbox');
+    if (lb) {
+        lb.style.opacity = '0';
+        setTimeout(() => lb.style.display = 'none', 300);
+    }
+}
+

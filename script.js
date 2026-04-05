@@ -2,6 +2,37 @@ const navbar = document.getElementById('navbar');
 window.addEventListener('scroll', () => {
 navbar.classList.toggle('scrolled', window.scrollY > 40);
 }, { passive: true });
+
+// --- Global Performance & Image Optimizer (v1.1) ---
+(function() {
+    const optimizeImages = () => {
+        document.querySelectorAll('img:not([loading])').forEach(img => {
+            img.setAttribute('loading', 'lazy');
+            img.setAttribute('decoding', 'async');
+        });
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', optimizeImages);
+    } else {
+        optimizeImages();
+    }
+    // Observe dynamic changes (lazy load newly added items)
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(m => m.addedNodes.forEach(node => {
+            if (node.nodeType === 1) {
+                if (node.tagName === 'IMG' && !node.hasAttribute('loading')) {
+                    node.setAttribute('loading', 'lazy');
+                    node.setAttribute('decoding', 'async');
+                }
+                node.querySelectorAll('img:not([loading])').forEach(img => {
+                    img.setAttribute('loading', 'lazy');
+                    img.setAttribute('decoding', 'async');
+                });
+            }
+        }));
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+})();
 const menuToggle = document.getElementById('menuToggle');
 const mobileMenu = document.getElementById('mobileMenu');
 const mobileMenuPanels = document.getElementById('mobileMenuPanels');
@@ -60,22 +91,31 @@ const animObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             const delay = parseInt(entry.target.dataset.delay) || 0;
-            setTimeout(() => {
+            // Immediate class for better performance, delay only if specified
+            if (delay === 0) {
                 entry.target.classList.add('visible');
-            }, delay);
+            } else {
+                setTimeout(() => {
+                    entry.target.classList.add('visible');
+                }, delay);
+            }
             animObserver.unobserve(entry.target);
         }
     });
-}, { threshold: 0.1, rootMargin: '50px' });
+}, { threshold: 0.05, rootMargin: '100px' }); // Increased rootMargin for pre-emptive loading
 animatedElements.forEach(el => animObserver.observe(el));
-// Force visible for anything in initial viewport
-setTimeout(() => {
+
+// Force visible for anything in initial viewport with a quicker check
+const forceInitialVisible = () => {
     animatedElements.forEach(el => {
-        if (el.getBoundingClientRect().top < window.innerHeight) {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight + 100) {
             el.classList.add('visible');
         }
     });
-}, 800);
+};
+if (document.readyState === 'complete') forceInitialVisible();
+else window.addEventListener('load', forceInitialVisible);
 const sections = document.querySelectorAll('section[id]');
 const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
 window.addEventListener('scroll', () => {
@@ -295,6 +335,25 @@ badge.textContent = '⚫ ปิดให้บริการ';
     let statusUnsubscribe = null;
     let pendingChatFile = null;
     let pendingChatType = null;
+    let presenceInterval = null;
+
+    const PAGE_MAP = {
+        'index.html': 'หน้าหลัก',
+        'parts.html': 'เลือกซื้ออะไหล่',
+        'accessory.html': 'อุปกรณ์เสริม',
+        'new-products.html': 'มือถือมือหนึ่ง',
+        'used-products.html': 'มือถือมือสอง',
+        'member.html': 'หน้าสมาชิก',
+        'purchases.html': 'รายการซื้อ',
+        'cart.html': 'ตะกร้าสินค้า',
+        'checkout.html': 'หน้าชำระเงิน',
+        'promotions.html': 'โปรโมชั่น'
+    };
+
+    function getCurrentPageName() {
+        const path = window.location.pathname.split('/').pop() || 'index.html';
+        return PAGE_MAP[path] || path;
+    }
 
     // --- Build UI ---
     const chatContainer = document.createElement('div');
@@ -421,8 +480,9 @@ badge.textContent = '⚫ ปิดให้บริการ';
                     </div>
                     <div>
                         <div style="font-weight:700; font-size:0.95rem; margin-bottom:1px;">แชทกับ Paomobile</div>
-                        <div style="font-size:0.7rem; opacity:0.8; display:flex; align-items:center; gap:4px;">
-                            <span style="width:6px; height:6px; background:#10b981; border-radius:50%;"></span> ออนไลน์ตอนนี้
+                        <div id="chatHeaderStatus" style="font-size:0.7rem; opacity:0.8; display:flex; align-items:center; gap:4px;">
+                            <span id="chatHeaderDot" style="width:6px; height:6px; background:#94a3b8; border-radius:50%;"></span>
+                            <span id="chatHeaderText">เชื่อมต่อ...</span>
                         </div>
                     </div>
                 </div>
@@ -560,6 +620,9 @@ badge.textContent = '⚫ ปิดให้บริการ';
     // --- Seller Status Sync ---
     function syncSellerStatus() {
         const indicator = document.getElementById('chatStatusIndicator');
+        const headerDot = document.getElementById('chatHeaderDot');
+        const headerText = document.getElementById('chatHeaderText');
+        
         if (!indicator) return;
 
         // Try to get DB
@@ -583,13 +646,21 @@ badge.textContent = '⚫ ปิดให้บริการ';
                 const diffSeconds = (now - lastSeen) / 1000;
                 
                 // If last active in 5 minutes, consider online
-                if (diffSeconds < 300 && data.isOnline) {
+                const isOnlineNow = diffSeconds < 300 && data.isOnline;
+
+                if (isOnlineNow) {
                     indicator.classList.remove('offline');
+                    if (headerDot) headerDot.style.background = '#10b981';
+                    if (headerText) headerText.textContent = 'ออนไลน์ตอนนี้';
                 } else {
                     indicator.classList.add('offline');
+                    if (headerDot) headerDot.style.background = '#94a3b8';
+                    const awayMsg = diffSeconds < 3600 ? 'ไม่อยู่ชั่วคราว' : 'ออฟไลน์';
+                    if (headerText) headerText.textContent = awayMsg;
                 }
             } else {
                 indicator.classList.add('offline');
+                if (headerText) headerText.textContent = 'ออฟไลน์';
             }
         }, err => console.warn("[StatusSync] Error:", err));
     }
@@ -641,12 +712,23 @@ badge.textContent = '⚫ ปิดให้บริการ';
         await ensureFirebaseAuth();
         const normalizedEmail = user.email.trim().toLowerCase();
 
-        // Sync Metadata
-        window.db.collection('chats').doc(normalizedEmail).set({
-            userName: user.name || user.email,
-            userAvatar: user.avatar || "",
-            userEmail: normalizedEmail
-        }, { merge: true }).catch(err => {});
+        const updatePresence = () => {
+            if (!window.db) return;
+            window.db.collection('chats').doc(normalizedEmail).set({
+                userName: user.name || user.email,
+                userAvatar: user.avatar || "",
+                userEmail: normalizedEmail,
+                lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                presence: {
+                    page: getCurrentPageName(),
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                }
+            }, { merge: true }).catch(err => {});
+        };
+
+        updatePresence();
+        if (presenceInterval) clearInterval(presenceInterval);
+        presenceInterval = setInterval(updatePresence, 30000); // 30s heartbeat
 
         if (chatUnsubscribe) chatUnsubscribe();
         

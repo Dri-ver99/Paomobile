@@ -46,6 +46,18 @@
         .preview-thumb-seller { width:52px; height:52px; border-radius:8px; object-fit:cover; border:2px solid #ee4d2d; }
         .preview-remove-seller { cursor:pointer; color:#94a3b8; font-size:1.2rem; transition:color 0.2s; padding:4px; }
         .preview-remove-seller:hover { color:#ef4444; }
+
+        /* Loading Skeletons for Chat */
+        .chat-skeleton { padding: 15px; border-bottom: 1px solid #f8fafc; display: flex; gap: 12px; align-items: center; pointer-events: none; }
+        .skeleton-avatar { width: 44px; height: 44px; border-radius: 50%; background: #f1f5f9; }
+        .skeleton-info { flex: 1; }
+        .skeleton-line { height: 14px; background: #f1f5f9; border-radius: 4px; margin-bottom: 8px; width: 60%; }
+        .skeleton-line.short { width: 40%; height: 10px; }
+        .skeleton-animate { background: linear-gradient(90deg, #f1f5f9 25%, #f8fafc 50%, #f1f5f9 75%); background-size: 200% 100%; animation: skeletonLoading 1.5s infinite; }
+        @keyframes skeletonLoading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        .chat-item { animation: chatItemFadeIn 0.4s ease-out both; }
+        @keyframes chatItemFadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
     `;
     document.head.appendChild(style);
     
@@ -55,29 +67,24 @@
     let pendingChatFile = null;
     let pendingChatType = null;
 
-    // 6. Seller Online Heartbeat Logic
-    function startHeartbeat() {
-        if (typeof db === 'undefined') return;
-        
-        const updateStatus = () => {
-            db.collection('status').doc('seller').set({
-                lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-                isOnline: true
-            }, { merge: true }).catch(err => console.error("[Heartbeat] Error:", err));
-        };
-
-        // Initial update
-        updateStatus();
-        
-        // Periodic update every 30 seconds
-        setInterval(updateStatus, 30000);
-    }
-
-    // Call it after initialization
-    startHeartbeat();
+    // Call it after initialization (Replaced by consolidated logic in seller-config.js)
 
     // 1. Load Chat List (Real-time)
     function loadChatList() {
+        const chatListArea = document.getElementById('chatList');
+        // Initial Skeletons while waiting for Firestore
+        if (chatListArea) {
+            chatListArea.innerHTML = Array(6).fill(0).map(() => `
+                <div class="chat-skeleton">
+                    <div class="skeleton-avatar skeleton-animate"></div>
+                    <div class="skeleton-info">
+                        <div class="skeleton-line skeleton-animate"></div>
+                        <div class="skeleton-line short skeleton-animate"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         db.collection('chats')
             .orderBy('lastTimestamp', 'desc')
             .onSnapshot(snapshot => {
@@ -85,13 +92,16 @@
                     id: doc.id,
                     ...doc.data()
                 }));
-                renderChatList();
+                // Small artificial delay for smooth transition from skeleton
+                setTimeout(() => renderChatList(), 200);
             });
     }
 
     // New: Unified rendering with search and filter
     window.renderChatList = () => {
         const chatListArea = document.getElementById('chatList');
+        if (!chatListArea) return;
+
         const searchQuery = document.getElementById('chatSearchInput')?.value.toLowerCase() || "";
         const filterStatus = document.getElementById('chatFilterSelect')?.value || "all";
 
@@ -128,6 +138,10 @@
                 ? `<img src="${chat.userAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` 
                 : `<span>${initial}</span>`;
             
+            // Presence UI (v1.8.5)
+            const presence = chat.presence;
+            const currentPage = (presence && presence.lastSeen && (new Date() - presence.lastSeen.toDate()) < 60000) ? presence.page : '';
+            
             html += `
                 <div class="chat-item ${isActive ? 'active' : ''}" onclick="openChat('${chat.id}')">
                     <div class="chat-item-avatar">
@@ -139,7 +153,10 @@
                             <div class="chat-item-name">${chat.userName || 'ลูกค้าใหม่'}</div>
                             <div class="chat-item-time">${time}</div>
                         </div>
-                        <div class="chat-item-snippet">${chat.lastMessage || 'ส่งรูปภาพ/การ์ด'}</div>
+                        <div class="chat-item-snippet">
+                            ${currentPage ? `<span style="color:#ee4d2d; font-weight:700;">[ดูหน้า: ${currentPage}]</span> ` : ''}
+                            ${chat.lastMessage || 'ส่งรูปภาพ/การ์ด'}
+                        </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
                             ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : '<div></div>'}
                             ${isClosed ? '<div class="status-badge closed">ปิด</div>' : '<div class="status-badge">วันนี้</div>'}
@@ -189,8 +206,8 @@
                         <div class="header-user-avatar" style="overflow:hidden; border:1px solid rgba(255,255,255,0.2); background:#333;">${avatarHtml}</div>
                         <div style="display:flex; flex-direction:column;">
                             <div class="header-user-name" style="color:#fff;">${chatData.userName || chatId}</div>
-                            <div style="font-size:0.7rem; color:#10b981; display:flex; align-items:center; gap:4px; font-weight:500;">
-                                <span style="width:6px; height:6px; background:#10b981; border-radius:50%;"></span> ออนไลน์ตอนนี้
+                            <div id="sellerPresenceNode" style="font-size:0.75rem; color:#fff; font-weight:700; background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:10px; margin-top:4px; display:inline-block;">
+                                ${chatData.presence && chatData.presence.page ? `กำลังดูหน้า: ${chatData.presence.page}` : 'กำลังดูสินค้า'}
                             </div>
                         </div>
                     </div>
@@ -470,23 +487,28 @@
 
     // 4. Product Picker Logic
     const MOCK_PRODUCTS_BASELINE = [
-        { id: "new-iph15-128", name: "iPhone 15 128GB", price: 28900, brand: "Apple", category: "new", emoji: "📱", specs: "หน้าจอ 6.1\" · ชิป A16 · รับประกัน 1 ปี", badge: "ใหม่" },
-        { id: "new-iph15pro-256", name: "iPhone 15 Pro 256GB", price: 42900, brand: "Apple", category: "new", emoji: "📱", specs: "หน้าจอ 6.1\" · ชิป A17 Pro · ไทเทเนียม", badge: "ขายดี" },
-        { id: "new-s24-256", name: "Samsung Galaxy S24 256GB", price: 29900, brand: "Samsung", category: "new", emoji: "📲", specs: "หน้าจอ 6.2\" · Snapdragon 8 Gen 3 · AI", badge: "ใหม่" },
-        { id: "new-xm14-256", name: "Xiaomi 14 256GB", price: 24900, brand: "Xiaomi", category: "new", emoji: "📲", specs: "หน้าจอ 6.36\" · Snapdragon 8 Gen 3 · Leica", badge: "" },
-        { id: "used-iph13-128", name: "iPhone 13 128GB (มือ 2)", price: 14900, brand: "Apple", category: "used", emoji: "📱", specs: "สภาพ 90% · แบต 88% · รับประกัน 3 เดือน", badge: "มือ 2" },
-        { id: "used-iph12-64", name: "iPhone 12 64GB (มือ 2)", price: 9900, brand: "Apple", category: "used", emoji: "📱", specs: "สภาพ 85% · แบต 82% · รับประกัน 3 เดือน", badge: "มือ 2" },
-        { id: "used-s23-256", name: "Samsung Galaxy S23 256GB (มือ 2)", price: 16500, brand: "Samsung", category: "used", emoji: "📲", specs: "สภาพ 92% · แบต 90% · รับประกัน 3 เดือน", badge: "มือ 2" },
-        { id: "used-a54-128", name: "Samsung Galaxy A54 128GB (มือ 2)", price: 7900, brand: "Samsung", category: "used", emoji: "📲", specs: "สภาพ 88% · แบต 85% · รับประกัน 3 เดือน", badge: "มือ 2" },
-        { id: "used-reno8pro-256", name: "OPPO Reno 8 Pro 256GB (มือ 2)", price: 8500, brand: "OPPO", category: "used", emoji: "📲", specs: "สภาพ 87% · แบต 83% · รับประกัน 3 เดือน", badge: "มือ 2" },
-        { id: "acc-why-60w", name: "สายชาร์จ Why 60W Type C To C", price: 399, brand: "Why", category: "accessory", emoji: "🔌", img: "Why 60W-1 Type C To C - 1.jpg", badge: "ใหม่" },
-        { id: "acc-why-20w", name: "ชุดชาร์จ Why 20W Type C To C", price: 599, brand: "Why", category: "accessory", emoji: "🔌", img: "Why 20w-1.jpg", badge: "ใหม่" },
-        { id: "acc-headphone-gallery", name: "หูฟัง Anidary ANT004", price: 699, brand: "Anidary", category: "accessory", emoji: "🎧", img: "earphone-1.jpg", badge: "" },
-        { id: "acc-ans006-gallery", name: "ชุดชาร์จ Anidary ANS006", price: 599, brand: "Anidary", category: "accessory", emoji: "🔌", img: "ANS006-1.jpg", badge: "" },
-        { id: "acc-why-cable-1m", name: "สายชาร์จ Why USB 1.0M", price: 159, brand: "Why", category: "accessory", emoji: "🔌", img: "Why-1.jpg", badge: "" },
-        { id: "acc-anidary-anc001", name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", emoji: "🔌", img: "USB-I 12W-1.jpg", badge: "" },
-        { id: "acc-anidary-ctoc", name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", badge: "" },
-        { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", emoji: "🔌", img: "Anidary Type c To c - 1.jpg", badge: "โปรโมชั่น 1฿" },
+      // New Products
+      { id: "new-iph15-128", name: "iPhone 15 128GB", price: 28900, brand: "Apple", category: "new", img: "", emoji: "📱", badge: "ใหม่", tags: ["iphone", "ไอโฟน", "apple", "แอปเปิล", "มือ1", "มือ 1", "a16"] },
+      { id: "new-iph15pro-256", name: "iPhone 15 Pro 256GB", price: 42900, brand: "Apple", category: "new", img: "", emoji: "📱", badge: "ขายดี", tags: ["iphone", "ไอโฟน", "apple", "แอปเปิล", "มือ1", "มือ 1", "a17", "pro"] },
+      { id: "new-s24-256", name: "Samsung Galaxy S24 256GB", price: 29900, brand: "Samsung", category: "new", img: "", emoji: "📲", badge: "AI", tags: ["samsung", "ซัมซุง", "galaxy", "s24", "มือ1", "มือ 1", "ai"] },
+      { id: "new-xm14-256", name: "Xiaomi 14 256GB", price: 24900, brand: "Xiaomi", category: "new", img: "", emoji: "📲", badge: "Leica", tags: ["xiaomi", "เสียวหมี่", "leica", "มือ1", "มือ 1"] },
+      
+      // Used Products
+      { id: "used-iph13-128", name: "iPhone 13 128GB (มือ 2)", price: 14900, brand: "Apple", category: "used", img: "", emoji: "📱", badge: "สภาพนางฟ้า", tags: ["iphone", "ไอโฟน", "apple", "มือสอง", "มือ2", "มือ 2"] },
+      { id: "used-iph12-64", name: "iPhone 12 64GB (มือ 2)", price: 9900, brand: "Apple", category: "used", img: "", emoji: "📱", badge: "ราคาคุ้ม", tags: ["iphone", "ไอโฟน", "apple", "มือสอง", "มือ2", "มือ 2"] },
+      { id: "used-s23-256", name: "Samsung Galaxy S23 256GB (มือ 2)", price: 16500, brand: "Samsung", category: "used", emoji: "📲", badge: "มือสอง", tags: ["samsung", "ซัมซุง", "galaxy", "s23", "มือสอง", "มือ2", "มือ 2"] },
+      { id: "used-a54-128", name: "Samsung Galaxy A54 128GB (มือ 2)", price: 7900, brand: "Samsung", category: "used", emoji: "📲", badge: "มือสอง", tags: ["samsung", "ซัมซุง", "a54", "มือสอง", "มือ2", "มือ 2"] },
+      { id: "used-reno8pro-256", name: "OPPO Reno 8 Pro 256GB (มือ 2)", price: 8500, brand: "OPPO", category: "used", emoji: "📲", badge: "มือสอง", tags: ["oppo", "ออปโป้", "reno", "มือสอง", "มือ2", "มือ 2"] },
+
+      // Accessory
+      { id: "acc-why-60w", name: "สายชาร์จ Why 60W Type C To C", price: 399, brand: "Why", category: "accessory", img: "Why 60W-1 Type C To C - 1.jpg", emoji: "🔌", badge: "ขายดี", tags: ["สายชาร์จ", "why", "60w", "type c", "ชาร์จเร็ว", "อุปกรณ์เสริม", "accessory"] },
+      { id: "acc-why-20w", name: "ชุดชาร์จ Why 20W Type C To C", price: 599, brand: "Why", category: "accessory", img: "Why 20w-1.jpg", emoji: "🔌", tags: ["ชุดชาร์จ", "why", "20w", "type c", "อุปกรณ์เสริม", "accessory"] },
+      { id: "acc-headphone-gallery", name: "หูฟัง Anidary ANT004", price: 699, brand: "Anidary", category: "accessory", img: "earphone-1.jpg", emoji: "🎧", tags: ["หูฟัง", "anidary", "earphone", "ant004", "อุปกรณ์เสริม", "accessory"] },
+      { id: "acc-ans006-gallery", name: "ชุดชาร์จ Anidary ANS006", price: 599, brand: "Anidary", category: "accessory", img: "ANS006-1.jpg", emoji: "🔌", tags: ["ชุดชาร์จ", "anidary", "ans006", "อุปกรณ์เสริม", "accessory"] },
+      { id: "acc-why-cable-1m", name: "สายชาร์จ Why USB 1.0M", price: 159, brand: "Why", category: "accessory", img: "Why-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "why", "usb", "1m", "micro", "lightning", "อุปกรณ์เสริม", "accessory"] },
+      { id: "acc-anidary-anc001", name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", img: "USB-I 12W-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc001", "lightning", "iphone", "อุปกรณ์เสริม", "accessory"] },
+      { id: "acc-anidary-ctoc", name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc007", "type c", "อุปกรณ์เสริม", "accessory"] },
+      { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", badge: "โปรแรง", tags: ["สายชาร์จ", "anidary", "anc007", "โปรโมชั่น", "ราคาพิเศษ", "อุปกรณ์เสริม", "accessory"] }
     ];
 
     let allProducts = [];
@@ -596,37 +618,78 @@
     };
 
     // 5. Auth Strategy & Init
+    // 5. Auth Strategy & Init (Standardized)
     async function initSellerChat() {
-        if (!window.db) {
-            console.error("Firebase DB not found.");
-            return;
-        }
-
-        // 1. Ensure Auth
-        firebase.auth().onAuthStateChanged(async user => {
-            if (user) {
-                console.log("[Auth] Seller identified:", user.uid);
-                loadChatList();
-                
-                // v1.7.1 - Auto-open chat from URL parameter (e.g., from Orders page)
-                const urlParams = new URLSearchParams(window.location.search);
-                const chatIdFromUrl = urlParams.get('id');
-                if (chatIdFromUrl) {
-                    console.log("[SellerChat] Auto-opening chat from URL:", chatIdFromUrl);
-                    // Small delay to ensure DB/UI is ready
-                    setTimeout(() => {
-                        window.openChat(chatIdFromUrl);
-                    }, 500);
-                }
-            } else {
-                console.log("[Auth] Attempting anonymous login...");
-                firebase.auth().signInAnonymously().catch(e => {
-                    console.error("Auth Failed:", e);
-                    document.getElementById('chatList').innerHTML = '<div style="padding:20px; color:red;">ล็อกอินไม่สำเร็จ: ' + e.message + '</div>';
-                });
+        const checkDB = setInterval(() => {
+            const currentDB = window.db || (typeof db !== 'undefined' ? db : null) || (typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore() : null);
+            if (currentDB) {
+                window.db = currentDB;
+                clearInterval(checkDB);
+                setupAuthAndLoad();
             }
-        });
+        }, 500);
+
+        async function setupAuthAndLoad() {
+            if (!window.db) return;
+
+            firebase.auth().onAuthStateChanged(async user => {
+                const authEmail = document.getElementById('authEmail');
+                const authIndicator = document.getElementById('authIndicator');
+                const loginBtn = document.getElementById('adminLoginBtn');
+                const logoutBtn = document.getElementById('adminLogoutBtn');
+                
+                const SELLER_EMAIL = 'sattawat2560@gmail.com';
+                const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
+                
+                if (user || localAdminActive) {
+                    const rawEmail = user ? (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "") : SELLER_EMAIL;
+                    const email = rawEmail.toLowerCase().trim();
+                    const isAdmin = email === SELLER_EMAIL.toLowerCase().trim();
+
+                    if (authEmail) authEmail.textContent = email + (user ? "" : " (จำสิทธิ์ 🔒)");
+                    if (authIndicator) {
+                        authIndicator.classList.remove('online', 'warning', 'offline');
+                        authIndicator.classList.add(isAdmin ? 'online' : 'warning');
+                    }
+                    
+                    if (isAdmin) {
+                        if (loginBtn) loginBtn.style.display = 'none';
+                        if (logoutBtn) logoutBtn.style.display = 'block';
+                        loadChatList();
+                        localStorage.setItem('paomobile_admin_active', 'true');
+                    } else {
+                        if (loginBtn) loginBtn.style.display = 'block';
+                        if (logoutBtn) logoutBtn.style.display = 'block';
+                        const listArea = document.getElementById('chatList');
+                        if (listArea) listArea.innerHTML = `<div style="padding:40px; text-align:center; color:#ef4444;">⚠️ ไม่มีสิทธิ์เข้าถึง<br><small>${email}</small></div>`;
+                    }
+                } else {
+                    if (authEmail) authEmail.textContent = "กรุณาล็อกอิน Admin";
+                    if (authIndicator) {
+                        authIndicator.classList.remove('online', 'warning');
+                        authIndicator.classList.add('offline');
+                    }
+                    if (loginBtn) loginBtn.style.display = 'block';
+                    if (logoutBtn) logoutBtn.style.display = 'none';
+                    const listArea = document.getElementById('chatList');
+                    if (listArea) listArea.innerHTML = '<div style="padding:40px; text-align:center; color:#64748b;">กรุณาล็อกอินเพื่อจัดการแชท</div>';
+                }
+            });
+        }
     }
+
+    window.sellerLogin = () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider).catch(err => {
+            console.error("Login Error:", err);
+            alert("Login Error: " + err.message);
+        });
+    };
+
+    window.sellerLogout = () => {
+        localStorage.removeItem('paomobile_admin_active');
+        firebase.auth().signOut().then(() => window.location.reload());
+    };
 
     window.handleFileUpload = async (input, type) => {
         const file = input.files[0];

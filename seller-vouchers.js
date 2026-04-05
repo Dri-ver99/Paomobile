@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const voucherListBody = document.getElementById('voucherListBody');
     const emptyState = document.getElementById('v-empty');
 
+    // Unified DB Reference
+    const db = window.db || (typeof firebase !== 'undefined' ? firebase.firestore() : null);
     if (!db) {
         console.error("Firestore DB not initialized");
         if (statusEl) statusEl.innerHTML = '<span style="color:red">&bull; Firestore Error: SDK Missing</span>';
@@ -22,22 +24,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (firebase.auth) {
         firebase.auth().onAuthStateChanged(user => {
             const authEmail = document.getElementById('authEmail');
-            const authIndicator = document.getElementById('authIndicator');
+            const authIndicator = document.getElementById('statusIndicator');
             const loginBtn = document.getElementById('adminLoginBtn');
             const logoutBtn = document.getElementById('adminLogoutBtn');
             const saveBtn = document.getElementById('btnSaveVoucher');
 
-            // Check for persistent Local Storage Admin flag as a bypass for file://
             const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
 
             if (user || localAdminActive) {
-                // Determine email (from Firebase OR fallback to Admin if Local Mode)
-                const email = user ? (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "").toLowerCase() : SELLER_EMAIL.toLowerCase();
+                const email = user ? (user.email || "").toLowerCase() : SELLER_EMAIL.toLowerCase();
                 const isAdmin = email === SELLER_EMAIL.toLowerCase();
 
-                console.log("[Auth] User detected:", email, "isAdmin:", isAdmin, "isLocalMode:", !user && localAdminActive);
-                if (authEmail) authEmail.textContent = email + (user ? "" : " (โหมดจำลอง 🔒)");
-                if (authIndicator) authIndicator.style.background = isAdmin ? '#52c41a' : '#faad14';
+                if (authEmail) authEmail.textContent = email + (user ? "" : " (จำสิทธิ์ 🔒)");
+                if (authIndicator) authIndicator.className = 'admin-status-dot ' + (isAdmin ? 'online' : 'warning');
                 
                 if (isAdmin) {
                     if (loginBtn) loginBtn.style.display = 'none';
@@ -45,52 +44,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (saveBtn) {
                         saveBtn.disabled = false;
                         saveBtn.style.opacity = '1';
-                        saveBtn.textContent = '💾 บันทึกและเปิดใช้งาน';
                     }
-                    // Persist for next session
                     localStorage.setItem('paomobile_admin_active', 'true');
                     startVoucherSync();
                 } else {
-                    console.warn("Unauthorized Access Attempt:", email);
-                    alert("⚠️ คำเตือน: คุณไม่ได้ล็อกอินด้วยสิทธิ์ผู้ขาย (sattawat2560@gmail.com)\n\nEmail ปัจจุบัน: " + email + "\nคุณจะไม่สามารถบันทึกหรือดูข้อมูลได้ครับ");
                     if (loginBtn) loginBtn.style.display = 'block';
                     if (logoutBtn) logoutBtn.style.display = 'block';
-                    if (statusEl) statusEl.innerHTML = '<span style="color:#faad14">&bull; Firestore: สิทธิ์ไม่เพียงพอ</span>';
+                    if (statusEl) statusEl.innerHTML = '<span style="color:#faad14">&bull; สิทธิ์ไม่เพียงพอ</span>';
                 }
             } else {
-                console.warn("[Auth] No user logged in.");
                 const isFileProtocol = window.location.protocol === 'file:';
-                
-                if (authEmail) authEmail.textContent = isFileProtocol ? "⚠️ พบบัญชีแอดมินแต่ล็อกอินไม่ได้ (โหมด Local)" : "กรุณาล็อกอิน Admin (เพื่อจัดการร้าน)";
-                if (authIndicator) authIndicator.style.background = '#ff4d4f';
+                if (authEmail) authEmail.textContent = isFileProtocol ? "โหมด Local" : "กรุณาล็อกอิน Admin";
+                if (authIndicator) authIndicator.className = 'admin-status-dot offline';
                 if (loginBtn) {
                     loginBtn.style.display = 'block';
-                    if (isFileProtocol) {
-                        loginBtn.innerHTML = '🛡️ บังคับล็อกอินแอดมิน (ใช้โหมด Local)';
-                        loginBtn.onclick = () => {
-                            if (confirm("คุณคิอ 'sattawat2560@gmail.com' ใช่หรือไม่?\n\n(เนื่องจากเปิดไฟล์ตรงๆ ระบบ Google ล็อกอินจะใช้ไม่ได้ จึงต้องใช้โหมดบังคับครับ)")) {
-                                localStorage.setItem('paomobile_admin_active', 'true');
-                                window.location.reload();
-                            }
-                        };
-                    } else {
-                        loginBtn.innerHTML = '🔑 ล็อกอิน Admin (ใช้บัญชีร้าน)';
-                        loginBtn.onclick = sellerLogin;
-                    }
-                    loginBtn.style.background = isFileProtocol ? '#52c41a' : '#ee4d2d';
-                    loginBtn.style.color = '#fff';
-                    loginBtn.style.padding = '8px 15px';
-                    loginBtn.style.borderRadius = '8px';
-                    loginBtn.style.fontWeight = '700';
+                    loginBtn.onclick = sellerLogin;
                 }
                 if (logoutBtn) logoutBtn.style.display = 'none';
                 if (saveBtn) {
                     saveBtn.disabled = true;
                     saveBtn.style.opacity = '0.5';
-                    saveBtn.textContent = '🔒 ต้องล็อกอินเพื่อบันทึก';
                 }
-                
-                // Clear list if any
                 voucherListBody.innerHTML = '';
                 emptyState.style.display = 'block';
             }
@@ -213,9 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const isPermanent = document.getElementById('v-isPermanent').checked;
         const showOnHomepage = document.getElementById('v-showOnHomepage').checked;
 
-        // Basic Validation
-        if (!/^[A-Z0-9]+$/.test(code)) {
-            alert("รหัสโค้ดต้องเป็นภาษาอังกฤษหรือตัวเลขเท่านั้นครับ");
+        // Basic Validation (Allow any alphanumeric, autocase to upper)
+        if (!/^[a-zA-Z0-9]+$/.test(code)) {
+            alert("รหัสโค้ดต้องเป็นภาษาอังกฤษหรือตัวเลขเท่านั้นครับ (เช่น SALE99)");
             return;
         }
 
@@ -289,13 +263,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.deleteVoucher = async (id, code) => {
-        if (confirm(`คุณต้องการลบคูปอง "${code}" ใช่หรือไม่?`)) {
-            try {
-                await db.collection('vouchers').doc(id).delete();
-                console.log("Voucher deleted:", code);
-            } catch (err) {
-                alert("ลบไม่สำเร็จ: " + err.message);
-            }
+        if (!confirm(`คุณต้องการลบคูปอง "${code}" ใช่หรือไม่?`)) return;
+        
+        try {
+            const btn = event.target.closest('button');
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '🕒';
+            btn.disabled = true;
+
+            await db.collection('vouchers').doc(id).delete();
+            console.log("Voucher deleted:", code);
+            // No alert needed, onSnapshot will clear the row
+        } catch (err) {
+            console.error("Delete Error:", err);
+            alert("ลบไม่สำเร็จ: " + err.message);
         }
     };
 

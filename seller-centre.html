@@ -194,7 +194,7 @@
                         <span class="stat-label">ที่ต้องชำระ</span>
                     </div>
                     <div class="stat-item clickable-stat" onclick="location.href='seller-orders.html?tab=toship'">
-                        <span class="stat-num" id="stat-to-ship">0</span>
+                        <span class="stat-num" id="stat-toship">0</span>
                         <span class="stat-label">ที่ต้องจัดส่ง</span>
                     </div>
                     <div class="stat-item clickable-stat" onclick="location.href='seller-orders.html?tab=processed'">
@@ -202,7 +202,7 @@
                         <span class="stat-label">เตรียมจัดส่งแล้ว</span>
                     </div>
                     <div class="stat-item clickable-stat" onclick="location.href='seller-orders.html?tab=cancelled'">
-                        <span class="stat-num" id="stat-refund">0</span>
+                        <span class="stat-num" id="stat-cancelled">0</span>
                         <span class="stat-label">ขอยกเลิก/คืนเงิน/คืน</span>
                     </div>
                 </div>
@@ -239,7 +239,7 @@
                     </div>
                     <div class="insight-item">
                         <span class="stat-label">คำสั่งซื้อ</span>
-                        <span class="insight-val" id="insight-orders">0</span>
+                        <span class="insight-val" id="insight-total-orders">0</span>
                     </div>
                 </div>
             </div>
@@ -357,6 +357,16 @@
         }
     </script>
     <script src="seller-centre.js?v=1.2.10"></script>
-</body>
+<div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
+            aria-label="Close Search">&#x2715;</button>
+        <div class="search-modal-container">
+            <div class="search-hero-input"><span class="search-hero-icon">&#x1F50D;</span><input type="text"
+                    id="searchInput" placeholder="ค้นหา เครื่องมือ 1, เครื่องมือ 2, รุ่นมือถือ..."
+                    autocomplete="off"><button class="search-clear-btn" id="searchClear"
+                    aria-label="Clear">&#x2715;</button></div>
+            <div class="search-results-area" id="searchResults"></div>
+        </div>
+    </div>
+    <script src="search.js"></script></body>
 </html>
 

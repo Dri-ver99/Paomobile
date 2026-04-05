@@ -235,72 +235,82 @@
     </main>
 
     <!-- Order Details Modal -->
-    <div id="orderDetailsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
-        <div style="background: #fff; width: 400px; max-width: 90%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;">
-            <div style="padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
-                <h3 style="margin: 0; font-size: 1.1rem; color: #333;">รายละเอียดการจัดส่ง</h3>
-                <button onclick="closeOrderDetails()" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #888;">&times;</button>
+    <div id="orderDetailsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: #fff; width: 600px; max-width: 95%; max-height: 90vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden;">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa; flex-shrink: 0;">
+            <h3 id="modalTitle" style="margin: 0; font-size: 1.1rem; color: #333;">รายละเอียดการจัดส่ง</h3>
+                <button onclick="closeOrderDetails()" style="background: transparent; border: none; font-size: 1.3rem; cursor: pointer; color: #888;">&times;</button>
             </div>
-            <div style="padding: 20px;">
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ชื่อลูกค้า</div>
-                    <div id="modalCustomerName" style="font-size: 1rem; color: #222; font-weight: 500;">-</div>
+            <div style="padding: 20px; overflow-y: auto; flex: 1;">
+                <div id="detailInfoSection">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">ชื่อลูกค้า</div>
+                        <div id="modalCustomerName" style="font-size: 1.05rem; color: #111; font-weight: 600;">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">ชื่อเล่น (ในระบบ)</div>
+                        <div id="modalCustomerProfile" style="font-size: 1.05rem; color: #ee4d2d; font-weight: 600; cursor: pointer; text-decoration: underline;">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">เบอร์โทรศัพท์</div>
+                        <div id="modalCustomerPhone" style="font-size: 1.05rem; color: #111; font-weight: 500;">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">รูปแบบการรับสินค้า</div>
+                        <div id="modalShippingMethod" style="font-size: 1.05rem; color: #111; font-weight: 500;">-</div>
+                    </div>
                 </div>
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ชื่อเล่น (ในระบบ)</div>
-                    <div id="modalCustomerProfile" style="font-size: 1rem; color: #ee4d2d; font-weight: 500; cursor: pointer; text-decoration: underline;">-</div>
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">เบอร์โทรศัพท์</div>
-                    <div id="modalCustomerPhone" style="font-size: 1rem; color: #222;">-</div>
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">รูปแบบการรับสินค้า</div>
-                    <div id="modalShippingMethod" style="font-size: 1rem; color: #222; font-weight: 400;">-</div>
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ที่อยู่สำหรับจัดส่ง</div>
-                    <div id="modalCustomerAddress" style="font-size: 1.1rem; color: #222; font-weight: 600; line-height: 1.5; background: #fffbe6; padding: 12px; border: 1px dashed #faad14; border-radius: 4px; white-space: pre-wrap;">-</div>
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">ที่อยู่สำหรับจัดส่ง</div>
+                    <div id="modalCustomerAddress" style="font-size: 1.1rem; color: #111; font-weight: 600; line-height: 1.5; background: #fffbe6; padding: 12px; border: 1px dashed #faad14; border-radius: 6px; white-space: pre-wrap;">-</div>
                 </div>
 
+                <!-- Payment, Slip, Voucher, Summary (Hidden in Dispatch mode) -->
+                <div id="paymentAndSummarySection">
                 <!-- Payment Info Section -->
-                <div style="margin-bottom: 12px; border-top: 1px dashed #eee; padding-top: 10px;">
-                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">การชำระเงิน</div>
-                    <div id="modalPaymentFull" style="font-size: 1rem; color: #222; font-weight: 600; background: #f9f9f9; padding: 10px; border-radius: 4px; border: 1px solid #f0f0f0;">-</div>
-                </div>
-                <div id="slipInfoGroup" style="margin-bottom: 12px; display: none; text-align: center; background: #fff; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
-                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 8px; text-align: left;">หลักฐานการโอน (สลิป)</div>
-                    <a id="modalSlipLink" href="javascript:void(0)" style="display: inline-block; position: relative;">
-                        <img id="modalSlipThumb" src="" style="max-width: 100%; max-height: 250px; border-radius: 4px; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                        <div style="font-size: 0.75rem; color: #fff; background: rgba(0,0,0,0.5); position: absolute; bottom: 0; width: 100%; padding: 4px 0; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px;">คลิกเพื่อดูรูปใหญ่</div>
-                    </a>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 16px; border-top: 1px dashed #eee; padding-top: 14px;">
+                    <div>
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">การชำระเงิน</div>
+                        <div id="modalPaymentFull" style="font-size: 1.05rem; color: #111; font-weight: 600; background: #f9f9f9; padding: 10px; border-radius: 6px; border: 1px solid #f0f0f0;">-</div>
+                    </div>
+                    <div id="slipInfoGroup" style="display: none; text-align: left;">
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">หลักฐานการโอน (สลิป)</div>
+                        <a id="modalSlipLink" href="javascript:void(0)" style="display: inline-block; position: relative;">
+                            <img id="modalSlipThumb" src="" style="max-height: 100px; border-radius: 6px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                            <div style="font-size: 0.70rem; color: #fff; background: rgba(0,0,0,0.6); position: absolute; bottom: 0; width: 100%; padding: 4px 0; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; font-weight: 500; text-align: center;">คลิกดูรูปใหญ่</div>
+                        </a>
+                    </div>
                 </div>
                 
                 <!-- Voucher Info Section (v1.5.0) -->
-                <div id="voucherInfoGroup" style="margin-bottom: 12px; display: none; background: #fff7e6; padding: 12px; border: 1px solid #ffd591; border-radius: 8px;">
-                    <div style="font-size: 0.8rem; color: #874d00; margin-bottom: 4px; font-weight: 600;">🎫 คูปองที่ใช้ส่วนลด</div>
+                <div id="voucherInfoGroup" style="margin-bottom: 16px; display: none; background: #fff7e6; padding: 12px; border: 1px solid #ffd591; border-radius: 8px;">
+                    <div style="font-size: 0.85rem; color: #874d00; margin-bottom: 4px; font-weight: 600;">🎫 คูปองที่ใช้ส่วนลด</div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span id="modalVoucherCode" style="font-size: 1rem; color: #d46b08; font-weight: 700; font-family: monospace;">-</span>
-                        <span id="modalDiscountAmount" style="font-size: 1rem; color: #cf1322; font-weight: 700;">-฿0</span>
+                        <span id="modalVoucherCode" style="font-size: 1.05rem; color: #d46b08; font-weight: 700; font-family: monospace;">-</span>
+                        <span id="modalDiscountAmount" style="font-size: 1.05rem; color: #cf1322; font-weight: 700;">-฿0</span>
                     </div>
                 </div>
 
                 <!-- Order Summary Section (v1.6.0) -->
-                <div id="orderSummaryGroup" style="margin-bottom: 12px; background: #fdfdfd; padding: 12px; border: 1px solid #eee; border-radius: 8px;">
-                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 8px; font-weight: 600; border-bottom: 1px solid #f0f0f0; padding-bottom: 4px;">สรุปยอดรายการ</div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.9rem;">
-                        <span style="color: #888;">ยอดรวมสินค้า</span>
-                        <span id="modalSubtotal" style="color: #333;">฿0</span>
+                <div id="orderSummaryGroup" style="background: #fdfdfd; padding: 14px; border: 1px solid #eee; border-radius: 8px;">
+                    <div style="font-size: 0.85rem; color: #555; margin-bottom: 8px; font-weight: 600; border-bottom: 2px solid #f0f0f0; padding-bottom: 6px;">สรุปยอดรายการ</div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 1rem;">
+                        <span style="color: #666; font-weight: 500;">ราคาที่ยังไม่ใช้ส่วนลด</span>
+                        <span id="modalSubtotal" style="color: #111; font-weight: 600;">฿0</span>
                     </div>
-                    <div id="summaryDiscountRow" style="display: none; justify-content: space-between; margin-bottom: 4px; font-size: 0.9rem;">
-                        <span style="color: #888;">ส่วนลดรวม</span>
-                        <span id="modalSummaryDiscount" style="color: #cf1322;">-฿0</span>
+                    <div id="summaryDiscountRow" style="display: none; justify-content: space-between; margin-bottom: 4px; font-size: 1rem;">
+                        <span style="color: #666; font-weight: 500;">คูปองที่ใช้</span>
+                        <span id="modalSummaryDiscount" style="color: #cf1322; font-weight: 600;">-฿0</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eee;">
-                        <span style="font-weight: 600; color: #222;">ยอดรวมสุทธิ</span>
-                        <span id="modalNetTotal" style="font-size: 1.1rem; color: #ee4d2d; font-weight: 700;">฿0</span>
+                    <div style="display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 2px dashed #eee;">
+                        <span style="font-weight: 700; color: #111; font-size: 1.1rem;">ยอดรวมสุทธิ</span>
+                        <span id="modalNetTotal" style="font-size: 1.25rem; color: #ee4d2d; font-weight: 800;">฿0</span>
                     </div>
                 </div>
+
+                </div> <!-- end paymentAndSummarySection -->
+                </div> <!-- end detailInfoSection -->
 
                 <!-- Shipping Input Section -->
                 <div id="shipInputSection" style="display: none; border-top: 1px dashed #eee; padding-top: 15px; margin-top: 10px;">
@@ -314,7 +324,7 @@
                     </div>
                 </div>
             </div>
-            <div style="padding: 16px 20px; border-top: 1px solid #eee; text-align: right; background: #fafafa;">
+            <div style="padding: 16px 20px; border-top: 1px solid #eee; text-align: right; background: #fafafa; flex-shrink: 0;">
                 <button id="btnShipConfirm" onclick="handleModalShip()" style="display: none; background: #ee4d2d; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 500;">แจ้งส่งพัสดุ</button>
                 <button id="btnSaveTracking" onclick="handleSaveTrackingEdit()" style="display: none; background: #2f54eb; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 500;">บันทึกการแก้ไข</button>
                 <button onclick="closeOrderDetails()" style="background: #fff; color: #555; border: 1px solid #ddd; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit;">ปิดหน้าต่าง</button>
@@ -387,6 +397,16 @@
         }
     </script>
     <script src="seller-orders.js?v=1.2.10"></script>
-</body>
+<div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
+            aria-label="Close Search">&#x2715;</button>
+        <div class="search-modal-container">
+            <div class="search-hero-input"><span class="search-hero-icon">&#x1F50D;</span><input type="text"
+                    id="searchInput" placeholder="ค้นหา เครื่องมือ 1, เครื่องมือ 2, รุ่นมือถือ..."
+                    autocomplete="off"><button class="search-clear-btn" id="searchClear"
+                    aria-label="Clear">&#x2715;</button></div>
+            <div class="search-results-area" id="searchResults"></div>
+        </div>
+    </div>
+    <script src="search.js"></script></body>
 </html>
 
