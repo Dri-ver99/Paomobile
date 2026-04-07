@@ -1316,11 +1316,10 @@
         // IMPROVED: Returns {exists: boolean, email?: string}
         window.checkIdentifierExists = async (rawIdentifier) => {
             console.log("[Auth] Checking existence for:", rawIdentifier);
-            try {
-                const identifier = normalizeIdentifier(rawIdentifier);
-                const isEmail = identifier.includes("@");
-                console.log("[Auth] Normalized:", identifier, "(isEmail:", isEmail, ")");
+            const identifier = normalizeIdentifier(rawIdentifier);
+            const isEmail = identifier.includes("@");
 
+            try {
                 // 1. Check Firestore first (Universal Lookup)
                 let querySnapshot;
                 try {
@@ -1328,10 +1327,13 @@
                         collection(db, "users"),
                         where(isEmail ? "email" : "phone", "==", identifier)
                     );
-                    querySnapshot = await getDocs(q);
+                    // Add timeout for getDocs to prevent hanging UI
+                    querySnapshot = await Promise.race([
+                        getDocs(q),
+                        new Promise((_, rec) => setTimeout(() => rec(new Error("Timeout")), 5000))
+                    ]);
                 } catch (firestoreErr) {
-                    console.warn("[Auth] Firestore query failed (likely permission rules):", firestoreErr.message);
-                    // Fallback to null snapshot to continue with step 2/3
+                    console.warn("[Auth] Firestore query failed/slow:", firestoreErr.message);
                     querySnapshot = { empty: true };
                 }
 
@@ -1339,23 +1341,17 @@
                     const userData = querySnapshot.docs[0].data();
                     console.log("[Auth] Found in Firestore:", userData);
                     let resolvedEmail = userData.email || (isEmail ? identifier : `${identifier}@paomobile.auth`);
-                    if (/^[0-9]{10}$/.test(resolvedEmail)) resolvedEmail = `${resolvedEmail}@paomobile.auth`;
                     return { exists: true, email: resolvedEmail };
                 }
 
-                // 2. Fallback to direct Firebase Auth for emails not yet in Firestore
+                // 2. Fallback to direct Firebase Auth (Enumeration Protection may block this)
                 if (isEmail) {
-                    const methods = await fetchSignInMethodsForEmail(auth, identifier);
-                    if (methods.length > 0) return { exists: true, email: identifier };
-                }
-
-                // 3. Fallback to Virtual Email for phone numbers not yet in Firestore
-                if (!isEmail && identifier.length === 10) {
-                    const virtualEmail = `${identifier}@paomobile.auth`;
                     try {
-                        const methods = await fetchSignInMethodsForEmail(auth, virtualEmail);
-                        if (methods.length > 0) return { exists: true, email: virtualEmail };
-                    } catch (e) { }
+                        const methods = await fetchSignInMethodsForEmail(auth, identifier);
+                        if (methods.length > 0) return { exists: true, email: identifier };
+                    } catch (e) {
+                         console.warn("[Auth] fetchSignInMethods failed (Normal for new projects):", e.code);
+                    }
                 }
 
                 return { exists: false };
@@ -1743,31 +1739,15 @@
             }
         }
 
-        // --- Save user data to Firestore (Version 1.6.0 - Fetch Existing Profile) ---
+        // --- Save user data to Firestore (Version 1.6.1 - Non-blocking UI) ---
         async function saveUserToFirestore(user, provider) {
             console.log("[Auth] Syncing profile with Cloud...");
 
             let finalName = user.displayName || 'Member';
             let finalAvatar = user.photoURL || "";
 
-            // 1. Try to fetch existing custom profile from Firestore first
-            if (db) {
-                try {
-                    const snap = await getDoc(doc(db, "users", user.uid));
-                    if (snap.exists()) {
-                        const existing = snap.data();
-                        if (existing.name) finalName = existing.name;
-                        if (existing.avatar) finalAvatar = existing.avatar;
-                        else if (existing.photoURL) finalAvatar = existing.photoURL;
-                        console.log("[Auth] Restored custom profile from Cloud:", finalName);
-                    }
-                } catch (e) {
-                    console.warn("[Auth] Cloud fetch failed, using Auth defaults:", e);
-                }
-            }
-
+            // 1. Prepare local userData immediately (Don't wait for Firestore)
             let email = user.email || '';
-            // Detect and mask virtual emails for phone users
             if (email.endsWith('@paomobile.auth')) {
                 email = email.split('@')[0]; 
                 if (finalName === 'Member' || finalName === user.email) finalName = email; 
@@ -1775,36 +1755,32 @@
                 finalName = email.split('@')[0];
             }
 
-            const originalEmail = user.email || '';
-            const isVerified = user.emailVerified ||
-                originalEmail.endsWith('@paomobile.auth') ||
-                provider.includes('google') ||
-                user.providerData.some(p => p.providerId === 'google.com');
-
             const userData = {
                 uid: user.uid,
                 name: finalName,
                 email: email,
-                avatar: finalAvatar, // Standardized key used in member.html
+                avatar: finalAvatar,
                 photo: finalAvatar,
-                isVerified: !!isVerified
+                isVerified: !!(user.emailVerified || provider.includes('google'))
             };
 
-            // Save to local session so index.html/member.html see it immediately
+            // Save to local session IMMEDIATELY so app feels fast
             localStorage.setItem('paomobile_user', JSON.stringify(userData));
 
-            // Background update to Firestore for last login
+            // 2. Background Firestore update (Don't await it to block logic, unless you really need existing data)
             if (db) {
                 const userRef = doc(db, "users", user.uid);
-                try {
-                    await setDoc(userRef, {
-                        ...userData,
-                        lastLogin: new Date()
-                    }, { merge: true });
-                    console.log("[Auth] Cloud Sync Success.");
-                } catch (e) {
-                    console.error("[Auth] Firestore update failed:", e);
-                }
+                // We use Doc Fetch in background
+                getDoc(userRef).then(snap => {
+                    if (snap.exists()) {
+                        const existing = snap.data();
+                        // Merge and update local storage if Firestore has newer info
+                        const updatedData = { ...userData, name: existing.name || finalName, avatar: existing.avatar || finalAvatar };
+                        localStorage.setItem('paomobile_user', JSON.stringify(updatedData));
+                    }
+                    // Final background write
+                    return setDoc(userRef, { ...userData, lastLogin: new Date() }, { merge: true });
+                }).catch(e => console.warn("[Auth] Cloud Background Sync Error:", e.message));
             }
         }
 
@@ -1832,14 +1808,15 @@
                         hideLoading();
                         return;
                     }
-                    // Fallback to Redirect for mobile/webviews where popups are often blocked
+                    // Fallback to Redirect
                     try {
                         await signInWithRedirect(auth, provider);
                     } catch (redirectError) {
                         console.error("[Auth] Redirect failed:", redirectError);
-                        hideLoading();
                         alert("ไม่สามารถเชื่อมต่อกับ Google ได้ในขณะนี้ครับ: " + redirectError.message);
                     }
+                } finally {
+                    hideLoading(true, "Google finalizer");
                 }
             });
         }
@@ -1866,7 +1843,9 @@
 
                 if (!res.exists) {
                     hideLoading();
-                    if (confirm("ไม่พบบัญชีผู้ใช้ในระบบค่ะ ต้องการสร้างบัญชีใหม่ด้วยอีเมลนี้เลยไหมคะ?")) {
+                    const choice = confirm("ไม่พบบัญชีผู้ใช้ในระบบค่ะ\n\nต้องการสมัครใหม่ (OK) หรือจะลองเข้าสู่ระบบด้วยรหัสผ่าน anyway (Cancel) คะ?\n(กรณีกด Cancel ระบบจะแสดงช่องใส่รหัสผ่านให้ลองดูค่ะ)");
+                    
+                    if (choice) {
                         console.log("[Auth] Seamless transition to Register View");
                         const registerView = document.getElementById("registerView");
                         const loginView = document.getElementById("loginView");
@@ -1876,12 +1855,17 @@
                             const regEmail = document.getElementById("regEmail");
                             if (regEmail) {
                                 regEmail.value = emailInput.value;
-                                // Trigger validation
                                 const event = new Event('input', { bubbles: true });
                                 regEmail.dispatchEvent(event);
                             }
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                         }
+                    } else {
+                        // User chose "Cancel" -> "ฉันมีบัญชีอยู่แล้ว (ลองล็อกอิน)"
+                        console.log("[Auth] Force showing password field for existing user...");
+                        passwordGroup.style.display = 'block';
+                        btnLogin.textContent = "เข้าสู่ระบบ anyway 🔑";
+                        return;
                     }
                     return;
                 }
