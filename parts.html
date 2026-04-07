@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -557,13 +557,27 @@
             }
 
             firestore.collection('settings').doc('spare_parts').onSnapshot(async doc => {
-                const data = doc.exists ? doc.data() : { models: [], partTypes: [], mappings: {} };
-                const { models, mappings } = data;
-
-                if (!models || models.length === 0) {
-                    accordion.innerHTML = '<li style="text-align:center; padding:20px; color:#999; font-size:0.9rem;">ยังไม่ได้ตั้งค่าหมวดหมู่</li>';
-                    return;
+                let data = doc.exists ? doc.data() : null;
+                
+                // Auto-Seed if missing (same as seller-config.js)
+                if (!data || !data.models || data.models.length === 0) {
+                    const initial = {
+                        models: ["iPhone", "Samsung", "Xiaomi", "OPPO", "Vivo", "Realme", "Huawei", "อื่นๆ"],
+                        partTypes: ["หน้าจอ", "แบตเตอรี่", "แพรชาร์จ", "กล้องหลัง", "กล้องหน้า", "กระจกฝาหลัง"],
+                        mappings: {
+                            "iPhone": ["หน้าจอ", "แบตเตอรี่", "แพรชาร์จ", "กล้องหลัง"],
+                            "Samsung": ["หน้าจอ", "แบตเตอรี่"],
+                            "Xiaomi": ["หน้าจอ", "แบตเตอรี่"],
+                            "OPPO": ["หน้าจอ", "แบตเตอรี่"],
+                            "Vivo": ["หน้าจอ", "แบตเตอรี่"]
+                        }
+                    };
+                    // Try to save if possible, but at least use it for current session
+                    data = initial;
+                    try { firestore.collection('settings').doc('spare_parts').set(initial, { merge: true }); } catch(e) {}
                 }
+
+                const { models, mappings } = data;
 
                 const newHTML = models.map(m => {
                     const cleanM = m.trim();

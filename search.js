@@ -77,8 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // 2. Sync All Products (Multi-category Search)
-    db.collection('products').onSnapshot(snapshot => {
+    // 2. Sync All Products (Multi-category Search) with Safety Limit
+    db.collection('products').limit(1000).onSnapshot(snapshot => {
       firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log(`[SearchSync] Synced ${firestoreProducts.length} global products`);
       updateMergedProducts();

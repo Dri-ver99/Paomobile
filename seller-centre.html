@@ -184,6 +184,18 @@
             <h1 style="font-size: 1.5rem; color: #333;">ภาพรวมระบบ</h1>
         </div>
 
+        <!-- Auth Warning Banner -->
+        <div id="auth-cloud-warning" style="display:none; background: #fff7ed; border: 1px solid #ffedd5; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">🔒</span>
+                <div>
+                    <div style="font-weight: 700; color: #9a3412;">คุณกำลังใช้โหมดข้ามสิทธิ์ (Local Bypass)</div>
+                    <div style="font-size: 0.85rem; color: #c2410c;">โปรดล็อกอินด้วย Google เพื่อดูออเดอร์ใหม่จาก Cloud คับ</div>
+                </div>
+            </div>
+            <button onclick="sellerLogin()" style="background: #ea580c; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">ล็อกอินเลย 🚀</button>
+        </div>
+
         <div class="dashboard-content">
             <!-- Order Stats Card -->
             <div class="card">
@@ -315,6 +327,14 @@
         };
         firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
+
+        // --- NEW: Global Persistence for Dashboard ---
+        try {
+            db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+                if (err.code == 'failed-precondition') console.warn("Persistence failed: multiple tabs.");
+                else if (err.code == 'unimplemented') console.warn("Persistence unsupported.");
+            });
+        } catch(e) {}
     </script>
     <!-- Mobile Sidebar Overlay -->
     <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">

@@ -375,6 +375,33 @@ async function deleteConfigItem(type, val) {
     }
 }
 
+// Manually Restore Default Categories
+async function restoreDefaultSparePartsConfig() {
+    if (!confirm('ยืนยันหน้าจอการล้างค่า "หมวดหมู่อะไหล่" ทั้งหมด และแทนที่ด้วยค่าเริ่มต้นใช่หรือไม่?')) return;
+    
+    const initial = {
+        models: ["iPhone", "Samsung", "Xiaomi", "OPPO", "Vivo", "Realme", "Huawei", "อื่นๆ"],
+        partTypes: ["หน้าจอ", "แบตเตอรี่", "แพรชาร์จ", "กล้องหลัง", "กล้องหน้า", "กระจกฝาหลัง"],
+        mappings: {
+            "iPhone": ["หน้าจอ", "แบตเตอรี่", "แพรชาร์จ", "กล้องหลัง"],
+            "Samsung": ["หน้าจอ", "แบตเตอรี่"],
+            "Xiaomi": ["หน้าจอ", "แบตเตอรี่"],
+            "OPPO": ["หน้าจอ", "แบตเตอรี่"],
+            "Vivo": ["หน้าจอ", "แบตเตอรี่"]
+        }
+    };
+
+    try {
+        if (typeof db === 'undefined' || !db) return;
+        
+        await db.collection('settings').doc('spare_parts').set(initial);
+        alert('✅ คืนค่าหมวดหมู่เริ่มต้นเรียบร้อยแล้วครับ!');
+    } catch (e) {
+        alert("Restore Error: " + e.message);
+    }
+}
+window.restoreDefaultSparePartsConfig = restoreDefaultSparePartsConfig;
+
 // Modal Handlers
 function openCategoryModal() {
     const modal = document.getElementById('categoryModal');

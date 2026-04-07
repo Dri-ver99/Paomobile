@@ -5,6 +5,19 @@ navbar.classList.toggle('scrolled', window.scrollY > 40);
 
 // --- Global Performance & Image Optimizer (v1.1) ---
 (function() {
+    // 0. Enable Firestore Persistence (Compat SDK) for all pages
+    if (typeof firebase !== 'undefined' && firebase.firestore) {
+        try {
+            firebase.firestore().enablePersistence({ synchronizeTabs: true }).catch(err => {
+                if (err.code == 'failed-precondition') {
+                    console.warn("[Persistence] Multiple tabs active.");
+                } else if (err.code == 'unimplemented') {
+                    console.warn("[Persistence] Browser not supported.");
+                }
+            });
+        } catch (e) { /* Already enabled or script loading order issue */ }
+    }
+
     const optimizeImages = () => {
         document.querySelectorAll('img:not([loading])').forEach(img => {
             img.setAttribute('loading', 'lazy');

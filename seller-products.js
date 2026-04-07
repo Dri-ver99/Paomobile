@@ -6,6 +6,7 @@ window.addEventListener('error', function(e) {
 let allProducts = [];
 let deletedMockIds = JSON.parse(localStorage.getItem('deleted_mock_ids') || '[]');
 let currentCategory = 'all';
+let productUnsubscribe = null; // Track current Firestore listener
 
 function initTabs() {
     if (typeof setFilterCategory === 'function') {
@@ -14,6 +15,19 @@ function initTabs() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 0. Enable Firestore Persistence for Seller Centre (Compat)
+    if (typeof firebase !== 'undefined' && firebase.firestore) {
+        try {
+            firebase.firestore().enablePersistence({ synchronizeTabs: true }).catch(err => {
+                if (err.code == 'failed-precondition') {
+                    console.warn("[Persistence] Multiple tabs active.");
+                } else if (err.code == 'unimplemented') {
+                    console.warn("[Persistence] Browser not supported.");
+                }
+            });
+        } catch (e) { /* Already enabled */ }
+    }
+
     // 1. Initial category from URL
     const urlParams = new URLSearchParams(window.location.search);
     const catParam = urlParams.get('cat');
@@ -167,7 +181,8 @@ function startSync() {
     if (cached) {
         try {
             allProducts = JSON.parse(cached);
-            document.getElementById('productCountStatus').textContent = "สินค้าทั้งหมด: " + allProducts.length + " (โหลดจากแคช ⚡)";
+            const countStatus = document.getElementById('productCountStatus');
+            if (countStatus) countStatus.textContent = "สินค้าทั้งหมด: " + allProducts.length + " (โหลดจากแคช ⚡)";
             filterProducts();
         } catch(e) { allProducts = [...MOCK_PRODUCTS_BASELINE]; }
     } else {
@@ -176,11 +191,11 @@ function startSync() {
     }
 
     if (typeof db === 'undefined' || !db) {
-        setTimeout(startSync, 1000); // Retry sync when db is ready
+        setTimeout(startSync, 1000); 
         return;
     }
 
-    // sync logic for deleted items
+    // A. Sync logic for deleted items (separate listener)
     db.collection('settings').doc('deleted_products').onSnapshot(doc => {
         if (doc.exists) {
             const globalDeleted = doc.data().deletedIds || [];
@@ -189,40 +204,94 @@ function startSync() {
         }
     });
 
-    // 2. Real-time Firebase Sync
-    db.collection('products').onSnapshot(snapshot => {
-        console.log(`[Real-time] Received update: ${snapshot.size} items from Cloud`);
+    // B. Start the category-specific sync (Initial)
+    restartFirestoreListener();
+}
+
+function restartFirestoreListener() {
+    if (typeof db === 'undefined' || !db) return;
+    
+    // Stop old listener if exists
+    if (productUnsubscribe) {
+        productUnsubscribe();
+        productUnsubscribe = null;
+    }
+
+    const statusText = document.getElementById('statusText');
+    const statusDot = document.getElementById('statusIndicator');
+    if (statusText) statusText.textContent = "กำลังซิงค์ Cloud...";
+    if (statusDot) statusDot.style.background = '#ffc107'; // yellow/loading
+
+    let query = db.collection('products');
+    
+    // Server-side filtering logic matching products-sync.js exactly
+    if (currentCategory && currentCategory !== 'all') {
+        let categoryList = [currentCategory];
+        if (currentCategory === 'new') categoryList = ['new', 'มือ 1', 'มือหนึ่ง'];
+        else if (currentCategory === 'used') categoryList = ['used', 'มือ 2', 'มือสอง'];
+        else if (currentCategory === 'accessory') categoryList = ['accessory', 'อุปกรณ์', 'อุปกรณ์เสริม'];
+        else if (currentCategory === 'parts') categoryList = ['parts', 'อะไหล่'];
+        
+        query = query.where('category', 'in', categoryList);
+    }
+    
+    // Add a limit for safety (same as customer side)
+    query = query.limit(2000); 
+    
+    productUnsubscribe = query.onSnapshot(snapshot => {
+        console.log(`[Seller Sync] Success: Received ${snapshot.size} items from Cloud for ${currentCategory}`);
+        
         const firestoreProducts = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
 
-        // Merge: baseline + firestore
+        // Robust Merge Logic (Mirroring products-sync.js logic more closely)
+        const isOriginalMock = (p) => {
+            const isMock = MOCK_PRODUCTS_BASELINE.some(m => m.id === p.id);
+            if (!isMock) return false;
+            if (p.id.endsWith('-orig')) return true;
+            return !deletedMockIds.includes(p.id);
+        };
+
         const mergedMap = new Map();
+        
+        // 1. First, populate with non-deleted baseline items that match current category
         MOCK_PRODUCTS_BASELINE.forEach(p => {
-            // Restore logic: If it's one of the 4 original parts, we ignore the local "deleted" flag
-            const isOriginalPart = p.id.endsWith('-orig');
-            if (isOriginalPart || !deletedMockIds.includes(p.id)) {
-                mergedMap.set(p.id, p);
-            }
+             const isOriginalPart = p.id.endsWith('-orig');
+             if (isOriginalPart || !deletedMockIds.includes(p.id)) {
+                 // Check if it matches current category (synonym aware)
+                 let matches = true;
+                 if (currentCategory !== 'all') {
+                     const pCat = (p.category || "").toLowerCase();
+                     const target = currentCategory.toLowerCase();
+                     if (target === 'new') matches = (pCat === 'new' || pCat === 'มือ 1' || pCat === 'มือหนึ่ง');
+                     else if (target === 'used') matches = (pCat === 'used' || pCat === 'มือ 2' || pCat === 'มือสอง');
+                     else if (target === 'accessory') matches = (pCat === 'accessory' || pCat === 'อุปกรณ์' || pCat === 'อุปกรณ์เสริม');
+                     else if (target === 'parts') matches = (pCat === 'parts' || pCat === 'อะไหล่');
+                     else matches = (pCat === target);
+                 }
+                 if (matches) mergedMap.set(p.id, p);
+             }
         });
         
+        // 2. Overwrite or add with Cloud data
         firestoreProducts.forEach(p => mergedMap.set(p.id, p));
+        
         allProducts = Array.from(mergedMap.values());
 
-        // Cache for next time with QuotaExceededError protection
+        // Cache update
         try {
             localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts));
-        } catch (e) {
-            try {
-                // If full data is too big, cache only the text data (light version)
-                const lightProducts = allProducts.map(p => ({ ...p, img: "", images: [] }));
-                localStorage.setItem('pao_seller_cache', JSON.stringify(lightProducts));
-            } catch (e2) { /* Totally full */ }
-        }
-        
-        // Instant visual update
+        } catch (e) {}
+
+        // UI update
+        const statusDot = document.getElementById('statusIndicator');
         const countStatus = document.getElementById('productCountStatus');
+        const statusTxt = document.getElementById('statusText');
+
+        if (statusDot) statusDot.style.background = '#52c41a';
+        if (statusTxt) statusTxt.textContent = "เชื่อมต่อ Cloud เรียบร้อย ✅";
         if (countStatus) {
             countStatus.textContent = "สินค้าทั้งหมด: " + allProducts.length + " (เชื่อมต่อ Cloud ✅)";
         }
@@ -230,11 +299,14 @@ function startSync() {
         updateBrandsDatalist();
         filterProducts();
     }, err => {
-        console.error("Firestore error:", err);
+        console.error("Seller snapshot error:", err);
+        const statusDot = document.getElementById('statusIndicator');
+        const statusTxt = document.getElementById('statusText');
         const countStatus = document.getElementById('productCountStatus');
-        if (countStatus) {
-            countStatus.textContent = "สินค้าทั้งหมด: " + (allProducts ? allProducts.length : 0) + " (ออฟไลน์ ⚠️)";
-        }
+
+        if (statusDot) statusDot.style.background = '#ff4d4f';
+        if (statusTxt) statusTxt.textContent = "การเชื่อมต่อขัดข้อง: " + err.code;
+        if (countStatus) countStatus.textContent = "สินค้าทั้งหมด: " + allProducts.length + " (ออฟไลน์ ⚠️)";
     });
 }
 
@@ -258,17 +330,18 @@ function togglePartsFields() {
 }
 
 function setFilterCategory(cat) {
+    if (currentCategory === cat) return;
     currentCategory = cat;
     
     // Update Tab UI
     const tabs = document.querySelectorAll('.tabs-nav .tab-btn');
     tabs.forEach(t => {
-        // Match by data-cat attribute
         if (t.dataset.cat === cat) t.classList.add('active');
         else t.classList.remove('active');
     });
 
-    filterProducts();
+    // Mirroring Customer system: restart listener on tab change
+    restartFirestoreListener();
 }
 window.setFilterCategory = setFilterCategory;
 
@@ -296,9 +369,9 @@ function filterProducts() {
             const targetCat = (currentCategory || "").toLowerCase().trim();
             
             // Map common synonyms for robustness
-            if (targetCat === 'new') return pCat === 'new' || pCat === 'มือ 1';
-            if (targetCat === 'used') return pCat === 'used' || pCat === 'มือ 2';
-            if (targetCat === 'accessory') return pCat === 'accessory' || pCat === 'อุปกรณ์';
+            if (targetCat === 'new') return pCat === 'new' || pCat === 'มือ 1' || pCat === 'มือหนึ่ง';
+            if (targetCat === 'used') return pCat === 'used' || pCat === 'มือ 2' || pCat === 'มือสอง';
+            if (targetCat === 'accessory') return pCat === 'accessory' || pCat === 'อุปกรณ์' || pCat === 'อุปกรณ์เสริม';
             if (targetCat === 'parts') return pCat === 'parts' || pCat === 'อะไหล่';
             
             return pCat === targetCat;
@@ -460,8 +533,14 @@ window.handleVariationImgUpload = function(event, rowId) {
 
 async function deleteAllProducts() {
     if (!confirm('🚨 คำเตือนสูงสุด: คุณแน่ใจหรือไม่ว่าต้องการ "ลบสินค้าทั้งหมด" จากระบบ Cloud?\n\nการกระทำนี้ไม่สามารถย้อนคืนได้ และจะทำให้หน้าเว็บร้านค้าว่างเปล่าทันที!')) return;
-    if (!confirm('กดยืนยันอีกครั้งเพื่อเริ่มการลบสินค้าทั้งหมด...')) return;
     
+    // Safety Double-Check
+    const confirmCode = prompt('กรุณาพิมพ์คำว่า "CONFIRM DELETE" เพื่อยืนยันการลบสินค้าทั้งหมดออกจากระบบ:');
+    if (confirmCode !== 'CONFIRM DELETE') {
+        alert('❌ รหัสยืนยันไม่ถูกต้อง ยกเลิกการลบครับ');
+        return;
+    }
+
     const indicator = document.getElementById('statusIndicator');
     if (indicator) indicator.style.background = '#faad14'; // Warning color
     

@@ -84,24 +84,41 @@ const ProductSync = {
             }
         }, err => console.warn("[Sync] Deleted List Sync Error:", err));
 
-        // 2. Real-time Firestore Listen
-        this.unsubscribe = db.collection('products')
-            .onSnapshot(snapshot => {
-                const firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // 2. Optimized Real-time Firestore Listen
+        let query = db.collection('products');
+        
+        // Server-side filtering with Synonym Support (Thai/English)
+        if (this.category && this.category !== 'all') {
+            let categoryList = [this.category];
+            
+            // Map synonyms for broader server-side matching
+            if (this.category === 'new') categoryList = ['new', 'มือ 1', 'มือหนึ่ง'];
+            else if (this.category === 'used') categoryList = ['used', 'มือ 2', 'มือสอง'];
+            else if (this.category === 'accessory') categoryList = ['accessory', 'อุปกรณ์', 'อุปกรณ์เสริม'];
+            else if (this.category === 'parts') categoryList = ['parts', 'อะไหล่'];
+            
+            query = query.where('category', 'in', categoryList);
+        }
+        
+        // Add a limit for safety (prevents massive accidental reads)
+        query = query.limit(1000); 
+
+        this.unsubscribe = query.onSnapshot(snapshot => {
+            const firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Client-side fallback for synonyms (if any were missed by the server query)
+            const isMatch = (p) => {
+                const pCat = (p.category || "").toLowerCase().trim();
+                const targetCat = (this.category || "").toLowerCase().trim();
                 
-                // Enhanced Filtering: Match by direct key OR synonym
-                const isMatch = (p) => {
-                    const pCat = (p.category || "").toLowerCase().trim();
-                    const targetCat = (this.category || "").toLowerCase().trim();
-                    
-                    if (targetCat === 'all') return true;
-                    if (targetCat === 'new') return pCat === 'new' || pCat === 'มือ 1' || pCat === 'มือหนึ่ง';
-                    if (targetCat === 'used') return pCat === 'used' || pCat === 'มือ 2' || pCat === 'มือสอง';
-                    if (targetCat === 'accessory') return pCat === 'accessory' || pCat === 'อุปกรณ์' || pCat === 'อุปกรณ์เสริม';
-                    if (targetCat === 'parts') return pCat === 'parts' || pCat === 'อะไหล่';
-                    
-                    return pCat === targetCat;
-                };
+                if (targetCat === 'all') return true;
+                if (targetCat === 'new') return pCat === 'new' || pCat === 'มือ 1' || pCat === 'มือหนึ่ง';
+                if (targetCat === 'used') return pCat === 'used' || pCat === 'มือ 2' || pCat === 'มือสอง';
+                if (targetCat === 'accessory') return pCat === 'accessory' || pCat === 'อุปกรณ์' || pCat === 'อุปกรณ์เสริม';
+                if (targetCat === 'parts') return pCat === 'parts' || pCat === 'อะไหล่';
+                
+                return pCat === targetCat;
+            };
 
                 const matchingFirestore = firestoreProducts.filter(isMatch);
                 const firestoreIds = new Set(matchingFirestore.map(p => p.id));

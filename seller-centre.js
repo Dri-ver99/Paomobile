@@ -6,12 +6,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (window.updateSidebarActiveState) window.updateSidebarActiveState();
 
-    // --- v1.2.11 Instant Local Load ---
-    updateDashboard();
+    // --- v1.2.11 Instant Local Load (Zero-Flash) ---
+    // Load last known counts immediately
+    const elInsightProd = document.getElementById('insight-products');
+    const elStatProd = document.getElementById('stat-total-products');
+    const prodCount = localStorage.getItem('pao_total_products_count') || 17;
+    if (elInsightProd) elInsightProd.textContent = prodCount;
+    if (elStatProd) elStatProd.textContent = prodCount;
 
-    // Show baseline products (17) or cached count immediately
-    const elProd = document.getElementById('insight-products');
-    if (elProd) elProd.textContent = localStorage.getItem('pao_total_products_count') || 17;
+    const elSales = document.getElementById('insight-sales');
+    if (elSales) elSales.textContent = localStorage.getItem('pao_last_sales_total') || '฿0';
+
+    // Initial render from local orders cache
+    updateDashboard();
 
     // --- v1.2.1 Auth & Firestore Initialization ---
     // --- v1.2.1 Auth & Firestore Initialization ---
@@ -38,6 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isAdmin) {
                     if (loginBtn) loginBtn.style.display = 'none';
                     if (logoutBtn) logoutBtn.style.display = 'block';
+                    
+                    // v1.2.12 - Warn if only local bypass is active
+                    const authWarn = document.getElementById('auth-cloud-warning');
+                    if (authWarn) {
+                        authWarn.style.display = (!user) ? 'block' : 'none';
+                    }
+
                     if (typeof db !== 'undefined') startFirestoreSync();
                     localStorage.setItem('paomobile_admin_active', 'true');
                 } else {
@@ -46,10 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 const isFileProtocol = window.location.protocol === 'file:';
-                if (authEmail) authEmail.textContent = isFileProtocol ? "โหมด Local" : "กรุณาล็อกอิน Admin";
+                if (authEmail) authEmail.textContent = isFileProtocol ? "โบนัสโหมด (Guest)" : "กรุณาล็อกอิน Admin";
                 if (authIndicator) authIndicator.className = 'admin-status-dot offline';
                 if (loginBtn) loginBtn.style.display = 'block';
                 if (logoutBtn) logoutBtn.style.display = 'none';
+                
+                const authWarn = document.getElementById('auth-cloud-warning');
+                if (authWarn) authWarn.style.display = 'none';
+                
                 updateDashboard();
             }
         });
@@ -84,21 +102,24 @@ document.addEventListener('DOMContentLoaded', () => {
             
             ordersData = processExpirations(fetchedOrders);
             
-            const authIndicator = document.getElementById('authIndicator');
-            if (authIndicator) authIndicator.className = 'admin-status-dot online';
-            
             localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
             const statusToast = document.getElementById('firestore-status');
             if (statusToast) {
-                statusToast.innerHTML = '<span style="color:#52c41a;">&bull;</span> Firestore: เชื่อมต่อสำเร็จ';
+                statusToast.innerHTML = '<span style="color:#52c41a;">&bull;</span> Cloud: เชื่อมต่อสำเร็จ ✅';
                 statusToast.style.borderColor = '#b7eb8f';
                 statusToast.style.background = '#f6ffed';
             }
             updateDashboard();
         }, (err) => {
             console.error("[v1.2.10] Sync Error:", err);
-            const authIndicator = document.getElementById('authIndicator');
-            if (authIndicator) authIndicator.className = 'admin-status-dot offline';
+            const statusToast = document.getElementById('firestore-status');
+            if (statusToast) {
+                let msg = 'ออฟไลน์ ⚠️';
+                if (err.code === 'permission-denied') msg = 'จำกัดการเข้าถึง 🔒 (กรุณาล็อกอิน)';
+                statusToast.innerHTML = `<span style="color:#ff4d4f;">&bull;</span> Cloud: ${msg}`;
+                statusToast.style.borderColor = '#ffa39e';
+                statusToast.style.background = '#fff1f0';
+            }
             updateDashboard();
         });
 
@@ -345,6 +366,9 @@ function updateDashboard() {
             }
         }
     });
+
+    // Save sales for Zero-Flash top display
+    localStorage.setItem('pao_last_sales_total', '฿' + totalSales.toLocaleString());
 
     const cachedProductCount = localStorage.getItem('pao_total_products_count') || 17;
     const cachedVouchersCount = localStorage.getItem('pao_total_vouchers_count') || 0; 
