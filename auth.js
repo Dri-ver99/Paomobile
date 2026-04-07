@@ -205,10 +205,20 @@
             }
         });
 
-        // Mobile Menu Header - Allow re-painting
         if (mobileMenu) {
             const oldHeader = document.getElementById('mobile-auth-header');
-            if (oldHeader) oldHeader.remove();
+            if (oldHeader) {
+                // If header already exists, just update its dynamic parts instead of replacing
+                const countSpan = oldHeader.querySelector('.coupon-count-badge');
+                const voucherKey = 'pao_user_vouchers_' + (user.email || '');
+                const voucherList = JSON.parse(localStorage.getItem(voucherKey)) || [];
+                const couponCount = voucherList.length;
+                if (countSpan && countSpan.textContent !== String(couponCount)) {
+                    countSpan.textContent = couponCount;
+                }
+                isUpdating = false;
+                return; 
+            }
             
             const header = document.createElement('div');
             header.id = 'mobile-auth-header';
@@ -227,7 +237,15 @@
                 border-radius: 0 32px 32px 0;
                 overflow: hidden;
             `;
-            header.onclick = () => window.location.href = 'member.html';
+            header.onclick = (e) => {
+                // If user clicked the logout button or ANY of its children (emoji etc.)
+                if (e.target.closest('#btnMobileLogout')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+                window.location.href = 'member.html';
+            };
             // Fetch real coupon count from localStorage
             const voucherKey = 'pao_user_vouchers_' + (user.email || '');
             const voucherList = JSON.parse(localStorage.getItem(voucherKey)) || [];
@@ -250,15 +268,30 @@
                             </div>
                             <div style="font-weight: 950; color: #fff; font-size: 1.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.8px; line-height: 1;">${firstName}</div>
                             <div style="font-size: 0.72rem; color: rgba(255,255,255,0.7); margin-top: 5px; font-weight: 600; display:flex; align-items:center; gap:4px;">
-                                🎟️ คูปองที่เหลือ: <span style="color:#f59e0b; font-weight:900; font-size:0.85rem;">${couponCount}</span> ใบ
+                                🎟️ คูปองที่เหลือ: <span class="coupon-count-badge" style="color:#f59e0b; font-weight:900; font-size:0.85rem;">${couponCount}</span> ใบ
                             </div>
                         </div>
-                        <button id="btnMobileLogout" style="background:rgba(255, 255, 255, 0.1); border:none; color: #fff; font-size: 1.1rem; padding: 0; border-radius: 12px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); border: 1px solid rgba(255,255,255,0.1);">🚪</button>
+                        <button id="btnMobileLogout" style="background:rgba(255, 255, 255, 0.15); border:none; color: #fff; font-size: 1.3rem; padding: 0; border-radius: 12px; width:45px; height:45px; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); border: 1px solid rgba(255,255,255,0.2); cursor:pointer; pointer-events: auto !important; z-index: 100;">🚪</button>
                     </div>
                 </div>
             `;
             mobileMenu.prepend(header);
-            document.getElementById('btnMobileLogout')?.addEventListener('click', handleLogout);
+            
+            const btnLogout = document.getElementById('btnMobileLogout');
+            if (btnLogout) {
+                const triggerLogout = (e) => {
+                    if (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // prevent immediate consecutive triggers
+                        if (window._isLoggingOut) return;
+                        window._isLoggingOut = true;
+                        handleLogout(e);
+                    }
+                };
+                btnLogout.addEventListener('click', triggerLogout);
+                btnLogout.addEventListener('touchstart', triggerLogout, { passive: false });
+            }
 
             // Clean up old mobile member links and seller centre links
             mobileMenu.querySelectorAll('.dynamic-member-mobile-wrapper, .seller-centre-mobile-wrapper').forEach(el => el.remove());
@@ -309,14 +342,29 @@
         for (let m of mutations) {
             if (m.addedNodes.length > 0) {
                 for (let n of m.addedNodes) {
-                    if (n.nodeType === 1 && (n.classList?.contains('navbar') || n.classList?.contains('mobile-menu') || n.querySelector?.('.account-dropdown'))) {
-                        isNavAction = true; break;
+                    if (n.nodeType === 1) {
+                        // Check if added node is or contains nav elements
+                        if (n.classList?.contains('navbar') || 
+                            n.classList?.contains('mobile-menu') || 
+                            n.querySelector?.('.account-dropdown') || 
+                            n.querySelector?.('.mobile-menu-inner')) {
+                            isNavAction = true;
+                            break;
+                        }
                     }
                 }
             }
             if (isNavAction) break;
         }
-        if (isNavAction) updateNavForUser();
+        if (isNavAction) {
+            // Disconnect momentarily to avoid feedback loops from ourselves
+            observer.disconnect();
+            updateNavForUser();
+            const nav = document.querySelector('.navbar');
+            if (nav) observer.observe(nav, { childList: true, subtree: true });
+            const body = document.body;
+            if (body) observer.observe(body, { childList: true });
+        }
     });
 
     // Run immediately if DOM might be ready, and on events
