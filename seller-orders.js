@@ -38,6 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isAdmin) {
                     if (loginBtn) loginBtn.style.display = 'none';
                     if (logoutBtn) logoutBtn.style.display = 'block';
+
+                    // v1.2.12 - Warn if only local bypass is active
+                    const authWarn = document.getElementById('auth-cloud-warning');
+                    if (authWarn) {
+                        authWarn.style.display = (!user) ? 'block' : 'none';
+                    }
+
                     if (typeof db !== 'undefined') startFirestoreSync();
                     localStorage.setItem('paomobile_admin_active', 'true');
                 } else {
@@ -46,10 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 const isFileProtocol = window.location.protocol === 'file:';
-                if (authEmail) authEmail.textContent = isFileProtocol ? "โหมด Local" : "กรุณาล็อกอิน Admin";
+                if (authEmail) authEmail.textContent = isFileProtocol ? "โบนัสโหมด (Guest)" : "กรุณาล็อกอิน Admin";
                 if (authIndicator) authIndicator.className = 'admin-status-dot offline';
                 if (loginBtn) loginBtn.style.display = 'block';
                 if (logoutBtn) logoutBtn.style.display = 'none';
+                
+                const authWarn = document.getElementById('auth-cloud-warning');
+                if (authWarn) authWarn.style.display = 'none';
+
                 loadLocalStorageFallback();
             }
         });
@@ -128,16 +139,27 @@ document.addEventListener('DOMContentLoaded', () => {
             
             ordersData = processExpirations(fetchedOrders);
             
-            const authIndicator = document.getElementById('statusIndicator');
-            if (authIndicator) authIndicator.className = 'admin-status-dot online';
-            
+            const statusToast = document.getElementById('statusText');
+            if (statusToast) {
+                statusToast.innerHTML = 'Cloud: เชื่อมต่อสำเร็จ ✅';
+            }
+            const statusInd = document.getElementById('statusIndicator');
+            if (statusInd) statusInd.style.background = '#52c41a';
+
             localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
             renderOrders();
             updateTabBadges();
         }, err => {
             console.error("[v1.2.7] Sync Error:", err);
-            const authIndicator = document.getElementById('statusIndicator');
-            if (authIndicator) authIndicator.className = 'admin-status-dot offline';
+            const statusToast = document.getElementById('statusText');
+            if (statusToast) {
+                let msg = 'แชร์ไฟล์/ออฟไลน์ ⚠️';
+                if (err.code === 'permission-denied') msg = 'จำกัดการเข้าถึง 🔒 (ต้องล็อกอิน)';
+                statusToast.innerHTML = `Cloud: ${msg}`;
+            }
+            const statusInd = document.getElementById('statusIndicator');
+            if (statusInd) statusInd.style.background = '#ff4d4f';
+            
             loadLocalStorageFallback();
         });
     }
