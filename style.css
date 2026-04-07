@@ -1424,6 +1424,11 @@ body.menu-open .navbar {
     background: transparent !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
+    pointer-events: none;
+}
+
+body.menu-open .navbar .menu-toggle {
+    pointer-events: auto !important;
 }
 
 body.menu-open .navbar .logo,
@@ -1440,24 +1445,28 @@ body.menu-open .navbar .nav-links {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    padding: 0 0 15px 0;
+    padding: 12px 0 15px 0;
     margin-bottom: 20px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     position: relative;
+    z-index: 10;
 }
 
 .mobile-back-btn {
     background: none;
     border: none;
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
     color: #007aff;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 8px 0;
+    gap: 6px;
+    padding: 12px 15px 12px 0;
+    margin-left: -5px;
     transition: opacity 0.2s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .mobile-back-btn:active {
