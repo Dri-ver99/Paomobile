@@ -33,43 +33,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (user || localAdminActive) {
                 const email = user ? (user.email || "").toLowerCase() : SELLER_EMAIL.toLowerCase();
-                const isAdmin = email === SELLER_EMAIL.toLowerCase();
+            const isAdmin = email === SELLER_EMAIL.toLowerCase();
 
-                if (authEmail) authEmail.textContent = email + (user ? "" : " (จำสิทธิ์ 🔒)");
-                if (authIndicator) authIndicator.className = 'admin-status-dot ' + (isAdmin ? 'online' : 'warning');
-                
-                if (isAdmin) {
-                    if (loginBtn) loginBtn.style.display = 'none';
-                    if (logoutBtn) logoutBtn.style.display = 'block';
-                    if (saveBtn) {
-                        saveBtn.disabled = false;
-                        saveBtn.style.opacity = '1';
-                    }
-                    localStorage.setItem('paomobile_admin_active', 'true');
-                    startVoucherSync();
-                } else {
-                    if (loginBtn) loginBtn.style.display = 'block';
-                    if (logoutBtn) logoutBtn.style.display = 'block';
-                    if (statusEl) statusEl.innerHTML = '<span style="color:#faad14">&bull; สิทธิ์ไม่เพียงพอ</span>';
-                }
-            } else {
-                const isFileProtocol = window.location.protocol === 'file:';
-                if (authEmail) authEmail.textContent = isFileProtocol ? "โหมด Local" : "กรุณาล็อกอิน Admin";
-                if (authIndicator) authIndicator.className = 'admin-status-dot offline';
-                if (loginBtn) {
-                    loginBtn.style.display = 'block';
-                    loginBtn.onclick = sellerLogin;
-                }
-                if (logoutBtn) logoutBtn.style.display = 'none';
-                if (saveBtn) {
-                    saveBtn.disabled = true;
-                    saveBtn.style.opacity = '0.5';
-                }
-                voucherListBody.innerHTML = '';
-                emptyState.style.display = 'block';
+            if (authEmail) authEmail.textContent = email + (user ? "" : " (จำสิทธิ์ 🔒)");
+            if (authIndicator) authIndicator.className = 'admin-status-dot ' + (isAdmin ? 'online' : 'warning');
+            
+            // Toggle Auth Warning Banner (New v2026)
+            const authWarning = document.getElementById('auth-cloud-warning');
+            if (authWarning) {
+                authWarning.style.display = (isAdmin && user) ? 'none' : 'flex';
             }
-        });
+
+            if (isAdmin) {
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (logoutBtn) logoutBtn.style.display = 'block';
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.style.opacity = '1';
+                }
+                localStorage.setItem('paomobile_admin_active', 'true');
+                startVoucherSync();
+            } else {
+                if (loginBtn) loginBtn.style.display = 'block';
+                if (logoutBtn) logoutBtn.style.display = 'block';
+                if (statusEl) statusEl.innerHTML = '<span style="color:#faad14">&bull; สิทธิ์ไม่เพียงพอ</span>';
+            }
+        } else {
+            const isFileProtocol = window.location.protocol === 'file:';
+            if (authEmail) authEmail.textContent = isFileProtocol ? "โหมด Local" : "กรุณาล็อกอิน Admin";
+            if (authIndicator) authIndicator.className = 'admin-status-dot offline';
+            
+            // Show Auth Warning in Local Mode
+            const authWarning = document.getElementById('auth-cloud-warning');
+            if (authWarning) authWarning.style.display = 'flex';
+
+            if (loginBtn) {
+                loginBtn.style.display = 'block';
+                loginBtn.onclick = sellerLogin;
+            }
+            if (logoutBtn) logoutBtn.style.display = 'none';
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.style.opacity = '0.5';
+            }
+            voucherListBody.innerHTML = '';
+            emptyState.style.display = 'block';
+        }
+    });
+}
+
+// ── Settings Management ──
+window.saveSettings = function() {
+    const baseUrl = document.getElementById('setting-base-url').value.trim();
+    if (!baseUrl) {
+        alert("กรุณาระบุ URL เว็บไซต์ครับ");
+        return;
     }
+    localStorage.setItem('paomobile_base_url', baseUrl);
+    alert("✅ บันทึกโดเมนเว็บไซต์เรียบร้อยแล้วครับ!");
+};
 
     // --- Authentication Functions (Exported to window) ---
     window.sellerLogin = function() {
@@ -144,10 +166,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }, (err) => {
             console.error("Snapshot error:", err);
             if (statusEl) statusEl.innerHTML = `<span style="color:red">&bull; Firestore Error: ${err.code}</span>`;
+            
+            // Check for permission denied and update UI
             if (err.code === 'permission-denied') {
+                const authWarning = document.getElementById('auth-cloud-warning');
+                if (authWarning) authWarning.style.display = 'flex';
+                
                 const currentUser = firebase.auth().currentUser;
                 const email = currentUser ? (currentUser.email || "Unknown") : "Not Logged In";
-                alert("สิทธิ์ไม่ถูกต้อง: ระบบไม่สามารถโหลดข้อมูลได้\n\nอีเมลปัจจุบัน: " + email + "\nกรุณาล็อกอินใหม่ด้วยเมล sattawat2560@gmail.com เท่านั้นครับ");
+                // alert("สิทธิ์ไม่ถูกต้อง: ระบบไม่สามารถโหลดข้อมูลได้\n\nอีเมลปัจจุบัน: " + email + "\nกรุณาล็อกอินใหม่ด้วยเมล sattawat2560@gmail.com เท่านั้นครับ");
             }
         });
     }
@@ -195,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             saveBtn.disabled = true;
-            saveBtn.textContent = '🕒 กำลังบันทึก...';
+            saveBtn.textContent = '⏳ กำลังบันทึก...';
 
             const vouchersCol = db.collection('vouchers');
             const voucherData = {
