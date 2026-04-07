@@ -94,6 +94,29 @@
                 }));
                 // Small artificial delay for smooth transition from skeleton
                 setTimeout(() => renderChatList(), 200);
+                
+                // If Cloud is active, hide the local-only warning
+                const warning = document.getElementById('auth-cloud-warning');
+                if (warning) warning.style.display = 'none';
+            }, err => {
+                console.error("[SellerChat] Load Error:", err.message);
+                const listArea = document.getElementById('chatList');
+                if (listArea) {
+                    listArea.innerHTML = `
+                        <div style="padding:40px; text-align:center;">
+                            <div style="color:#ef4444; font-weight:600; font-size:1.1rem; margin-bottom:10px;">⚠️ ไม่มีสิทธิ์เข้าถึงข้อมูล</div>
+                            <div style="color:#64748b; font-size:0.85rem; margin-bottom:20px;">
+                                ${err.code === 'permission-denied' ? 'บัญชีปัจจุบันไม่มีสิทธิ์ Admin สำหรับ Cloud Sync' : err.message}
+                            </div>
+                            <button onclick="sellerLogin()" style="background:#ee4d2d; color:white; border:none; padding:8px 20px; border-radius:30px; font-weight:600; cursor:pointer;">ล็อกอิน Admin (Cloud)</button>
+                        </div>
+                    `;
+                }
+                // Show Cloud warning if we get a permission denied
+                if (err.code === 'permission-denied') {
+                    const warning = document.getElementById('auth-cloud-warning');
+                    if (warning) warning.style.display = 'flex';
+                }
             });
     }
 
@@ -637,42 +660,50 @@
                 const authIndicator = document.getElementById('authIndicator');
                 const loginBtn = document.getElementById('adminLoginBtn');
                 const logoutBtn = document.getElementById('adminLogoutBtn');
+                const cloudWarning = document.getElementById('auth-cloud-warning');
                 
                 const SELLER_EMAIL = 'sattawat2560@gmail.com';
                 const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
                 
-                if (user || localAdminActive) {
-                    const rawEmail = user ? (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "") : SELLER_EMAIL;
-                    const email = rawEmail.toLowerCase().trim();
-                    const isAdmin = email === SELLER_EMAIL.toLowerCase().trim();
+                // 1. Initial State Check
+                let email = "";
+                let isCloudAdmin = false;
 
-                    if (authEmail) authEmail.textContent = email + (user ? "" : " (จำสิทธิ์ 🔒)");
-                    if (authIndicator) {
-                        authIndicator.classList.remove('online', 'warning', 'offline');
-                        authIndicator.classList.add(isAdmin ? 'online' : 'warning');
-                    }
-                    
-                    if (isAdmin) {
-                        if (loginBtn) loginBtn.style.display = 'none';
-                        if (logoutBtn) logoutBtn.style.display = 'block';
-                        loadChatList();
-                        localStorage.setItem('paomobile_admin_active', 'true');
-                    } else {
-                        if (loginBtn) loginBtn.style.display = 'block';
-                        if (logoutBtn) logoutBtn.style.display = 'block';
-                        const listArea = document.getElementById('chatList');
-                        if (listArea) listArea.innerHTML = `<div style="padding:40px; text-align:center; color:#ef4444;">⚠️ ไม่มีสิทธิ์เข้าถึง<br><small>${email}</small></div>`;
-                    }
+                if (user) {
+                    email = (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "").toLowerCase().trim();
+                    isCloudAdmin = email === SELLER_EMAIL.toLowerCase().trim();
+                }
+
+                // 2. UI Updates
+                if (authEmail) authEmail.textContent = email || (localAdminActive ? "ADMIN (จำสิทธิ์ 🔒)" : "ลงชื่อเข้าใช้ Admin");
+                
+                if (authIndicator) {
+                    authIndicator.classList.remove('online', 'warning', 'offline');
+                    if (isCloudAdmin) authIndicator.classList.add('online');
+                    else if (localAdminActive) authIndicator.classList.add('warning');
+                    else authIndicator.classList.add('offline');
+                }
+
+                if (isCloudAdmin) {
+                    // FULL CLOUD ACCESS
+                    if (cloudWarning) cloudWarning.style.display = 'none';
+                    if (loginBtn) loginBtn.style.display = 'none';
+                    if (logoutBtn) logoutBtn.style.display = 'block';
+                    loadChatList();
+                    localStorage.setItem('paomobile_admin_active', 'true');
+                } else if (localAdminActive) {
+                    // LOCAL BYPASS MODE
+                    if (cloudWarning) cloudWarning.style.display = 'flex';
+                    if (loginBtn) loginBtn.style.display = 'block';
+                    if (logoutBtn) logoutBtn.style.display = 'block';
+                    loadChatList(); // Try to load, if permission denied, the onSnapshot error will catch it
                 } else {
-                    if (authEmail) authEmail.textContent = "กรุณาล็อกอิน Admin";
-                    if (authIndicator) {
-                        authIndicator.classList.remove('online', 'warning');
-                        authIndicator.classList.add('offline');
-                    }
+                    // NOT AUTHENTICATED
+                    if (cloudWarning) cloudWarning.style.display = 'flex';
                     if (loginBtn) loginBtn.style.display = 'block';
                     if (logoutBtn) logoutBtn.style.display = 'none';
                     const listArea = document.getElementById('chatList');
-                    if (listArea) listArea.innerHTML = '<div style="padding:40px; text-align:center; color:#64748b;">กรุณาล็อกอินเพื่อจัดการแชท</div>';
+                    if (listArea) listArea.innerHTML = '<div style="padding:40px; text-align:center; color:#64748b;">กรุณาล็อกอิน Admin เพื่อจัดการแชทจาก Cloud</div>';
                 }
             });
         }

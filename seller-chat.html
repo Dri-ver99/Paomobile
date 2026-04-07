@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -342,6 +342,29 @@
             }
         }
         .btn-back-chat { display: none; }
+        
+        /* Cloud Auth Warning Banner */
+        #auth-cloud-warning {
+            display: none;
+            background: #fff5f0; 
+            border: 1.5px dashed #ee4d2d; 
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 15px 20px;
+            align-items: center;
+            gap: 15px;
+            color: #d73211;
+            font-size: 0.9rem;
+            animation: slideDownIn 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        @keyframes slideDownIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        #auth-cloud-warning .warning-icon { font-size: 1.4rem; flex-shrink: 0; }
+        #auth-cloud-warning .warning-btn {
+            background: #ee4d2d; color: #fff; border: none; padding: 6px 14px;
+            border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 0.85rem;
+            white-space: nowrap; margin-left: auto;
+        }
+        #auth-cloud-warning .warning-btn:hover { background: #d73211; }
 
     </style>
     <link rel="stylesheet" href="style.css">
@@ -398,6 +421,15 @@
         <div class="chat-sidebar">
             <div class="sidebar-header-shopee">
                  <h3>Chat <span style="font-size: 1.1rem; color: var(--shopee-orange);">●</span></h3>
+            </div>
+            <!-- Auth Cloud Warning Banner -->
+            <div id="auth-cloud-warning">
+                <div class="warning-icon">⚠️</div>
+                <div style="flex:1;">
+                    <div style="font-weight:700;">โหมดจำกัดสิทธิ์ (Local Only)</div>
+                    <div style="font-size:0.8rem; opacity:0.8;">คุณไม่ได้ล็อกอิน ADMIN (Cloud) ทำให้ไม่เห็นแชทลูกค้าครับ</div>
+                </div>
+                <button class="warning-btn" onclick="sellerLogin()">🔑 ล็อกอิน</button>
             </div>
             <div class="sidebar-search-container">
                 <div class="search-box">
@@ -466,13 +498,8 @@
         };
         firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
-
-        // Ensure Seller is authenticated for Firestore rules
-        firebase.auth().onAuthStateChanged(user => {
-            if (!user) {
-                firebase.auth().signInAnonymously().catch(err => console.error("Seller Auth Error:", err));
-            }
-        });
+        // Seller Chat: Use specific admin email sattawat2560@gmail.com
+        // No anonymous login allowed here to prevent permission conflicts
     </script>
     <!-- Mobile Sidebar Overlay -->
     <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
