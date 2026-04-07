@@ -2,36 +2,34 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 🛡️ Admin Verification - ONLY sattawat2560@gmail.com
+    // 🛡️ ฟังก์ชันตรวจสอบสิทธิ์ Admin
     function isAdmin() {
       return request.auth != null && 
              request.auth.token != null &&
              request.auth.token.email != null &&
-             request.auth.token.email.lower() == "sattawat2560@gmail.com";
+             request.auth.token.email.toLower() == "sattawat2560@gmail.com";
     }
 
-    // 1. User Profiles (Users own their data)
+    // 1. ข้อมูลผู้ใช้งาน (Users)
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // 2. Orders (Customers create, Admins manage)
+    // 2. ข้อมูลคำสั่งซื้อ (Orders)
     match /orders/{orderId} {
       allow create: if true;
-      allow read: if request.auth != null && (
+      allow read: if (request.auth != null && (
         resource.data.customer == request.auth.uid ||
-        resource.data.customer == request.auth.token.email ||
-        isAdmin()
-      );
+        resource.data.customer == request.auth.token.email
+      )) || isAdmin();
       allow update: if (request.auth != null && (
         resource.data.customer == request.auth.uid ||
         resource.data.customer == request.auth.token.email
       )) || isAdmin() || (resource.data.status == "ที่ต้องชำระ");
-      allow delete: if isAdmin();
-      allow write: if isAdmin();
+      allow delete, write: if isAdmin();
     }
     
-    // 3. Vouchers & Promotions (Admins manage)
+    // 3. ระบบคูปอง (Vouchers / Redemptions)
     match /vouchers/{document=**} {
       allow read: if true;
       allow write: if isAdmin();
@@ -44,41 +42,28 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // ⚙️ Settings (Category management, etc.)
+    // 4. การตั้งค่าระบบ (Settings)
     match /settings/{doc} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
-    // 5. Chat System
+    // 5. ระบบแชท (Real-time Chat & Memory)
     match /chats/{chatId} {
-      // Allow user to read/write if the chatId matches their email OR if they are the Admin
-      allow read, write: if (request.auth != null && (
-        chatId.lower() == request.auth.token.email.lower() || 
-        isAdmin()
-      )) || (
-        // Fallback for cases where email might not be in token (e.g. some manual providers)
-        // or if rules need to be more permissive for initial setup
-        isAdmin()
-      );
-      
+      allow read, write: if request.auth != null || isAdmin();
       match /messages/{messageId} {
-        allow read, write: if (request.auth != null && (
-          chatId.lower() == request.auth.token.email.lower() || 
-          isAdmin()
-        )) || (
-          isAdmin()
-        );
+        allow read, write: if request.auth != null || isAdmin();
       }
     }
-
-    // 6. Online Status
-    match /status/{document=**} {
+    
+    // 6. ✅ ระบบจัดการสต๊อกสินค้า (Products)
+    match /products/{productId} {
       allow read: if true;
-      allow write: if true; // Simple status updates
+      // ✅ อนุญาตให้เขียน/แก้ไขสต๊อกได้ตลอดเวลา (Usable Forever) ตามที่คุณลูกค้าต้องการครับ
+      allow write: if true; 
     }
     
-    // 7. General Fallback (Admins manage everything else)
+    // 7. ส่วนอื่นๆ (Fallback)
     match /{document=**} {
       allow read: if true;
       allow write: if isAdmin();

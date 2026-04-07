@@ -137,6 +137,29 @@ window.ProductDetail = {
             .btn-pd-solid { background: linear-gradient(135deg, #18181b, #27272a); color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
             .btn-pd-solid:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
             
+            .btn-pd.disabled {
+                background: #e4e4e7 !important;
+                color: #a1a1aa !important;
+                border-color: #e4e4e7 !important;
+                cursor: not-allowed !important;
+                box-shadow: none !important;
+                transform: none !important;
+            }
+
+            .pd-option.sold-out {
+                text-decoration: line-through;
+                opacity: 0.5;
+                cursor: not-allowed;
+                position: relative;
+            }
+            .pd-option.sold-out::after {
+                content: " (หมด)";
+                font-size: 0.65rem;
+                text-decoration: none;
+                display: inline-block;
+                margin-left: 4px;
+            }
+            
             .pd-desc { 
                 color: #1e293b; 
                 line-height: 1.75; 
@@ -219,8 +242,8 @@ window.ProductDetail = {
                         </div>
 
                         <div class="pd-actions">
-                            <button class="btn-pd btn-pd-outline" onclick="ProductDetail.addToCart()">เพิ่มลงในตะกร้าสินค้า</button>
-                            <button class="btn-pd btn-pd-solid" onclick="ProductDetail.buyNow()">ซื้อเลย</button>
+                            <button id="pdAddToCartBtn" class="btn-pd btn-pd-outline" onclick="ProductDetail.addToCart()">เพิ่มลงในตะกร้าสินค้า</button>
+                            <button id="pdBuyNowBtn" class="btn-pd btn-pd-solid" onclick="ProductDetail.buyNow()">ซื้อเลย</button>
                         </div>
                     </div>
                 </div>
@@ -288,6 +311,29 @@ window.ProductDetail = {
         // Show Modal
         modal.classList.add('open');
         document.body.style.overflow = 'hidden'; // Prevent scroll
+
+        // Check if main product is out of stock
+        const addBtn = document.getElementById('pdAddToCartBtn');
+        const buyBtn = document.getElementById('pdBuyNowBtn');
+        if (product.isOutOfStock) {
+            addBtn.classList.add('disabled');
+            buyBtn.classList.add('disabled');
+            buyBtn.style.display = 'none'; // Hide Buy Now button
+            addBtn.innerText = 'สินค้าหมดแล้วครับ';
+            if (pricePromoEl) pricePromoEl.innerHTML += ' <small style="color:#ef4444; font-size:1rem;">(สินค้าหมด)</small>';
+        } else if (this.currentVariation && this.currentVariation.isOutOfStock) {
+            // Check initial variation
+            addBtn.classList.add('disabled');
+            buyBtn.classList.add('disabled');
+            buyBtn.style.display = 'none'; // Hide Buy Now button
+            addBtn.innerText = 'สินค้าหมด';
+        } else {
+            addBtn.classList.remove('disabled');
+            buyBtn.classList.remove('disabled');
+            buyBtn.style.display = 'flex'; // Show Buy Now button
+            addBtn.innerText = 'เพิ่มลงในตะกร้าสินค้า';
+            buyBtn.innerText = 'ซื้อเลย';
+        }
     },
 
     openByElement(el) {
@@ -311,7 +357,7 @@ window.ProductDetail = {
         if (p.variations && p.variations.length > 0) {
             section.style.display = 'block';
             optionsEl.innerHTML = p.variations.map(v => `
-                <button class="pd-option ${this.currentVariation?.id === v.id ? 'selected' : ''}" 
+                <button class="pd-option ${this.currentVariation?.id === v.id ? 'selected' : ''} ${v.isOutOfStock ? 'sold-out' : ''}" 
                         onclick="window.ProductDetail.selectVariation('${v.id}')">
                     ${v.name}
                 </button>
@@ -338,6 +384,22 @@ window.ProductDetail = {
             if (mainImg) {
                 mainImg.src = v.img;
             }
+        }
+
+        // Update Buttons state based on variation stock
+        const addBtn = document.getElementById('pdAddToCartBtn');
+        const buyBtn = document.getElementById('pdBuyNowBtn');
+        if (v.isOutOfStock) {
+            addBtn.classList.add('disabled');
+            buyBtn.classList.add('disabled');
+            buyBtn.style.display = 'none'; // Hide Buy Now button
+            addBtn.innerText = 'สินค้าหมด';
+        } else {
+            addBtn.classList.remove('disabled');
+            buyBtn.classList.remove('disabled');
+            buyBtn.style.display = 'flex'; // Show Buy Now button
+            addBtn.innerText = 'เพิ่มลงในตะกร้าสินค้า';
+            buyBtn.innerText = 'ซื้อเลย';
         }
 
         this.renderVariations();
@@ -479,9 +541,21 @@ window.ProductDetail = {
         const p = this.currentProduct;
         const v = this.currentVariation;
 
+        // Check product stock
+        if (p.isOutOfStock) {
+            alert('ขออภัย สินค้านี้หมดชั่วคราว');
+            return;
+        }
+
         // If product has variations but none selected, prompt user
         if (p.variations && p.variations.length > 0 && !v) {
             alert('กรุณาเลือกตัวเลือกสินค้าก่อนเพิ่มลงตะกร้า');
+            return;
+        }
+
+        // Check variation stock
+        if (v && v.isOutOfStock) {
+            alert('ขออภัย ตัวเลือกนี้หมดชั่วคราว');
             return;
         }
 

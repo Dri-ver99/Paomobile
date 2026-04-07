@@ -251,7 +251,8 @@ const ProductSync = {
             description: p.description || "",
             emoji: p.emoji || "📱",
             specs: p.specs || "",
-            variations: p.variations || []
+            variations: p.variations || [],
+            isOutOfStock: !!p.isOutOfStock
         };
 
         const cartObj = JSON.stringify({
@@ -267,15 +268,20 @@ const ProductSync = {
         
         // If product has variations, the cart button should open the modal to let customer choose
         let cartBtnHTML;
-        if (hasVariations) {
+        if (p.isOutOfStock) {
+            cartBtnHTML = `<button class="btn-add-cart disabled" onclick="event.stopPropagation()">หมดชั่วคราว</button>`;
+        } else if (hasVariations) {
             cartBtnHTML = `<button class="btn-add-cart" onclick="event.stopPropagation(); var prod = window._paoProductMap && window._paoProductMap['${p.id}']; if(prod && window.ProductDetail) ProductDetail.open(prod);">เลือกตัวเลือก</button>`;
         } else {
             cartBtnHTML = `<button class="btn-add-cart" onclick="event.stopPropagation(); CartAPI.add(${cartObj})">+ เพิ่มลงตะกร้า</button>`;
         }
 
+        const soldOutClass = p.isOutOfStock ? 'sold-out' : '';
+        const imgSoldOutClass = p.isOutOfStock ? 'sold-out' : '';
+
         return `
-            <div class="product-card" data-pid="${p.id}">
-                <div class="product-img">${badgeHTML}${imgHTML}</div>
+            <div class="product-card ${soldOutClass}" data-pid="${p.id}">
+                <div class="product-img ${imgSoldOutClass}">${badgeHTML}${imgHTML}</div>
                 <div class="product-info">
                     <div class="product-brand">${p.brand || p.partModel || ''}</div>
                     <h3 class="product-name">${p.name}</h3>
