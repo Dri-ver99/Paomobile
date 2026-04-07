@@ -330,7 +330,7 @@ function filterProducts() {
             </td>
             <td>
                 <div class="product-name-info">
-                    <div class="product-name-txt">${p.name}</div>
+                    <div class="product-name-txt">${p.name} ${p.isOutOfStock ? '<span style="color:#ff4d4f; font-size:0.7rem; border:1px solid #ff4d4f; padding:1px 4px; border-radius:4px; margin-left:5px;">OUT OF STOCK</span>' : ''}</div>
                     <div class="product-sku-txt">
                         ${p.brand} 
                         ${p.badge ? `· <span style="color:#ee4d2d">${p.badge}</span>` : ''}
@@ -401,6 +401,11 @@ window.addVariationRow = function(data = null) {
                     <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; color: #999;">฿</span>
                     <input type="number" placeholder="0" value="${data?.price || ''}" class="v-price" style="width: 100%; padding: 10px 10px 10px 25px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.95rem; font-weight: 700; color: #ee4d2d;">
                 </div>
+            </div>
+            
+            <div style="grid-column: span 2; display: flex; align-items: center; gap: 8px; background: #fffcf5; padding: 10px; border-radius: 8px; border: 1px solid #f9da8b;">
+                <input type="checkbox" class="v-stock" id="stock-${rowId}" ${data?.isOutOfStock ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="stock-${rowId}" style="font-size: 0.85rem; font-weight: 700; color: #856404; cursor: pointer;">ทำเครื่องหมายว่า "หมด" (Out of Stock)</label>
             </div>
         </div>
         
@@ -652,6 +657,10 @@ function openAddModal() {
         if (isAdmin) submitBtn.textContent = "💾 บันทึกสินค้า";
     }
 
+    // Reset stock status
+    const stockSelect = document.getElementById('formStockStatus');
+    if (stockSelect) stockSelect.value = "in_stock";
+
     document.getElementById('productModal').style.display = 'flex';
 }
 
@@ -670,6 +679,12 @@ function openEditModal(id) {
     document.getElementById('formBadge').value = p.badge || "";
     document.getElementById('formSpecs').value = p.specs || "";
 
+    // Load Stock Status
+    const stockSelect = document.getElementById('formStockStatus');
+    if (stockSelect) {
+        stockSelect.value = p.isOutOfStock ? "out_of_stock" : "in_stock";
+    }
+
     // Spare parts specific loading
     if (p.category === 'parts') {
         document.getElementById('formPartModel').value = p.partModel || "";
@@ -685,6 +700,7 @@ function openEditModal(id) {
     } else {
         uploadedImages = [];
     }
+    refreshImgPreviews();
     document.getElementById('formPartType').value = p.partType || ""; // Then set the value
     
     // Variations loading
@@ -765,9 +781,11 @@ async function handleFormSubmit(e) {
                     id: rid,
                     name: row.querySelector('.v-name').value,
                     price: parseFloat(row.querySelector('.v-price').value) || 0,
-                    img: variationImages[rid] || ""
+                    img: variationImages[rid] || "",
+                    isOutOfStock: row.querySelector('.v-stock').checked
                 };
             }),
+            isOutOfStock: document.getElementById('formStockStatus').value === 'out_of_stock',
             lastUpdatedBy: (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : "local-seller",
             updatedAt: new Date().toISOString()
         };

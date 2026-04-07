@@ -410,6 +410,15 @@
                     </div>
                 </div>
 
+                <div style="margin-bottom: 15px; background: #fffbe6; padding: 12px; border-radius: 8px; border: 1px solid #ffe58f;">
+                    <label style="display: block; font-size: 0.85rem; color: #856404; margin-bottom: 5px; font-weight: 700;">🏬 สถานะสต๊อกสินค้าหลัก</label>
+                    <select id="formStockStatus" style="width: 100%; padding: 10px; border: 1px solid #ffcc00; border-radius: 6px; font-family: inherit; font-weight: 600; color: #333;">
+                        <option value="in_stock">✅ มีสินค้า (In Stock)</option>
+                        <option value="out_of_stock">❌ สินค้าหมด (Sold Out)</option>
+                    </select>
+                    <p style="font-size: 0.75rem; color: #b08900; margin: 4px 0 0 0;">* หากเลือก 'สินค้าหมด' สินค้านี้จะขึ้นป้าย Sold Out และลูกค้าจะกดซื้อไม่ได้ทันที</p>
+                </div>
+
                 <!-- Spare Parts Specific Fields -->
                 <div id="partsFields" style="display: none; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee;">
                     <div>
