@@ -138,8 +138,16 @@ window.ProductDetail = {
             .btn-pd-solid:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
             
             .pd-desc { 
-                color: #71717a; line-height: 1.6; font-size: 0.8rem; margin-top: 14px; padding-top: 14px; 
-                border-top: 1px solid #f4f4f5; 
+                color: #1e293b; 
+                line-height: 1.75; 
+                font-size: 1rem; 
+                margin-top: 0; 
+                padding: 24px 30px; 
+                background: #f8fafc;
+                border-top: 1px solid #f1f5f9;
+                white-space: pre-line;
+                font-weight: 600;
+                width: 100%;
             }
 
             /* Carousel & Arrows */
@@ -214,10 +222,9 @@ window.ProductDetail = {
                             <button class="btn-pd btn-pd-outline" onclick="ProductDetail.addToCart()">เพิ่มลงในตะกร้าสินค้า</button>
                             <button class="btn-pd btn-pd-solid" onclick="ProductDetail.buyNow()">ซื้อเลย</button>
                         </div>
-
-                        <div class="pd-desc">คำอธิบายสินค้า...</div>
                     </div>
                 </div>
+                <div class="pd-desc">คำอธิบายสินค้า...</div>
             </div>
         `;
         document.body.appendChild(modalDiv);
