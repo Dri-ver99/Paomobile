@@ -67,24 +67,39 @@ openMenu();
 }
 if (mobileClose) mobileClose.addEventListener('click', closeMenu);
 if (mobileBackBtn) {
-mobileBackBtn.addEventListener('click', () => {
-mobileMenuPanels.classList.remove('showing-sub');
-});
+    const handleBack = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        mobileMenuPanels.classList.remove('showing-sub');
+    };
+    mobileBackBtn.addEventListener('click', handleBack);
+    mobileBackBtn.addEventListener('touchstart', handleBack, { passive: false });
 }
+
+// Delegate mobile back button clicks for maximum robustness
 mobileMenu.addEventListener('click', (e) => {
-const parent = e.target.closest('.menu-item-parent');
-if (parent) {
-const wrapper = parent.closest('.menu-item-wrapper');
-const subMenuTemplate = wrapper.querySelector('.mobile-sub-menu');
-if (subMenuTemplate && subMenuContent) {
-subMenuTitle.textContent = parent.textContent.trim();
-subMenuContent.innerHTML = subMenuTemplate.innerHTML;
-mobileMenuPanels.classList.add('showing-sub');
-subMenuContent.querySelectorAll('a').forEach(link => {
-link.addEventListener('click', closeMenu);
-});
-}
-}
+    // 1. Handle Back Button
+    if (e.target.closest('#mobileBackBtn')) {
+        mobileMenuPanels.classList.remove('showing-sub');
+        return;
+    }
+
+    // 2. Handle Sub-menu triggers
+    const parent = e.target.closest('.menu-item-parent');
+    if (parent) {
+        const wrapper = parent.closest('.menu-item-wrapper');
+        const subMenuTemplate = wrapper.querySelector('.mobile-sub-menu');
+        if (subMenuTemplate && subMenuContent) {
+            subMenuTitle.textContent = parent.textContent.trim();
+            subMenuContent.innerHTML = subMenuTemplate.innerHTML;
+            mobileMenuPanels.classList.add('showing-sub');
+            subMenuContent.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', closeMenu);
+            });
+        }
+    }
 });
 const animatedElements = document.querySelectorAll('[data-animate]');
 const animObserver = new IntersectionObserver((entries) => {
@@ -377,28 +392,29 @@ badge.textContent = '⚫ ปิดให้บริการ';
             bottom:70px; 
             left:5px; 
             width:240px; 
-            background:#fff; 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(10px);
             border-radius:20px; 
             box-shadow:0 10px 40px rgba(0,0,0,0.15); 
-            border:1px solid #e2e8f0; 
+            border:1px solid rgba(226, 232, 240, 0.8); 
             padding:15px; 
             z-index:200; 
             grid-template-columns: repeat(4, 1fr); 
             gap:10px; 
         }
         .emoji-picker.active { display:grid; animation: chatFadeIn 0.2s ease-out; }
-        .emoji-item { cursor:pointer; width:100%; aspect-ratio:1; border-radius:12px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; }
-        .emoji-item:hover { background:#f1f5f9; transform:scale(1.1); }
-        .emoji-item img { width:80%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
+        .emoji-item { cursor:pointer; width:100%; aspect-ratio:1; border-radius:12px; transition:all 0.2s; display:flex; align-items:center; justify-content:center; background: transparent !important; }
+        .emoji-item:hover { background: transparent !important; transform:scale(1.2); }
+        .emoji-item img { width:95%; height:auto; object-fit:contain; mix-blend-mode: multiply; }
 
         /* Sticker Image Rendering */
         .sticker-img { 
-            max-width: 180px; 
-            max-height: 180px; 
+            max-width: 160px; 
+            max-height: 160px; 
             cursor: pointer; 
             transition: transform 0.2s; 
-            mix-blend-mode: multiply; 
-            filter: contrast(1.1) brightness(1.1);
+            background: transparent !important;
+            mix-blend-mode: multiply;
         }
         .sticker-img:hover { transform: scale(1.05); }
         
@@ -789,7 +805,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
                         html += `
                             <div class="msg-row ${isCustomer ? 'customer' : 'seller'} sticker">
                                 <div class="msg-bubble" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important; overflow:visible !important;">
-                                    <img src="${msg.fileUrl}" class="sticker-img" style="mix-blend-mode:multiply !important; filter:contrast(1.1) brightness(1.1) !important;" onclick="openImageLarge('${msg.fileUrl}')">
+                                    <img src="${msg.fileUrl}" class="sticker-img" onclick="openImageLarge('${msg.fileUrl}')">
                                 </div>
                             </div>
                         `;
