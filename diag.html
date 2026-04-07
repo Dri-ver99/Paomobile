@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Global Firestore Data Scanner</title>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.5; color: #333; }
+        .item { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+        .title { font-weight: bold; color: #ee4d2d; margin-bottom: 10px; display: block; border-bottom: 1px solid #eee; }
+        .data { white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; color: #555; background: #f9f9f9; padding: 10px; display: block; overflow-x: auto; }
+        .count { font-weight: bold; font-size: 1.2rem; margin: 10px 0; }
+        .error { color: #ff4d4f; }
+        .log { border-left: 4px solid #aaa; padding-left: 10px; font-size: 0.9rem; color: #777; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Global Firestore Data Scanner (Recovery Mode)</h2>
+    <div id="logArea"></div>
+    <div id="results"></div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const results = document.getElementById('results');
+        const logArea = document.getElementById('logArea');
+
+        function log(msg) {
+            const l = document.createElement('div');
+            l.className = 'log';
+            l.textContent = (new Date().toLocaleTimeString()) + " - " + msg;
+            logArea.appendChild(l);
+        }
+
+        function renderItem(title, data) {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerHTML = `<span class="title">${title}</span><div class="data">${JSON.stringify(data, null, 2)}</div>`;
+            results.appendChild(div);
+        }
+
+        async function scan() {
+            try {
+                log("Scanning 'settings' collection...");
+                const settingsSnap = await db.collection('settings').get();
+                log(`Found ${settingsSnap.size} documents in 'settings'.`);
+                settingsSnap.forEach(doc => {
+                    renderItem(`Setting: ${doc.id}`, doc.data());
+                });
+
+                log("Scanning 'products' collection (Summary)...");
+                const allProdsSnap = await db.collection('products').get();
+                log(`Found ${allProdsSnap.size} documents in 'products'.`);
+                
+                const stats = {};
+                allProdsSnap.forEach(doc => {
+                    const data = doc.data();
+                    const cat = data.category || 'unknown';
+                    if (!stats[cat]) stats[cat] = 0;
+                    stats[cat]++;
+                });
+                renderItem("Product Statistics by Category", stats);
+
+                log("Checking for Spare Parts specifically...");
+                allProdsSnap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.category === 'parts' || data.category === 'อะไหล่' || doc.id.includes('part')) {
+                        renderItem(`Spare Part Document: ${doc.id}`, data);
+                    }
+                });
+
+                log("Checking for 'deleted_products' specifically...");
+                const delDoc = await db.collection('settings').doc('deleted_products').get();
+                if (delDoc.exists) {
+                    renderItem("Global Deleted Products Registry", delDoc.data());
+                }
+
+                log("Scan complete.");
+            } catch (e) {
+                log("ERROR: " + e.message);
+                const errDiv = document.createElement('div');
+                errDiv.className = 'error';
+                errDiv.textContent = "FATAL ERROR during scan: " + e.message;
+                results.appendChild(errDiv);
+            }
+        }
+
+        scan();
+    </script>
+</body>
+</html>

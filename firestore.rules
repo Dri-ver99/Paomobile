@@ -7,7 +7,7 @@ service cloud.firestore {
       return request.auth != null && 
              request.auth.token != null &&
              request.auth.token.email != null &&
-             request.auth.token.email.toLower() == "sattawat2560@gmail.com";
+             request.auth.token.email.lower() == "sattawat2560@gmail.com";
     }
 
     // 1. ข้อมูลผู้ใช้งาน (Users)
@@ -56,10 +56,10 @@ service cloud.firestore {
       }
     }
     
-    // 6. ✅ ระบบจัดการสต๊อกสินค้า (Products)
+    // 6. ✅ [ส่วนที่แก้ไข] ระบบจัดการสต๊อกสินค้า (Products)
     match /products/{productId} {
       allow read: if true;
-      // ✅ อนุญาตให้เขียน/แก้ไขสต๊อกได้ตลอดเวลา (Usable Forever) ตามที่คุณลูกค้าต้องการครับ
+      // ✅ อนุญาตให้เขียน/แก้ไขสต๊อกได้ตลอดเวลา (Always usable) ตามที่คุณลูกค้าต้องการครับ
       allow write: if true; 
     }
     
