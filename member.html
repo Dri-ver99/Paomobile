@@ -29,31 +29,8 @@
             color: var(--member-text);
         }
 
-        /* --- Critical UI Layering Fix (v1.7.5) --- */
 
-        /* Lockdown ALL potential overlays when hidden */
-        .site-search-overlay,
-        .toast-overlay,
-        .mobile-menu,
-        .cart-sidebar,
-        .cart-overlay {
-            pointer-events: none !important;
-            opacity: 0;
-            visibility: hidden;
-            display: none;
-        }
 
-        /* Enable only when active class is present */
-        .site-search-overlay.open,
-        .toast-overlay.active,
-        .mobile-menu.active,
-        .cart-sidebar.active,
-        .cart-overlay.active {
-            pointer-events: auto !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            display: flex !important;
-        }
 
         .member-container {
             max-width: 1200px;

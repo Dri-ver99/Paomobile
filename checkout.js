@@ -229,58 +229,55 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             tempShipCode = appliedShipCode;
             tempDiscountCode = appliedDiscountCode;
 
-            // v1.8.0 - Sync with Firestore before rendering
-            if (window.db) {
-                try {
-                    const user = JSON.parse(localStorage.getItem('paomobile_user'));
-                    if (user && user.email) {
-                        const email = user.email.trim();
-                        const vKey = 'pao_user_vouchers_' + email;
-                        
-                        const syncPromise = (async () => {
-                            const redemptionsSnap = await db.collection('vouchers_redemptions').where('email', '==', email).get();
-                            if (redemptionsSnap.empty) return;
-
-                            const claimedCodes = [...new Set(redemptionsSnap.docs.map(doc => doc.data().code))];
-                            
-                            let refreshedVouchers = [];
-                            const chunkSize = 10;
-                            for (let i = 0; i < claimedCodes.length; i += chunkSize) {
-                                const chunk = claimedCodes.slice(i, i + chunkSize);
-                                const vouchersSnap = await db.collection('vouchers').where('code', 'in', chunk).get();
-                                vouchersSnap.forEach(doc => refreshedVouchers.push({ ...doc.data(), id: doc.id }));
-                            }
-
-                            if (refreshedVouchers.length > 0) {
-                                localStorage.setItem(vKey, JSON.stringify(refreshedVouchers));
-                                console.log("[Sync] Cloud refresh success:", refreshedVouchers.length);
-                            }
-                        })();
-
-                        await Promise.race([syncPromise, new Promise(resolve => setTimeout(resolve, 2000))]);
-                    }
-                } catch (e) { console.warn("[Sync] Timeout or error, using cache", e); }
-            }
-            
-            // Usage check
-            let usageCounts = {};
-            if (window.db) {
-                try {
-                    const user = JSON.parse(localStorage.getItem('paomobile_user'));
-                    const email = user ? user.email : '';
-                    const snap = await db.collection('orders').where('customerEmail', '==', email).get();
-                    snap.docs.forEach(doc => {
-                        const d = doc.data();
-                        if (d.status !== 'ยกเลิกแล้ว') {
-                            const code = d.appliedVoucherCode || d.voucherCode;
-                            if (code) usageCounts[code] = (usageCounts[code] || 0) + 1;
-                        }
-                    });
-                } catch (e) { console.error(e); }
-            }
-
-            renderPersonalVouchers(usageCounts);
+            // 1. INSTANT RENDER (using LocalStorage Cache - Zero Delay)
+            renderPersonalVouchers({}); 
             refreshVoucherListUI();
+
+            // 2. BACKGROUND SYNC (Non-blocking)
+            if (window.db) {
+                (async () => {
+                    try {
+                        const user = JSON.parse(localStorage.getItem('paomobile_user'));
+                        if (user && user.email) {
+                            const email = user.email.trim();
+                            const vKey = 'pao_user_vouchers_' + email;
+                            let usageCounts = {};
+                            
+                            // A. Fetch claimed vouchers
+                            const redemptionsSnap = await db.collection('vouchers_redemptions').where('email', '==', email).get();
+                            if (!redemptionsSnap.empty) {
+                                const claimedCodes = [...new Set(redemptionsSnap.docs.map(doc => doc.data().code))];
+                                let refreshedVouchers = [];
+                                const chunkSize = 10;
+                                for (let i = 0; i < claimedCodes.length; i += chunkSize) {
+                                    const chunk = claimedCodes.slice(i, i + chunkSize);
+                                    const vouchersSnap = await db.collection('vouchers').where('code', 'in', chunk).get();
+                                    vouchersSnap.forEach(doc => refreshedVouchers.push({ ...doc.data(), id: doc.id }));
+                                }
+                                if (refreshedVouchers.length > 0) {
+                                    localStorage.setItem(vKey, JSON.stringify(refreshedVouchers));
+                                }
+                            }
+
+                            // B. Check usage limits from orders
+                            const ordersSnap = await db.collection('orders').where('customerEmail', '==', email).get();
+                            ordersSnap.docs.forEach(doc => {
+                                const d = doc.data();
+                                if (d.status !== 'ยกเลิกแล้ว') {
+                                    const code = d.appliedVoucherCode || d.voucherCode;
+                                    if (code) usageCounts[code] = (usageCounts[code] || 0) + 1;
+                                }
+                            });
+
+                            // C. Re-render silently with completely updated limits & codes
+                            renderPersonalVouchers(usageCounts);
+                            refreshVoucherListUI();
+                        }
+                    } catch (e) { 
+                        console.warn("[Background DB Sync] Handled gracefully:", e); 
+                    }
+                })();
+            }
         }
 
         function renderPersonalVouchers(usageCounts = {}) {
@@ -605,7 +602,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                     const container = document.getElementById('policyModalContainer');
                     if (container) container.style.transform = 'translateY(0)';
                 }, 10);
-                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
             }
         }
 
@@ -617,7 +614,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 if (container) container.style.transform = 'translateY(20px)';
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                    document.body.style.overflow = '';
+                    document.documentElement.style.overflow = '';
                 }, 300);
             }
         }
