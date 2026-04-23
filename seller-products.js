@@ -1102,6 +1102,14 @@ async function handleFormSubmit(e) {
                 console.error("❌ LocalStorage completely failed:", e2);
             }
         }
+
+        // --- Invalidate Customer-Side Caches ---
+        // Clear all customer page caches so they always fetch fresh data from Firestore
+        // instead of showing the stale pre-edit version.
+        ['new', 'used', 'accessory', 'parts', 'all'].forEach(cat => {
+            localStorage.removeItem(`pao_cache_${cat}`);
+        });
+        console.log("🗑️ Customer caches cleared — customers will see the latest data on next load.");
         
         // Auto-switch to the category of the saved product so it is immediately visible
         if (typeof setFilterCategory === 'function') {
@@ -1110,23 +1118,29 @@ async function handleFormSubmit(e) {
             filterProducts();
         }
         
+        // --- Reset button & close modal IMMEDIATELY (don't wait for cloud sync) ---
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "💾 บันทึกสินค้า";
+        }
         closeModal();
 
-        // --- 2. Background Cloud Sync (Optional) ---
+        // --- 2. Background Cloud Sync (fire-and-forget, does NOT block UI) ---
         if (typeof db !== 'undefined' && db && checkCloudPermission()) {
-            await db.collection('products').doc(id).set(data, { merge: true });
-            console.log("☁️ Cloud Sync Successful");
+            db.collection('products').doc(id).set(data, { merge: true })
+                .then(() => console.log("☁️ Cloud Sync Successful"))
+                .catch(syncErr => console.error("❌ Cloud Sync Error:", syncErr));
         } else {
             console.warn("⚠️ Cloud sync skipped - product saved locally only. Customers won't see it until synced.");
         }
     } catch (err) {
         console.error("❌ Submission Error:", err);
-        await sellerAlert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message, 'error');
-    } finally {
+        // Always reset button on error so user can retry
         if (btn) {
             btn.disabled = false;
             btn.textContent = "💾 บันทึกสินค้า";
         }
+        await sellerAlert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message, 'error');
     }
 }
 
@@ -1145,6 +1159,11 @@ async function deleteProduct(id) {
             localStorage.setItem('pao_seller_cache', JSON.stringify(lightProducts));
         } catch (e2) { /* Totally full */ }
     }
+
+    // --- Invalidate Customer-Side Caches ---
+    ['new', 'used', 'accessory', 'parts', 'all'].forEach(cat => {
+        localStorage.removeItem(`pao_cache_${cat}`);
+    });
     
     filterProducts();
 
