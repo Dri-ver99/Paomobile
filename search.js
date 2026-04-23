@@ -214,12 +214,26 @@ document.addEventListener('DOMContentLoaded', () => {
           ? `<img src="${p.img}" alt="${p.name}" class="sr-product-img">`
           : `<div class="sr-icon">${p.emoji || '📦'}</div>`;
 
+        // Price display: range for variations
+        let srPriceStr;
+        if (p.variations && p.variations.length > 0) {
+            const vp = p.variations.map(v => v.price || 0).filter(pr => pr > 0);
+            if (vp.length > 0) {
+                const mn = Math.min(...vp), mx = Math.max(...vp);
+                srPriceStr = mn === mx ? `฿${mn.toLocaleString()}` : `฿${mn.toLocaleString()} - ฿${mx.toLocaleString()}`;
+            } else {
+                srPriceStr = `฿${(p.price || 0).toLocaleString()}`;
+            }
+        } else {
+            srPriceStr = `฿${(p.price || 0).toLocaleString()}`;
+        }
+
         a.innerHTML = `
           ${thumbHTML}
           <div class="sr-content">
             <div class="sr-title">${p.name}</div>
             <div class="sr-brand">${p.brand || (p.category === 'parts' ? p.partModel : '')}</div>
-            <div class="sr-price">฿${(p.price || 0).toLocaleString()}</div>
+            <div class="sr-price">${srPriceStr}</div>
           </div>
           <span class="sr-arrow">→</span>`;
         a.addEventListener('click', closeSearch);

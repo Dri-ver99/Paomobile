@@ -253,6 +253,419 @@
             border-color: #ee4d2d !important;
             transform: scale(1.05);
         }
+
+        /* ── Multi-Select & Bulk Edit ─────────────────────── */
+        .product-checkbox-cell {
+            width: 40px;
+            text-align: center !important;
+            vertical-align: middle;
+        }
+        .product-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #ee4d2d;
+            border-radius: 4px;
+        }
+        .product-table tr.selected-row {
+            background: #fff7f5 !important;
+        }
+        .product-table tr.selected-row:hover {
+            background: #ffeeea !important;
+        }
+
+        /* Floating Bulk Action Bar */
+        .bulk-action-bar {
+            position: fixed;
+            bottom: -80px;
+            left: 250px;
+            right: 0;
+            height: 64px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 900;
+            transition: bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bulk-action-bar.visible {
+            bottom: 0;
+        }
+        .bulk-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .bulk-bar-left .select-all-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bulk-bar-left .select-all-wrap input {
+            width: 18px;
+            height: 18px;
+            accent-color: #ee4d2d;
+            cursor: pointer;
+        }
+        .bulk-bar-left .select-all-wrap label {
+            color: #ccc;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .bulk-bar-count {
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bulk-bar-count .count-badge {
+            background: #ee4d2d;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        .bulk-bar-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .bulk-btn {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .bulk-btn-price {
+            background: #faad14;
+            color: #fff;
+        }
+        .bulk-btn-price:hover { background: #d48806; }
+        .bulk-btn-brand {
+            background: #1890ff;
+            color: #fff;
+        }
+        .bulk-btn-brand:hover { background: #096dd9; }
+        .bulk-btn-category {
+            background: #52c41a;
+            color: #fff;
+        }
+        .bulk-btn-category:hover { background: #389e0d; }
+        .bulk-btn-delete {
+            background: rgba(255,77,79,0.15);
+            color: #ff4d4f;
+            border: 1px solid rgba(255,77,79,0.3);
+        }
+        .bulk-btn-delete:hover { background: #ff4d4f; color: #fff; }
+        .bulk-btn-cancel {
+            background: rgba(255,255,255,0.1);
+            color: #aaa;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .bulk-btn-cancel:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+        /* Bulk Edit Modal */
+        .bulk-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .bulk-modal-overlay.active {
+            display: flex;
+        }
+        .bulk-modal {
+            background: #fff;
+            width: 460px;
+            max-width: 95%;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: bulkModalIn 0.3s ease;
+        }
+        @keyframes bulkModalIn {
+            from { transform: scale(0.9) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .bulk-modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fafafa;
+        }
+        .bulk-modal-header h3 {
+            margin: 0;
+            font-size: 1.05rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bulk-modal-header .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #888;
+        }
+        .bulk-modal-body {
+            padding: 24px;
+        }
+        .bulk-modal-body label {
+            display: block;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .bulk-modal-body input,
+        .bulk-modal-body select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .bulk-modal-body input:focus,
+        .bulk-modal-body select:focus {
+            outline: none;
+            border-color: #ee4d2d;
+        }
+        .bulk-modal-info {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: #f6ffed;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        .bulk-modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .bulk-modal-footer button {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .bulk-modal-footer .btn-cancel-modal {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #666;
+        }
+        .bulk-modal-footer .btn-apply {
+            background: #ee4d2d;
+            border: none;
+            color: #fff;
+        }
+        .bulk-modal-footer .btn-apply:hover {
+            background: #d73211;
+        }
+
+        @media (max-width: 768px) {
+            .bulk-action-bar {
+                left: 0;
+                padding: 0 12px;
+                height: auto;
+                min-height: 58px;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 8px 12px;
+            }
+            .bulk-bar-actions {
+                flex-wrap: wrap;
+            }
+            .bulk-btn {
+                font-size: 0.75rem;
+                padding: 6px 10px;
+            }
+            .product-checkbox-cell {
+                width: 30px;
+            }
+            .product-table tr {
+                grid-template-columns: 30px 60px 1fr !important;
+            }
+            .product-img-cell {
+                width: 60px !important;
+            }
+        }
+
+        /* ── Inline Price Edit ────────────────────── */
+        .price-editable {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 6px;
+            border-radius: 6px;
+            transition: all 0.15s;
+            position: relative;
+        }
+        .price-editable:hover {
+            background: #fff7f5;
+        }
+        .price-editable .edit-icon {
+            opacity: 0;
+            color: #ee4d2d;
+            font-size: 0.8rem;
+            transition: opacity 0.15s;
+        }
+        .price-editable:hover .edit-icon {
+            opacity: 1;
+        }
+
+        /* Inline Price Edit Modal */
+        .inline-price-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+        .inline-price-overlay.active {
+            display: flex;
+        }
+        .inline-price-box {
+            background: #fff;
+            width: 420px;
+            max-width: 92%;
+            border-radius: 14px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+            overflow: hidden;
+            animation: inlinePriceIn 0.25s ease;
+        }
+        @keyframes inlinePriceIn {
+            from { transform: scale(0.92) translateY(15px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .inline-price-header {
+            padding: 20px 24px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .inline-price-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #333;
+            font-weight: 700;
+        }
+        .inline-price-header .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: #aaa;
+            line-height: 1;
+        }
+        .inline-price-header .close-btn:hover { color: #333; }
+        .inline-price-body {
+            padding: 14px 24px 20px;
+        }
+        .inline-price-body .product-name-label {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+        .inline-price-body .price-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .inline-price-body .price-input-row label {
+            font-size: 0.9rem;
+            color: #555;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .inline-price-body .price-input-wrap {
+            flex: 1;
+            position: relative;
+        }
+        .inline-price-body .price-input-wrap .baht-symbol {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            color: #999;
+            font-size: 1rem;
+        }
+        .inline-price-body .price-input-wrap input {
+            width: 100%;
+            padding: 12px 14px 12px 32px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #333;
+            transition: border-color 0.2s;
+        }
+        .inline-price-body .price-input-wrap input:focus {
+            outline: none;
+            border-color: #ee4d2d;
+        }
+        .inline-price-footer {
+            padding: 14px 24px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .inline-price-footer button {
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .inline-price-footer .btn-ip-cancel {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #666;
+        }
+        .inline-price-footer .btn-ip-cancel:hover { background: #eee; }
+        .inline-price-footer .btn-ip-save {
+            background: #ee4d2d;
+            border: none;
+            color: #fff;
+        }
+        .inline-price-footer .btn-ip-save:hover { background: #d73211; }
     </style>
 </head>
 <body>
@@ -356,6 +769,7 @@
                 <table class="product-table">
                     <thead>
                         <tr>
+                            <th class="product-checkbox-cell"><input type="checkbox" class="product-checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" title="เลือกทั้งหมด"></th>
                             <th class="product-img-cell">รูป</th>
                             <th>ข้อมูลสินค้า</th>
                             <th>หมวดหมู่</th>
@@ -365,7 +779,7 @@
                     </thead>
                     <tbody id="product-list-body">
                         <!-- Products will be injected here -->
-                        <tr><td colspan="5" style="text-align: center; padding: 40px; color: #999;">กำลังโหลดสินค้า...</td></tr>
+                        <tr><td colspan="6" style="text-align: center; padding: 40px; color: #999;">กำลังโหลดสินค้า...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -396,8 +810,8 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                     <div>
-                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">ราคา (฿)</label>
-                        <input type="number" id="formPrice" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">ราคา (฿) <span id="priceAutoHint" style="color:#52c41a; font-weight:400; display:none;">(คำนวณจากตัวเลือกอัตโนมัติ)</span></label>
+                        <input type="number" id="formPrice" placeholder="ถ้ามีตัวเลือกจะคำนวณอัตโนมัติ" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
                     </div>
                     <div>
                         <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">หมวดหมู่</label>
@@ -571,6 +985,136 @@
             <button class="iv-close" onclick="closeImageViewer()">&times;</button>
             <img id="fullSizeImg" src="" class="iv-img" alt="Zoomed view">
             <div id="ivCaption" class="iv-caption">รูปภาพที่ 1</div>
+        </div>
+    </div>
+
+    <!-- Inline Price Edit Modal -->
+    <div class="inline-price-overlay" id="inlinePriceOverlay" onclick="closeInlinePrice()">
+        <div class="inline-price-box" onclick="event.stopPropagation()">
+            <div class="inline-price-header">
+                <h3>ตั้งราคาสินค้า</h3>
+                <button class="close-btn" onclick="closeInlinePrice()">&times;</button>
+            </div>
+            <div class="inline-price-body">
+                <div class="product-name-label" id="inlinePriceProductName">-</div>
+                <div class="price-input-row">
+                    <label>ราคา</label>
+                    <div class="price-input-wrap">
+                        <span class="baht-symbol">฿</span>
+                        <input type="number" id="inlinePriceValue" min="0" placeholder="0" onkeydown="if(event.key==='Enter'){saveInlinePrice(); event.preventDefault();}">
+                    </div>
+                </div>
+            </div>
+            <div class="inline-price-footer">
+                <button class="btn-ip-cancel" onclick="closeInlinePrice()">ยกเลิก</button>
+                <button class="btn-ip-save" onclick="saveInlinePrice()">อัปเดตราคาสินค้า</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Bulk Action Bar -->
+    <div class="bulk-action-bar" id="bulkActionBar">
+        <div class="bulk-bar-left">
+            <div class="select-all-wrap">
+                <input type="checkbox" id="bulkSelectAll" onchange="toggleSelectAll()">
+                <label for="bulkSelectAll">เลือกทั้งหมด</label>
+            </div>
+            <div class="bulk-bar-count">
+                เลือกแล้ว <span class="count-badge" id="bulkCount">0</span> รายการ
+            </div>
+        </div>
+        <div class="bulk-bar-actions">
+            <button class="bulk-btn bulk-btn-price" onclick="openBulkPriceModal()">💰 แก้ราคา</button>
+            <button class="bulk-btn bulk-btn-brand" onclick="openBulkBrandModal()">🏷️ แก้แบรนด์</button>
+            <button class="bulk-btn bulk-btn-category" onclick="openBulkCategoryModal()">📂 แก้หมวดหมู่</button>
+            <button class="bulk-btn bulk-btn-merge" onclick="mergeSelectedProducts()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff;">🔗 รวมที่เลือก</button>
+            <button class="bulk-btn bulk-btn-delete" onclick="bulkDeleteSelected()">🗑️ ลบที่เลือก</button>
+            <button class="bulk-btn bulk-btn-cancel" onclick="clearSelection()">✕ ยกเลิก</button>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Price Modal -->
+    <div class="bulk-modal-overlay" id="bulkPriceModal">
+        <div class="bulk-modal">
+            <div class="bulk-modal-header">
+                <h3>💰 แก้ราคาสินค้าพร้อมกัน</h3>
+                <button class="close-btn" onclick="closeBulkModal('bulkPriceModal')">&times;</button>
+            </div>
+            <div class="bulk-modal-body">
+                <label>ราคาใหม่ (฿) — จะใช้กับสินค้าที่เลือกทั้งหมด</label>
+                <input type="number" id="bulkPriceInput" placeholder="เช่น 3500" min="0">
+                <div class="bulk-modal-info" id="bulkPriceInfo">✅ จะอัปเดตราคาให้ <strong>0</strong> รายการ</div>
+            </div>
+            <div class="bulk-modal-footer">
+                <button class="btn-cancel-modal" onclick="closeBulkModal('bulkPriceModal')">ยกเลิก</button>
+                <button class="btn-apply" onclick="applyBulkPrice()">✅ บันทึกราคาใหม่</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Brand Modal -->
+    <div class="bulk-modal-overlay" id="bulkBrandModal">
+        <div class="bulk-modal">
+            <div class="bulk-modal-header">
+                <h3>🏷️ แก้แบรนด์สินค้าพร้อมกัน</h3>
+                <button class="close-btn" onclick="closeBulkModal('bulkBrandModal')">&times;</button>
+            </div>
+            <div class="bulk-modal-body">
+                <label>แบรนด์ใหม่ — จะใช้กับสินค้าที่เลือกทั้งหมด</label>
+                <input type="text" id="bulkBrandInput" placeholder="เช่น Samsung, Apple..." list="brandsList">
+                <div class="bulk-modal-info" id="bulkBrandInfo">✅ จะอัปเดตแบรนด์ให้ <strong>0</strong> รายการ</div>
+            </div>
+            <div class="bulk-modal-footer">
+                <button class="btn-cancel-modal" onclick="closeBulkModal('bulkBrandModal')">ยกเลิก</button>
+                <button class="btn-apply" onclick="applyBulkBrand()">✅ บันทึกแบรนด์ใหม่</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Category Modal -->
+    <div class="bulk-modal-overlay" id="bulkCategoryModal">
+        <div class="bulk-modal">
+            <div class="bulk-modal-header">
+                <h3>📂 แก้หมวดหมู่สินค้าพร้อมกัน</h3>
+                <button class="close-btn" onclick="closeBulkModal('bulkCategoryModal')">&times;</button>
+            </div>
+            <div class="bulk-modal-body">
+                <label>เลือกหมวดหมู่ใหม่ (ทีละ 1 หมวด)</label>
+                <select id="bulkCategoryInput" onchange="onBulkCategoryChange()">
+                    <option value="new">📱 มือ 1</option>
+                    <option value="used">♻️ มือ 2</option>
+                    <option value="accessory">🎧 Accessory</option>
+                    <option value="parts">🔧 อะไหล่มือถือ</option>
+                </select>
+
+                <!-- Parts Sub-Options (shown only when "parts" selected) -->
+                <div id="bulkPartsSubOptions" style="display:none; margin-top:16px; background:#f9f7f3; border:1px solid #e8dcc8; border-radius:12px; padding:16px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                        <span style="font-size:1.1rem;">🔧</span>
+                        <span style="font-weight:700; color:#A68A64; font-size:0.9rem;">ตั้งค่าอะไหล่เพิ่มเติม</span>
+                    </div>
+
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:0.8rem; color:#856404; font-weight:600;">รุ่นโทรศัพท์ (หมวดหลัก)</label>
+                        <select id="bulkPartModelInput" onchange="onBulkPartModelChange()" style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-family:inherit; font-size:0.9rem; margin-top:4px;">
+                            <option value="">-- ไม่เปลี่ยนรุ่น --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem; color:#856404; font-weight:600;">ประเภทอะไหล่ (หมวดย่อย)</label>
+                        <select id="bulkPartTypeInput" style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-family:inherit; font-size:0.9rem; margin-top:4px;">
+                            <option value="">-- ไม่เปลี่ยนประเภท --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bulk-modal-info" id="bulkCategoryInfo">✅ จะอัปเดตหมวดหมู่ให้ <strong>0</strong> รายการ</div>
+            </div>
+            <div class="bulk-modal-footer">
+                <button class="btn-cancel-modal" onclick="closeBulkModal('bulkCategoryModal')">ยกเลิก</button>
+                <button class="btn-apply" onclick="applyBulkCategory()">✅ บันทึกหมวดหมู่ใหม่</button>
+            </div>
         </div>
     </div>
 

@@ -3,10 +3,126 @@ window.addEventListener('error', function(e) {
     console.error("❌ Script Error:", e.message, "at", e.filename, ":", e.lineno);
 });
 
+// ── Premium Modal System (replaces native alert/confirm) ──────────────
+
+function sellerAlert(message, type = 'info') {
+    return new Promise(resolve => {
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️', delete: '🗑️', merge: '🔗' };
+        const colors = { success: '#52c41a', error: '#ff4d4f', warning: '#faad14', info: '#1890ff', delete: '#ff4d4f', merge: '#764ba2' };
+        const icon = icons[type] || icons.info;
+        const color = colors[type] || colors.info;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'sellerAlertOverlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(4px);animation:sModalFadeIn 0.2s ease;';
+
+        overlay.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;animation:sModalSlideIn 0.3s ease;">
+                <div style="font-size:48px;margin-bottom:16px;">${icon}</div>
+                <div style="font-size:0.95rem;color:#333;line-height:1.7;white-space:pre-line;margin-bottom:24px;">${message}</div>
+                <button id="sAlertOkBtn" style="background:${color};color:#fff;border:none;padding:12px 40px;border-radius:10px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;min-width:120px;transition:all 0.2s;">ตกลง</button>
+            </div>
+        `;
+
+        // Add animation styles if not present
+        if (!document.getElementById('sModalStyles')) {
+            const style = document.createElement('style');
+            style.id = 'sModalStyles';
+            style.textContent = `
+                @keyframes sModalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes sModalSlideIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+                #sAlertOkBtn:hover { filter: brightness(1.1); transform: scale(1.02); }
+                #sConfirmOkBtn:hover { filter: brightness(1.1); transform: scale(1.02); }
+                #sConfirmCancelBtn:hover { background: #f5f5f5 !important; }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(overlay);
+        const okBtn = overlay.querySelector('#sAlertOkBtn');
+        okBtn.focus();
+        okBtn.onclick = () => { overlay.remove(); resolve(); };
+        overlay.onclick = (e) => { if (e.target === overlay) { overlay.remove(); resolve(); } };
+    });
+}
+
+function sellerConfirm(message, type = 'warning') {
+    return new Promise(resolve => {
+        const icons = { warning: '⚠️', delete: '🗑️', merge: '🔗', info: 'ℹ️' };
+        const colors = { warning: '#faad14', delete: '#ff4d4f', merge: '#764ba2', info: '#1890ff' };
+        const icon = icons[type] || icons.warning;
+        const color = colors[type] || colors.warning;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'sellerConfirmOverlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(4px);animation:sModalFadeIn 0.2s ease;';
+
+        overlay.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:32px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;animation:sModalSlideIn 0.3s ease;">
+                <div style="font-size:48px;margin-bottom:16px;">${icon}</div>
+                <div style="font-size:0.95rem;color:#333;line-height:1.7;white-space:pre-line;margin-bottom:28px;">${message}</div>
+                <div style="display:flex;gap:12px;justify-content:center;">
+                    <button id="sConfirmCancelBtn" style="background:#fff;color:#666;border:1px solid #ddd;padding:12px 32px;border-radius:10px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;min-width:100px;transition:all 0.2s;">ยกเลิก</button>
+                    <button id="sConfirmOkBtn" style="background:${color};color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;min-width:100px;transition:all 0.2s;">ยืนยัน</button>
+                </div>
+            </div>
+        `;
+
+        // Add animation styles if not present
+        if (!document.getElementById('sModalStyles')) {
+            const style = document.createElement('style');
+            style.id = 'sModalStyles';
+            style.textContent = `
+                @keyframes sModalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes sModalSlideIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+                #sAlertOkBtn:hover { filter: brightness(1.1); transform: scale(1.02); }
+                #sConfirmOkBtn:hover { filter: brightness(1.1); transform: scale(1.02); }
+                #sConfirmCancelBtn:hover { background: #f5f5f5 !important; }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(overlay);
+        overlay.querySelector('#sConfirmOkBtn').onclick = () => { overlay.remove(); resolve(true); };
+        overlay.querySelector('#sConfirmCancelBtn').onclick = () => { overlay.remove(); resolve(false); };
+    });
+}
+
+function sellerPrompt(message, placeholder = '') {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.id = 'sellerPromptOverlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(4px);animation:sModalFadeIn 0.2s ease;';
+
+        overlay.innerHTML = `
+            <div style="background:#fff;border-radius:16px;padding:32px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;animation:sModalSlideIn 0.3s ease;">
+                <div style="font-size:40px;margin-bottom:16px;">⌨️</div>
+                <div style="font-size:0.95rem;color:#333;line-height:1.7;white-space:pre-line;margin-bottom:20px;">${message}</div>
+                <input type="text" id="sPromptInput" placeholder="${placeholder}" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:1rem;margin-bottom:24px;text-align:center;outline:none;font-family:inherit;" autocomplete="off">
+                <div style="display:flex;gap:12px;justify-content:center;">
+                    <button id="sPromptCancelBtn" style="background:#fff;color:#666;border:1px solid #ddd;padding:12px 32px;border-radius:10px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;min-width:100px;transition:all 0.2s;">ยกเลิก</button>
+                    <button id="sPromptOkBtn" style="background:#1890ff;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;min-width:100px;transition:all 0.2s;">ตกลง</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+        const input = overlay.querySelector('#sPromptInput');
+        input.focus();
+
+        const finish = (val) => { overlay.remove(); resolve(val); };
+        
+        overlay.querySelector('#sPromptOkBtn').onclick = () => finish(input.value);
+        overlay.querySelector('#sPromptCancelBtn').onclick = () => finish(null);
+        input.onkeyup = (e) => { if(e.key === 'Enter') finish(input.value); };
+    });
+}
+
 let allProducts = [];
 let deletedMockIds = JSON.parse(localStorage.getItem('deleted_mock_ids') || '[]');
 let currentCategory = 'all';
 let productUnsubscribe = null; // Track current Firestore listener
+let selectedProductIds = new Set(); // Multi-select tracking
 
 function initTabs() {
     if (typeof setFilterCategory === 'function') {
@@ -138,9 +254,9 @@ window.sellerLogin = function() {
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.addScope('email');
     provider.setCustomParameters({ prompt: 'select_account' });
-    firebase.auth().signInWithPopup(provider).catch(err => {
+    firebase.auth().signInWithPopup(provider).catch(async err => {
         if (window.location.protocol === 'file:') {
-            alert("⚠️ ล็อกอินไม่ได้เนื่องจากเปิดไฟล์ตรงๆ กรุณาใช้ปุ่ม 'บังคับสิทธิ์ Admin (Local)' แทนครับ");
+            await sellerAlert("ล็อกอินไม่ได้เนื่องจากเปิดไฟล์ตรงๆ กรุณาใช้ปุ่ม 'บังคับสิทธิ์ Admin (Local)' แทนครับ", 'warning');
         }
     });
 };
@@ -392,12 +508,20 @@ function filterProducts() {
     console.log(`[Filter] Results: ${filtered.length} items`);
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #999;">ไม่พบสินค้าในหมวดหมู่นี้</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #999;">ไม่พบสินค้าในหมวดหมู่นี้</td></tr>';
         return;
     }
 
-    tbody.innerHTML = filtered.map(p => `
-        <tr data-id="${p.id}">
+    // Track which visible IDs exist for "select all" logic
+    window._currentFilteredIds = filtered.map(p => p.id);
+
+    tbody.innerHTML = filtered.map(p => {
+        const isSelected = selectedProductIds.has(p.id);
+        return `
+        <tr data-id="${p.id}" class="${isSelected ? 'selected-row' : ''}">
+            <td class="product-checkbox-cell">
+                <input type="checkbox" class="product-checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelectProduct('${p.id}')">
+            </td>
             <td class="product-img-cell">
                 ${p.img ? `<img src="${p.img}" class="product-img-mini">` : `<div class="product-img-mini">${p.emoji || '📦'}</div>`}
             </td>
@@ -413,17 +537,21 @@ function filterProducts() {
                 </div>
             </td>
             <td class="mobile-hide-on-card"><span class="category-tag tag-${p.category}">${getCategoryName(p.category)}</span></td>
-            <td class="mobile-hide-on-card"><div class="price-txt">฿${(p.price || 0).toLocaleString()}</div></td>
+            <td class="mobile-hide-on-card"><div class="price-txt price-editable" onclick="openInlinePrice('${p.id}')">${getDisplayPrice(p)} <span class="edit-icon">✏️</span></div></td>
             <td class="actions-cell">
                 <div class="mobile-card-details" style="display:none;">
                     <span class="category-tag tag-${p.category}">${getCategoryName(p.category)}</span>
-                    <div class="price-txt">฿${(p.price || 0).toLocaleString()}</div>
+                    <div class="price-txt price-editable" onclick="openInlinePrice('${p.id}')">${getDisplayPrice(p)} <span class="edit-icon">✏️</span></div>
                 </div>
                 <button class="btn-edit" onclick="openEditModal('${p.id}')">แก้ไข</button>
                 <button class="btn-delete" onclick="deleteProduct('${p.id}')">ลบ</button>
             </td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
+
+    // Sync "select all" checkbox state
+    syncSelectAllCheckbox();
 }
 
 function getCategoryName(cat) {
@@ -432,6 +560,24 @@ function getCategoryName(cat) {
     if (cat === 'accessory') return 'Accessory';
     if (cat === 'parts') return 'อะไหล่';
     return cat;
+}
+
+// Price display helper: shows range if variations have different prices
+function getDisplayPrice(product) {
+    const variations = product.variations;
+    if (variations && variations.length > 0) {
+        const prices = variations.map(v => v.price || 0).filter(p => p > 0);
+        if (prices.length > 0) {
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            if (minPrice === maxPrice) {
+                return `฿${minPrice.toLocaleString()}`;
+            } else {
+                return `฿${minPrice.toLocaleString()} - ฿${maxPrice.toLocaleString()}`;
+            }
+        }
+    }
+    return `฿${(product.price || 0).toLocaleString()}`;
 }
 
 // ── Variations Management ──────────────────────────────────────────
@@ -444,6 +590,10 @@ window.addVariationRow = function(data = null) {
     
     if (hint) hint.style.display = 'none';
     
+    // Show auto-calc hint on price field
+    const priceHint = document.getElementById('priceAutoHint');
+    if (priceHint) priceHint.style.display = 'inline';
+    
     const rowId = data?.id || "v-" + Date.now() + Math.random().toString(16).slice(2, 5);
     const row = document.createElement('div');
     row.className = 'variation-row';
@@ -455,9 +605,11 @@ window.addVariationRow = function(data = null) {
 
     row.innerHTML = `
         <div style="flex-shrink: 0;">
-            <div style="position: relative; width: 80px; height: 80px; border-radius: 10px; border: 1px dashed #bbb; overflow: hidden; background: #f8f9fa; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="this.nextElementSibling.click()">
-                ${variationImages[rowId] ? `<img src="${variationImages[rowId]}" style="width: 100%; height: 100%; object-fit: cover;">` : '<span style="font-size: 2rem;">🖼️</span>'}
-                <div style="absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); color: #fff; font-size: 0.65rem; text-align: center; padding: 4px; pointer-events: none;">เปลี่ยนรูป</div>
+            <div style="position: relative; width: 80px; height: 80px; border-radius: 10px; border: 1px dashed #bbb; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 4px rgba(0,0,0,0.05);">
+                <div style="width: 100%; height: 100%; cursor: pointer;" onclick="variationImages['${rowId}'] ? viewFullImage(variationImages['${rowId}']) : this.parentElement.nextElementSibling.click()">
+                    ${variationImages[rowId] ? `<img src="${variationImages[rowId]}" style="width: 100%; height: 100%; object-fit: contain;">` : '<span style="font-size: 2rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">🖼️</span>'}
+                </div>
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 0.65rem; text-align: center; padding: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.8)'" onmouseout="this.style.background='rgba(0,0,0,0.6)'" onclick="this.parentElement.nextElementSibling.click()">เปลี่ยนรูป</div>
             </div>
             <input type="file" accept="image/*" style="display: none;" onchange="handleVariationImgUpload(event, '${rowId}')">
         </div>
@@ -482,10 +634,30 @@ window.addVariationRow = function(data = null) {
             </div>
         </div>
         
-        <button type="button" onclick="removeVariationRow(this)" style="background: #fff1f0; border: 1px solid #ffa39e; color: #ff4d4f; cursor: pointer; font-size: 1rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#ff4d4f'; this.style.color='#fff';" onmouseout="this.style.background='#fff1f0'; this.style.color='#ff4d4f';">&times;</button>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button type="button" onclick="moveVariationUp(this)" style="background: #e6f7ff; border: 1px solid #91d5ff; color: #1890ff; cursor: pointer; font-size: 0.8rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#1890ff'; this.style.color='#fff';" onmouseout="this.style.background='#e6f7ff'; this.style.color='#1890ff';" title="เลื่อนขึ้น">▲</button>
+            <button type="button" onclick="moveVariationDown(this)" style="background: #e6f7ff; border: 1px solid #91d5ff; color: #1890ff; cursor: pointer; font-size: 0.8rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#1890ff'; this.style.color='#fff';" onmouseout="this.style.background='#e6f7ff'; this.style.color='#1890ff';" title="เลื่อนลง">▼</button>
+            <button type="button" onclick="removeVariationRow(this)" style="background: #fff1f0; border: 1px solid #ffa39e; color: #ff4d4f; cursor: pointer; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#ff4d4f'; this.style.color='#fff';" onmouseout="this.style.background='#fff1f0'; this.style.color='#ff4d4f';" title="ลบตัวเลือก">&times;</button>
+        </div>
     `;
     
     container.appendChild(row);
+}
+
+window.moveVariationUp = function(btn) {
+    const row = btn.closest('.variation-row');
+    const prev = row.previousElementSibling;
+    if (prev && prev.classList.contains('variation-row')) {
+        row.parentNode.insertBefore(row, prev);
+    }
+}
+
+window.moveVariationDown = function(btn) {
+    const row = btn.closest('.variation-row');
+    const next = row.nextElementSibling;
+    if (next && next.classList.contains('variation-row')) {
+        row.parentNode.insertBefore(next, row);
+    }
 }
 
 window.removeVariationRow = function(btn) {
@@ -498,6 +670,12 @@ window.removeVariationRow = function(btn) {
     const hint = document.getElementById('noVariationHint');
     if (container && container.children.length === 0 && hint) {
         hint.style.display = 'block';
+    }
+    
+    // Hide auto-calc hint if no variations left
+    if (container && container.children.length === 0) {
+        const priceHint = document.getElementById('priceAutoHint');
+        if (priceHint) priceHint.style.display = 'none';
     }
 }
 
@@ -524,7 +702,7 @@ window.handleVariationImgUpload = function(event, rowId) {
             // Update preview
             const row = document.querySelector(`.variation-row[data-id="${rowId}"]`);
             const previewContainer = row.querySelector('div[onclick]');
-            previewContainer.innerHTML = `<img src="${dataUrl}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            previewContainer.innerHTML = `<img src="${dataUrl}" style="width: 100%; height: 100%; object-fit: contain;">`;
         };
         img.src = e.target.result;
     };
@@ -532,12 +710,12 @@ window.handleVariationImgUpload = function(event, rowId) {
 }
 
 async function deleteAllProducts() {
-    if (!confirm('🚨 คำเตือนสูงสุด: คุณแน่ใจหรือไม่ว่าต้องการ "ลบสินค้าทั้งหมด" จากระบบ Cloud?\n\nการกระทำนี้ไม่สามารถย้อนคืนได้ และจะทำให้หน้าเว็บร้านค้าว่างเปล่าทันที!')) return;
+    if (!await sellerConfirm('🚨 คำเตือนสูงสุด: คุณแน่ใจหรือไม่ว่าต้องการ "ลบสินค้าทั้งหมด" จากระบบ Cloud?\n\nการกระทำนี้ไม่สามารถย้อนคืนได้ และจะทำให้หน้าเว็บร้านค้าว่างเปล่าทันที!', 'delete')) return;
     
     // Safety Double-Check
-    const confirmCode = prompt('กรุณาพิมพ์คำว่า "CONFIRM DELETE" เพื่อยืนยันการลบสินค้าทั้งหมดออกจากระบบ:');
+    const confirmCode = await sellerPrompt('กรุณาพิมพ์คำว่า "CONFIRM DELETE" เพื่อยืนยันการลบสินค้าทั้งหมดออกจากระบบ:', 'CONFIRM DELETE');
     if (confirmCode !== 'CONFIRM DELETE') {
-        alert('❌ รหัสยืนยันไม่ถูกต้อง ยกเลิกการลบครับ');
+        await sellerAlert('รหัสยืนยันไม่ถูกต้อง ยกเลิกการลบครับ', 'error');
         return;
     }
 
@@ -571,11 +749,11 @@ async function deleteAllProducts() {
         
         await batch.commit();
         
-        alert('✅ ลบสินค้าทั้งหมดเรียบร้อยแล้วครับ! ระบบกำลังรีโหลด...');
+        await sellerAlert('ลบสินค้าทั้งหมดเรียบร้อยแล้วครับ! ระบบกำลังรีโหลด...', 'success');
         window.location.reload();
     } catch (err) {
         console.error('Delete All Error:', err);
-        alert('เกิดข้อผิดพลาดในการลบ: ' + err.message);
+        await sellerAlert('เกิดข้อผิดพลาดในการลบ: ' + err.message, 'error');
     }
 }
 window.deleteAllProducts = deleteAllProducts;
@@ -686,8 +864,18 @@ function removeImg(index) {
     refreshImgPreviews();
 }
 // ── Image Viewer Functions ─────────────────────────────────────────
-function viewFullImage(index) {
-    const src = uploadedImages[index];
+function viewFullImage(indexOrUrl) {
+    let src;
+    let labelText = '';
+    
+    if (typeof indexOrUrl === 'string') {
+        src = indexOrUrl;
+        labelText = 'รูปภาพ';
+    } else {
+        src = uploadedImages[indexOrUrl];
+        labelText = `รูปภาพที่ ${indexOrUrl + 1} ${indexOrUrl === 0 ? '(รูปหน้าหลัก)' : ''}`;
+    }
+    
     if (!src) return;
     
     const modal = document.getElementById('imageViewerModal');
@@ -695,7 +883,7 @@ function viewFullImage(index) {
     const caption = document.getElementById('ivCaption');
     
     fullImg.src = src;
-    caption.textContent = `รูปภาพที่ ${index + 1} ${index === 0 ? '(รูปหน้าหลัก)' : ''}`;
+    if (caption) caption.textContent = labelText;
     
     modal.style.display = 'flex';
     setTimeout(() => modal.classList.add('open'), 10);
@@ -723,6 +911,10 @@ function openAddModal() {
     document.getElementById('variationContainer').innerHTML = '';
     document.getElementById('noVariationHint').style.display = 'block';
     variationImages = {};
+    
+    // Reset price auto-calc hint
+    const priceHint = document.getElementById('priceAutoHint');
+    if (priceHint) priceHint.style.display = 'none';
 
     // Safety: Disable save button if not logged in as Admin
     const submitBtn = document.getElementById('btnSubmitForm');
@@ -786,11 +978,14 @@ function openEditModal(id) {
     const vContainer = document.getElementById('variationContainer');
     vContainer.innerHTML = '';
     variationImages = {};
+    const priceHintEdit = document.getElementById('priceAutoHint');
     if (p.variations && p.variations.length > 0) {
         document.getElementById('noVariationHint').style.display = 'none';
+        if (priceHintEdit) priceHintEdit.style.display = 'inline';
         p.variations.forEach(v => addVariationRow(v));
     } else {
         document.getElementById('noVariationHint').style.display = 'block';
+        if (priceHintEdit) priceHintEdit.style.display = 'none';
     }
 
     document.getElementById('productModal').style.display = 'flex';
@@ -840,11 +1035,36 @@ async function handleFormSubmit(e) {
     try {
         const id = document.getElementById('formProductId').value || ("p-" + Date.now());
         const imagesArr = uploadedImages.length ? uploadedImages : [];
+        
+        // Collect variations first
+        const variations = Array.from(document.querySelectorAll('.variation-row')).map(row => {
+            const rid = row.dataset.id;
+            return {
+                id: rid,
+                name: row.querySelector('.v-name').value,
+                price: parseFloat(row.querySelector('.v-price').value) || 0,
+                img: variationImages[rid] || "",
+                isOutOfStock: row.querySelector('.v-stock').checked
+            };
+        });
+        
+        // Auto-calculate price from variations if price field is empty
+        let mainPrice = parseFloat(document.getElementById('formPrice').value);
+        if ((isNaN(mainPrice) || mainPrice === 0) && variations.length > 0) {
+            const varPrices = variations.map(v => v.price).filter(p => p > 0);
+            if (varPrices.length > 0) {
+                mainPrice = Math.min(...varPrices); // Use lowest price as main price
+            } else {
+                mainPrice = 0;
+            }
+        }
+        if (isNaN(mainPrice)) mainPrice = 0;
+        
         const data = {
             id: id,
             name: document.getElementById('formName').value,
             brand: document.getElementById('formBrand').value,
-            price: parseFloat(document.getElementById('formPrice').value) || 0,
+            price: mainPrice,
             category: document.getElementById('formCategory').value,
             description: document.getElementById('formDescription').value,
             emoji: document.getElementById('formEmoji').value || "📦",
@@ -854,16 +1074,7 @@ async function handleFormSubmit(e) {
             specs: document.getElementById('formSpecs').value,
             partModel: document.getElementById('formCategory').value === 'parts' ? document.getElementById('formPartModel').value : "",
             partType: document.getElementById('formCategory').value === 'parts' ? document.getElementById('formPartType').value : "",
-            variations: Array.from(document.querySelectorAll('.variation-row')).map(row => {
-                const rid = row.dataset.id;
-                return {
-                    id: rid,
-                    name: row.querySelector('.v-name').value,
-                    price: parseFloat(row.querySelector('.v-price').value) || 0,
-                    img: variationImages[rid] || "",
-                    isOutOfStock: row.querySelector('.v-stock').checked
-                };
-            }),
+            variations: variations,
             isOutOfStock: document.getElementById('formStockStatus').value === 'out_of_stock',
             lastUpdatedBy: (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : "local-seller",
             updatedAt: new Date().toISOString()
@@ -905,10 +1116,12 @@ async function handleFormSubmit(e) {
         if (typeof db !== 'undefined' && db && checkCloudPermission()) {
             await db.collection('products').doc(id).set(data, { merge: true });
             console.log("☁️ Cloud Sync Successful");
+        } else {
+            console.warn("⚠️ Cloud sync skipped - product saved locally only. Customers won't see it until synced.");
         }
     } catch (err) {
         console.error("❌ Submission Error:", err);
-        alert("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
+        await sellerAlert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message, 'error');
     } finally {
         if (btn) {
             btn.disabled = false;
@@ -918,7 +1131,7 @@ async function handleFormSubmit(e) {
 }
 
 async function deleteProduct(id) {
-    if (!confirm('ยืนยันการลบสินค้านี้?')) return;
+    if (!await sellerConfirm('ยืนยันการลบสินค้านี้?', 'delete')) return;
     
     // --- 1. Immediate Local Delete ---
     allProducts = allProducts.filter(p => p.id !== id);
@@ -998,13 +1211,13 @@ async function runMigration() {
         }, { merge: true });
 
         await batch.commit();
-        alert("✅ นำเข้าข้อมูลสินค้า 21 รายการเรียบร้อยแล้วครับ!");
+        await sellerAlert('นำเข้าข้อมูลสินค้า 21 รายการเรียบร้อยแล้วครับ!', 'success');
         window.location.reload();
-        alert("✅ กู้คืนข้อมูล Cloud สำเร็จแล้วครับ! สินค้าทั้งหมดกลับมาแล้ว");
+        await sellerAlert('กู้คืนข้อมูล Cloud สำเร็จแล้วครับ! สินค้าทั้งหมดกลับมาแล้ว', 'success');
         localStorage.removeItem('pao_seller_cache');
         window.location.reload();
     } catch (err) {
-        alert("กู้คืนไม่สำเร็จ: " + err.message);
+        await sellerAlert('กู้คืนไม่สำเร็จ: ' + err.message, 'error');
     } finally {
         migrationBtn.disabled = false;
         migrationBtn.textContent = "นำเข้าสินค้าทันที";
@@ -1045,11 +1258,647 @@ function checkCloudPermission() {
 
 
 
+// ── Multi-Select & Bulk Edit System ─────────────────────────────────
+
+function toggleSelectProduct(id) {
+    if (selectedProductIds.has(id)) {
+        selectedProductIds.delete(id);
+    } else {
+        selectedProductIds.add(id);
+    }
+    
+    // Update row visual
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    if (row) {
+        row.classList.toggle('selected-row', selectedProductIds.has(id));
+    }
+    
+    syncSelectAllCheckbox();
+    updateBulkActionBar();
+}
+
+function toggleSelectAll() {
+    const filteredIds = window._currentFilteredIds || [];
+    const allSelected = filteredIds.length > 0 && filteredIds.every(id => selectedProductIds.has(id));
+    
+    if (allSelected) {
+        // Deselect all visible
+        filteredIds.forEach(id => selectedProductIds.delete(id));
+    } else {
+        // Select all visible
+        filteredIds.forEach(id => selectedProductIds.add(id));
+    }
+    
+    // Re-render to update checkboxes
+    filterProducts();
+    updateBulkActionBar();
+}
+
+function syncSelectAllCheckbox() {
+    const filteredIds = window._currentFilteredIds || [];
+    const allSelected = filteredIds.length > 0 && filteredIds.every(id => selectedProductIds.has(id));
+    const someSelected = filteredIds.some(id => selectedProductIds.has(id));
+    
+    // Header checkbox
+    const headerCb = document.getElementById('selectAllCheckbox');
+    if (headerCb) {
+        headerCb.checked = allSelected;
+        headerCb.indeterminate = someSelected && !allSelected;
+    }
+    
+    // Bottom bar checkbox
+    const barCb = document.getElementById('bulkSelectAll');
+    if (barCb) {
+        barCb.checked = allSelected;
+        barCb.indeterminate = someSelected && !allSelected;
+    }
+}
+
+function updateBulkActionBar() {
+    const bar = document.getElementById('bulkActionBar');
+    const countEl = document.getElementById('bulkCount');
+    const count = selectedProductIds.size;
+    
+    if (countEl) countEl.textContent = count;
+    
+    if (bar) {
+        if (count > 0) {
+            bar.classList.add('visible');
+        } else {
+            bar.classList.remove('visible');
+        }
+    }
+}
+
+function clearSelection() {
+    selectedProductIds.clear();
+    filterProducts();
+    updateBulkActionBar();
+}
+
+// --- Bulk Edit Modals ---
+
+function openBulkPriceModal() {
+    const count = selectedProductIds.size;
+    if (count === 0) return;
+    document.getElementById('bulkPriceInput').value = '';
+    document.getElementById('bulkPriceInfo').innerHTML = `✅ จะอัปเดตราคาให้ <strong>${count}</strong> รายการ`;
+    document.getElementById('bulkPriceModal').classList.add('active');
+}
+
+function openBulkBrandModal() {
+    const count = selectedProductIds.size;
+    if (count === 0) return;
+    document.getElementById('bulkBrandInput').value = '';
+    document.getElementById('bulkBrandInfo').innerHTML = `✅ จะอัปเดตแบรนด์ให้ <strong>${count}</strong> รายการ`;
+    document.getElementById('bulkBrandModal').classList.add('active');
+}
+
+function openBulkCategoryModal() {
+    const count = selectedProductIds.size;
+    if (count === 0) return;
+    document.getElementById('bulkCategoryInput').value = 'new';
+    document.getElementById('bulkCategoryInfo').innerHTML = `✅ จะอัปเดตหมวดหมู่ให้ <strong>${count}</strong> รายการ`;
+    
+    // Reset parts sub-options
+    const partsDiv = document.getElementById('bulkPartsSubOptions');
+    if (partsDiv) partsDiv.style.display = 'none';
+    
+    document.getElementById('bulkCategoryModal').classList.add('active');
+}
+
+function onBulkCategoryChange() {
+    const val = document.getElementById('bulkCategoryInput').value;
+    const partsDiv = document.getElementById('bulkPartsSubOptions');
+    if (!partsDiv) return;
+    
+    if (val === 'parts') {
+        partsDiv.style.display = 'block';
+        // Populate partModel dropdown from sparePartsConfig
+        const modelSelect = document.getElementById('bulkPartModelInput');
+        if (modelSelect && typeof sparePartsConfig !== 'undefined') {
+            const models = sparePartsConfig.models || [];
+            modelSelect.innerHTML = '<option value="">-- ไม่เปลี่ยนรุ่น --</option>' +
+                models.map(m => `<option value="${m}">${m}</option>`).join('');
+        }
+        // Reset partType
+        const typeSelect = document.getElementById('bulkPartTypeInput');
+        if (typeSelect) {
+            typeSelect.innerHTML = '<option value="">-- เลือกรุ่นก่อน --</option>';
+        }
+    } else {
+        partsDiv.style.display = 'none';
+    }
+}
+
+function onBulkPartModelChange() {
+    const model = document.getElementById('bulkPartModelInput').value;
+    const typeSelect = document.getElementById('bulkPartTypeInput');
+    if (!typeSelect || typeof sparePartsConfig === 'undefined') return;
+    
+    if (!model) {
+        typeSelect.innerHTML = '<option value="">-- เลือกรุ่นก่อน --</option>';
+        return;
+    }
+    
+    // Get allowed part types for this model from mappings
+    let allowedTypes = [];
+    if (sparePartsConfig.mappings && sparePartsConfig.mappings[model]) {
+        allowedTypes = sparePartsConfig.mappings[model];
+    } else {
+        // Fallback: show all part types
+        allowedTypes = sparePartsConfig.partTypes || [];
+    }
+    
+    typeSelect.innerHTML = '<option value="">-- ไม่เปลี่ยนประเภท --</option>' +
+        allowedTypes.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+function closeBulkModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove('active');
+}
+
+async function applyBulkPrice() {
+    const newPrice = parseFloat(document.getElementById('bulkPriceInput').value);
+    if (isNaN(newPrice) || newPrice < 0) {
+        await sellerAlert('กรุณาใส่ราคาที่ถูกต้องครับ', 'warning');
+        return;
+    }
+    
+    if (!checkCloudPermission()) return;
+    
+    const ids = Array.from(selectedProductIds);
+    
+    // 1. Local update
+    ids.forEach(id => {
+        const product = allProducts.find(p => p.id === id);
+        if (product) {
+            product.price = newPrice;
+            product.updatedAt = new Date().toISOString();
+        }
+    });
+    
+    // 2. Cache update
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    
+    // 3. Re-render
+    filterProducts();
+    closeBulkModal('bulkPriceModal');
+    
+    // 4. Cloud batch sync
+    try {
+        if (typeof db !== 'undefined' && db) {
+            const batch = db.batch();
+            ids.forEach(id => {
+                batch.update(db.collection('products').doc(id), {
+                    price: newPrice,
+                    updatedAt: new Date().toISOString()
+                });
+            });
+            await batch.commit();
+            console.log(`☁️ Bulk price update: ${ids.length} items → ฿${newPrice}`);
+        }
+    } catch(err) {
+        console.warn('⚠️ Cloud bulk price update failed:', err);
+    }
+    
+    await sellerAlert(`อัปเดตราคาเป็น ฿${newPrice.toLocaleString()} สำเร็จ ${ids.length} รายการ`, 'success');
+}
+
+async function applyBulkBrand() {
+    const newBrand = document.getElementById('bulkBrandInput').value.trim();
+    if (!newBrand) {
+        await sellerAlert('กรุณาใส่ชื่อแบรนด์ครับ', 'warning');
+        return;
+    }
+    
+    if (!checkCloudPermission()) return;
+    
+    const ids = Array.from(selectedProductIds);
+    
+    // 1. Local update
+    ids.forEach(id => {
+        const product = allProducts.find(p => p.id === id);
+        if (product) {
+            product.brand = newBrand;
+            product.updatedAt = new Date().toISOString();
+        }
+    });
+    
+    // 2. Cache update
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    
+    // 3. Re-render
+    filterProducts();
+    updateBrandsDatalist();
+    closeBulkModal('bulkBrandModal');
+    
+    // 4. Cloud batch sync
+    try {
+        if (typeof db !== 'undefined' && db) {
+            const batch = db.batch();
+            ids.forEach(id => {
+                batch.update(db.collection('products').doc(id), {
+                    brand: newBrand,
+                    updatedAt: new Date().toISOString()
+                });
+            });
+            await batch.commit();
+            console.log(`☁️ Bulk brand update: ${ids.length} items → ${newBrand}`);
+        }
+    } catch(err) {
+        console.warn('⚠️ Cloud bulk brand update failed:', err);
+    }
+    
+    await sellerAlert(`อัปเดตแบรนด์เป็น "${newBrand}" สำเร็จ ${ids.length} รายการ`, 'success');
+}
+
+async function applyBulkCategory() {
+    const newCategory = document.getElementById('bulkCategoryInput').value;
+    if (!newCategory) {
+        await sellerAlert('กรุณาเลือกหมวดหมู่ครับ', 'warning');
+        return;
+    }
+    
+    if (!checkCloudPermission()) return;
+    
+    const ids = Array.from(selectedProductIds);
+    const catName = getCategoryName(newCategory);
+    
+    // Get parts sub-fields if applicable
+    let newPartModel = '';
+    let newPartType = '';
+    if (newCategory === 'parts') {
+        const modelInput = document.getElementById('bulkPartModelInput');
+        const typeInput = document.getElementById('bulkPartTypeInput');
+        newPartModel = modelInput ? modelInput.value : '';
+        newPartType = typeInput ? typeInput.value : '';
+    }
+    
+    // 1. Local update
+    ids.forEach(id => {
+        const product = allProducts.find(p => p.id === id);
+        if (product) {
+            product.category = newCategory;
+            product.updatedAt = new Date().toISOString();
+            if (newCategory === 'parts') {
+                if (newPartModel) product.partModel = newPartModel;
+                if (newPartType) product.partType = newPartType;
+            } else {
+                product.partModel = '';
+                product.partType = '';
+            }
+        }
+    });
+    
+    // 2. Cache update
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    
+    // 3. Re-render
+    filterProducts();
+    closeBulkModal('bulkCategoryModal');
+    
+    // 4. Cloud batch sync
+    try {
+        if (typeof db !== 'undefined' && db) {
+            const batch = db.batch();
+            ids.forEach(id => {
+                const updateData = {
+                    category: newCategory,
+                    updatedAt: new Date().toISOString()
+                };
+                if (newCategory === 'parts') {
+                    if (newPartModel) updateData.partModel = newPartModel;
+                    if (newPartType) updateData.partType = newPartType;
+                } else {
+                    updateData.partModel = '';
+                    updateData.partType = '';
+                }
+                batch.update(db.collection('products').doc(id), updateData);
+            });
+            await batch.commit();
+            console.log(`☁️ Bulk category update: ${ids.length} items → ${catName}${newPartModel ? ' / ' + newPartModel : ''}${newPartType ? ' / ' + newPartType : ''}`);
+        }
+    } catch(err) {
+        console.warn('⚠️ Cloud bulk category update failed:', err);
+    }
+    
+    let msg = `✅ อัปเดตหมวดหมู่เป็น "${catName}" สำเร็จ ${ids.length} รายการ`;
+    if (newPartModel) msg += `\nรุ่น: ${newPartModel}`;
+    if (newPartType) msg += `\nประเภท: ${newPartType}`;
+    await sellerAlert(msg, 'success');
+}
+
+async function bulkDeleteSelected() {
+    const count = selectedProductIds.size;
+    if (count === 0) return;
+    
+    if (!await sellerConfirm(`คุณต้องการลบสินค้าที่เลือก ${count} รายการ ใช่หรือไม่?\n\nการกระทำนี้ไม่สามารถย้อนคืนได้!`, 'delete')) return;
+    
+    if (!checkCloudPermission()) return;
+    
+    const ids = Array.from(selectedProductIds);
+    
+    // 1. Local delete
+    allProducts = allProducts.filter(p => !selectedProductIds.has(p.id));
+    
+    // 2. Cache
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    
+    // 3. Clear selection & re-render
+    selectedProductIds.clear();
+    filterProducts();
+    updateBulkActionBar();
+    
+    // 4. Cloud batch delete
+    try {
+        if (typeof db !== 'undefined' && db) {
+            const batch = db.batch();
+            const mockIdsToDelete = [];
+            
+            ids.forEach(id => {
+                batch.delete(db.collection('products').doc(id));
+                const isMock = MOCK_PRODUCTS_BASELINE.some(m => m.id === id);
+                if (isMock) mockIdsToDelete.push(id);
+            });
+            
+            if (mockIdsToDelete.length > 0) {
+                deletedMockIds = [...new Set([...deletedMockIds, ...mockIdsToDelete])];
+                localStorage.setItem('deleted_mock_ids', JSON.stringify(deletedMockIds));
+                batch.set(db.collection('settings').doc('deleted_products'), {
+                    deletedIds: firebase.firestore.FieldValue.arrayUnion(...mockIdsToDelete),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            }
+            
+            await batch.commit();
+            console.log(`🗑️ Bulk delete: ${ids.length} items`);
+        }
+    } catch(err) {
+        console.warn('⚠️ Cloud bulk delete failed:', err);
+    }
+    
+    await sellerAlert(`ลบสินค้าสำเร็จ ${count} รายการ`, 'success');
+}
+
+// ── Inline Price Edit ────────────────────────────────────────────────
+
+let _inlinePriceEditId = null;
+
+function openInlinePrice(productId) {
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) return;
+    
+    // If product has variations, open full edit modal (prices are per-variation)
+    if (product.variations && product.variations.length > 0) {
+        openEditModal(productId);
+        return;
+    }
+    
+    _inlinePriceEditId = productId;
+    
+    document.getElementById('inlinePriceProductName').textContent = product.name;
+    document.getElementById('inlinePriceValue').value = product.price || 0;
+    document.getElementById('inlinePriceOverlay').classList.add('active');
+    
+    // Auto-focus and select the input
+    setTimeout(() => {
+        const input = document.getElementById('inlinePriceValue');
+        input.focus();
+        input.select();
+    }, 100);
+}
+
+function closeInlinePrice() {
+    document.getElementById('inlinePriceOverlay').classList.remove('active');
+    _inlinePriceEditId = null;
+}
+
+async function saveInlinePrice() {
+    if (!_inlinePriceEditId) return;
+    
+    const newPrice = parseFloat(document.getElementById('inlinePriceValue').value);
+    if (isNaN(newPrice) || newPrice < 0) {
+        await sellerAlert('กรุณาใส่ราคาที่ถูกต้องครับ', 'warning');
+        return;
+    }
+    
+    const id = _inlinePriceEditId;
+    
+    // 1. Local update
+    const product = allProducts.find(p => p.id === id);
+    if (product) {
+        product.price = newPrice;
+        product.updatedAt = new Date().toISOString();
+    }
+    
+    // 2. Cache
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    
+    // 3. Close modal & re-render
+    closeInlinePrice();
+    filterProducts();
+    
+    // 4. Cloud sync
+    try {
+        if (typeof db !== 'undefined' && db && checkCloudPermission()) {
+            await db.collection('products').doc(id).update({
+                price: newPrice,
+                updatedAt: new Date().toISOString()
+            });
+            console.log(`☁️ Inline price update: ${id} → ฿${newPrice}`);
+        }
+    } catch(err) {
+        console.warn('⚠️ Cloud inline price update failed:', err);
+    }
+}
+
+// ── Merge Products System ─────────────────────────────────────────────
+
+async function mergeSelectedProducts() {
+    const count = selectedProductIds.size;
+    if (count < 2) {
+        await sellerAlert('กรุณาเลือกสินค้าอย่างน้อย 2 รายการเพื่อรวมครับ', 'warning');
+        return;
+    }
+
+    const ids = Array.from(selectedProductIds);
+    const products = ids.map(id => allProducts.find(p => p.id === id)).filter(Boolean);
+
+    if (products.length < 2) {
+        await sellerAlert('ไม่พบสินค้าที่เลือก กรุณาลองใหม่ครับ', 'error');
+        return;
+    }
+
+    // Confirm merge
+    const nameList = products.map(p => `• ${p.name}`).join('\n');
+    if (!await sellerConfirm(`รวมสินค้า ${count} รายการเป็นสินค้าเดียว?\n\n${nameList}\n\nสินค้าตัวเดิมจะถูกลบ และสร้างสินค้าใหม่จากข้อมูลที่เลือก`, 'merge')) return;
+
+    // Use first product as the base
+    const base = products[0];
+    const mergedId = "p-merged-" + Date.now();
+
+    // Combine names
+    const mergedName = products.map(p => p.name).join(' + ');
+
+    // Collect all images from all products
+    const allImages = [];
+    products.forEach(p => {
+        if (p.images && p.images.length > 0) {
+            p.images.forEach(img => { if (img && !allImages.includes(img)) allImages.push(img); });
+        } else if (p.img) {
+            if (!allImages.includes(p.img)) allImages.push(p.img);
+        }
+    });
+
+    // Create variations from each selected product
+    const mergedVariations = products.map((p, idx) => {
+        return {
+            id: "v-merged-" + Date.now() + "-" + idx,
+            name: p.name,
+            price: p.price || 0,
+            img: p.img || (p.images && p.images[0]) || "",
+            isOutOfStock: p.isOutOfStock || false
+        };
+    });
+
+    // Calculate main price from lowest variation
+    const prices = mergedVariations.map(v => v.price).filter(p => p > 0);
+    const mainPrice = prices.length > 0 ? Math.min(...prices) : 0;
+
+    // Create merged product data
+    const mergedProduct = {
+        id: mergedId,
+        name: mergedName,
+        brand: base.brand || '',
+        price: mainPrice,
+        category: base.category || 'new',
+        description: products.map(p => p.description || '').filter(Boolean).join('\n\n'),
+        emoji: base.emoji || '📦',
+        img: allImages[0] || base.img || '',
+        images: allImages,
+        badge: base.badge || '',
+        specs: base.specs || '',
+        partModel: base.partModel || '',
+        partType: base.partType || '',
+        variations: mergedVariations,
+        isOutOfStock: false,
+        lastUpdatedBy: (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : "local-seller",
+        updatedAt: new Date().toISOString()
+    };
+
+    // Open in Edit Modal so seller can review before saving
+    // First, add the merged product to allProducts temporarily
+    allProducts.unshift(mergedProduct);
+
+    // Set up the form
+    document.getElementById('productModal').style.display = 'flex';
+    document.getElementById('modalTitle').textContent = '🔗 รวมสินค้า — ตรวจสอบและบันทึก';
+    document.getElementById('formProductId').value = mergedId;
+    document.getElementById('formName').value = mergedName;
+    document.getElementById('formBrand').value = mergedProduct.brand;
+    document.getElementById('formPrice').value = '';
+    document.getElementById('formCategory').value = mergedProduct.category;
+    document.getElementById('formDescription').value = mergedProduct.description;
+    document.getElementById('formEmoji').value = mergedProduct.emoji;
+    document.getElementById('formImg').value = '';
+    document.getElementById('formBadge').value = mergedProduct.badge;
+    document.getElementById('formSpecs').value = mergedProduct.specs;
+
+    // Set up images - use existing refreshImgPreviews() for consistent rendering
+    uploadedImages = allImages;
+    refreshImgPreviews();
+
+    // Set up category-specific fields
+    if (typeof togglePartsFields === 'function') {
+        togglePartsFields();
+    }
+    if (mergedProduct.category === 'parts') {
+        setTimeout(() => {
+            const partModelEl = document.getElementById('formPartModel');
+            const partTypeEl = document.getElementById('formPartType');
+            if (partModelEl) partModelEl.value = mergedProduct.partModel;
+            if (partTypeEl) {
+                if (typeof updatePartTypeDropdown === 'function') updatePartTypeDropdown();
+                setTimeout(() => { partTypeEl.value = mergedProduct.partType; }, 200);
+            }
+        }, 100);
+    }
+
+    // Set up variations
+    variationImages = {};
+    const container = document.getElementById('variationContainer');
+    if (container) container.innerHTML = '';
+    const hint = document.getElementById('noVariationHint');
+    if (hint) hint.style.display = 'none';
+
+    mergedVariations.forEach(v => {
+        addVariationRow(v);
+    });
+
+    // Set up stock status
+    const stockSelect = document.getElementById('formStockStatus');
+    if (stockSelect) stockSelect.value = 'in_stock';
+
+    // Show auto-calc price hint
+    const priceHint = document.getElementById('priceAutoHint');
+    if (priceHint) priceHint.style.display = 'inline';
+
+    // Store original IDs to delete after successful save
+    window._mergeOriginalIds = ids;
+    window._isMergeMode = true;
+
+    // Clear selection
+    selectedProductIds.clear();
+    updateBulkActionBar();
+}
+
+// Override handleFormSubmit to handle merge cleanup
+const _originalHandleFormSubmit = handleFormSubmit;
+async function handleMergeAwareSubmit(e) {
+    await _originalHandleFormSubmit(e);
+
+    // After successful save, delete original products if in merge mode
+    if (window._isMergeMode && window._mergeOriginalIds) {
+        const idsToDelete = window._mergeOriginalIds;
+
+        // Remove original products from local state
+        allProducts = allProducts.filter(p => !idsToDelete.includes(p.id));
+
+        // Update cache
+        try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+
+        // Cloud delete originals
+        try {
+            if (typeof db !== 'undefined' && db && checkCloudPermission()) {
+                const batch = db.batch();
+                idsToDelete.forEach(id => {
+                    batch.delete(db.collection('products').doc(id));
+                });
+                await batch.commit();
+                console.log(`🔗 Merge cleanup: deleted ${idsToDelete.length} original products`);
+            }
+        } catch(err) {
+            console.warn('⚠️ Cloud merge cleanup failed:', err);
+        }
+
+        // Clean up merge state
+        window._mergeOriginalIds = null;
+        window._isMergeMode = false;
+
+        // Re-render
+        filterProducts();
+    }
+}
+
+// Replace the form submit handler
+window.handleFormSubmit = handleMergeAwareSubmit;
+
 // ── Global Exports ──────────────────────────────────────────────────
 window.openAddModal = openAddModal;
 window.openEditModal = openEditModal;
 window.closeModal = closeModal;
-window.handleFormSubmit = handleFormSubmit;
 window.handleImgUpload = handleImgUpload;
 window.togglePartsFields = togglePartsFields;
 window.updatePartTypeDropdown = updatePartTypeDropdown;
@@ -1060,3 +1909,23 @@ window.runMigration = runMigration;
 window.deleteProduct = deleteProduct;
 window.sellerLogin = sellerLogin;
 window.sellerLogout = sellerLogout;
+
+// Multi-select exports
+window.toggleSelectProduct = toggleSelectProduct;
+window.toggleSelectAll = toggleSelectAll;
+window.clearSelection = clearSelection;
+window.openBulkPriceModal = openBulkPriceModal;
+window.openBulkBrandModal = openBulkBrandModal;
+window.openBulkCategoryModal = openBulkCategoryModal;
+window.closeBulkModal = closeBulkModal;
+window.applyBulkPrice = applyBulkPrice;
+window.applyBulkBrand = applyBulkBrand;
+window.applyBulkCategory = applyBulkCategory;
+window.bulkDeleteSelected = bulkDeleteSelected;
+window.onBulkCategoryChange = onBulkCategoryChange;
+window.onBulkPartModelChange = onBulkPartModelChange;
+window.openInlinePrice = openInlinePrice;
+window.closeInlinePrice = closeInlinePrice;
+window.saveInlinePrice = saveInlinePrice;
+window.mergeSelectedProducts = mergeSelectedProducts;
+

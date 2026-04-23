@@ -151,17 +151,18 @@ function refreshCategoryUI() {
         }
     }
 
-    // 3. Render Part Types with their associated models
     if (pList) {
         const mappings = sparePartsConfig.mappings || {};
-        pList.innerHTML = (sparePartsConfig.partTypes || []).map(t => {
+        pList.innerHTML = (sparePartsConfig.partTypes || []).map((t, index) => {
             const associatedModels = Object.keys(mappings).filter(m => mappings[m] && mappings[m].includes(t));
             
             return `
                 <div style="background:#fff; border:1px solid #eee; border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-weight:600; color:#A68A64;">🔧 ${t}</span>
-                        <div style="display:flex; gap:10px;">
+                        <div style="display:flex; gap:10px; align-items: center;">
+                            <span onclick="movePartTypeUp(${index})" style="color:#888; cursor:pointer; font-size:1.1rem; padding:0 4px; visibility: ${index === 0 ? 'hidden' : 'visible'};" title="เลื่อนขึ้น">🔼</span>
+                            <span onclick="movePartTypeDown(${index})" style="color:#888; cursor:pointer; font-size:1.1rem; padding:0 4px; visibility: ${index === (sparePartsConfig.partTypes || []).length - 1 ? 'hidden' : 'visible'};" title="เลื่อนลง">🔽</span>
                             <span onclick="editMapping('${t}')" style="color:#1890ff; cursor:pointer; font-size:0.85rem; font-weight:600;">แก้ไข</span>
                             <span onclick="deleteConfigItem('partTypes', '${t}')" style="color:#ff4d4f; cursor:pointer; font-size:0.85rem; font-weight:600;">ลบ</span>
                         </div>
@@ -401,6 +402,34 @@ async function restoreDefaultSparePartsConfig() {
     }
 }
 window.restoreDefaultSparePartsConfig = restoreDefaultSparePartsConfig;
+
+window.movePartTypeUp = async function(index) {
+    if (index <= 0) return;
+    const types = [...(sparePartsConfig.partTypes || [])];
+    const temp = types[index];
+    types[index] = types[index - 1];
+    types[index - 1] = temp;
+    
+    try {
+        await db.collection('settings').doc('spare_parts').set({ partTypes: types }, { merge: true });
+    } catch(err) {
+        console.error("Move Error:", err);
+    }
+}
+
+window.movePartTypeDown = async function(index) {
+    const types = [...(sparePartsConfig.partTypes || [])];
+    if (index >= types.length - 1) return;
+    const temp = types[index];
+    types[index] = types[index + 1];
+    types[index + 1] = temp;
+    
+    try {
+        await db.collection('settings').doc('spare_parts').set({ partTypes: types }, { merge: true });
+    } catch(err) {
+        console.error("Move Error:", err);
+    }
+}
 
 // Modal Handlers
 function openCategoryModal() {
