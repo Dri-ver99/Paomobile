@@ -323,7 +323,7 @@
                     <div style="padding: 0 0 24px 0;">
                         <p class="terms-text" style="font-size: 0.85rem; color: var(--co-muted); margin: 0; text-align: left;">
                             โดยการคลิก "สั่งสินค้า" ฉันได้อ่านและยอมรับเงื่อนไขการให้บริการ Paomobile
-                            <a href="#" style="color:var(--co-orange); text-decoration:none;">นโยบายการคืนเงินและคืนสินค้า</a>
+                            <a href="javascript:void(0)" onclick="openPolicyModal()" style="color:var(--co-orange); text-decoration:none;">นโยบายการคืนเงินและคืนสินค้า</a>
                         </p>
                     </div>
                 </div>
@@ -542,6 +542,104 @@
             <div class="success-loader">
                 <div class="dot"></div><div class="dot"></div><div class="dot"></div>กำลังพาคุณไปหน้า ที่ต้องจัดส่ง
             </div>
+        </div>
+    </div>
+
+    <!-- Policy Modal -->
+    <div id="policyModalOverlay" style="display:none; position: fixed; inset: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 4000; opacity: 0; transition: opacity 0.3s ease; padding: 20px; box-sizing: border-box;">
+        <div id="policyModalContainer" style="width: 100%; max-width: 650px; background: #fff; border-radius: 12px; position: relative; display: flex; flex-direction: column; max-height: 85vh; box-shadow: 0 4px 20px rgba(0,0,0,0.15); transform: translateY(20px); transition: transform 0.3s ease; margin: auto; padding: 24px 0 24px 24px;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-right: 24px; margin-bottom: 20px;">
+                <h3 style="margin: 0; font-size: 1.25rem; color: #1a1a1a; font-weight: 700;">นโยบายการคืนเงินและคืนสินค้า</h3>
+                <button onclick="closePolicyModal()" style="background: none; border: none; cursor: pointer; color: #666; display: flex; align-items: center; justify-content: center; padding: 4px; transition: color 0.2s;" aria-label="Close">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            
+            <div style="border-bottom: 1px solid #f0f0f0; margin-bottom: 20px; margin-right: 24px;"></div>
+
+            <!-- Custom scrollbar styling scoped here -->
+            <style>
+                .policy-scroll::-webkit-scrollbar { width: 6px; }
+                .policy-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; margin-right: 4px; }
+                .policy-scroll::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+                .policy-scroll::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+            </style>
+
+            <div class="policy-scroll" style="overflow-y: auto; flex: 1; padding-right: 18px; font-size: 0.95rem; color: #4a4a4a; line-height: 1.7; font-weight: 300;">
+                
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; margin-top: 8px;">
+                    <div style="width: 4px; height: 24px; background: #0056b3; border-radius: 2px;"></div>
+                    <strong style="color: #1a1a1a; font-size: 1.1rem;">1. การยื่นคำร้องขอคืนสินค้า/คืนเงิน</strong>
+                </div>
+                
+                <p style="margin-top:0;">ภายใต้ข้อกำหนดและเงื่อนไขที่กำหนดไว้ใน นโยบายการคืนเงินและคืนสินค้าฉบับนี้ และ เงื่อนไขการให้บริการ ผู้ซื้อสามารถยื่นคำร้องขอคืนสินค้าที่ซื้อ (“สินค้า”) และ/หรือคืนเงิน ทั้งนี้สำหรับการคืนเงินและคืนสินค้าจะเป็นไปตามข้อกำหนดและเงื่อนไขที่กำหนดไว้ใน นโยบายของ Paomobile</p>
+                <p>ผู้ซื้อสามารถยื่นคำร้องขอคืนเงินโดยจะมีการพิจารณาจากกรณีที่ซื้อสินค้านั้นจากร้าน Paomobile ภายในระยะเวลาที่กำหนดหลังจากที่ผู้ซื้อได้รับสินค้าดังกล่าว และในกรณีดังต่อไปนี้เท่านั้น</p>
+
+                <div style="background: #fafafa; border: 1px solid #e8e8e8; padding: 20px; border-radius: 8px; margin: 24px 0;">
+                    <p style="font-weight: 600; margin-top: 0; color: #1a1a1a; font-size: 1rem; border-bottom: 1px solid #e8e8e8; padding-bottom: 10px; margin-bottom: 16px;">📌 เงื่อนไขสำคัญสำหรับการเคลม/คืนสินค้า:</p>
+                    <ul style="list-style: none; padding-left: 0; margin-bottom: 0; color: #4a4a4a;">
+                        <li style="margin-bottom: 10px; display: flex; gap: 8px; align-items: start;">
+                            <span style="color: #2e7d32; font-weight: bold; flex-shrink: 0;">✔️</span> 
+                            <span>สินค้าต้องอยู่ในสภาพสมบูรณ์ ไม่มีการถูกแกะ แงะ ดัดแปลง หรือแก้ไขใดๆ</span>
+                        </li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 8px;">
+                            <span style="color: #d32f2f; font-weight: bold; flex-shrink: 0;">❌</span> 
+                            <span>ไม่ตก หรือมีรอยกระแทก</span>
+                        </li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 8px;">
+                            <span style="color: #d32f2f; font-weight: bold; flex-shrink: 0;">❌</span> 
+                            <span>ไม่หล่น หรือจอแตก</span>
+                        </li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 8px;">
+                            <span style="color: #d32f2f; font-weight: bold; flex-shrink: 0;">❌</span> 
+                            <span>ไม่โดนน้ำ หรือมีความชื้นสะสมภายในตัวเครื่อง</span>
+                        </li>
+                        <li style="margin-bottom: 10px; display: flex; gap: 8px;">
+                            <span style="color: #d32f2f; font-weight: bold; flex-shrink: 0;">❌</span> 
+                            <span>ไม่มีรอยขีดข่วน / แตก / หรือชำรุดจากการใช้งานของลูกค้า</span>
+                        </li>
+                    </ul>
+                    <div style="margin-top: 20px; padding-top: 16px; border-top: 2px dashed #ffc107; font-weight: bold; color: #d32f2f; display: flex; gap: 10px; align-items: center; background: #fff8e1; border-radius: 6px; padding: 12px;">
+                        <span style="font-size: 1.5rem; line-height: 1;">🎥</span> 
+                        <span>กรุณาถ่ายวิดีโอขณะเปิดกล่องสินค้าตั้งแต่ต้นจนจบ เพื่อใช้เป็นหลักฐานในการเคลมสินค้า (หากไม่มีวิดีโอ ทางร้านขอสงวนสิทธิ์ในการรับเคลมทุกกรณี)</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; margin-top: 32px;">
+                    <div style="width: 4px; height: 24px; background: #0056b3; border-radius: 2px;"></div>
+                    <strong style="color: #1a1a1a; font-size: 1.1rem;">2. การยื่นคำร้องขอคืนสินค้า</strong>
+                </div>
+                
+                <p>ผู้ซื้อสามารถยื่นคำร้องขอคืนเงินและ/หรือคืนสินค้าในกรณีดังต่อไปนี้เท่านั้น:</p>
+                <ul style="padding-left: 28px; margin-bottom: 20px;">
+                    <li style="margin-bottom: 8px;">ผู้ซื้อไม่ได้รับสินค้า หรือได้รับสินค้าไม่ครบ</li>
+                    <li style="margin-bottom: 8px;">สินค้ามีตำหนิ ใช้การไม่ได้และ/หรือเสียหายระหว่างการจัดส่ง (ต้องมีวิดีโอตอนแกะกล่องเป็นหลักฐานอย่างชัดเจน)</li>
+                    <li style="margin-bottom: 8px;">ผู้ขายส่งสินค้าไม่ตรงกับข้อมูลจำเพาะที่ตกลงกันไว้ (เช่น ขนาด สี หรือรุ่นไม่ถูกต้อง เป็นต้น) ให้กับผู้ซื้อ</li>
+                    <li style="margin-bottom: 8px;">กฎหมายกำหนดให้ต้องมีการคืนเงิน</li>
+                </ul>
+                <p>ทั้งนี้ สินค้าจะต้องไม่อยู่ภายใต้รายการของสินค้าที่ถูกยกเว้นตามที่กำหนด และเป็นสินค้าที่มีสภาพสมบูรณ์พร้อมส่วนประกอบทุกชิ้นครบถ้วนตามที่ได้สั่งซื้อ รวมถึงถูกเก็บอยู่ในหีบห่อเดิม</p>
+                <p>โปรดทราบ ในกรณีที่ Paomobile ร้องขอ ผู้ซื้อจะต้องดำเนินการส่งสินค้าคืนมายังร้านภายใน สาม (3) วันปฏิทินหลังจากที่ได้มีการยื่นคำร้องขอคืนสินค้า</p>
+
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; margin-top: 32px;">
+                    <div style="width: 4px; height: 24px; background: #0056b3; border-radius: 2px;"></div>
+                    <strong style="color: #1a1a1a; font-size: 1.1rem;">3. สภาพของสินค้าที่คืน</strong>
+                </div>
+                <p>เพื่อหลีกเลี่ยงความยุ่งยากในการคืนสินค้า ผู้ซื้อควรตรวจสอบให้แน่ใจว่าสินค้า รวมถึงสินค้าให้ฟรี เช่น อุปกรณ์เสริมที่มาพร้อมสินค้าชิ้นนั้น จะต้องส่งคืนผู้ขายในสภาพที่ผู้ซื้อได้รับขณะจัดส่ง เราขอแนะนำให้ผู้ซื้อถ่ายรูปสินค้าไว้ก่อนทำการส่งคืน</p>
+
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; margin-top: 32px;">
+                    <div style="width: 4px; height: 24px; background: #0056b3; border-radius: 2px;"></div>
+                    <strong style="color: #1a1a1a; font-size: 1.1rem;">4. ค่าใช้จ่ายในการคืนสินค้า</strong>
+                </div>
+                <p>ในกรณีที่พิสูจน์ได้ว่าเป็นความผิดของร้านค้า (เช่น สินค้ามีปัญหา, สงผิดรุ่น) ทาง Paomobile จะเป็นผู้รับผิดชอบค่าใช้จ่ายในการจัดส่งคืนทุกกรณี แต่หากการคืนสินค้าเกิดจากการเปลี่ยนใจ หรือการใช้งานที่ผิดเงื่อนไขของผู้ซื้อ ผู้ซื้อจะต้องเป็นฝ่ายรับผิดชอบค่าใช้จ่ายในการจัดส่งทั้งไปและกลับ</p>
+
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; margin-top: 32px;">
+                    <div style="width: 4px; height: 24px; background: #0056b3; border-radius: 2px;"></div>
+                    <strong style="color: #1a1a1a; font-size: 1.1rem;">5. การคืนเงิน</strong>
+                </div>
+                <p>ผู้ซื้อจะได้รับเงินคืนหลังจากที่ Paomobile ได้รับสินค้าที่ส่งคืนและได้ทำการตรวจสอบความสมบูรณ์ของสินค้าเรียบร้อยแล้วเท่านั้น เงินที่คืนจะถูกโอนกลับไปยังบัญชีธนาคารของผู้ซื้อตามที่ตกลงกันไว้</p>
+            </div>
+            
         </div>
     </div>
 

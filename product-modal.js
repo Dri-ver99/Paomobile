@@ -279,7 +279,26 @@ window.ProductDetail = {
 
         if (brandEl) brandEl.textContent = product.brand || 'Paomobile';
         if (nameEl) nameEl.textContent = product.name;
-        if (pricePromoEl) pricePromoEl.textContent = '฿' + (product.price ? product.price.toLocaleString() : '0');
+        
+        // Price display: show range if variations have different prices
+        if (pricePromoEl) {
+            if (product.variations && product.variations.length > 0) {
+                const varPrices = product.variations.map(v => v.price || 0).filter(pr => pr > 0);
+                if (varPrices.length > 0) {
+                    const minP = Math.min(...varPrices);
+                    const maxP = Math.max(...varPrices);
+                    if (minP === maxP) {
+                        pricePromoEl.textContent = '฿' + minP.toLocaleString();
+                    } else {
+                        pricePromoEl.textContent = '฿' + minP.toLocaleString() + ' - ฿' + maxP.toLocaleString();
+                    }
+                } else {
+                    pricePromoEl.textContent = '฿' + (product.price ? product.price.toLocaleString() : '0');
+                }
+            } else {
+                pricePromoEl.textContent = '฿' + (product.price ? product.price.toLocaleString() : '0');
+            }
+        }
         if (skuEl) skuEl.textContent = 'SKU: ' + (product.id || 'N/A');
 
         if (product.originalPrice && priceOrigEl && saleBadgeEl) {
@@ -299,7 +318,7 @@ window.ProductDetail = {
         // --- FEATURE: Auto-select first variation (price & button only, keep cover image) ---
         if (product.variations && product.variations.length > 0) {
             this.currentVariation = product.variations[0];
-            // Update initial price to variation price
+            // Update price to selected variation's price
             const vPrice = this.currentVariation.price || product.price;
             if (pricePromoEl) pricePromoEl.textContent = '฿' + vPrice.toLocaleString();
         }

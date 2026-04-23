@@ -595,6 +595,36 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
         window.confirmVoucherSelection = confirmVoucherSelection;
         window.checkPendingVoucher = checkPendingVoucher;
 
+        function openPolicyModal() {
+            const overlay = document.getElementById('policyModalOverlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                // Small delay to allow display:flex to apply before opacity transition
+                setTimeout(() => {
+                    overlay.style.opacity = '1';
+                    const container = document.getElementById('policyModalContainer');
+                    if (container) container.style.transform = 'translateY(0)';
+                }, 10);
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closePolicyModal() {
+            const overlay = document.getElementById('policyModalOverlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                const container = document.getElementById('policyModalContainer');
+                if (container) container.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = '';
+                }, 300);
+            }
+        }
+
+        window.openPolicyModal = openPolicyModal;
+        window.closePolicyModal = closePolicyModal;
+
         function updateShipping(el) {
             shippingCost = parseInt(el.value) || 0;
             // Update selected class

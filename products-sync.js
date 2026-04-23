@@ -247,7 +247,23 @@ const ProductSync = {
     },
 
     createCardHTML: function(p, index = 0) {
-        const priceStr = p.price ? p.price.toLocaleString() : "0";
+        // Price display: range if variations have different prices
+        let priceStr;
+        const variations = p.variations;
+        if (variations && variations.length > 0) {
+            const varPrices = variations.map(v => v.price || 0).filter(pr => pr > 0);
+            if (varPrices.length > 0) {
+                const minP = Math.min(...varPrices);
+                const maxP = Math.max(...varPrices);
+                priceStr = minP === maxP 
+                    ? minP.toLocaleString() 
+                    : `${minP.toLocaleString()} - ฿${maxP.toLocaleString()}`;
+            } else {
+                priceStr = p.price ? p.price.toLocaleString() : "0";
+            }
+        } else {
+            priceStr = p.price ? p.price.toLocaleString() : "0";
+        }
         const badgeClass = p.badge === 'ใหม่' ? 'new' : (p.badge === 'ขายดี' ? 'hot' : 'used');
         const badgeHTML = p.badge ? `<div class="product-badge ${badgeClass}">${p.badge}</div>` : "";
         
