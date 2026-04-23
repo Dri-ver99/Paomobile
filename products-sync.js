@@ -121,20 +121,36 @@ const ProductSync = {
             };
 
                 const matchingFirestore = firestoreProducts.filter(isMatch);
-                const firestoreIds = new Set(matchingFirestore.map(p => p.id));
 
-                const newOnes = matchingFirestore.filter(p => !baselineIds.has(p.id));
-                const mergedBaseline = baselineForCategory.map(p =>
-                    firestoreIds.has(p.id) ? firestoreProducts.find(f => f.id === p.id) : p
-                );
+                // ── Seller-Edit-First Merge Logic ──
+                // Use a Map so Firestore data ALWAYS wins over baseline mocks.
+                // This ensures any edits made by the Seller are immediately visible
+                // to customers without stale-cache interference.
+                const mergedMap = new Map();
 
-                const finalProducts = [...newOnes, ...mergedBaseline];
+                // 1. Start with baseline (lowest priority)
+                baselineForCategory.forEach(p => mergedMap.set(p.id, p));
+
+                // 2. Overwrite with live Firestore data (highest priority)
+                //    This guarantees Seller edits (name, price, images, variations)
+                //    are always reflected on the customer side.
+                matchingFirestore.forEach(p => mergedMap.set(p.id, p));
+
+                const finalProducts = Array.from(mergedMap.values());
                 this.allProducts = finalProducts;
                 this.hasLoadedOnce = true;
                 
                 this.debounceRender();
-                
-                localStorage.setItem(cacheKey, JSON.stringify(finalProducts));
+
+                // Always refresh cache with latest Firestore data so next page load
+                // shows the most up-to-date Seller edits.
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify(finalProducts));
+                } catch(e) {
+                    // If cache is full, clear it so stale data doesn't persist
+                    localStorage.removeItem(cacheKey);
+                }
+
                 this.autoOpenFromUrl();
             }, err => {
                 console.error("[Sync] Firestore Listen Error:", err);
