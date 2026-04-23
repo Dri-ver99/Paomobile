@@ -321,6 +321,9 @@ window.ProductDetail = {
             // Update price to selected variation's price
             const vPrice = this.currentVariation.price || product.price;
             if (pricePromoEl) pricePromoEl.textContent = '฿' + vPrice.toLocaleString();
+            
+            // Update name to selected variation's name
+            if (nameEl) nameEl.textContent = this.currentVariation.name || product.name;
         }
 
         this.renderVariations();
@@ -396,6 +399,10 @@ window.ProductDetail = {
         const pricePromoEl = document.querySelector('.pd-price-promo');
         const price = v.price || this.currentProduct.price;
         if (pricePromoEl) pricePromoEl.textContent = '฿' + price.toLocaleString();
+
+        // Update Name UI
+        const nameEl = document.querySelector('.pd-name');
+        if (nameEl) nameEl.textContent = v.name || this.currentProduct.name;
 
         // Update Image if variation has one
         if (v.img) {
