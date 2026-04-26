@@ -855,8 +855,8 @@
                 </div>
 
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">ข้อมูลเพิ่มเติม/สเปก (ถ้าไม่ใส่จะขึ้น "แตะเพื่อดูรูปภาพเพิ่มเติม")</label>
-                    <input type="text" id="formSpecs" placeholder="เช่น แตะเพื่อดูรูปภาพเพิ่มเติม, หน้าจอ 6.1 นิ้ว ..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                    <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">ข้อมูลเพิ่มเติม/สเปก <span style="color:#aaa;font-weight:400;">(ถ้าไม่ใส่จะขึ้น "แตะเพื่อดูรูปภาพเพิ่มเติม") — พิมพ์หลายบรรทัดได้</span></label>
+                    <textarea id="formSpecs" rows="4" placeholder="เช่น แตะเพื่อดูรูปภาพเพิ่มเติม&#10;หน้าจอ 6.1 นิ้ว OLED&#10;แบตเตอรี่ 3279 mAh ..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; resize: vertical; line-height: 1.6;"></textarea>
                 </div>
 
                 <!-- Image Upload Zone -->
@@ -1027,6 +1027,7 @@
             <button class="bulk-btn bulk-btn-price" onclick="openBulkPriceModal()">💰 แก้ราคา</button>
             <button class="bulk-btn bulk-btn-brand" onclick="openBulkBrandModal()">🏷️ แก้แบรนด์</button>
             <button class="bulk-btn bulk-btn-category" onclick="openBulkCategoryModal()">📂 แก้หมวดหมู่</button>
+            <button class="bulk-btn" onclick="openBulkSpecsModal()" style="background:#fff3e0; color:#e65100; border:1px solid #ffcc80;">📝 แก้ข้อมูลเพิ่มเติม</button>
             <button class="bulk-btn bulk-btn-merge" onclick="mergeSelectedProducts()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff;">🔗 รวมที่เลือก</button>
             <button class="bulk-btn bulk-btn-delete" onclick="bulkDeleteSelected()">🗑️ ลบที่เลือก</button>
             <button class="bulk-btn bulk-btn-cancel" onclick="clearSelection()">✕ ยกเลิก</button>
@@ -1114,6 +1115,26 @@
             <div class="bulk-modal-footer">
                 <button class="btn-cancel-modal" onclick="closeBulkModal('bulkCategoryModal')">ยกเลิก</button>
                 <button class="btn-apply" onclick="applyBulkCategory()">✅ บันทึกหมวดหมู่ใหม่</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Specs Modal -->
+    <div class="bulk-modal-overlay" id="bulkSpecsModal">
+        <div class="bulk-modal" style="width:520px;">
+            <div class="bulk-modal-header">
+                <h3>📝 แก้ข้อมูลเพิ่มเติม/สเปก พร้อมกัน</h3>
+                <button class="close-btn" onclick="closeBulkModal('bulkSpecsModal')">&times;</button>
+            </div>
+            <div class="bulk-modal-body">
+                <label>ข้อมูลเพิ่มเติม/สเปกใหม่ — จะใช้กับสินค้าที่เลือกทั้งหมด</label>
+                <textarea id="bulkSpecsInput" rows="5" placeholder="เช่น แตะเพื่อดูรูปภาพเพิ่มเติม&#10;หน้าจอ 6.1 นิ้ว OLED&#10;แบตเตอรี่ 3279 mAh" style="width:100%; padding:12px 14px; border:2px solid #e0e0e0; border-radius:10px; font-family:inherit; font-size:1rem; resize:vertical; line-height:1.6; transition:border-color 0.2s;" onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e0e0e0'"></textarea>
+                <div style="margin-top:8px; font-size:0.78rem; color:#888;">💡 ใส่ข้อความหลายบรรทัดได้ — แต่ละบรรทัดจะแสดงแยกกัน</div>
+                <div class="bulk-modal-info" id="bulkSpecsInfo">✅ จะอัปเดตข้อมูลเพิ่มเติมให้ <strong>0</strong> รายการ</div>
+            </div>
+            <div class="bulk-modal-footer">
+                <button class="btn-cancel-modal" onclick="closeBulkModal('bulkSpecsModal')">ยกเลิก</button>
+                <button class="btn-apply" onclick="applyBulkSpecs()">✅ บันทึกข้อมูลเพิ่มเติม</button>
             </div>
         </div>
     </div>

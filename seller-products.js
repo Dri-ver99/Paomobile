@@ -1533,6 +1533,61 @@ async function applyBulkBrand() {
     await sellerAlert(`อัปเดตแบรนด์เป็น "${newBrand}" สำเร็จ ${ids.length} รายการ`, 'success');
 }
 
+// ── Bulk Edit Specs ────────────────────────────────────────────────────
+function openBulkSpecsModal() {
+    const count = selectedProductIds.size;
+    if (count === 0) return;
+    document.getElementById('bulkSpecsInput').value = '';
+    document.getElementById('bulkSpecsInfo').innerHTML = `✅ จะอัปเดตข้อมูลเพิ่มเติมให้ <strong>${count}</strong> รายการ`;
+    document.getElementById('bulkSpecsModal').classList.add('active');
+    setTimeout(() => document.getElementById('bulkSpecsInput').focus(), 100);
+}
+
+async function applyBulkSpecs() {
+    const newSpecs = document.getElementById('bulkSpecsInput').value.trim();
+    // อนุญาตให้ส่งค่าว่างได้ (ลบข้อมูลเพิ่มเติมได้)
+    if (!checkCloudPermission()) return;
+    
+    const ids = Array.from(selectedProductIds);
+    const now = new Date().toISOString();
+    
+    // 1. Local update
+    ids.forEach(id => {
+        const product = allProducts.find(p => p.id === id);
+        if (product) {
+            product.specs = newSpecs;
+            product.updatedAt = now;
+        }
+    });
+    
+    // 2. Cache update
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    
+    // 3. Re-render
+    filterProducts();
+    closeBulkModal('bulkSpecsModal');
+    
+    // 4. Cloud batch sync
+    try {
+        if (typeof db !== 'undefined' && db) {
+            const batch = db.batch();
+            ids.forEach(id => {
+                batch.update(db.collection('products').doc(id), {
+                    specs: newSpecs,
+                    updatedAt: now
+                });
+            });
+            await batch.commit();
+            console.log(`☁️ Bulk specs update: ${ids.length} items`);
+        }
+    } catch(err) {
+        console.warn('⚠️ Cloud bulk specs update failed:', err);
+    }
+    
+    const preview = newSpecs ? `"${newSpecs.slice(0, 30)}${newSpecs.length > 30 ? '...' : ''}"` : '(ว่าง)';
+    await sellerAlert(`อัปเดตข้อมูลเพิ่มเติมเป็น ${preview} สำเร็จ ${ids.length} รายการ`, 'success');
+}
+
 async function applyBulkCategory() {
     const newCategory = document.getElementById('bulkCategoryInput').value;
     if (!newCategory) {
@@ -1936,10 +1991,12 @@ window.clearSelection = clearSelection;
 window.openBulkPriceModal = openBulkPriceModal;
 window.openBulkBrandModal = openBulkBrandModal;
 window.openBulkCategoryModal = openBulkCategoryModal;
+window.openBulkSpecsModal = openBulkSpecsModal;
 window.closeBulkModal = closeBulkModal;
 window.applyBulkPrice = applyBulkPrice;
 window.applyBulkBrand = applyBulkBrand;
 window.applyBulkCategory = applyBulkCategory;
+window.applyBulkSpecs = applyBulkSpecs;
 window.bulkDeleteSelected = bulkDeleteSelected;
 window.onBulkCategoryChange = onBulkCategoryChange;
 window.onBulkPartModelChange = onBulkPartModelChange;
