@@ -99,22 +99,12 @@ function startConfigSync() {
         if (doc.exists) {
             sparePartsConfig = doc.data();
             if (!sparePartsConfig.mappings) sparePartsConfig.mappings = {};
-        } else {
-            // Initial seed if doc doesn't exist
-            const initial = {
-                models: ["iPhone", "Samsung", "Xiaomi", "OPPO", "Vivo", "Realme", "Huawei", "อื่นๆ"],
-                partTypes: ["หน้าจอ", "แบตเตอรี่", "แพรชาร์จ", "กล้องหลัง", "กล้องหน้า", "กระจกฝาหลัง"],
-                mappings: {
-                    "iPhone": ["หน้าจอ", "แบตเตอรี่", "แพรชาร์จ", "กล้องหลัง"],
-                    "Samsung": ["หน้าจอ", "แบตเตอรี่"],
-                    "Xiaomi": ["หน้าจอ", "แบตเตอรี่"],
-                    "OPPO": ["หน้าจอ", "แบตเตอรี่"],
-                    "Vivo": ["หน้าจอ", "แบตเตอรี่"]
-                }
-            };
-            db.collection('settings').doc('spare_parts').set(initial, { merge: true });
-            sparePartsConfig = initial;
+            if (!sparePartsConfig.models) sparePartsConfig.models = [];
+            if (!sparePartsConfig.partTypes) sparePartsConfig.partTypes = [];
         }
+        // หมายเหตุ: ถ้า doc ยังไม่มีใน Firestore ให้คงค่าว่างไว้
+        // ระบบจะไม่ seed ค่า default โดยอัตโนมัติ
+        // Seller จะเป็นคนกำหนดเองผ่าน Modal เท่านั้น
         refreshCategoryUI();
     }, err => {
         console.error("Config Sync Error:", err);
