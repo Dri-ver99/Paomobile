@@ -463,78 +463,72 @@
     </div>
     <script src="search.js"></script>
     <script>
-        initDynamicSidebar();
         ProductSync.init('parts');
 
-        function initDynamicSidebar() {
-            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
+        // ── Dynamic Sidebar: แสดงหมวดหมู่ตาม Seller กำหนด ──────────────────
+        (function initDynamicSidebar() {
             const accordion = document.getElementById('dynamicBrandAccordion');
             if (!accordion) return;
 
-            // 1. Instant Cache Render
+            // รอ db พร้อม
+            if (!window.db) { setTimeout(initDynamicSidebar, 200); return; }
+
             const cacheKey = 'pao_parts_sidebar_cache';
-            const cachedHTML = localStorage.getItem(cacheKey);
-            if (cachedHTML) {
-                accordion.innerHTML = cachedHTML;
-            }
 
-            if (!firestore) {
-                setTimeout(initDynamicSidebar, 500);
-                return;
-            }
-
-            firestore.collection('settings').doc('spare_parts').onSnapshot(async doc => {
-                let data = doc.exists ? doc.data() : null;
-                
-                // Auto-Seed if missing
-                if (!data || !data.models || data.models.length === 0) {
-                    const initial = {
-                        models: ["iPhone", "Samsung", "Xiaomi", "OPPO", "Vivo", "Realme", "Huawei", "อื่นๆ"],
-                        partTypes: ["หน้าจอ", "แบตเตอรี่", "แพรชาร์จ", "กล้องหลัง", "กล้องหน้า", "กระจกฝาหลัง"],
-                        mappings: {
-                            "iPhone": ["หน้าจอ", "แบตเตอรี่", "แพรชาร์จ", "กล้องหลัง"],
-                            "Samsung": ["หน้าจอ", "แบตเตอรี่"],
-                            "Xiaomi": ["หน้าจอ", "แบตเตอรี่"],
-                            "OPPO": ["หน้าจอ", "แบตเตอรี่"],
-                            "Vivo": ["หน้าจอ", "แบตเตอรี่"]
-                        }
-                    };
-                    data = initial;
-                    try { firestore.collection('settings').doc('spare_parts').set(initial, { merge: true }); } catch(e) {}
-                }
-
-                const { models, mappings } = data;
-
-                const newHTML = models.map(m => {
-                    const cleanM = m.trim();
-                    let allowedTypes = [];
-                    if (mappings) {
-                        const matchKey = Object.keys(mappings).find(key => key.trim() === cleanM);
-                        if (matchKey) allowedTypes = mappings[matchKey];
-                    }
-                    if (allowedTypes.length === 0) return '';
-
-                    return `
-                        <li class="brand-item" id="brand-${cleanM.replace(/\s+/g, '-')}" data-brand="${cleanM}">
-                            <div class="brand-header" onclick="toggleAccordion(this)">
-                                <span>${cleanM}</span>
-                                <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            </div>
-                            <ul class="sub-cat-list">
-                                ${allowedTypes.map(t => `
-                                    <li><a href="javascript:void(0)" onclick="handleFilterClick('${cleanM}', '${t}')">${t}</a></li>
-                                `).join('')}
-                            </ul>
-                        </li>
-                    `;
+            // ── Render: สร้าง HTML จาก models array (เรียงตาม Seller) ──
+            function render(models, mappings) {
+                if (!models || !models.length) return;
+                const html = models.map(m => {
+                    const name = m.trim();
+                    const types = (mappings && Array.isArray(mappings[name])) ? mappings[name] : [];
+                    if (!types.length) return '';
+                    return `<li class="brand-item" id="brand-${name.replace(/\s+/g,'-')}" data-brand="${name}">
+                        <div class="brand-header" onclick="toggleAccordion(this)">
+                            <span>${name}</span>
+                            <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </div>
+                        <ul class="sub-cat-list">
+                            ${types.map(t=>`<li><a href="javascript:void(0)" onclick="handleFilterClick('${name}','${t}')">${t}</a></li>`).join('')}
+                        </ul>
+                    </li>`;
                 }).join('');
-
-                if (newHTML !== cachedHTML) {
-                    accordion.innerHTML = newHTML;
-                    localStorage.setItem(cacheKey, newHTML);
+                if (html) {
+                    accordion.innerHTML = html;
+                    localStorage.setItem(cacheKey, html);
                 }
-            });
-        }
+            }
+
+            // ── Step 1: แสดง cache ทันที (ป้องกันหน้าว่าง) ──
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) accordion.innerHTML = cached;
+
+            // ── Step 2: onSnapshot — ทุก update ทั้ง local และ server ──
+            //    (ไม่ filter fromCache เพราะ IndexedDB มีข้อมูลล่าสุดอยู่แล้ว)
+            window.db.collection('settings').doc('spare_parts').onSnapshot(doc => {
+                if (!doc.exists) return;
+                const d = doc.data();
+                render(d.models, d.mappings);
+            }, err => console.warn('[sidebar]', err));
+
+            // ── Step 3: REST API fetch — รับรองว่าได้ข้อมูลล่าสุดจาก server ──
+            //    (กรณีเปิดจากเครื่องอื่น / IndexedDB อาจมีข้อมูลเก่า)
+            fetch(
+                'https://firestore.googleapis.com/v1/projects/paomobile-85e39/databases/(default)/documents/settings/spare_parts?key=AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to',
+                { cache: 'no-store' }
+            )
+            .then(r => r.json())
+            .then(res => {
+                if (!res || !res.fields) return;
+                // parse REST format → JS object
+                const parseArr = v => (v.arrayValue && v.arrayValue.values || []).map(x => x.stringValue || '');
+                const models = parseArr(res.fields.models || {});
+                const mappings = {};
+                const mf = (res.fields.mappings && res.fields.mappings.mapValue && res.fields.mappings.mapValue.fields) || {};
+                Object.keys(mf).forEach(k => { mappings[k] = parseArr(mf[k]); });
+                render(models, mappings);
+            })
+            .catch(() => {}); // silent fail — onSnapshot จะ render แทน
+        })();
 
         function handleFilterClick(model, type) {
             localStorage.setItem('pao_last_part_model', model);
@@ -544,13 +538,9 @@
 
         function toggleAccordion(header) {
             const item = header.parentElement;
-            const model = item.getAttribute('data-brand');
             const wasActive = item.classList.contains('active');
-
             document.querySelectorAll('.brand-item').forEach(i => i.classList.remove('active'));
-            if (!wasActive) {
-                item.classList.add('active');
-            }
+            if (!wasActive) item.classList.add('active');
         }
     </script>
 </body>
