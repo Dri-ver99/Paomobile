@@ -117,14 +117,19 @@ function refreshCategoryUI() {
     const pList = document.getElementById('partTypesList');
     const targetCheckboxes = document.getElementById('targetModelsCheckboxes');
     
-    // 1. Render Main Models with delete buttons
+    // 1. Render Main Models with Drag & Drop reorder
     if (mList) {
-        mList.innerHTML = (sparePartsConfig.models || []).map(m => `
-            <div style="background:#f0f2f5; padding:5px 12px; border-radius:20px; display:flex; align-items:center; gap:8px; font-size:0.85rem; border:1px solid #d9d9d9;">
+        const models = sparePartsConfig.models || [];
+        mList.style.cssText = 'display:flex; flex-wrap:wrap; gap:8px; align-items:center;';
+        mList.innerHTML = models.map((m, index) => `
+            <div class="model-chip" draggable="true" data-index="${index}" data-model="${m}"
+                 style="background:#f0f2f5; padding:5px 10px 5px 12px; border-radius:20px; display:flex; align-items:center; gap:6px; font-size:0.85rem; border:1px solid #d9d9d9; cursor:grab; user-select:none; transition:box-shadow 0.15s, opacity 0.15s;">
+                <span style="font-size:0.75rem; color:#bbb; margin-right:2px;">⠿</span>
                 <span>${m}</span>
-                <span onclick="deleteConfigItem('models', '${m}')" style="color:#ff4d4f; cursor:pointer; font-weight:bold; font-size:1.1rem;">×</span>
+                <span onclick="deleteConfigItem('models', '${m}')" style="color:#ff4d4f; cursor:pointer; font-weight:bold; font-size:1.1rem; line-height:1;">×</span>
             </div>
         `).join('') || '<div style="color:#ccc">ไม่มีข้อมูล</div>';
+        initModelsDragDrop(mList);
     }
 
     // 2. Render Checkboxes for mapping
@@ -144,7 +149,8 @@ function refreshCategoryUI() {
     if (pList) {
         const mappings = sparePartsConfig.mappings || {};
         pList.innerHTML = (sparePartsConfig.partTypes || []).map((t, index) => {
-            const associatedModels = Object.keys(mappings).filter(m => mappings[m] && mappings[m].includes(t));
+            // เรียง associatedModels ตามลำดับของ models ที่ Seller กำหนดไว้ (ไม่ใช่ Object.keys ซึ่งไม่รักษาลำดับ)
+            const associatedModels = (sparePartsConfig.models || []).filter(m => mappings[m] && mappings[m].includes(t));
             
             return `
                 <div style="background:#fff; border:1px solid #eee; border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
@@ -418,6 +424,115 @@ window.movePartTypeDown = async function(index) {
         await db.collection('settings').doc('spare_parts').set({ partTypes: types }, { merge: true });
     } catch(err) {
         console.error("Move Error:", err);
+    }
+}
+
+window.moveModelUp = null; // replaced by drag-drop
+window.moveModelDown = null; // replaced by drag-drop
+
+// ── Drag & Drop for Models (หมวดหมู่หลัก) — ใช้ pointer events แทน HTML5 DnD ──
+function initModelsDragDrop(container) {
+    let dragSrc = null;
+    let ghost = null;
+    let offsetX = 0, offsetY = 0;
+
+    function getChips() { return [...container.querySelectorAll('.model-chip')]; }
+
+    function createGhost(chip, x, y) {
+        ghost = chip.cloneNode(true);
+        const r = chip.getBoundingClientRect();
+        offsetX = x - r.left;
+        offsetY = y - r.top;
+        ghost.style.cssText = `
+            position:fixed; z-index:999999; pointer-events:none;
+            opacity:0.85; box-shadow:0 6px 20px rgba(0,0,0,0.25);
+            border-radius:20px; background:#fef4e8; border:2px solid #A68A64;
+            left:${r.left}px; top:${r.top}px;
+            width:${r.width}px; height:${r.height}px;
+            display:flex; align-items:center; padding:${getComputedStyle(chip).padding};
+            font-size:0.85rem; transition:none;
+        `;
+        document.body.appendChild(ghost);
+    }
+
+    function moveGhost(x, y) {
+        if (!ghost) return;
+        ghost.style.left = (x - offsetX) + 'px';
+        ghost.style.top  = (y - offsetY) + 'px';
+    }
+
+    function removeGhost() {
+        if (ghost) { ghost.remove(); ghost = null; }
+    }
+
+    function getChipAt(x, y) {
+        const chips = getChips();
+        for (const c of chips) {
+            if (c === dragSrc) continue;
+            const r = c.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return c;
+        }
+        return null;
+    }
+
+    container.querySelectorAll('.model-chip').forEach(chip => {
+        chip.addEventListener('mousedown', e => {
+            // ไม่ให้ drag เมื่อคลิกปุ่ม ×
+            if (e.target.closest('[onclick]')) return;
+            e.preventDefault();
+            dragSrc = chip;
+            chip.style.opacity = '0.35';
+            createGhost(chip, e.clientX, e.clientY);
+            getChips().forEach(c => c.style.transition = 'outline 0.1s');
+        });
+    });
+
+    document.addEventListener('mousemove', e => {
+        if (!dragSrc) return;
+        moveGhost(e.clientX, e.clientY);
+
+        // Highlight drop target
+        getChips().forEach(c => { c.style.outline = ''; });
+        const target = getChipAt(e.clientX, e.clientY);
+        if (target) target.style.outline = '2px dashed #A68A64';
+    });
+
+    document.addEventListener('mouseup', async e => {
+        if (!dragSrc) return;
+
+        const target = getChipAt(e.clientX, e.clientY);
+        dragSrc.style.opacity = '';
+        removeGhost();
+        getChips().forEach(c => { c.style.outline = ''; c.style.transition = ''; });
+
+        if (target && target !== dragSrc) {
+            const chips = getChips();
+            const fromIdx = chips.indexOf(dragSrc);
+            const toIdx   = chips.indexOf(target);
+
+            const newModels = [...(sparePartsConfig.models || [])];
+            const [moved] = newModels.splice(fromIdx, 1);
+            newModels.splice(toIdx, 0, moved);
+
+            sparePartsConfig.models = newModels;
+            refreshCategoryUI();
+
+            try {
+                await db.collection('settings').doc('spare_parts').set({ models: newModels }, { merge: true });
+            } catch(err) {
+                console.error('Drag-drop save error:', err);
+            }
+        }
+
+        dragSrc = null;
+    });
+
+    // Inject cursor style once
+    if (!document.getElementById('modelDragStyle')) {
+        const s = document.createElement('style');
+        s.id = 'modelDragStyle';
+        s.textContent = `.model-chip { cursor: grab; } .model-chip:active { cursor: grabbing; }`;
+        document.head.appendChild(s);
     }
 }
 
