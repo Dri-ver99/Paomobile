@@ -39,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof db !== 'undefined' && db) {
             clearInterval(checkFirestore);
             startConfigSync();
-            startSellerPresence(); // Initiate real-time status update
         }
     }, 500);
 });
@@ -549,58 +548,5 @@ function closeCategoryModal() {
     const modal = document.getElementById('categoryModal');
     if (modal) modal.style.display = 'none';
     resetPartTypeMode();
-}
-
-/**
- * ── SELLER PRESENCE SYSTEM ──────────────────────────────────────────
- * Updates Firestore with seller's online status and last seen timestamp.
- * Consolidates heartbeat to prevent multiple redundant writes.
- */
-async function startSellerPresence() {
-    if (typeof db === 'undefined' || !db) return;
-
-    let isUpdating = false;
-
-    const updateStatus = async (isOnline) => {
-        if (isUpdating) return;
-        isUpdating = true;
-        
-        try {
-            const user = firebase.auth().currentUser;
-            const statusRef = db.collection('status').doc('seller');
-            
-            await statusRef.set({
-                isOnline: isOnline,
-                lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-                platform: 'web-seller-centre',
-                email: user ? user.email : 'guest-admin'
-            }, { merge: true });
-            
-            console.log(`[Presence] Seller ${isOnline ? 'ONLINE' : 'AWAY'} (v2)`);
-        } catch (e) {
-            // Silently fail to avoid clogging UI logs
-        } finally {
-            isUpdating = false;
-        }
-    };
-
-    // 1. Initial Heartbeat with small delay for initial Auth state
-    setTimeout(() => updateStatus(true), 2000);
-
-    // 2. Periodic Heartbeat (Every 45 seconds for quota balance)
-    setInterval(() => {
-        if (document.visibilityState === 'visible') {
-            updateStatus(true);
-        }
-    }, 45000);
-
-    // 3. Handle Visibility Change
-    document.addEventListener('visibilitychange', () => {
-        updateStatus(document.visibilityState === 'visible');
-    });
-
-    // 4. Handle Offline/Online browser events
-    window.addEventListener('online', () => updateStatus(true));
-    window.addEventListener('offline', () => updateStatus(false));
 }
 

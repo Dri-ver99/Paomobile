@@ -147,6 +147,7 @@
                 <a href="seller-centre.html" class="menu-item active"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
                 <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
                 <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="#promotion-card" class="menu-item" onclick="document.getElementById('promotion-card').scrollIntoView({behavior:'smooth'}); return false;"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
@@ -263,6 +264,22 @@
                     <div style="grid-column: 1/-1; padding: 20px; text-align: center; color: #999;">กำลังโหลดคูปอง...</div>
                 </div>
             </div>
+
+            <!-- Promotion Management Card -->
+            <div class="card" id="promotion-card">
+                <div class="card-title">
+                    <span>🎁 จัดการโปรโมชั่น (<span id="promo-count">0</span> รายการ)</span>
+                    <button onclick="openPromoEditor(null)" style="background:linear-gradient(135deg,#ee4d2d,#ff7a28); color:#fff; border:none; padding:8px 18px; border-radius:10px; font-size:0.85rem; font-weight:700; cursor:pointer;">
+                        ➕ เพิ่มโปรโมชั่นใหม่
+                    </button>
+                </div>
+                <div id="promo-list-area">
+                    <div style="text-align:center; padding:30px; color:#94a3b8;">กำลังโหลด...</div>
+                </div>
+                <div style="margin-top:14px; padding-top:14px; border-top:1px solid #f1f5f9; font-size:0.8rem; color:#94a3b8;">
+                    🔄 โปรโมชั่นจะสลับกันอัตโนมัติบนหน้า <a href="promotions.html" target="_blank" style="color:#4080ff;">promotions.html</a>
+                </div>
+            </div>
         </div>
 
         <!-- Secure QR Modal -->
@@ -280,6 +297,139 @@
             </div>
         </div>
     </main>
+
+    <!-- Promotion Editor Modal -->
+    <div id="promoEditorModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:3500; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+        <div style="background:#fff; width:700px; max-width:95vw; max-height:90vh; border-radius:20px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 25px 60px rgba(0,0,0,0.25);">
+            <!-- Modal Header -->
+            <div style="padding:20px 28px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg,#fff5f2,#fff);">
+                <div>
+                    <h3 id="promoModalTitle" style="margin:0; font-size:1.2rem; color:#0f172a;">🎁 แก้ไขโปรโมชั่น</h3>
+                    <p style="margin:4px 0 0; font-size:0.8rem; color:#94a3b8;">การเปลี่ยนแปลงจะอัปเดตทันทีบนหน้าลูกค้า</p>
+                </div>
+                <button onclick="closePromoEditor()" style="background:#f1f5f9; border:none; width:36px; height:36px; border-radius:50%; font-size:1.3rem; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#64748b;">✕</button>
+            </div>
+
+            <!-- Modal Body -->
+            <div style="overflow-y:auto; padding:28px; display:flex; flex-direction:column; gap:22px;">
+
+                <!-- Image Upload Section -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#374151; display:block; margin-bottom:10px;">📸 รูปโปรโมชั่น</label>
+                    <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+                        <div id="promoImgPreviewModal" onclick="document.getElementById('promoImgInput').click()" style="width:180px; height:120px; border-radius:12px; border:2px dashed #cbd5e1; background:#f8fafc; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; position:relative; flex-shrink:0; transition:border-color 0.2s;">
+                            <img id="promoImgPreviewImg" src="" alt="" style="width:100%; height:100%; object-fit:cover; display:none; border-radius:10px;">
+                            <div id="promoImgUploadPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:6px; color:#94a3b8;">
+                                <span style="font-size:2rem;">🖼️</span>
+                                <span style="font-size:0.75rem; text-align:center;">คลิกเพื่ออัปโหลดรูป</span>
+                            </div>
+                        </div>
+                        <div style="flex:1; min-width:180px;">
+                            <input type="file" id="promoImgInput" accept="image/*" style="display:none;" onchange="handlePromoImgUpload(event)">
+                            <button onclick="document.getElementById('promoImgInput').click()" style="width:100%; background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:10px; cursor:pointer; font-size:0.85rem; color:#374151; font-weight:600; margin-bottom:10px;">📂 เลือกไฟล์รูปภาพ</button>
+                            <div style="font-size:0.75rem; color:#94a3b8; line-height:1.6;">
+                                • รองรับ JPG, PNG, GIF, WebP<br>
+                                • แนะนำ: กว้าง 700px ขึ้นไป<br>
+                                • ขนาดสูงสุด: 5MB
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Promo Title -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#374151; display:block; margin-bottom:8px;">✏️ ชื่อโปรโมชั่น (หัวข้อ)</label>
+                    <input type="text" id="promoTitle" placeholder="เช่น ซื้อชิ้นที่ 2 เพียง 1 บาท!" maxlength="100"
+                        style="width:100%; padding:12px 16px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.95rem; outline:none; transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <!-- Promo Sub-description -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#374151; display:block; margin-bottom:8px;">📝 รายละเอียดย่อ (ใต้ชื่อโปรโมชั่น)</label>
+                    <input type="text" id="promoSubDesc" placeholder="เช่น ซื้อ หูฟัง 1 ชุด แถม 1 ชุดในราคาเพียง 1 บาท" maxlength="150"
+                        style="width:100%; padding:12px 16px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.95rem; outline:none; transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <!-- Promo Full Description -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#374151; display:block; margin-bottom:8px;">📄 คำอธิบายสินค้า (แสดงใต้รูป)</label>
+                    <textarea id="promoDesc" rows="3" placeholder="เช่น Anidary High Fidelity Sound Earphone&#10;หูฟังคุณภาพสูง เสียงคมชัด เบสแน่น (Bluetooth 5.3)"
+                        style="width:100%; padding:12px 16px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.95rem; resize:vertical; outline:none; transition:border-color 0.2s; font-family:inherit;"
+                        onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+                </div>
+
+                <!-- Packages Section -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:18px;">
+                    <div style="font-size:0.9rem; font-weight:700; color:#374151; margin-bottom:14px;">📦 แพ็กเกจสินค้า (Package Cards)</div>
+                    <!-- Package 1 -->
+                    <div style="margin-bottom:14px;">
+                        <div style="font-size:0.8rem; font-weight:600; color:#64748b; margin-bottom:8px;">แพ็กเกจ 1 (มาตรฐาน)</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <input type="text" id="pkg1Name" placeholder="ชื่อแพ็กเกจ เช่น 1 ชุด (มาตรฐาน)"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                            <input type="text" id="pkg1Price" placeholder="ราคา เช่น ฿699"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                        </div>
+                    </div>
+                    <!-- Package 2 -->
+                    <div>
+                        <div style="font-size:0.8rem; font-weight:600; color:#64748b; margin-bottom:8px;">แพ็กเกจ 2 (โปรโมชั่น)</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;">
+                            <input type="text" id="pkg2Name" placeholder="ชื่อแพ็กเกจ เช่น 2 ชุด (Combo Set)"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                            <input type="text" id="pkg2Price" placeholder="ราคา เช่น ฿700"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <input type="text" id="pkg2OldPrice" placeholder="ราคาเดิม (ขีดทับ) เช่น ฿1,398"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                            <input type="text" id="pkg2Badge" placeholder="ป้าย เช่น คุ้มที่สุด! ชิ้นที่ 2 เพียง 1 บาท"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Link / CTA -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#374151; display:block; margin-bottom:8px;">🔗 ลิงก์ปุ่ม "ซื้อเลย" (ถ้าไม่กรอก ใช้ LINE เดิม)</label>
+                    <input type="url" id="promoCTALink" placeholder="https://line.me/R/ti/p/@pao789"
+                        style="width:100%; padding:12px 16px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.95rem; outline:none; transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <!-- Active Toggle -->
+                <div style="display:flex; align-items:center; gap:14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:14px 18px;">
+                    <div style="flex:1;">
+                        <div style="font-weight:700; color:#166534; font-size:0.9rem;">แสดงโปรโมชั่นบนเว็บไซต์</div>
+                        <div style="font-size:0.78rem; color:#4ade80; margin-top:2px;">เปิด/ปิดการแสดงโปรโมชั่นบนหน้า promotions.html</div>
+                    </div>
+                    <label style="position:relative; display:inline-block; width:50px; height:26px; cursor:pointer;">
+                        <input type="checkbox" id="promoActive" checked style="opacity:0; width:0; height:0;">
+                        <span onclick="document.getElementById('promoActive').click()" style="position:absolute; inset:0; background:#ccc; border-radius:13px; transition:0.3s;" id="promoToggleTrack"></span>
+                        <span id="promoToggleThumb" style="position:absolute; left:3px; top:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:0.3s; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></span>
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="padding:18px 28px; border-top:1px solid #f1f5f9; display:flex; gap:12px; align-items:center; background:#fafafa;">
+                <button id="promoDeleteBtn" onclick="deletePromotion(null)" style="display:none; padding:10px 18px; background:#fff1f0; color:#dc2626; border:1.5px solid #fca5a5; border-radius:10px; font-size:0.85rem; cursor:pointer; font-weight:600; margin-right:auto;">🗑️ ลบโปรโมชั่นนี้</button>
+                <button onclick="closePromoEditor()" style="padding:11px 22px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; font-size:0.9rem; cursor:pointer; font-weight:600; color:#64748b;">ยกเลิก</button>
+                <button onclick="savePromotion()" id="promoSaveBtn" style="padding:11px 28px; background:linear-gradient(135deg,#ee4d2d,#ff7a28); color:#fff; border:none; border-radius:10px; font-size:0.9rem; font-weight:700; cursor:pointer;">
+                    💾 บันทึก &amp; อัปเดต
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Order Details Modal -->
     <div id="orderDetailsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
@@ -336,6 +486,7 @@
             });
         } catch(e) {}
     </script>
+    <script src="seller-presence.js"></script>
     <!-- Mobile Sidebar Overlay -->
     <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
         <div class="mobile-sidebar" onclick="event.stopPropagation()">
@@ -358,6 +509,7 @@
                         <a href="seller-centre.html" class="menu-item active"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
                         <a href="seller-chat.html" class="menu-item"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
                         <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                        <a href="#promotion-card" class="menu-item" onclick="toggleSellerMobileMenu(false); document.getElementById('promotion-card').scrollIntoView({behavior:'smooth'}); return false;"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
                     </div>
                     <div class="menu-section">
                         <p class="menu-title">คำสั่งซื้อ</p>

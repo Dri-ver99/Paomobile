@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8" />
@@ -32,14 +32,20 @@
             overflow: hidden;
             margin-bottom: 40px;
             border: 1px solid var(--border);
+            min-height: 680px;
         }
         .promo-img {
-            width: 100%;
-            height: auto;
             display: block;
+            width: calc(100% - 48px);
+            max-width: 100%;
+            max-height: calc(100vh - 280px);
+            object-fit: contain;
+            margin: 24px auto 0;
+            border-radius: var(--radius-lg);
         }
         .promo-content {
             padding: 40px;
+            min-height: 260px;
         }
         .promo-title {
             font-size: 2.5rem;
@@ -69,7 +75,46 @@
         @media (max-width: 768px) {
             .promo-hero { padding-top: 100px; }
             .promo-title { font-size: 1.8rem; }
+            .promo-img {
+                width: calc(100% - 32px);
+                max-height: none;
+                margin: 16px auto 0;
+                border-radius: var(--radius-md);
+            }
         }
+
+        /* ── Slider Styles ── */
+        .slider-wrapper { position: relative; min-height: 200px; }
+        .promo-slide { display: none; animation: slideFadeIn 0.5s ease; }
+        .promo-slide.active { display: block; }
+        @keyframes slideFadeIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .slider-nav {
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; margin-top: 28px;
+        }
+        .slider-dots { display: flex; gap: 8px; align-items: center; }
+        .slider-dot {
+            width: 8px; height: 8px; border-radius: 4px; border: none;
+            background: #d1d5db; cursor: pointer;
+            transition: all 0.35s ease; padding: 0;
+        }
+        .slider-dot.active {
+            background: var(--orange-500, #f97316);
+            width: 26px; border-radius: 4px;
+        }
+        .slider-arrow {
+            background: #fff; border: 1.5px solid #e5e7eb;
+            width: 38px; height: 38px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 1rem; color: #374151;
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .slider-arrow:hover { background: var(--orange-500,#f97316); color: #fff; border-color: var(--orange-500,#f97316); }
+        .slide-counter { font-size: 0.78rem; color: #9ca3af; font-weight: 600; min-width: 36px; text-align: center; }
+        .promo-off-msg { text-align: center; padding: 80px 20px; }
 
         /* Package Selector Styles */
         .package-selector {
@@ -338,44 +383,19 @@
         <div class="promo-container">
             <div class="label" style="justify-content: center;">Exclusive Promotion</div>
             <h1 class="promo-title">รับสิทธิประโยชน์สุดพิเศษ</h1>
-            
-            <div class="promo-banner">
-                <img src="promotion-earphone.png" alt="Promotion 1 Baht" class="promo-img" />
-                <div class="promo-content">
-                    <div class="promo-details">
-                        <h3>ซื้อชิ้นที่ 2 เพียง 1 บาท!</h3>
-                        <p>ซื้อ หูฟัง 1 ชุด แถม 1 ชุดในราคาเพียง 1 บาท</p>
-                    </div>
-                    <p class="promo-desc">Anidary High Fidelity Sound Earphone<br>หูฟังคุณภาพสูง เสียงคมชัด เบสแน่น (Bluetooth 5.3)</p>
-                    
-                    <div class="package-selector">
-                        <div class="package-card" onclick="selectPromoPackage(1)" id="pkg1">
-                            <div class="package-info">
-                                <h4>1 ชุด (มาตรฐาน)</h4>
-                                <div class="package-price">฿699</div>
-                            </div>
-                        </div>
-                        <div class="package-card active" onclick="selectPromoPackage(2)" id="pkg2">
-                            <div class="package-badge">คุ้มที่สุด! ชิ้นที่ 2 เพียง 1 บาท</div>
-                            <div class="package-info">
-                                <h4>2 ชุด (Combo Set)</h4>
-                                <div class="package-price">฿700 <span>฿1,398</span></div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="promo-actions">
-                        <button onclick="handleAddToCart()" class="btn btn-outline btn-lg">
-                            🛒 เพิ่มลงตะกร้า
-                        </button>
-                        <button onclick="handleBuyNow()" class="btn btn-primary btn-lg">
-                            ⚡ ซื้อเลย
-                        </button>
-                    </div>
-                </div>
+            <!-- Slider container -->
+            <div class="slider-wrapper" id="sliderWrapper">
+                <!-- Slides injected here by JS -->
+                <div style="text-align:center;padding:60px 0;color:#94a3b8;">กำลังโหลดโปรโมชั่น...</div>
             </div>
-            
-            <p style="color: var(--text-muted); font-size: 0.9rem;">*เงื่อนไขเป็นไปตามที่บริษัทกำหนดหรือจนกว่าสินค้าจะหมด</p>
+
+            <!-- Navigation dots only (no arrows, no counter) -->
+            <div class="slider-nav" id="sliderNav" style="display:none;">
+                <div class="slider-dots" id="sliderDots"></div>
+            </div>
+
+            <p style="color:var(--text-muted);font-size:0.9rem;margin-top:24px;">*เงื่อนไขเป็นไปตามที่บริษัทกำหนดหรือจนกว่าสินค้าจะหมด</p>
         </div>
     </main>
 
@@ -390,8 +410,158 @@ d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7
 d="M4.5 6A1.5 1.5 0 0 0 3 7.5v13A1.5 1.5 0 0 0 4.5 22h15a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 19.5 6h-15zm7.5 4.5c-1.5 0-2.7.5-3.4 1.3-.5.5-.6 1.1-.6 1.5 0 .7.4 1.2.9 1.5.5.3 1.1.4 1.7.5.6.1 1.2.2 1.6.4.4.2.5.4.5.7 0 .3-.1.5-.4.7-.3.2-.8.4-1.5.4-.8 0-1.4-.2-1.8-.5-.3-.2-.5-.5-.6-.9H7.4c.1.8.5 1.5 1.1 1.9.7.5 1.7.8 2.8.8 1.5 0 2.7-.4 3.4-1.2.5-.5.7-1.2.7-1.7 0-.7-.3-1.2-.9-1.6-.5-.3-1.1-.5-1.7-.6-.6-.1-1.2-.2-1.6-.4-.4-.2-.5-.4-.5-.6 0-.3.2-.5.5-.7.3-.2.8-.3 1.3-.3.7 0 1.2.2 1.5.4.2.2.4.4.5.7h1.5c-.1-.7-.4-1.3-1-1.7-.6-.5-1.5-.8-2.5-.8z" /></svg></a></div></div><div class="footer-col"><h4>บริการ</h4><a href="select-screen-repair.html">ซ่อมจอ / เปลี่ยนจอ</a><a href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a href="select-board-repair.html">ซ่อมบอร์ด</a><a href="select-speaker-repair.html">ซ่อมลำโพง / ไมค์</a></div><div class="footer-col"><h4>บริการเสริม</h4><a href="select-glass-film.html">ติดฟิล์มกระจก</a><a href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส / อุปกรณ์เสริม</a></div><div class="footer-col"><h4>ติดต่อเรา</h4><a href="index.html#branches">📍 6 สาขาทั่วชลบุรี</a><a href="https://line.me/R/ti/p/@pao789">💬 LINE: @pao789</a><a href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank">📘 Facebook</a><a href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
 target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a></div></div></div></footer>
 
+    <!-- Firebase SDKs (Prioritized for Chat System) -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        window.db = firebase.firestore();
+    </script>
     <script src="script.js"></script>
     <script src="cart.js?v=4"></script>
+
+    <!-- Promotion Slider Logic -->
+    <script>
+    (function() {
+        const db = window.db;
+
+        /* ── Slider state ── */
+        window.promoSlider = { cur: 0, slides: [], timer: null,
+            go(idx) {
+                const n = this.slides.length;
+                if (!n) return;
+                this.cur = (idx + n) % n;
+                this.slides.forEach((s, i) => s.classList.toggle('active', i === this.cur));
+                document.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === this.cur));
+                const ctr = document.getElementById('slideCounter');
+                if (ctr) ctr.textContent = (this.cur + 1) + ' / ' + n;
+                // restart auto
+                clearInterval(this.timer);
+                if (n > 1) this.timer = setInterval(() => this.go(this.cur + 1), 5000);
+            },
+            next() { this.go(this.cur + 1); },
+            prev() { this.go(this.cur - 1); }
+        };
+
+        /* ── Build slide HTML ── */
+        function buildSlide(p) {
+            const img    = p.imageBase64 || p.imageUrl || '';
+            const ctaUrl = p.ctaLink || 'https://line.me/R/ti/p/@pao789';
+            let pkgsHtml = '';
+            if (p.pkg1Name || p.pkg1Price) {
+                pkgsHtml += `<div class="package-card" onclick="selectPromoPackage(1,this.closest('.promo-slide'))" style="cursor:pointer;"><div class="package-info"><h4>${p.pkg1Name || ''}</h4><div class="package-price">${p.pkg1Price || ''}</div></div></div>`;
+            }
+            if (p.pkg2Name || p.pkg2Price) {
+                let badge = p.pkg2Badge ? `<div class="package-badge">${p.pkg2Badge}</div>` : '';
+                let oldP  = p.pkg2OldPrice ? `<span>${p.pkg2OldPrice}</span>` : '';
+                pkgsHtml += `<div class="package-card active" onclick="selectPromoPackage(2,this.closest('.promo-slide'))" style="cursor:pointer;">${badge}<div class="package-info"><h4>${p.pkg2Name || ''}</h4><div class="package-price">${p.pkg2Price || ''}${oldP}</div></div></div>`;
+            }
+            // Smart CTA button: LINE style if link is LINE, else default
+            const isLine = ctaUrl.includes('line.me') || ctaUrl.includes('@pao');
+            const ctaBtn = isLine
+                ? `<a href="${ctaUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:10px;background:#06c755;color:#fff;border:none;padding:14px 30px;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;text-decoration:none;box-shadow:0 4px 14px rgba(6,199,85,0.35);transition:all 0.2s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.365 9.864c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-2.05v.744h2.05c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-3.426a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h3.426zm-4.91 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108h-1.272a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zm-2.594 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H10.59a.106.106 0 01-.086-.044l-1.99-2.696v2.632c0 .06-.048.108-.108.108H7.134a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272c.034 0 .066.016.086.044l1.99 2.694V9.972c0-.06.048-.108.108-.108h1.272zm-5.648 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H4.941a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zM24 10.62C24 5.076 18.614.573 12 .573S0 5.076 0 10.62c0 4.962 4.402 9.122 10.348 9.908.403.087.952.266 1.09.61.126.314.082.804.04 1.12l-.164 1.022c-.054.314-.248 1.228 1.076.67 1.324-.56 7.146-4.208 9.752-7.204C23.464 15.254 24 13.046 24 10.62z"/></svg> สนใจ ติดต่อ LINE @pao789</a>`
+                : `<a href="${ctaUrl}" target="_blank" class="btn btn-primary btn-lg">⚡ ซื้อเลย</a>`;
+
+            // Show cart button only if packages exist
+            const cartBtn = pkgsHtml ? `<button onclick="handleAddToCart()" class="btn btn-outline btn-lg">🛒 เพิ่มลงตะกร้า</button>` : '';
+
+            return `<div class="promo-slide">
+                <div class="promo-banner">
+                    ${img ? `<img src="${img}" alt="" class="promo-img">` : ''}
+                    <div class="promo-content">
+                        <div class="promo-details"><h3>${p.title || ''}</h3><p>${p.subDesc || ''}</p></div>
+                        <p class="promo-desc">${(p.desc || '').replace(/\n/g,'<br>')}</p>
+                        ${pkgsHtml ? `<div class="package-selector">${pkgsHtml}</div>` : ''}
+                        <div class="promo-actions" style="gap:12px;flex-wrap:wrap;justify-content:center;text-align:center;">
+                            ${cartBtn}
+                            ${ctaBtn}
+                        </div>
+                    </div>
+                </div></div>`;
+        }
+
+        /* ── Render slider ── */
+        function renderSlider(promos) {
+            const wrapper = document.getElementById('sliderWrapper');
+            const nav     = document.getElementById('sliderNav');
+            const dots    = document.getElementById('sliderDots');
+            if (!wrapper) return;
+
+            if (!promos.length) {
+                wrapper.innerHTML = `<div class="promo-off-msg">
+                    <div style="font-size:3rem;margin-bottom:16px;">🎁</div>
+                    <h2 style="color:var(--text-dark);margin-bottom:8px;">ยังไม่มีโปรโมชั่นในขณะนี้</h2>
+                    <p style="color:var(--text-muted);">ติดตามได้เร็วๆ นี้ครับ</p></div>`;
+                if (nav) nav.style.display = 'none';
+                return;
+            }
+
+            wrapper.innerHTML = promos.map(p => buildSlide(p)).join('');
+            promoSlider.slides = Array.from(wrapper.querySelectorAll('.promo-slide'));
+
+            // Build dots
+            if (dots) dots.innerHTML = promos.map((_, i) =>
+                `<button class="slider-dot${i===0?' active':''}" onclick="promoSlider.go(${i})"></button>`).join('');
+
+            if (nav) nav.style.display = promos.length > 1 ? 'flex' : 'none';
+            promoSlider.go(0);
+        }
+
+        /* ── Real-time Firestore listener (no orderBy = no index needed) ── */
+        const defaultPromo = [
+            {
+                title:    'ผ่อนซ่อมโทรศัพท์ ดาวน์เริ่มต้น 30%',
+                subDesc:  '✨ ผ่อนไปใช้ไปได้เลย! • ใช้เพียงบัตรประชาชนใบเดียว',
+                desc:     'ซ่อมจบทุกอาการด้วยอะไหล่คุณภาพมาตรฐาน\n✅ รับประกันงานซ่อมทุกชิ้นส่วน\n⚡ ซ่อมไว รอรับได้เลย\n❤️ ดูแลทุกเครื่องเหมือนเครื่องของเราเอง',
+                imageUrl: 'Promotion-1.jpg',
+                ctaLink:  'https://line.me/R/ti/p/@pao789',
+                active:   true,
+                order:    0
+            },
+            {
+                title:    'โปรโมชั่น Accessory ยิ่งซื้อเยอะ ยิ่งคุ้ม!',
+                subDesc:  '🛒 รับส่วนลดทันทีสูงสุด 20% เมื่อซื้อครบเงื่อนไข',
+                desc:     '💰 ซื้อครบ 500 บาท ลดทันที 10%\n💰 ซื้อครบ 1,000 บาท ลดทันที 15%\n💰 ซื้อครบ 2,000 บาท ลดทันที 20%\n✅ ของแท้คุณภาพดี • รับประกันทุกชิ้น • คุ้มค่าราคาโดนใจ',
+                imageUrl: 'Promotion-2.jpg',
+                ctaLink:  'https://line.me/R/ti/p/@pao789',
+                active:   true,
+                order:    1
+            }
+        ];
+
+        // ── Show promotion image IMMEDIATELY (no waiting for Firestore) ──
+        renderSlider(defaultPromo);
+
+        // ── Then update from Firestore when ready ──
+        db.collection('promotions').onSnapshot(snap => {
+            const promos = snap.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .filter(p => p.active !== false)
+                .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+            // Only update if Firestore actually has data
+            if (promos.length > 0) renderSlider(promos);
+        }, err => {
+            console.warn('[Promo] Firestore error:', err);
+            // Already showing defaultPromo, nothing to do
+        });
+
+        /* ── Package selector helper (per slide) ── */
+        window.selectPromoPackage = function(num, slideEl) {
+            const cards = (slideEl || document).querySelectorAll('.package-card');
+            cards.forEach((c, i) => c.classList.toggle('active', i === num - 1));
+        };
+    })();
+    </script>
     <div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
             aria-label="Close Search">&#x2715;</button>
         <div class="search-modal-container">

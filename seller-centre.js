@@ -21,8 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
     updateDashboard();
 
     // --- v1.2.1 Auth & Firestore Initialization ---
-    // --- v1.2.1 Auth & Firestore Initialization ---
     if (typeof firebase !== 'undefined' && firebase.auth) {
+        // v1.2.14 Update status immediately if db exists
+        if (typeof db !== 'undefined') {
+            const statusToast = document.getElementById('firestore-status');
+            if (statusToast) statusToast.innerHTML = '&bull; Firestore: กำลังซิงค์ข้อมูล... ⏳';
+        }
+
         firebase.auth().onAuthStateChanged(user => {
             const authEmail = document.getElementById('authEmail');
             const authIndicator = document.getElementById('authIndicator');
@@ -115,10 +120,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusToast = document.getElementById('firestore-status');
             if (statusToast) {
                 let msg = 'ออฟไลน์ ⚠️';
-                if (err.code === 'permission-denied') msg = 'จำกัดการเข้าถึง 🔒 (กรุณาล็อกอิน)';
-                statusToast.innerHTML = `<span style="color:#ff4d4f;">&bull;</span> Cloud: ${msg}`;
-                statusToast.style.borderColor = '#ffa39e';
-                statusToast.style.background = '#fff1f0';
+                if (err.code === 'permission-denied') {
+                    msg = 'จำกัดการเข้าถึง 🔒 (โปรดล็อกอิน Google)';
+                    statusToast.style.borderColor = '#faad14';
+                    statusToast.style.background = '#fffbe6';
+                    statusToast.innerHTML = `<span style="color:#faad14;">&bull;</span> Cloud: ${msg}`;
+                } else {
+                    statusToast.innerHTML = `<span style="color:#ff4d4f;">&bull;</span> Cloud: ${msg}`;
+                    statusToast.style.borderColor = '#ffa39e';
+                    statusToast.style.background = '#fff1f0';
+                }
             }
             updateDashboard();
         });
@@ -146,19 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn("[v1.2.11] Product sync failed:", err);
         });
 
-        // Vouchers Sync (for stats count)
-        db.collection('vouchers').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            const elVouchers = document.getElementById('stat-vouchers');
-            if (elVouchers) elVouchers.textContent = snapshot.size;
-            localStorage.setItem('pao_total_vouchers_count', snapshot.size);
-            
-            // Still render quick vouchers in case the UI element gets re-added later
-            const vouchers = snapshot.docs.map(doc => doc.data());
-            renderQuickVouchers(vouchers);
-        }, err => {
-            console.error("Voucher sync error:", err);
-        });
-
         // Chat Unread Sync
         db.collection('chats').onSnapshot(snapshot => {
             const totalUnread = snapshot.docs.reduce((sum, doc) => sum + (doc.data().unreadCount || 0), 0);
@@ -174,7 +172,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }, err => {
             console.warn("Chat unread sync error:", err);
         });
+
+        // Promotion List Sync
+        loadPromoList();
     }
+
+    // v1.2.15 - Public Syncs (Run even if admin sync hangs/blocked)
+    if (typeof db !== 'undefined') {
+        loadPromoList();
+        
+        // Voucher Sync (Public Read) - Client-side sort to avoid index issues
+        db.collection('vouchers').onSnapshot(snapshot => {
+            const elVouchers = document.getElementById('stat-vouchers');
+            if (elVouchers) elVouchers.textContent = snapshot.size;
+            localStorage.setItem('pao_total_vouchers_count', snapshot.size);
+            
+            const docs = snapshot.docs.map(doc => doc.data());
+            // Client-side sort by createdAt desc
+            docs.sort((a, b) => {
+                const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                const db = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                return db - da;
+            });
+            renderQuickVouchers(docs);
+        }, err => {
+            console.error("Voucher sync error:", err);
+            const list = document.getElementById('quick-qr-list');
+            if (list) list.innerHTML = `<div style="grid-column: 1/-1; padding: 20px; text-align: center; color: #ef4444; font-size: 0.8rem;">⚠️ โหลดคูปองไม่ได้: ${err.message}</div>`;
+        });
+    }
+    
+    // v1.2.13 - Ensure promo list runs even if sync hangs (public read allowed)
+    if (typeof db !== 'undefined') loadPromoList();
 
     function renderQuickVouchers(vouchers) {
         const list = document.getElementById('quick-qr-list');
@@ -641,3 +670,235 @@ function closeSlipLightbox() {
     }
 }
 
+
+// ============================================================
+//  PROMOTION MANAGEMENT — Multi-Promo (v2.0)
+// ============================================================
+
+const DEFAULT_PROMOS = [
+    {
+        title:    'ผ่อนซ่อมโทรศัพท์ ดาวน์เริ่มต้น 30%',
+        subDesc:  '✨ ผ่อนไปใช้ไปได้เลย! • ใช้เพียงบัตรประชาชนใบเดียว',
+        desc:     'ซ่อมจบทุกอาการด้วยอะไหล่คุณภาพมาตรฐาน\n✅ รับประกันงานซ่อมทุกชิ้นส่วน\n⚡ ซ่อมไว รอรับได้เลย\n❤️ ดูแลทุกเครื่องเหมือนเครื่องของเราเอง',
+        imageUrl: 'Promotion-1.jpg',
+        ctaLink:  'https://line.me/R/ti/p/@pao789',
+        active:   true,
+        order:    0
+    },
+    {
+        title:    'โปรโมชั่น Accessory ยิ่งซื้อเยอะ ยิ่งคุ้ม!',
+        subDesc:  '🛒 รับส่วนลดทันทีสูงสุด 20% เมื่อซื้อครบเงื่อนไข',
+        desc:     '💰 ซื้อครบ 500 บาท ลดทันที 10%\n💰 ซื้อครบ 1,000 บาท ลดทันที 15%\n💰 ซื้อครบ 2,000 บาท ลดทันที 20%\n✅ ของแท้คุณภาพดี • รับประกันทุกชิ้น • คุ้มค่าราคาโดนใจ',
+        imageUrl: 'Promotion-2.jpg',
+        ctaLink:  'https://line.me/R/ti/p/@pao789',
+        active:   true,
+        order:    1
+    }
+];
+
+let _currentPromoId = null;
+let _currentPromoImgBase64 = null;
+
+/* ── Render promotion list in dashboard card ── */
+function loadPromoList() {
+    if (typeof db === 'undefined') return;
+
+    // No orderBy to avoid requiring a Firestore index — sort client-side
+    db.collection('promotions').onSnapshot(snapshot => {
+        const area  = document.getElementById('promo-list-area');
+        const count = document.getElementById('promo-count');
+        if (count) count.textContent = snapshot.size;
+        if (!area) return;
+
+        if (snapshot.empty) {
+            area.innerHTML = `<div style="text-align:center;padding:30px 20px;color:#94a3b8;">
+                <div style="font-size:2.5rem;margin-bottom:10px;">🎁</div>
+                <div style="font-weight:600;margin-bottom:6px;">ยังไม่มีโปรโมชั่นบนคลาวด์</div>
+                <div style="font-size:0.85rem;margin-bottom:15px;">คุณสามารถใช้เทมเพลตเริ่มต้น หรือกดเพิ่มใหม่ได้คับ</div>
+                <button onclick="seedDefaultPromos()" style="background:#f8fafc; border:1.5px solid #e2e8f0; padding:8px 16px; border-radius:10px; font-size:0.8rem; font-weight:700; cursor:pointer; color:#475569;">
+                    ✨ ใช้โปรโมชั่นเริ่มต้น (2 รายการ)
+                </button>
+            </div>`;
+            return;
+        }
+
+        // Sort client-side by order field
+        const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        docs.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+        area.innerHTML = docs.map((p, idx) => {
+            const imgSrc   = p.imageBase64 || p.imageUrl || '';
+            const isActive = p.active !== false;
+            const sc = isActive ? {bg:'#f0fdf4',c:'#16a34a',b:'#bbf7d0',t:'✅ แสดง'} : {bg:'#fff1f0',c:'#dc2626',b:'#fca5a5',t:'⛔ ซ่อน'};
+            return `<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #f1f5f9;border-radius:12px;margin-bottom:8px;background:#fafafa;"
+                         onmouseenter="this.style.borderColor='#e2e8f0'" onmouseleave="this.style.borderColor='#f1f5f9'">
+                <div style="width:72px;height:48px;border-radius:8px;overflow:hidden;background:#e2e8f0;flex-shrink:0;">
+                    ${imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖼️</div>'}
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:700;color:#0f172a;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.title || '(ไม่มีชื่อ)'}</div>
+                    <span style="font-size:0.7rem;background:${sc.bg};color:${sc.c};border:1px solid ${sc.b};padding:1px 8px;border-radius:20px;font-weight:600;">${sc.t}</span>
+                </div>
+                <span style="font-size:0.72rem;color:#94a3b8;flex-shrink:0;">สไลด์ ${idx+1}</span>
+                <div style="display:flex;gap:6px;flex-shrink:0;">
+                    <button onclick="openPromoEditor('${p.id}')" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;padding:5px 10px;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;">✏️ แก้ไข</button>
+                    <button onclick="deletePromotion('${p.id}')" style="background:#fff1f0;color:#dc2626;border:1px solid #fca5a5;padding:5px 10px;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;">🗑️</button>
+                </div>
+            </div>`;
+        }).join('');
+    }, err => {
+        console.error('[Promo] List error:', err);
+        const area = document.getElementById('promo-list-area');
+        if (area) area.innerHTML = `<div style="color:#dc2626;padding:16px;font-size:0.85rem;">❌ โหลดไม่ได้: ${err.message}</div>`;
+    });
+}
+
+/* ── Open editor modal ── */
+window.openPromoEditor = async function(docId) {
+    _currentPromoId = docId || null;
+    _currentPromoImgBase64 = null;
+
+    document.getElementById('promoEditorModal').style.display = 'flex';
+
+    const titleEl = document.getElementById('promoModalTitle');
+    if (titleEl) titleEl.textContent = docId ? '✏️ แก้ไขโปรโมชั่น' : '➕ เพิ่มโปรโมชั่นใหม่';
+
+    const deleteBtn = document.getElementById('promoDeleteBtn');
+    if (deleteBtn) deleteBtn.style.display = docId ? 'flex' : 'none';
+
+    // Clear all fields
+    ['promoTitle','promoSubDesc','promoDesc','promoCTALink',
+     'pkg1Name','pkg1Price','pkg2Name','pkg2Price','pkg2OldPrice','pkg2Badge']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    resetModalImgPreview();
+    const activeChk = document.getElementById('promoActive');
+    if (activeChk) { activeChk.checked = true; syncToggleUI(true); }
+
+    if (docId) {
+        try {
+            const doc = await db.collection('promotions').doc(docId).get();
+            const d = doc.exists ? doc.data() : {};
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+            set('promoTitle', d.title); set('promoSubDesc', d.subDesc);
+            set('promoDesc', d.desc);   set('promoCTALink', d.ctaLink);
+            set('pkg1Name', d.pkg1Name); set('pkg1Price', d.pkg1Price);
+            set('pkg2Name', d.pkg2Name); set('pkg2Price', d.pkg2Price);
+            set('pkg2OldPrice', d.pkg2OldPrice); set('pkg2Badge', d.pkg2Badge);
+            if (activeChk) { activeChk.checked = (d.active !== false); syncToggleUI(activeChk.checked); }
+            if (d.imageBase64 || d.imageUrl) showModalImgPreview(d.imageBase64 || d.imageUrl);
+        } catch(e) { console.warn('[Promo] Load error:', e); }
+    }
+    if (activeChk) activeChk.onchange = () => syncToggleUI(activeChk.checked);
+};
+
+function syncToggleUI(on) {
+    const track = document.getElementById('promoToggleTrack');
+    const thumb = document.getElementById('promoToggleThumb');
+    if (track) track.style.background = on ? '#22c55e' : '#ccc';
+    if (thumb) thumb.style.left = on ? '27px' : '3px';
+}
+
+window.closePromoEditor = function() {
+    document.getElementById('promoEditorModal').style.display = 'none';
+    _currentPromoImgBase64 = null; _currentPromoId = null;
+};
+
+window.handlePromoImgUpload = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('⚠️ รูปใหญ่เกิน 5MB'); return; }
+    const reader = new FileReader();
+    reader.onload = e => { _currentPromoImgBase64 = e.target.result; showModalImgPreview(_currentPromoImgBase64); };
+    reader.readAsDataURL(file);
+};
+
+function showModalImgPreview(src) {
+    const img = document.getElementById('promoImgPreviewImg');
+    const ph  = document.getElementById('promoImgUploadPlaceholder');
+    if (img && ph) { img.src = src; img.style.display = 'block'; ph.style.display = 'none'; }
+}
+function resetModalImgPreview() {
+    const img = document.getElementById('promoImgPreviewImg');
+    const ph  = document.getElementById('promoImgUploadPlaceholder');
+    if (img && ph) { img.src = ''; img.style.display = 'none'; ph.style.display = 'flex'; }
+}
+
+/* ── Save promotion ── */
+window.savePromotion = async function() {
+    const btn = document.getElementById('promoSaveBtn');
+    btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+
+    // Safe server timestamp (works in both compat and modular)
+    const ts = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
+        ? firebase.firestore.FieldValue.serverTimestamp()
+        : new Date();
+
+    const g = id => document.getElementById(id)?.value.trim() || '';
+    const payload = {
+        title: g('promoTitle'), subDesc: g('promoSubDesc'), desc: g('promoDesc'),
+        ctaLink: g('promoCTALink'), pkg1Name: g('pkg1Name'), pkg1Price: g('pkg1Price'),
+        pkg2Name: g('pkg2Name'), pkg2Price: g('pkg2Price'),
+        pkg2OldPrice: g('pkg2OldPrice'), pkg2Badge: g('pkg2Badge'),
+        active: document.getElementById('promoActive')?.checked ?? true,
+        updatedAt: ts
+    };
+    if (_currentPromoImgBase64) payload.imageBase64 = _currentPromoImgBase64;
+
+    try {
+        if (typeof db === 'undefined') throw new Error('Firestore (db) ยังไม่พร้อม กรุณาล็อกอินก่อน');
+        if (_currentPromoId) {
+            await db.collection('promotions').doc(_currentPromoId).set(payload, { merge: true });
+        } else {
+            const snap = await db.collection('promotions').get();
+            payload.order = snap.size;
+            payload.createdAt = ts;
+            await db.collection('promotions').add(payload);
+        }
+        btn.textContent = '✅ บันทึกแล้ว!';
+        setTimeout(() => { btn.disabled = false; btn.textContent = '💾 บันทึก & อัปเดต'; closePromoEditor(); }, 1000);
+    } catch(e) {
+        console.error('[Promo] Save error:', e);
+        alert('❌ บันทึกไม่สำเร็จ: ' + e.message);
+        btn.disabled = false; btn.textContent = '💾 บันทึก & อัปเดต';
+    }
+};
+
+/* ── Delete promotion ── */
+window.deletePromotion = async function(docId) {
+    const id = docId || _currentPromoId;
+    if (!id || !confirm('🗑️ ลบโปรโมชั่นนี้ใช่ไหมคับ?')) return;
+    try {
+        await db.collection('promotions').doc(id).delete();
+        if (_currentPromoId === id) closePromoEditor();
+    } catch(e) { alert('❌ ลบไม่สำเร็จ: ' + e.message); }
+};
+
+/* ── Seed default promotions ── */
+window.seedDefaultPromos = async function() {
+    if (!confirm('ต้องการเพิ่มโปรโมชั่นเริ่มต้น 2 รายการ (ผ่อนซ่อม & Accessory) ลงในระบบคลาวด์ใช่ไหมคับ?')) return;
+    
+    try {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ กำลังส่งข้อมูล...';
+
+        for (const p of DEFAULT_PROMOS) {
+            await db.collection('promotions').add({
+                ...p,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+        alert('✅ เพิ่มโปรโมชั่นเริ่มต้นสำเร็จแล้วคับ!');
+        btn.textContent = originalText;
+        btn.disabled = false;
+    } catch (e) {
+        console.error(e);
+        alert('❌ เพิ่มไม่สำเร็จ: ' + e.message + '\n(โปรดตรวจสอบว่าคุณล็อกอิน Admin หรือยัง)');
+        btn.disabled = false;
+    }
+};
+
+// Auto-start list when Firestore is ready — called from startFirestoreSync above
+// (No DOMContentLoaded fallback needed: db is only ready after auth)

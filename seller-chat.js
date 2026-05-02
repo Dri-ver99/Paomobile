@@ -640,17 +640,20 @@
         }
     };
 
-    // 5. Auth Strategy & Init
-    // 5. Auth Strategy & Init (Standardized)
+    // 5. Auth Strategy & Init (Optimized)
     async function initSellerChat() {
-        const checkDB = setInterval(() => {
-            const currentDB = window.db || (typeof db !== 'undefined' ? db : null) || (typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore() : null);
-            if (currentDB) {
-                window.db = currentDB;
-                clearInterval(checkDB);
-                setupAuthAndLoad();
-            }
-        }, 500);
+        const currentDB = window.db || (typeof db !== 'undefined' ? db : null);
+        if (currentDB) {
+            setupAuthAndLoad();
+        } else {
+            const checkDB = setInterval(() => {
+                const retryDB = window.db || (typeof db !== 'undefined' ? db : null);
+                if (retryDB) {
+                    clearInterval(checkDB);
+                    setupAuthAndLoad();
+                }
+            }, 50);
+        }
 
         async function setupAuthAndLoad() {
             if (!window.db) return;

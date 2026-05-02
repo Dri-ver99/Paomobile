@@ -648,18 +648,11 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
-    <script src="cart.js?v=3"></script>
-    <script src="search.js"></script>
-    <script src="auth.js"></script>
-
-
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
-    <!-- Firebase Config -->
+    <!-- Firebase SDKs (Prioritized for Chat System) -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
@@ -670,13 +663,14 @@
             appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
             measurementId: "G-BZYNZ9B9LQ"
         };
-        // Use the global config if available, otherwise use this fallback
-        const finalConfig = (typeof window.firebaseConfig !== 'undefined') ? window.firebaseConfig : firebaseConfig;
-        if (!firebase.apps.length) {
-            firebase.initializeApp(finalConfig);
-        }
-        var db = firebase.firestore();
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        window.db = firebase.firestore();
+        var db = window.db;
     </script>
+    <script src="script.js"></script>
+    <script src="cart.js?v=3"></script>
+    <script src="search.js"></script>
+    <script src="auth.js"></script>
     <script>
         (function () {
             const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };

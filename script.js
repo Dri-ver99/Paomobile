@@ -510,8 +510,8 @@ badge.textContent = '⚫ ปิดให้บริการ';
                     <div>
                         <div style="font-weight:700; font-size:0.95rem; margin-bottom:1px;">แชทกับ Paomobile</div>
                         <div id="chatHeaderStatus" style="font-size:0.7rem; opacity:0.8; display:flex; align-items:center; gap:4px;">
-                            <span id="chatHeaderDot" style="width:6px; height:6px; background:#94a3b8; border-radius:50%;"></span>
-                            <span id="chatHeaderText">เชื่อมต่อ...</span>
+                            <span id="chatStatusDot" style="width:6px; height:6px; background:#94a3b8; border-radius:50%;"></span>
+                            <span id="chatStatusText">เชื่อมต่อ...</span>
                         </div>
                     </div>
                 </div>
@@ -649,8 +649,8 @@ badge.textContent = '⚫ ปิดให้บริการ';
     // --- Seller Status Sync ---
     function syncSellerStatus() {
         const indicator = document.getElementById('chatStatusIndicator');
-        const headerDot = document.getElementById('chatHeaderDot');
-        const headerText = document.getElementById('chatHeaderText');
+        const headerDot = document.getElementById('chatStatusDot');
+        const headerText = document.getElementById('chatStatusText');
         
         if (!indicator) return;
 
@@ -674,21 +674,22 @@ badge.textContent = '⚫ ปิดให้บริการ';
                 const now = new Date();
                 const diffSeconds = (now - lastSeen) / 1000;
                 
-                // If last active in 5 minutes, consider online
-                const isOnlineNow = diffSeconds < 300 && data.isOnline;
+                // If last active in 3 minutes, consider online
+                const isOnlineNow = diffSeconds < 180 && data.isOnline;
 
                 if (isOnlineNow) {
                     indicator.classList.remove('offline');
-                    if (headerDot) headerDot.style.background = '#10b981';
-                    if (headerText) headerText.textContent = 'ออนไลน์ตอนนี้';
+                    if (headerDot) headerDot.style.background = '#26af11';
+                    if (headerText) headerText.textContent = 'ออนไลน์';
                 } else {
                     indicator.classList.add('offline');
-                    if (headerDot) headerDot.style.background = '#94a3b8';
+                    if (headerDot) headerDot.style.background = '#888';
                     const awayMsg = diffSeconds < 3600 ? 'ไม่อยู่ชั่วคราว' : 'ออฟไลน์';
                     if (headerText) headerText.textContent = awayMsg;
                 }
             } else {
                 indicator.classList.add('offline');
+                if (headerDot) headerDot.style.background = '#888';
                 if (headerText) headerText.textContent = 'ออฟไลน์';
             }
         }, err => console.warn("[StatusSync] Error:", err));
@@ -1061,10 +1062,11 @@ badge.textContent = '⚫ ปิดให้บริการ';
         });
     };
 
+    // --- Initial Load ---
     setTimeout(() => {
         syncSellerStatus();
         startCustomerHeartbeat();
-    }, 2000);
+    }, 500);
     window.handleChatCardClick = (productId, category, link) => {
         // ALWAYS navigate to ensure we follow the "Go to Page" requirement.
         // ProductSync in the destination page will handle auto-opening the modal.

@@ -498,9 +498,16 @@
         };
         firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
-        // Seller Chat: Use specific admin email sattawat2560@gmail.com
-        // No anonymous login allowed here to prevent permission conflicts
+        
+        // v1.2.16 - Enable Persistence for Instant Chat Loading
+        try {
+            db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+                if (err.code == 'failed-precondition') console.warn("Persistence failed: multiple tabs.");
+                else if (err.code == 'unimplemented') console.warn("Persistence unsupported.");
+            });
+        } catch(e) {}
     </script>
+    <script src="seller-presence.js"></script>
     <!-- Mobile Sidebar Overlay -->
     <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
         <div class="mobile-sidebar" onclick="event.stopPropagation()">
