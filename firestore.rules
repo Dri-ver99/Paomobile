@@ -63,7 +63,13 @@ service cloud.firestore {
       allow write: if true; 
     }
     
-    // 7. ส่วนอื่นๆ (Fallback)
+    // 7. โปรโมชั่น (Promotions) - ลูกค้าอ่านได้ทุกคน, Seller เท่านั้นที่แก้ได้
+    match /promotions/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 8. ส่วนอื่นๆ (Fallback)
     match /{document=**} {
       allow read: if true;
       allow write: if isAdmin();

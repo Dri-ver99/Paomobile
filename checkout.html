@@ -647,6 +647,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
@@ -657,11 +658,13 @@
             appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
             measurementId: "G-BZYNZ9B9LQ"
         };
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
+        window.db = db;
     </script>
     <script src="thai-address-data.js"></script>
     <script src="checkout.js?v=1.2.11"></script>
+    <script src="script.js"></script>
     <div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
             aria-label="Close Search">&#x2715;</button>
         <div class="search-modal-container">

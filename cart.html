@@ -328,6 +328,23 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs (Prioritized for Chat System) -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-storage-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        window.db = firebase.firestore();
+    </script>
     <script src="script.js"></script>
     <script src="cart.js?v=3"></script>
     <div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
