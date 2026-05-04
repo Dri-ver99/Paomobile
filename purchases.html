@@ -193,6 +193,41 @@
             background: #f9f9f9;
             color: #555;
         }
+
+        /* Return Reason Modal Styles (Refined) */
+        .return-modal-list { list-style: none; padding: 0; margin: 0; }
+        .return-option { 
+            display: flex; 
+            align-items: center; 
+            padding: 18px 24px; 
+            border-bottom: 1px solid #f8f8f8; 
+            cursor: pointer; 
+            transition: all 0.25s ease; 
+            gap: 20px; 
+            text-align: left; /* Align beautifully */
+        }
+        .return-option:hover { background: #fff8f5; }
+        .return-option:active { transform: scale(0.98); }
+        .return-option:hover .return-title { color: #ee4d2d; }
+        .return-option:hover .return-icon { transform: scale(1.15) rotate(5deg); }
+        .return-option:last-child { border-bottom: none; }
+        
+        .return-icon { 
+            font-size: 1.8rem; 
+            min-width: 48px; 
+            height: 48px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #fff5f2; 
+            border-radius: 12px; 
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .return-text { flex: 1; }
+        .return-title { font-weight: 600; color: #222; margin-bottom: 4px; font-size: 1rem; line-height: 1.4; transition: color 0.2s; }
+        .return-desc { font-size: 0.82rem; color: #777; line-height: 1.5; }
+        .return-arrow { color: #eee; font-size: 1.5rem; transition: transform 0.2s; margin-left: 5px; }
+        .return-option:hover .return-arrow { color: #ee4d2d; transform: translateX(3px); }
     </style>
 </head>
 
@@ -763,9 +798,25 @@
                         cloudOrders.forEach(o => {
                             if (mergedMap.has(o.id)) {
                                 const localO = mergedMap.get(o.id);
-                                const advancedStatus = ['ที่ต้องจัดส่ง', 'ที่ต้องได้รับ', 'กำลังดำเนินการ', 'เตรียมจัดส่งแล้ว', 'Processed'];
-                                if (advancedStatus.includes(localO.status) && o.status === 'ที่ต้องชำระ') {
-                                    return; // Don't overwrite an advanced local status with a stale incomplete cloud status
+                                
+                                // ✅ Advanced Merging Logic: Prevent "Stale" cloud status from overwriting "More Advanced" local status
+                                const statusPriority = {
+                                    'ที่ต้องชำระ': 1,
+                                    'ที่ต้องจัดส่ง': 2,
+                                    'เตรียมจัดส่งแล้ว': 3,
+                                    'Processed': 3,
+                                    'ที่ต้องได้รับ': 4,
+                                    'สำเร็จแล้ว': 5,
+                                    'Completed': 5,
+                                    'ยกเลิกแล้ว': 6,
+                                    'คืนเงิน/คืนสินค้า': 6
+                                };
+
+                                const localWeight = statusPriority[localO.status] || 0;
+                                const cloudWeight = statusPriority[o.status] || 0;
+
+                                if (localWeight > cloudWeight) {
+                                    return; // Don't overwrite with a less advanced status from cloud
                                 }
                             }
                             mergedMap.set(o.id, o);
@@ -780,7 +831,10 @@
                         // ✅ Centralized Expiration Check (Fixes cloud-only order expiry)
                         ordersData = processExpirations(ordersData);
 
-                        console.log("[v1.2.10] Sync Success: Found", ordersData.length, "orders");
+                        // ✅ Sync back to Local Storage to ensure priority logic works on next snapshot
+                        localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
+
+                        console.log("[v1.2.12] Sync Success: Found", ordersData.length, "orders");
                         const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
                         renderOrders(ordersData, activeTab);
                     }, err => {
@@ -995,9 +1049,10 @@
                                                 style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">จัดส่งสำเร็จ</button>
                                         ` : ''}
                                     ` : `
+                                        <button class="btn-purchase" onclick="window.requestReturn('${order.id}')" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">คืนเงิน/คืนสินค้า</button>
                                         <button class="btn-purchase btn-purchase-primary" onclick="window.buyAgain('${order.id}')" style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">ซื้ออีกครั้ง</button>
                                     `)}
-                                    <button class="btn-purchase" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">ติดต่อผู้ขาย</button>
+                                    <button class="btn-purchase" onclick="window.open('https://line.me/R/ti/p/@pao789', '_blank')" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">ติดต่อผู้ขาย</button>
                                 </div>
                         </div>
                     </div>`;
@@ -1241,9 +1296,9 @@
                 }, 300);
             };
 
-            window.confirmSuccessOrder = async function () {
+            window.confirmSuccessOrder = function () {
                 if (!currentSuccessOrderId) return;
-                const orderId = currentSuccessOrderId;
+                const orderId = currentSuccessOrderId.trim();
                 
                 try {
                     const updateObj = { status: 'สำเร็จแล้ว' };
@@ -1251,51 +1306,82 @@
                     // 1. Firebase Sync
                     if (typeof db !== 'undefined' && db.collection) {
                         db.collection('orders').doc(orderId).update(updateObj)
-                            .then(() => console.log("[Cloud] Success:", orderId))
-                            .catch(err => console.error("[Cloud Error]", err));
+                            .then(() => console.log("[Cloud] Status updated to Completed:", orderId))
+                            .catch(err => console.error("[Cloud Error] Failed to update status:", err));
                     }
                     
-                    // 2. Local Storage Sync
+                    // 2. Local Storage Sync (Primary User Orders)
                     const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
                     let currentOrders = JSON.parse(rawOrders);
-                    let order = currentOrders.find(o => o.id === orderId);
-                    if (order) {
-                        order.status = 'สำเร็จแล้ว';
+                    let foundLocal = false;
+                    currentOrders.forEach(o => {
+                        if (o.id && o.id.trim() === orderId) {
+                            o.status = 'สำเร็จแล้ว';
+                            foundLocal = true;
+                        }
+                    });
+
+                    if (!foundLocal) {
+                        // Capture the order from in-memory data if it wasn't in local storage yet
+                        const orderFromMem = ordersData.find(o => o.id && o.id.trim() === orderId);
+                        if (orderFromMem) {
+                            const newLocalOrder = { ...orderFromMem, status: 'สำเร็จแล้ว' };
+                            currentOrders.push(newLocalOrder);
+                            foundLocal = true;
+                        }
+                    }
+
+                    if (foundLocal) {
                         localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
                     }
                     
-                    // 3. Global Sync Fallback
+                    // 3. Global Sync Fallback (pao_global_orders)
                     try {
                         let globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-                        let go = globalOrders.find(o => o.id === orderId);
-                        if (go) {
-                            go.status = 'สำเร็จแล้ว';
+                        let foundGlobal = false;
+                        globalOrders.forEach(go => {
+                            if (go.id && go.id.trim() === orderId) {
+                                go.status = 'สำเร็จแล้ว';
+                                foundGlobal = true;
+                            }
+                        });
+                        if (foundGlobal) {
                             localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
                         }
                     } catch (e) { }
 
-                    // 4. Update Local Memory and Switch Tab
-                    const idx = ordersData.findIndex(o => o.id === orderId);
+                    // 4. Update In-Memory Data and UI
+                    const idx = ordersData.findIndex(o => o.id && o.id.trim() === orderId);
                     if (idx > -1) {
                         ordersData[idx].status = 'สำเร็จแล้ว';
-                        
-                        // Automatically switch to "Success" tab
-                        const successTab = document.querySelector('.order-tab[data-filter="success"]');
-                        if (successTab) {
-                            document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
-                            successTab.classList.add('active');
-                            renderOrders(ordersData, 'success');
-                        } else {
-                            const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
-                            renderOrders(ordersData, activeTab);
-                        }
                     }
                     
+                    // Force switch to "Completed" tab
+                    document.querySelectorAll('.order-tab').forEach(t => {
+                        if (t.dataset.filter === 'completed') {
+                            t.classList.add('active');
+                        } else {
+                            t.classList.remove('active');
+                        }
+                    });
+                    
+                    // Update badges and render
+                    updateTabCounts(ordersData);
+                    renderOrders(ordersData, 'completed');
+                    
+                    // ✅ Notify other tabs (Seller Centre) to refresh immediately
+                    try {
+                        const bc = new BroadcastChannel('pao_order_sync');
+                        bc.postMessage({ type: 'REFRESH_ORDERS', orderId: orderId });
+                    } catch (e) { }
+
                     closeSuccessModal();
-                    // alert('📦 ยินดีด้วยคับ! การสั่งซื้อสำเร็จเรียบร้อยแล้ว ขอบคุณที่อุดหนุนนะคับ');
                     
                 } catch (e) {
-                    console.error("Critical: markAsCompletedUser failed:", e);
+                    console.error("Critical: confirmSuccessOrder failed:", e);
+                    // Fallback: simple refresh if everything fails
+                    closeSuccessModal();
+                    setTimeout(() => window.location.reload(), 500);
                 }
             };
 
@@ -1445,6 +1531,112 @@
                 }
             };
 
+            window.buyAgain = function (orderId) {
+                const order = ordersData.find(o => o.id === orderId);
+                if (order && order.items && window.CartAPI) {
+                    order.items.forEach(item => {
+                        window.CartAPI.add(item);
+                    });
+                    setTimeout(() => {
+                        if (window.CartUI) window.CartUI.open();
+                        else alert('เพิ่มสินค้าลงตะกร้าเรียบร้อยแล้วครับ!');
+                    }, 100);
+                } else {
+                    alert('ไม่สามารถทำรายการได้ในขณะนี้ กรุณาลองใหม่อีกครั้งครับ');
+                }
+            };
+
+            window.requestReturn = function (orderId) {
+                currentReturnOrderId = orderId;
+                const overlay = document.getElementById('returnModalOverlay');
+                const modal = document.getElementById('returnModal');
+                if (overlay && modal) {
+                    overlay.style.display = 'block';
+                    setTimeout(() => modal.classList.add('show'), 10);
+                }
+            };
+
+            window.closeReturnModal = function () {
+                const overlay = document.getElementById('returnModalOverlay');
+                const modal = document.getElementById('returnModal');
+                if (modal) modal.classList.remove('show');
+                setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 300);
+                currentReturnOrderId = null;
+            };
+
+            window.executeReturnOrder = function (reasonTitle) {
+                if (!currentReturnOrderId) return;
+                const orderId = currentReturnOrderId.trim();
+                
+                try {
+                    const updateObj = { 
+                        status: 'คืนเงิน/คืนสินค้า',
+                        returnReason: reasonTitle,
+                        returnDate: new Date().toISOString()
+                    };
+                    
+                    // 1. Firebase Sync
+                    if (typeof db !== 'undefined' && db.collection) {
+                        db.collection('orders').doc(orderId).update(updateObj)
+                            .catch(err => console.error("[Cloud Error] Refund update failed:", err));
+                    }
+                    
+                    // 2. Local Storage Sync
+                    const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
+                    let currentOrders = JSON.parse(rawOrders);
+                    let foundLocal = false;
+                    currentOrders.forEach(o => {
+                        if (o.id && o.id.trim() === orderId) {
+                            o.status = 'คืนเงิน/คืนสินค้า';
+                            o.returnReason = reasonTitle;
+                            foundLocal = true;
+                        }
+                    });
+                    if (foundLocal) localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
+                    
+                    // 3. Global Sync Fallback
+                    try {
+                        let globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+                        globalOrders.forEach(go => {
+                            if (go.id && go.id.trim() === orderId) {
+                                go.status = 'คืนเงิน/คืนสินค้า';
+                                go.returnReason = reasonTitle;
+                            }
+                        });
+                        localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
+                    } catch (e) { }
+
+                    // 4. UI Update
+                    const idx = ordersData.findIndex(o => o.id && o.id.trim() === orderId);
+                    if (idx > -1) {
+                        ordersData[idx].status = 'คืนเงิน/คืนสินค้า';
+                        ordersData[idx].returnReason = reasonTitle;
+                    }
+                    
+                    // Force switch to "Return" tab
+                    document.querySelectorAll('.order-tab').forEach(t => {
+                        if (t.dataset.filter === 'return') t.classList.add('active');
+                        else t.classList.remove('active');
+                    });
+                    
+                    updateTabCounts(ordersData);
+                    renderOrders(ordersData, 'return');
+                    
+                    // ✅ Notify other tabs (Seller Centre) to refresh immediately
+                    try {
+                        const bc = new BroadcastChannel('pao_order_sync');
+                        bc.postMessage({ type: 'REFRESH_ORDERS', orderId: orderId });
+                    } catch (e) { }
+
+                    closeReturnModal();
+                    
+                } catch (e) {
+                    console.error("Return execution failed:", e);
+                    closeReturnModal();
+                }
+            };
+
+            let currentReturnOrderId = null;
         })();
     </script>
 
@@ -1457,6 +1649,48 @@
         <div class="sc-actions">
             <button class="btn-sc-confirm" onclick="confirmSuccessOrder()">ยืนยันว่าได้รับสินค้าแล้ว</button>
             <button class="btn-sc-cancel" onclick="closeSuccessModal()">ยกเลิก</button>
+        </div>
+    </div>
+
+    <!-- Return Reason Modal -->
+    <div class="sc-modal-overlay" id="returnModalOverlay" onclick="closeReturnModal()"></div>
+    <div class="sc-modal" id="returnModal" style="max-width: 500px; padding: 0; overflow: hidden;">
+        <div style="padding: 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; background: #fff; position: sticky; top: 0; z-index: 10;">
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">เลือกเหตุผลการคืนสินค้า</h3>
+            <span onclick="closeReturnModal()" style="cursor: pointer; font-size: 1.5rem; color: #999; line-height: 1;">&times;</span>
+        </div>
+        <div class="return-modal-list">
+            <div class="return-option" onclick="executeReturnOrder('ได้รับสินค้าที่มีความเสียหาย หรือสภาพไม่ดี')">
+                <div class="return-icon">🩹</div>
+                <div class="return-text">
+                    <div class="return-title">ได้รับสินค้าที่มีความเสียหาย หรือสภาพไม่ดี</div>
+                    <div class="return-desc">สินค้าที่ได้รับมีร่องรอยขีดข่วน แตกหัก รั่ว/หก หรือการทำงานไม่สมบูรณ์ หรือสินค้าหมดอายุ</div>
+                </div>
+                <div class="return-arrow">›</div>
+            </div>
+            <div class="return-option" onclick="executeReturnOrder('ได้รับสินค้ามาผิด หรือไม่ใช่สินค้าที่สั่ง')">
+                <div class="return-icon">🚫</div>
+                <div class="return-text">
+                    <div class="return-title">ได้รับสินค้ามาผิด หรือไม่ใช่สินค้าที่สั่ง</div>
+                    <div class="return-desc">สินค้าที่ได้รับมาไม่ใช่สินค้าที่สั่ง / มีความแตกต่างจากรายละเอียด / ผิดลิขสิทธิ์</div>
+                </div>
+                <div class="return-arrow">›</div>
+            </div>
+            <div class="return-option" onclick="executeReturnOrder('ได้รับสินค้าไม่ครบ หรือยังไม่ได้รับพัสดุ')">
+                <div class="return-icon">📦</div>
+                <div class="return-text">
+                    <div class="return-title">ได้รับสินค้าไม่ครบ หรือยังไม่ได้รับพัสดุ</div>
+                    <div class="return-desc">ได้รับสินค้าไม่ครบตามจำนวนที่สั่ง / มีชิ้นส่วนบางชิ้นหายไป / ได้รับกล่องเปล่า</div>
+                </div>
+                <div class="return-arrow">›</div>
+            </div>
+            <div class="return-option" onclick="executeReturnOrder('อื่นๆ')">
+                <div class="return-icon">⚙️</div>
+                <div class="return-text">
+                    <div class="return-title">อื่นๆ</div>
+                </div>
+                <div class="return-arrow">›</div>
+            </div>
         </div>
     </div>
 </body>

@@ -129,9 +129,25 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchedOrders = fetchedOrders.map(o => {
                 if (localMap.has(o.id)) {
                     const localO = localMap.get(o.id);
-                    const advanced = ['ที่ต้องจัดส่ง', 'เตรียมจัดส่งแล้ว', 'ที่ต้องได้รับ', 'สำเร็จแล้ว'];
-                    if (advanced.includes(localO.status) && o.status === 'ที่ต้องชำระ') {
-                        return { ...o, status: localO.status };
+                    
+                    // ✅ Advanced Merging Logic: Prevent "Stale" cloud status from overwriting "More Advanced" local status
+                    const statusPriority = {
+                        'ที่ต้องชำระ': 1,
+                        'ที่ต้องจัดส่ง': 2,
+                        'เตรียมจัดส่งแล้ว': 3,
+                        'Processed': 3,
+                        'ที่ต้องได้รับ': 4,
+                        'สำเร็จแล้ว': 5,
+                        'Completed': 5,
+                        'ยกเลิกแล้ว': 6,
+                        'คืนเงิน/คืนสินค้า': 6
+                    };
+
+                    const localWeight = statusPriority[localO.status] || 0;
+                    const cloudWeight = statusPriority[o.status] || 0;
+
+                    if (localWeight > cloudWeight) {
+                        return { ...o, status: localO.status }; // Keep local advanced status
                     }
                 }
                 return o;
@@ -350,7 +366,7 @@ function getStatusStyle(status) {
     if (status === 'เตรียมจัดส่งแล้ว' || status === 'Processed') return 'background: #fffbe6; border-color: #ffe58f; color: #faad14;';
     if (status === 'ที่ต้องได้รับ' || status === 'To Receive') return 'background: #f0f5ff; border-color: #adc6ff; color: #2f54eb;';
     if (status === 'สำเร็จแล้ว' || status === 'Completed') return 'background: #f6ffed; border-color: #b7eb8f; color: #52c41a;';
-    if (status === 'ยกเลิกแล้ว' || status === 'Cancelled' || status === 'Return') return 'background: #f5f5f5; border-color: #d9d9d9; color: #8c8c8c;';
+    if (status === 'ยกเลิกแล้ว' || status === 'Cancelled' || status === 'Return' || status === 'คืนเงิน/คืนสินค้า') return 'background: #f5f5f5; border-color: #d9d9d9; color: #8c8c8c;';
     return '';
 }
 
@@ -424,6 +440,17 @@ function viewOrderDetails(orderId, isDispatch = false) {
         document.getElementById('modalSlipLink').onclick = (e) => { e.preventDefault(); viewSlipLightbox(slipThumb.src); };
     } else {
         slipGroup.style.display = 'none';
+    }
+
+    // Return Reason Info
+    const returnGroup = document.getElementById('returnReasonGroup');
+    if (order.returnReason) {
+        if (returnGroup) {
+            returnGroup.style.display = 'block';
+            document.getElementById('modalReturnReason').textContent = order.returnReason;
+        }
+    } else {
+        if (returnGroup) returnGroup.style.display = 'none';
     }
 
     // Voucher Info & Summary Discount Row
