@@ -49,8 +49,33 @@ const SEARCH_SERVICES = [
   { title: "🔧 อะไหล่มือถือ", url: "parts.html", icon: "🛠️", tags: ["อะไหล่", "จอ", "แบต", "เครื่องมือ", "หน้าจอ", "ช่างซ่อม", "parts"] },
 ];
 
-// ─── Category → page mapping ───────────────────────────────────────────────────
-const PRODUCT_PAGE = { new: "new-products.html", used: "used-products.html", accessory: "accessory.html", parts: "parts.html" };
+// ─── Category → page mapping (รองรับทุกรูปแบบที่อาจเก็บใน Firestore) ────────────
+const PRODUCT_PAGE = {
+  // สินค้าใหม่
+  new: "new-products.html", "new-products": "new-products.html", "สินค้าใหม่": "new-products.html", "มือ1": "new-products.html",
+  // สินค้ามือสอง
+  used: "used-products.html", "used-products": "used-products.html", "สินค้ามือสอง": "used-products.html", "มือ2": "used-products.html",
+  // อุปกรณ์เสริม
+  accessory: "accessory.html", "accessories": "accessory.html", "อุปกรณ์เสริม": "accessory.html",
+  // อะไหล่
+  parts: "parts.html", "spare-parts": "parts.html", "อะไหล่": "parts.html"
+};
+
+// Helper: หา URL จาก category ของสินค้า
+function getProductUrl(p) {
+  // ถ้ามี category ให้ map ตาม PRODUCT_PAGE
+  if (p.category) {
+    const mapped = PRODUCT_PAGE[p.category] || PRODUCT_PAGE[p.category.toLowerCase()];
+    if (mapped) return mapped;
+  }
+  // ถ้ามี partModel หรือ partType แสดงว่าเป็นอะไหล่
+  if (p.partModel || p.partType) return "parts.html";
+  // ถ้าชื่อบ่งบอก
+  const name = (p.name || '').toLowerCase();
+  if (name.includes('อะไหล่') || name.includes('หน้าจอ lcd') || name.includes('แบตเตอรี่') || name.includes('แพร')) return "parts.html";
+  // fallback
+  return "new-products.html";
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const searchBtn     = document.getElementById('searchBtn');
@@ -78,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 2. Sync All Products (Multi-category Search) with Safety Limit
-    db.collection('products').limit(1000).onSnapshot(snapshot => {
+    db.collection('products').limit(2000).onSnapshot(snapshot => {
       firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       console.log(`[SearchSync] Synced ${firestoreProducts.length} global products`);
       updateMergedProducts();
@@ -203,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
       searchResults.appendChild(sectionLabel);
 
       filteredProducts.forEach(p => {
-        const url = PRODUCT_PAGE[p.category] || 'new-products.html';
+        const url = getProductUrl(p);
         const a = document.createElement('a');
         // Deep Linking: append ?id=... to auto-open modal on page load
         a.href = `${url}?id=${p.id}`;

@@ -398,7 +398,10 @@
         <div class="voucher-container">
             <!-- Settings Card -->
             <div class="card" style="margin-bottom: 20px; border: 1px solid #e0e0e0; background: #fffaf0;">
-                <div class="card-title" style="color: #d35400;">🌐 ตั้งค่าโดเมนเว็บไซต์</div>
+                <div class="card-title" style="color: #d35400; display: flex; justify-content: space-between; align-items: center;">
+                <div>🌐 ตั้งค่าโดเมนเว็บไซต์</div>
+                <button onclick="emergencyClearVouchers()" style="background: #ff4d4f; color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">🚨 ล้างคูปองทั้งหมด (แก้บัค)</button>
+            </div>
                 <div class="form-group" style="margin-bottom: 15px;">
                     <p style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">ระบุ URL เว็บไซต์ของคุณเพื่อให้สแกน QR ผ่านมือถือได้ (เช่น <code>https://paomobile-85e39.web.app</code>)</p>
                     <div style="display: flex; gap: 10px;">
@@ -708,7 +711,7 @@
         var db = firebase.firestore();
     </script>
     <script src="seller-presence.js"></script>
-    <script src="seller-vouchers.js"></script>
+    <script src="seller-vouchers.js?v=2.0"></script>
 <div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
             aria-label="Close Search">&#x2715;</button>
         <div class="search-modal-container">
@@ -719,5 +722,6 @@
             <div class="search-results-area" id="searchResults"></div>
         </div>
     </div>
-    <script src="search.js"></script></body>
+    <script src="search.js"></script><script src="premium-alerts.js"></script>
+</body>
 </html>

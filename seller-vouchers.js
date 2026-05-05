@@ -1,3 +1,22 @@
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+(function() {
+    if (window.__alertOverrideInjected) return;
+    window.__alertOverrideInjected = true;
+    var _nativeAlert = window.alert;
+    window.alert = function(msg) {
+        if (window.sellerAlert) {
+            // Detect type from message content
+            var type = 'info';
+            if (msg && (msg.includes('Error') || msg.includes('error') || msg.includes('เนเธกเนเธชเธณเน€เธฃเนเธ') || msg.includes('โ') || msg.includes('โ ๏ธ') || msg.includes('เธฅเธ') || msg.includes('เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”'))) type = 'error';
+            else if (msg && (msg.includes('โ…') || msg.includes('เธชเธณเน€เธฃเนเธ') || msg.includes('เน€เธฃเธตเธขเธเธฃเนเธญเธข') || msg.includes('เธเธฑเธเธ—เธถเธ'))) type = 'success';
+            else if (msg && (msg.includes('โ ๏ธ') || msg.includes('เธเธฃเธธเธ“เธฒ') || msg.includes('เธฃเธฐเธงเธฑเธ'))) type = 'warning';
+            window.sellerAlert(String(msg), type);
+        } else {
+            _nativeAlert(msg);
+        }
+    };
+})();
+/* โ”€โ”€ End Premium Alert Override โ”€โ”€ */
 /**
  * seller-vouchers.js
  * Logic for managing vouchers in Seller Centre using Firestore
@@ -21,6 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const SELLER_EMAIL = 'sattawat2560@gmail.com';
     let authUnsubscribe = null;
 
+    // ── Always start voucher sync immediately (read is public) ──
+    // Auth state only controls write (save button)
+    startVoucherSync();
+
     if (firebase.auth) {
         firebase.auth().onAuthStateChanged(user => {
             const authEmail = document.getElementById('authEmail');
@@ -33,54 +56,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (user || localAdminActive) {
                 const email = user ? (user.email || "").toLowerCase() : SELLER_EMAIL.toLowerCase();
-            const isAdmin = email === SELLER_EMAIL.toLowerCase();
+                const isAdmin = email === SELLER_EMAIL.toLowerCase();
 
-            if (authEmail) authEmail.textContent = email + (user ? "" : " (จำสิทธิ์ 🔒)");
-            if (authIndicator) authIndicator.className = 'admin-status-dot ' + (isAdmin ? 'online' : 'warning');
-            
-            // Toggle Auth Warning Banner (New v2026)
-            const authWarning = document.getElementById('auth-cloud-warning');
-            if (authWarning) {
-                authWarning.style.display = (isAdmin && user) ? 'none' : 'flex';
-            }
+                if (authEmail) authEmail.textContent = email + (user ? "" : " (จำสิทธิ์ 🔒)");
+                if (authIndicator) authIndicator.className = 'admin-status-dot ' + (isAdmin ? 'online' : 'warning');
 
-            if (isAdmin) {
-                if (loginBtn) loginBtn.style.display = 'none';
-                if (logoutBtn) logoutBtn.style.display = 'block';
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.style.opacity = '1';
+                const authWarning = document.getElementById('auth-cloud-warning');
+                if (authWarning) {
+                    authWarning.style.display = (isAdmin && user) ? 'none' : 'flex';
                 }
-                localStorage.setItem('paomobile_admin_active', 'true');
-                startVoucherSync();
-            } else {
-                if (loginBtn) loginBtn.style.display = 'block';
-                if (logoutBtn) logoutBtn.style.display = 'block';
-                if (statusEl) statusEl.innerHTML = '<span style="color:#faad14">&bull; สิทธิ์ไม่เพียงพอ</span>';
-            }
-        } else {
-            const isFileProtocol = window.location.protocol === 'file:';
-            if (authEmail) authEmail.textContent = isFileProtocol ? "โหมด Local" : "กรุณาล็อกอิน Admin";
-            if (authIndicator) authIndicator.className = 'admin-status-dot offline';
-            
-            // Show Auth Warning in Local Mode
-            const authWarning = document.getElementById('auth-cloud-warning');
-            if (authWarning) authWarning.style.display = 'flex';
 
-            if (loginBtn) {
-                loginBtn.style.display = 'block';
-                loginBtn.onclick = sellerLogin;
+                if (isAdmin) {
+                    if (loginBtn) loginBtn.style.display = 'none';
+                    if (logoutBtn) logoutBtn.style.display = 'block';
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.style.opacity = '1';
+                    }
+                    localStorage.setItem('paomobile_admin_active', 'true');
+                } else {
+                    if (loginBtn) loginBtn.style.display = 'block';
+                    if (logoutBtn) logoutBtn.style.display = 'block';
+                    if (saveBtn) {
+                        saveBtn.disabled = true;
+                        saveBtn.style.opacity = '0.5';
+                    }
+                }
+            } else {
+                const isFileProtocol = window.location.protocol === 'file:';
+                if (authEmail) authEmail.textContent = isFileProtocol ? "โหมด Local" : "กรุณาล็อกอิน Admin";
+                if (authIndicator) authIndicator.className = 'admin-status-dot offline';
+
+                const authWarning = document.getElementById('auth-cloud-warning');
+                if (authWarning) authWarning.style.display = 'flex';
+
+                if (loginBtn) {
+                    loginBtn.style.display = 'block';
+                    loginBtn.onclick = sellerLogin;
+                }
+                if (logoutBtn) logoutBtn.style.display = 'none';
+                const saveBtn2 = document.getElementById('btnSaveVoucher');
+                if (saveBtn2) {
+                    saveBtn2.disabled = true;
+                    saveBtn2.style.opacity = '0.5';
+                }
             }
-            if (logoutBtn) logoutBtn.style.display = 'none';
-            if (saveBtn) {
-                saveBtn.disabled = true;
-                saveBtn.style.opacity = '0.5';
-            }
-            voucherListBody.innerHTML = '';
-            emptyState.style.display = 'block';
-        }
-    });
-}
+        });
+    }
 
 // ── Settings Management ──
 window.saveSettings = function() {
@@ -119,7 +141,8 @@ window.saveSettings = function() {
         if (authUnsubscribe) authUnsubscribe(); // Prevent duplicate listeners
 
         const vouchersCol = db.collection('vouchers');
-        authUnsubscribe = vouchersCol.orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+        // เอา orderBy ออก เพื่อให้ดึงคูปองเก่าๆ ที่ไม่มีฟิลด์ createdAt ติดมาด้วย
+        authUnsubscribe = vouchersCol.onSnapshot((snapshot) => {
             if (statusEl) statusEl.innerHTML = '<span style="color:#52c41a">&bull; Firestore: เชื่อมต่อแล้ว</span>';
             
             if (snapshot.empty) {
@@ -130,7 +153,44 @@ window.saveSettings = function() {
 
             emptyState.style.display = 'none';
             let html = '';
-            snapshot.forEach((doc) => {
+
+            const now = new Date().toISOString().split('T')[0];
+            const visibleDocs = [];
+            snapshot.forEach(doc => {
+                const v = doc.data();
+                // Include if permanent, or no expiry set, or expiry is today or future
+                if (v.isPermanent || !v.expiry || v.expiry >= now) {
+                    visibleDocs.push(doc);
+                }
+            });
+
+            if (visibleDocs.length === 0) {
+                voucherListBody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            // นำมาเรียงลำดับด้วย JavaScript แทน (อันใหม่สุดขึ้นก่อน, อันที่ไม่มีวันที่ให้อยู่ล่างสุด)
+            visibleDocs.sort((a, b) => {
+                const dataA = a.data();
+                const dataB = b.data();
+                
+                const getMillis = (data) => {
+                    try {
+                        if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+                            return data.createdAt.toDate().getTime();
+                        }
+                        if (data.createdAt === null) return Date.now(); // Pending local write
+                        if (data.createdAt && data.createdAt.seconds) return data.createdAt.seconds * 1000;
+                        if (data.createdAt) return new Date(data.createdAt).getTime() || 0;
+                    } catch(e) {}
+                    return 0; // undefined or missing (old items)
+                };
+
+                return getMillis(dataB) - getMillis(dataA);
+            });
+
+            visibleDocs.forEach((doc) => {
                 const v = doc.data();
                 const id = doc.id;
                 const isDiscount = v.type === 'discount';
@@ -156,7 +216,7 @@ window.saveSettings = function() {
                             <div style="display:flex; gap:5px; justify-content: flex-end;">
                                 <button class="btn-gen-qr" onclick="prepareQRModal('${v.code}', '${v.expiry || ''}')" title="สร้าง Secure QR">🎫 สแกน</button>
                                 <button class="btn-gen-qr" style="background:#f39c12" onclick="editVoucher('${id}')" title="จัดการการแสดงผล/แก้ไข">✏️</button>
-                                <button class="btn-delete" onclick="deleteVoucher('${id}', '${v.code}')" title="ลบคูปอง">🗑️</button>
+                                <button class="btn-delete" onclick="deleteVoucher('${id}', '${v.code}', this)" title="ลบคูปอง">🗑️</button>
                             </div>
                         </td>
                     </tr>
@@ -206,7 +266,9 @@ window.saveSettings = function() {
         const title = document.getElementById('v-title').value.trim();
         const desc = document.getElementById('v-desc').value.trim();
         const type = document.getElementById('v-type').value;
-        const value = parseInt(document.getElementById('v-value').value);
+        const valueRaw = document.getElementById('v-value').value;
+        const value = parseInt(valueRaw);
+        
         const redemptionLimit = parseInt(document.getElementById('v-redemptionLimit').value) || 1;
         const usageLimit = parseInt(document.getElementById('v-usageLimit').value) || 1;
         const minPurchase = parseInt(document.getElementById('v-minPurchase').value) || 0;
@@ -214,9 +276,25 @@ window.saveSettings = function() {
         const isPermanent = document.getElementById('v-isPermanent').checked;
         const showOnHomepage = document.getElementById('v-showOnHomepage').checked;
 
-        // Basic Validation (Allow any alphanumeric, autocase to upper)
+        // --- Validation ---
+        if (!code) {
+            alert("⚠️ กรุณาระบุรหัสโค้ดส่วนลดครับ");
+            return;
+        }
         if (!/^[a-zA-Z0-9]+$/.test(code)) {
-            alert("รหัสโค้ดต้องเป็นภาษาอังกฤษหรือตัวเลขเท่านั้นครับ (เช่น SALE99)");
+            alert("⚠️ รหัสโค้ดต้องเป็นภาษาอังกฤษหรือตัวเลขเท่านั้นครับ (เช่น SALE99)");
+            return;
+        }
+        if (!title) {
+            alert("⚠️ กรุณาระบุชื่อ/รายละเอียดคูปองครับ");
+            return;
+        }
+        if (isNaN(value) || value <= 0) {
+            alert("⚠️ กรุณาระบุมูลค่าส่วนลดให้ถูกต้องครับ");
+            return;
+        }
+        if (!isPermanent && !expiry) {
+            alert("⚠️ กรุณาระบุวันหมดอายุ หรือเลือก 'ไม่มีหมดอายุ' ครับ");
             return;
         }
 
@@ -243,7 +321,7 @@ window.saveSettings = function() {
             if (window.editingVoucherId) {
                 // Update
                 await vouchersCol.doc(window.editingVoucherId).update(voucherData);
-                alert("อัปเดตคูปองเรียบร้อยแล้วครับ! ✨");
+                alert("✅ อัปเดตคูปองเรียบร้อยแล้วครับ!");
             } else {
                 // Create New
                 // Check if code exists globally
@@ -289,20 +367,32 @@ window.saveSettings = function() {
         return d.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
     }
 
-    window.deleteVoucher = async (id, code) => {
+    window.deleteVoucher = async (id, code, btnEl) => {
         if (!confirm(`คุณต้องการลบคูปอง "${code}" ใช่หรือไม่?`)) return;
         
+        let originalIcon = '🗑️';
+        let targetBtn = btnEl;
+        
         try {
-            const btn = event.target.closest('button');
-            const originalIcon = btn.innerHTML;
-            btn.innerHTML = '🕒';
-            btn.disabled = true;
+            if (!targetBtn && typeof event !== 'undefined' && event.target) {
+                targetBtn = event.target.closest('button');
+            }
+            
+            if (targetBtn) {
+                originalIcon = targetBtn.innerHTML;
+                targetBtn.innerHTML = '🕒';
+                targetBtn.disabled = true;
+            }
 
             await db.collection('vouchers').doc(id).delete();
             console.log("Voucher deleted:", code);
             // No alert needed, onSnapshot will clear the row
         } catch (err) {
             console.error("Delete Error:", err);
+            if (targetBtn) {
+                targetBtn.innerHTML = originalIcon;
+                targetBtn.disabled = false;
+            }
             alert("ลบไม่สำเร็จ: " + err.message);
         }
     };
@@ -554,3 +644,31 @@ window.saveSettings = function() {
         document.getElementById('setting-base-url').value = savedUrl;
     }
 });
+
+window.emergencyClearVouchers = async () => {
+    // ใช้ premium confirm แทนของเก่า
+    const isConfirm = await sellerConfirm("🚨 คำเตือน: ต้องการลบคูปอง 'ทั้งหมด' ในระบบใช่ไหมครับ?\n(ลบแล้วกู้คืนไม่ได้)", "delete");
+    if(!isConfirm) return;
+    
+    try {
+        const snapshot = await db.collection('vouchers').get();
+        if (snapshot.empty) {
+            alert("✅ ไม่มีคูปองค้างอยู่ในระบบแล้วครับ");
+            return;
+        }
+        
+        let deletedCount = 0;
+        const batch = db.batch();
+        snapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+            deletedCount++;
+        });
+        
+        await batch.commit();
+        alert(`✅ ล้างคูปองสำเร็จแล้วจำนวน ${deletedCount} รายการครับ!`);
+        window.location.reload();
+    } catch (err) {
+        console.error(err);
+        alert("❌ เกิดข้อผิดพลาด: " + err.message);
+    }
+};

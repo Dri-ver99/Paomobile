@@ -1,3 +1,22 @@
+﻿/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+(function() {
+    if (window.__alertOverrideInjected) return;
+    window.__alertOverrideInjected = true;
+    var _nativeAlert = window.alert;
+    window.alert = function(msg) {
+        if (window.sellerAlert) {
+            // Detect type from message content
+            var type = 'info';
+            if (msg && (msg.includes('Error') || msg.includes('error') || msg.includes('เนเธกเนเธชเธณเน€เธฃเนเธ') || msg.includes('โ') || msg.includes('โ ๏ธ') || msg.includes('เธฅเธ') || msg.includes('เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”'))) type = 'error';
+            else if (msg && (msg.includes('โ…') || msg.includes('เธชเธณเน€เธฃเนเธ') || msg.includes('เน€เธฃเธตเธขเธเธฃเนเธญเธข') || msg.includes('เธเธฑเธเธ—เธถเธ'))) type = 'success';
+            else if (msg && (msg.includes('โ ๏ธ') || msg.includes('เธเธฃเธธเธ“เธฒ') || msg.includes('เธฃเธฐเธงเธฑเธ'))) type = 'warning';
+            window.sellerAlert(String(msg), type);
+        } else {
+            _nativeAlert(msg);
+        }
+    };
+})();
+/* โ”€โ”€ End Premium Alert Override โ”€โ”€ */
 let currentTab = 'all';
 let ordersData = []; // Global store for Firestore orders
 

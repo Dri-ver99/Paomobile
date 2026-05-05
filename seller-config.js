@@ -1,3 +1,22 @@
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+(function() {
+    if (window.__alertOverrideInjected) return;
+    window.__alertOverrideInjected = true;
+    var _nativeAlert = window.alert;
+    window.alert = function(msg) {
+        if (window.sellerAlert) {
+            // Detect type from message content
+            var type = 'info';
+            if (msg && (msg.includes('Error') || msg.includes('error') || msg.includes('เนเธกเนเธชเธณเน€เธฃเนเธ') || msg.includes('โ') || msg.includes('โ ๏ธ') || msg.includes('เธฅเธ') || msg.includes('เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”'))) type = 'error';
+            else if (msg && (msg.includes('โ…') || msg.includes('เธชเธณเน€เธฃเนเธ') || msg.includes('เน€เธฃเธตเธขเธเธฃเนเธญเธข') || msg.includes('เธเธฑเธเธ—เธถเธ'))) type = 'success';
+            else if (msg && (msg.includes('โ ๏ธ') || msg.includes('เธเธฃเธธเธ“เธฒ') || msg.includes('เธฃเธฐเธงเธฑเธ'))) type = 'warning';
+            window.sellerAlert(String(msg), type);
+        } else {
+            _nativeAlert(msg);
+        }
+    };
+})();
+/* โ”€โ”€ End Premium Alert Override โ”€โ”€ */
 /**
  * seller-config.js
  * Shared logic for Spare Parts Category Management across Seller Centre pages.
@@ -245,61 +264,76 @@ async function addConfigItem(type) {
             return;
         }
 
-        // --- Robust Updates ---
+        // --- Quota-Efficient Updates ---
         if (type === 'models') {
-            // For Models, use atomic arrayUnion (Safer & Faster)
+            // Models: arrayUnion = 0 reads + 1 write
             const configRef = db.collection('settings').doc('spare_parts');
             await configRef.set({
                 models: firebase.firestore.FieldValue.arrayUnion(val)
             }, { merge: true });
-        } else {
-            // For Part Types, use Transaction because we update multiple fields
-            await db.runTransaction(async (transaction) => {
-                const configRef = db.collection('settings').doc('spare_parts');
-                const doc = await transaction.get(configRef);
-                
-                let data = doc.exists ? doc.data() : { models: [], partTypes: [], mappings: {} };
-                if (!data.models) data.models = [];
-                if (!data.partTypes) data.partTypes = [];
-                if (!data.mappings) data.mappings = {};
 
-                // Handle Part Types
-                if (editingOriginalPartType) {
-                    data.partTypes = data.partTypes.map(item => item === editingOriginalPartType ? val : item);
-                } else if (!data.partTypes.includes(val)) {
-                    data.partTypes.push(val);
-                }
-                data.partTypes = [...new Set(data.partTypes)];
-
-                // Update Mappings
-                if (editingOriginalPartType) {
-                    Object.keys(data.mappings).forEach(m => {
-                        data.mappings[m] = (data.mappings[m] || []).filter(item => item !== editingOriginalPartType);
-                    });
-                } else {
-                    Object.keys(data.mappings).forEach(m => {
-                        data.mappings[m] = (data.mappings[m] || []).filter(item => item !== val);
-                    });
-                }
-
-                selectedModels.forEach(m => {
-                    if (!data.mappings[m]) data.mappings[m] = [];
-                    if (!data.mappings[m].includes(val)) data.mappings[m].push(val);
+        } else if (!editingOriginalPartType) {
+            // ADD new partType: pure atomic — 0 reads + 1 write only!
+            const configRef = db.collection('settings').doc('spare_parts');
+            const updates = {
+                partTypes: firebase.firestore.FieldValue.arrayUnion(val)
+            };
+            // เพิ่มเข้า mappings ของ model ที่เลือก (arrayUnion ไม่ต้องอ่านก่อน)
+            selectedModels.forEach(m => {
+                updates[`mappings.${m}`] = firebase.firestore.FieldValue.arrayUnion(val);
+            });
+            // ตรวจสอบว่า doc มีอยู่แล้ว ถ้าไม่มีให้ set แทน update
+            const snap = await configRef.get();
+            if (snap.exists) {
+                await configRef.update(updates);
+            } else {
+                // สร้าง doc ใหม่
+                const initMappings = {};
+                selectedModels.forEach(m => { initMappings[m] = [val]; });
+                await configRef.set({
+                    models: sparePartsConfig.models || [],
+                    partTypes: [val],
+                    mappings: initMappings
                 });
+            }
 
-                transaction.set(configRef, data);
+        } else {
+            // RENAME partType: ต้องอ่าน 1 ครั้ง เพื่อ swap ชื่อใน array
+            const configRef = db.collection('settings').doc('spare_parts');
+            const snap = await configRef.get();
+            if (!snap.exists) return;
+
+            let data = snap.data();
+            if (!data.partTypes) data.partTypes = [];
+            if (!data.mappings)  data.mappings  = {};
+
+            // Rename ใน partTypes array (รักษาลำดับ)
+            data.partTypes = data.partTypes.map(item => item === editingOriginalPartType ? val : item);
+            data.partTypes = [...new Set(data.partTypes)];
+
+            // Rename in-place ใน mappings (รักษาลำดับ)
+            Object.keys(data.mappings).forEach(m => {
+                const arr = data.mappings[m] || [];
+                const idx = arr.indexOf(editingOriginalPartType);
+                if (idx !== -1) arr[idx] = val;
+                data.mappings[m] = arr;
+            });
+
+            // ผูก selectedModels ใหม่
+            selectedModels.forEach(m => {
+                if (!data.mappings[m]) data.mappings[m] = [];
+                if (!data.mappings[m].includes(val)) data.mappings[m].push(val);
+            });
+
+            await configRef.update({
+                partTypes: data.partTypes,
+                mappings:  data.mappings
             });
         }
 
-        // 3. Update all existing PRODUCTS (Data Migration) - Run after config transaction
-        if (type === 'partTypes' && editingOriginalPartType && editingOriginalPartType !== val) {
-            const batch = db.batch();
-            const productsToUpdate = await db.collection('products').where('partType', '==', editingOriginalPartType).get();
-            productsToUpdate.forEach(doc => {
-                batch.update(doc.ref, { partType: val });
-            });
-            await batch.commit();
-        }
+        // 3. NOTE: ไม่ migrate สินค้าทันที เพราะจะทำให้ quota หมด
+        // Seller สามารถแก้ไขสินค้าแต่ละชิ้นได้เองภายหลัง
+        // หรือสินค้าใหม่ที่เพิ่มจะใช้ชื่อหมวดหมู่ใหม่โดยอัตโนมัติ
 
         // Reset form
         input.value = "";
@@ -307,8 +341,14 @@ async function addConfigItem(type) {
             document.querySelectorAll('input[name="targetModel"]').forEach(cb => cb.checked = false);
             resetPartTypeMode();
         }
-        
-        if (typeof sellerAlert === 'function') sellerAlert("บันทึกข้อมูลเรียบร้อยแล้วครับ", "success");
+
+        if (editingOriginalPartType && editingOriginalPartType !== val) {
+            if (typeof sellerAlert === 'function') {
+                sellerAlert(`✅ เปลี่ยนชื่อ "${editingOriginalPartType}" → "${val}" สำเร็จแล้วครับ!\n\nหมายเหตุ: สินค้าที่มีอยู่เดิมยังใช้ชื่อหมวดหมู่เก่า กรุณาแก้ไขสินค้าแต่ละชิ้นเองในหน้าจัดการสินค้าครับ`, 'success');
+            }
+        } else {
+            if (typeof sellerAlert === 'function') sellerAlert("บันทึกข้อมูลเรียบร้อยแล้วครับ", "success");
+        }
     } catch (e) {
         console.error("Save Error:", e);
         if (e.code === 'permission-denied' || e.message.includes('permissions')) {
@@ -429,27 +469,43 @@ async function deleteConfigItem(type, val) {
 
 // Manually Restore Default Categories
 async function restoreDefaultSparePartsConfig() {
-    if (!confirm('ยืนยันหน้าจอการล้างค่า "หมวดหมู่อะไหล่" ทั้งหมด และแทนที่ด้วยค่าเริ่มต้นใช่หรือไม่?')) return;
+    let confirmed = false;
+    const confirmMsg = 'ยืนยันการล้างค่า "หมวดหมู่อะไหล่" ทั้งหมด และแทนที่ด้วยค่าเริ่มต้นใช่หรือไม่?';
+    if (typeof sellerConfirm === 'function') confirmed = await sellerConfirm(confirmMsg, 'warning');
+    else confirmed = confirm(confirmMsg);
     
+    if (!confirmed) return;
+    
+    const defaultModels = ["iPhone", "iPad", "Samsung", "Xiaomi", "OPPO", "Vivo", "Huawei", "OnePlus", "Nokia"];
+    const defaultPartTypes = ["หน้าจอ Lcd (แท้)", "หน้าจอ Lcd (OLED)", "แบตเตอรี่", "แพรชาร์จ", "แพรสวิตช์"];
+    
+    // Auto-map all 5 types to all models for convenience
+    const defaultMappings = {};
+    defaultModels.forEach(m => {
+        defaultMappings[m] = [...defaultPartTypes];
+    });
+
     const initial = {
-        models: ["iPhone", "Samsung", "Xiaomi", "OPPO", "Vivo", "Realme", "Huawei", "อื่นๆ"],
-        partTypes: ["หน้าจอ", "แบตเตอรี่", "แพรชาร์จ", "กล้องหลัง", "กล้องหน้า", "กระจกฝาหลัง"],
-        mappings: {
-            "iPhone": ["หน้าจอ", "แบตเตอรี่", "แพรชาร์จ", "กล้องหลัง"],
-            "Samsung": ["หน้าจอ", "แบตเตอรี่"],
-            "Xiaomi": ["หน้าจอ", "แบตเตอรี่"],
-            "OPPO": ["หน้าจอ", "แบตเตอรี่"],
-            "Vivo": ["หน้าจอ", "แบตเตอรี่"]
-        }
+        models: defaultModels,
+        partTypes: defaultPartTypes,
+        mappings: defaultMappings
     };
 
     try {
         if (typeof db === 'undefined' || !db) return;
         
         await db.collection('settings').doc('spare_parts').set(initial);
-        alert('✅ คืนค่าหมวดหมู่เริ่มต้นเรียบร้อยแล้วครับ!');
+        const successMsg = '✅ คืนค่าหมวดหมู่เริ่มต้นเรียบร้อยแล้วครับ!';
+        if (typeof sellerAlert === 'function') sellerAlert(successMsg, 'success');
+        else alert(successMsg);
+        
+        // Reload to show changes
+        setTimeout(() => location.reload(), 1000);
     } catch (e) {
-        alert("Restore Error: " + e.message);
+        console.error("Restore Error:", e);
+        const errorMsg = "Restore Error: " + e.message;
+        if (typeof sellerAlert === 'function') sellerAlert(errorMsg, 'error');
+        else alert(errorMsg);
     }
 }
 window.restoreDefaultSparePartsConfig = restoreDefaultSparePartsConfig;

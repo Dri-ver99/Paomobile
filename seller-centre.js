@@ -1,3 +1,22 @@
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+(function() {
+    if (window.__alertOverrideInjected) return;
+    window.__alertOverrideInjected = true;
+    var _nativeAlert = window.alert;
+    window.alert = function(msg) {
+        if (window.sellerAlert) {
+            // Detect type from message content
+            var type = 'info';
+            if (msg && (msg.includes('Error') || msg.includes('error') || msg.includes('เนเธกเนเธชเธณเน€เธฃเนเธ') || msg.includes('โ') || msg.includes('โ ๏ธ') || msg.includes('เธฅเธ') || msg.includes('เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”'))) type = 'error';
+            else if (msg && (msg.includes('โ…') || msg.includes('เธชเธณเน€เธฃเนเธ') || msg.includes('เน€เธฃเธตเธขเธเธฃเนเธญเธข') || msg.includes('เธเธฑเธเธ—เธถเธ'))) type = 'success';
+            else if (msg && (msg.includes('โ ๏ธ') || msg.includes('เธเธฃเธธเธ“เธฒ') || msg.includes('เธฃเธฐเธงเธฑเธ'))) type = 'warning';
+            window.sellerAlert(String(msg), type);
+        } else {
+            _nativeAlert(msg);
+        }
+    };
+})();
+/* โ”€โ”€ End Premium Alert Override โ”€โ”€ */
 let ordersData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -183,18 +202,35 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Voucher Sync (Public Read) - Client-side sort to avoid index issues
         db.collection('vouchers').onSnapshot(snapshot => {
-            const elVouchers = document.getElementById('stat-vouchers');
-            if (elVouchers) elVouchers.textContent = snapshot.size;
-            localStorage.setItem('pao_total_vouchers_count', snapshot.size);
-            
-            const docs = snapshot.docs.map(doc => doc.data());
-            // Client-side sort by createdAt desc
-            docs.sort((a, b) => {
-                const da = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-                const db = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-                return db - da;
+            const now = new Date().toISOString().split('T')[0];
+            const activeDocs = [];
+            snapshot.forEach(doc => {
+                const v = doc.data();
+                if (v.isPermanent || !v.expiry || v.expiry >= now) {
+                    activeDocs.push(v);
+                }
             });
-            renderQuickVouchers(docs);
+
+            const elVouchers = document.getElementById('stat-vouchers');
+            if (elVouchers) elVouchers.textContent = activeDocs.length;
+            localStorage.setItem('pao_total_vouchers_count', activeDocs.length);
+            
+            // Client-side sort by createdAt desc
+            activeDocs.sort((a, b) => {
+                const getMillis = (data) => {
+                    try {
+                        if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+                            return data.createdAt.toDate().getTime();
+                        }
+                        if (data.createdAt === null) return Date.now();
+                        if (data.createdAt && data.createdAt.seconds) return data.createdAt.seconds * 1000;
+                        if (data.createdAt) return new Date(data.createdAt).getTime() || 0;
+                    } catch(e) {}
+                    return 0;
+                };
+                return getMillis(b) - getMillis(a);
+            });
+            renderQuickVouchers(activeDocs);
         }, err => {
             console.error("Voucher sync error:", err);
             const list = document.getElementById('quick-qr-list');
