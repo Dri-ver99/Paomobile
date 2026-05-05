@@ -446,6 +446,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         window.db = firebase.firestore();
     </script>
+    <script src="premium-alerts.js"></script>
     <script src="script.js"></script>
     <script src="auth.js"></script>
     <script src="cart.js?v=4"></script>
@@ -473,14 +474,26 @@
             // รอ db พร้อม
             if (!window.db) { setTimeout(initDynamicSidebar, 200); return; }
 
-            const cacheKey = 'pao_parts_sidebar_cache';
+            const cacheKey = 'pao_parts_sidebar_v2';
+
+            // ลบ cache เก่า (v1) ที่อาจมีข้อมูลผิด
+            localStorage.removeItem('pao_parts_sidebar_cache');
 
             // ── Render: สร้าง HTML จาก models array (เรียงตาม Seller) ──
-            function render(models, mappings) {
+            function render(models, mappings, partTypes) {
                 if (!models || !models.length) return;
                 const html = models.map(m => {
                     const name = m.trim();
-                    const types = (mappings && Array.isArray(mappings[name])) ? mappings[name] : [];
+                    const rawTypes = (mappings && Array.isArray(mappings[name])) ? mappings[name] : [];
+
+                    // เรียงลำดับ subcategories ตาม partTypes ที่ Seller กำหนด (ไม่ใช้ลำดับจาก mappings)
+                    let types;
+                    if (partTypes && partTypes.length > 0) {
+                        types = partTypes.filter(pt => rawTypes.includes(pt));
+                    } else {
+                        types = rawTypes;
+                    }
+
                     if (!types.length) return '';
                     return `<li class="brand-item" id="brand-${name.replace(/\s+/g,'-')}" data-brand="${name}">
                         <div class="brand-header" onclick="toggleAccordion(this)">
@@ -494,20 +507,23 @@
                 }).join('');
                 if (html) {
                     accordion.innerHTML = html;
+                    // เก็บ cache พร้อมข้อมูล partTypes ไว้ด้วย เพื่อให้ระหว่าง session ถูกต้อง
                     localStorage.setItem(cacheKey, html);
                 }
             }
 
-            // ── Step 1: แสดง cache ทันที (ป้องกันหน้าว่าง) ──
+            // ── Step 1: แสดง cache ทันที (Zero-Flash) ──
+            // เช็คว่า cache มีข้อมูลจริงก่อนแสดง (ไม่ใช่ข้อมูลเปล่า)
             const cached = localStorage.getItem(cacheKey);
-            if (cached) accordion.innerHTML = cached;
+            if (cached && cached.includes('<li class="brand-item"')) {
+                accordion.innerHTML = cached;
+            }
 
-            // ── Step 2: onSnapshot — ทุก update ทั้ง local และ server ──
-            //    (ไม่ filter fromCache เพราะ IndexedDB มีข้อมูลล่าสุดอยู่แล้ว)
+            // ── Step 2: onSnapshot ── ทุก update ทั้ง local และ server ──
             window.db.collection('settings').doc('spare_parts').onSnapshot(doc => {
                 if (!doc.exists) return;
                 const d = doc.data();
-                render(d.models, d.mappings);
+                render(d.models, d.mappings, d.partTypes);  // ส่ง partTypes เพื่อจัดเรียงตาม Seller
             }, err => console.warn('[sidebar]', err));
 
             // ── Step 3: REST API fetch — รับรองว่าได้ข้อมูลล่าสุดจาก server ──
@@ -522,10 +538,11 @@
                 // parse REST format → JS object
                 const parseArr = v => (v.arrayValue && v.arrayValue.values || []).map(x => x.stringValue || '');
                 const models = parseArr(res.fields.models || {});
+                const partTypes = parseArr(res.fields.partTypes || {});  // ดึงลำดับ partTypes ด้วย
                 const mappings = {};
                 const mf = (res.fields.mappings && res.fields.mappings.mapValue && res.fields.mappings.mapValue.fields) || {};
                 Object.keys(mf).forEach(k => { mappings[k] = parseArr(mf[k]); });
-                render(models, mappings);
+                render(models, mappings, partTypes);  // ส่ง partTypes เพื่อจัดเรียงตาม Seller
             })
             .catch(() => {}); // silent fail — onSnapshot จะ render แทน
         })();

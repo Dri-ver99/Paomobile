@@ -562,26 +562,29 @@ window.ProductDetail = {
         }
     },
 
-    addToCart() {
+    async addToCart() {
         if (!this.currentProduct) return;
         const p = this.currentProduct;
         const v = this.currentVariation;
 
         // Check product stock
         if (p.isOutOfStock) {
-            alert('ขออภัย สินค้านี้หมดชั่วคราว');
+            if (window.sellerAlert) await sellerAlert('ขออภัย สินค้านี้หมดชั่วคราว', 'error');
+            else alert('ขออภัย สินค้านี้หมดชั่วคราว');
             return;
         }
 
         // If product has variations but none selected, prompt user
         if (p.variations && p.variations.length > 0 && !v) {
-            alert('กรุณาเลือกตัวเลือกสินค้าก่อนเพิ่มลงตะกร้า');
+            if (window.sellerAlert) await sellerAlert('กรุณาเลือกตัวเลือกสินค้าก่อนเพิ่มลงตะกร้า', 'warning');
+            else alert('กรุณาเลือกตัวเลือกสินค้าก่อนเพิ่มลงตะกร้า');
             return;
         }
 
         // Check variation stock
         if (v && v.isOutOfStock) {
-            alert('ขออภัย ตัวเลือกนี้หมดชั่วคราว');
+            if (window.sellerAlert) await sellerAlert('ขออภัย ตัวเลือกนี้หมดชั่วคราว', 'error');
+            else alert('ขออภัย ตัวเลือกนี้หมดชั่วคราว');
             return;
         }
 
@@ -618,9 +621,10 @@ window.ProductDetail = {
         this.close();
     },
 
-    buyNow() {
+    async buyNow() {
         if (window.AuthAPI && !window.AuthAPI.isLoggedIn()) {
-            alert('กรุณาเข้าสู่ระบบก่อนดำเนินการสั่งซื้อสินค้า');
+            if (window.sellerAlert) await sellerAlert('กรุณาเข้าสู่ระบบก่อนดำเนินการสั่งซื้อสินค้า', 'info');
+            else alert('กรุณาเข้าสู่ระบบก่อนดำเนินการสั่งซื้อสินค้า');
             window.AuthAPI.redirectToLogin();
             return;
         }
