@@ -4,6 +4,7 @@
  */
 
 let sparePartsConfig = { models: [], partTypes: [], mappings: {} };
+let isConfigLoaded = false;
 let editingOriginalPartType = null;
 
 // Initialize on load
@@ -95,6 +96,7 @@ function startConfigSync() {
     if (typeof db === 'undefined' || !db) return;
     
     db.collection('settings').doc('spare_parts').onSnapshot(doc => {
+        isConfigLoaded = true;
         if (doc.exists) {
             sparePartsConfig = doc.data();
             if (!sparePartsConfig.mappings) sparePartsConfig.mappings = {};
@@ -197,93 +199,126 @@ async function addConfigItem(type) {
     if (!val) return;
 
     const currentArr = sparePartsConfig[type] || [];
-    if (currentArr.includes(val) && type === 'models') {
-        alert("มีชื่อรุ่นนี้อยู่แล้วครับ");
+    if (currentArr.includes(val) && type === 'models' && !editingOriginalPartType) {
+        const msg = "มีชื่อรุ่นนี้อยู่แล้วครับ";
+        if (typeof sellerAlert === 'function') sellerAlert(msg, 'warning');
+        else alert(msg);
+        return;
+    }
+
+    // Admin Check
+    const SELLER_EMAIL = 'sattawat2560@gmail.com';
+    const user = firebase.auth().currentUser;
+    const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
+    const isAdmin = (user && user.email && user.email.toLowerCase() === SELLER_EMAIL.toLowerCase()) || localAdminActive;
+
+    if (!isAdmin) {
+        const currentEmail = user ? (user.isAnonymous ? "Guest" : user.email) : "ยังไม่ได้ล็อกอิน";
+        const msg = `🚫 คุณต้องใช้สิทธิ์ Admin เพื่อแก้ไขข้อมูลครับ\n(ปัจจุบัน: ${currentEmail})\n\nกรุณาล็อกอินใหม่ หรือกดปุ่ม "บังคับสิทธิ์ Admin" ที่เมนูขวาบนครับ`;
+        if (typeof sellerAlert === 'function') sellerAlert(msg, 'warning');
+        else alert(msg);
+        
+        // Try to show the permission modal if it exists in seller-products.js
+        if (typeof checkCloudPermission === 'function') {
+            checkCloudPermission();
+        }
         return;
     }
 
     try {
-        let updates = {};
-        if (type === 'models') {
-            updates.models = [...currentArr, val];
-        } else {
-            // RENAMING CHECK
-            if (editingOriginalPartType && editingOriginalPartType !== val) {
-                if (!confirm(`คุณต้องการเปลี่ยนชื่อจาก "${editingOriginalPartType}" เป็น "${val}" ใช่หรือไม่?\nการเปลี่ยนชื่อจะส่งผลต่อสินค้าที่มีอยู่ทั้งหมดในระบบครับ`)) {
-                    return;
-                }
-            }
-
-            const selectedModels = Array.from(document.querySelectorAll('input[name="targetModel"]:checked')).map(cb => cb.value);
-            if (selectedModels.length === 0) {
-                alert("กรุณาเลือกรุ่นโทรศัพท์ที่ต้องการให้แสดงอย่างน้อย 1 รุ่นครับ");
-                return;
-            }
-
-            // 1. Update partTypes array
-            if (editingOriginalPartType) {
-                updates.partTypes = currentArr.map(item => item === editingOriginalPartType ? val : item);
-                updates.partTypes = [...new Set(updates.partTypes)];
-            } else {
-                if (!currentArr.includes(val)) {
-                    updates.partTypes = [...currentArr, val];
-                }
-            }
-
-            // 2. Update mappings object
-            const newMappings = { ...(sparePartsConfig.mappings || {}) };
-            if (editingOriginalPartType) {
-                Object.keys(newMappings).forEach(m => {
-                    newMappings[m] = (newMappings[m] || []).filter(item => item !== editingOriginalPartType);
-                });
-            } else {
-                Object.keys(newMappings).forEach(m => {
-                    newMappings[m] = (newMappings[m] || []).filter(item => item !== val);
-                });
-            }
-
-            selectedModels.forEach(m => {
-                if (!newMappings[m]) newMappings[m] = [];
-                if (!newMappings[m].includes(val)) newMappings[m].push(val);
-            });
-            updates.mappings = newMappings;
-
-            // 3. Update all existing PRODUCTS (Data Migration)
-            if (editingOriginalPartType && editingOriginalPartType !== val) {
-                const batch = db.batch();
-                const productsToUpdate = await db.collection('products').where('partType', '==', editingOriginalPartType).get();
-                productsToUpdate.forEach(doc => {
-                    batch.update(doc.ref, { partType: val });
-                });
-                await batch.commit();
-            }
+        // Prepare renaming confirmation if needed
+        if (type === 'partTypes' && editingOriginalPartType && editingOriginalPartType !== val) {
+            const confirmMsg = `คุณต้องการเปลี่ยนชื่อจาก "${editingOriginalPartType}" เป็น "${val}" ใช่หรือไม่?\nการเปลี่ยนชื่อจะส่งผลต่อสินค้าที่มีอยู่ทั้งหมดในระบบครับ`;
+            let confirmed = false;
+            if (typeof sellerConfirm === 'function') confirmed = await sellerConfirm(confirmMsg, 'warning');
+            else confirmed = confirm(confirmMsg);
+            if (!confirmed) return;
         }
 
-        const SELLER_EMAIL = 'sattawat2560@gmail.com';
-        const user = firebase.auth().currentUser;
-        const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
+        const selectedModels = type === 'partTypes' ? 
+            Array.from(document.querySelectorAll('input[name="targetModel"]:checked')).map(cb => cb.value) : [];
         
-        const isAdmin = (user && user.email && user.email.toLowerCase() === SELLER_EMAIL.toLowerCase()) || localAdminActive;
-
-        if (!isAdmin) {
-            if (typeof checkCloudPermission === 'function') {
-                checkCloudPermission();
-            } else {
-                alert("🚫 คุณต้องใช้สิทธิ์ Admin เพื่อแก้ไขข้อมูลครับ\n(ล็อกอิน: " + (user ? user.email : 'ยังไม่ได้ล็อกอิน') + ")");
-            }
+        if (type === 'partTypes' && selectedModels.length === 0) {
+            const msg = "กรุณาเลือกรุ่นโทรศัพท์ที่ต้องการให้แสดงอย่างน้อย 1 รุ่นครับ";
+            if (typeof sellerAlert === 'function') sellerAlert(msg, 'warning');
+            else alert(msg);
             return;
         }
 
-        await db.collection('settings').doc('spare_parts').set(updates, { merge: true });
-        
+        // --- Robust Updates ---
+        if (type === 'models') {
+            // For Models, use atomic arrayUnion (Safer & Faster)
+            const configRef = db.collection('settings').doc('spare_parts');
+            await configRef.set({
+                models: firebase.firestore.FieldValue.arrayUnion(val)
+            }, { merge: true });
+        } else {
+            // For Part Types, use Transaction because we update multiple fields
+            await db.runTransaction(async (transaction) => {
+                const configRef = db.collection('settings').doc('spare_parts');
+                const doc = await transaction.get(configRef);
+                
+                let data = doc.exists ? doc.data() : { models: [], partTypes: [], mappings: {} };
+                if (!data.models) data.models = [];
+                if (!data.partTypes) data.partTypes = [];
+                if (!data.mappings) data.mappings = {};
+
+                // Handle Part Types
+                if (editingOriginalPartType) {
+                    data.partTypes = data.partTypes.map(item => item === editingOriginalPartType ? val : item);
+                } else if (!data.partTypes.includes(val)) {
+                    data.partTypes.push(val);
+                }
+                data.partTypes = [...new Set(data.partTypes)];
+
+                // Update Mappings
+                if (editingOriginalPartType) {
+                    Object.keys(data.mappings).forEach(m => {
+                        data.mappings[m] = (data.mappings[m] || []).filter(item => item !== editingOriginalPartType);
+                    });
+                } else {
+                    Object.keys(data.mappings).forEach(m => {
+                        data.mappings[m] = (data.mappings[m] || []).filter(item => item !== val);
+                    });
+                }
+
+                selectedModels.forEach(m => {
+                    if (!data.mappings[m]) data.mappings[m] = [];
+                    if (!data.mappings[m].includes(val)) data.mappings[m].push(val);
+                });
+
+                transaction.set(configRef, data);
+            });
+        }
+
+        // 3. Update all existing PRODUCTS (Data Migration) - Run after config transaction
+        if (type === 'partTypes' && editingOriginalPartType && editingOriginalPartType !== val) {
+            const batch = db.batch();
+            const productsToUpdate = await db.collection('products').where('partType', '==', editingOriginalPartType).get();
+            productsToUpdate.forEach(doc => {
+                batch.update(doc.ref, { partType: val });
+            });
+            await batch.commit();
+        }
+
         // Reset form
         input.value = "";
         if (type === 'partTypes') {
             document.querySelectorAll('input[name="targetModel"]').forEach(cb => cb.checked = false);
             resetPartTypeMode();
         }
+        
+        if (typeof sellerAlert === 'function') sellerAlert("บันทึกข้อมูลเรียบร้อยแล้วครับ", "success");
     } catch (e) {
-        alert("Error Save: " + e.message);
+        console.error("Save Error:", e);
+        if (e.code === 'permission-denied' || e.message.includes('permissions')) {
+            const msg = "🚫 สิทธิ์การเข้าถึงถูกปฏิเสธครับ (Permission Denied)\n\nกรุณากดปุ่ม \"บังคับสิทธิ์ Admin\" ที่มุมขวาบนของหน้าจอ (แถบสถานะ) เพื่อยืนยันตัวตนก่อนนะครับ";
+            if (typeof sellerAlert === 'function') sellerAlert(msg, 'error');
+            else alert(msg);
+        } else {
+            if (typeof sellerAlert === 'function') sellerAlert("เกิดข้อผิดพลาด: " + e.message, "error");
+            else alert("Error Save: " + e.message);
+        }
     }
 }
 
@@ -334,7 +369,11 @@ function resetPartTypeMode() {
 
 // Delete Item
 async function deleteConfigItem(type, val) {
-    if (!confirm(`ยืนยันการลบ "${val}" ใช่หรือไม่?`)) return;
+    const confirmMsg = `ยืนยันการลบ "${val}" ใช่หรือไม่?`;
+    let confirmed = false;
+    if (typeof sellerConfirm === 'function') confirmed = await sellerConfirm(confirmMsg, 'delete');
+    else confirmed = confirm(confirmMsg);
+    if (!confirmed) return;
     
     const SELLER_EMAIL = 'sattawat2560@gmail.com';
     const user = firebase.auth().currentUser;
@@ -351,23 +390,40 @@ async function deleteConfigItem(type, val) {
     }
 
     try {
-        let updates = {};
         if (type === 'models') {
-            updates.models = (sparePartsConfig.models || []).filter(item => item !== val);
-            const newMappings = { ...(sparePartsConfig.mappings || {}) };
-            delete newMappings[val];
-            updates.mappings = newMappings;
-        } else {
-            updates.partTypes = (sparePartsConfig.partTypes || []).filter(item => item !== val);
-            const newMappings = { ...(sparePartsConfig.mappings || {}) };
-            Object.keys(newMappings).forEach(m => {
-                newMappings[m] = (newMappings[m] || []).filter(t => t !== val);
+            await db.collection('settings').doc('spare_parts').update({
+                models: firebase.firestore.FieldValue.arrayRemove(val)
             });
-            updates.mappings = newMappings;
+            // Also need to remove the mapping entry - simple update is fine
+            await db.collection('settings').doc('spare_parts').set({
+                mappings: { [val]: firebase.firestore.FieldValue.delete() }
+            }, { merge: true });
+        } else {
+            await db.runTransaction(async (transaction) => {
+                const configRef = db.collection('settings').doc('spare_parts');
+                const doc = await transaction.get(configRef);
+                if (!doc.exists) return;
+
+                let data = doc.data();
+                data.partTypes = (data.partTypes || []).filter(item => item !== val);
+                if (data.mappings) {
+                    Object.keys(data.mappings).forEach(m => {
+                        data.mappings[m] = (data.mappings[m] || []).filter(t => t !== val);
+                    });
+                }
+                transaction.set(configRef, data);
+            });
         }
-        await db.collection('settings').doc('spare_parts').update(updates);
     } catch (e) {
-        alert("Error Delete: " + e.message);
+        console.error("Delete Error:", e);
+        if (e.code === 'permission-denied' || e.message.includes('permissions')) {
+            const msg = "🚫 ไม่สามารถลบได้: สิทธิ์การเข้าถึงถูกปฏิเสธครับ\n\nกรุณากดปุ่ม \"บังคับสิทธิ์ Admin\" ที่มุมขวาบนก่อนนะครับ";
+            if (typeof sellerAlert === 'function') sellerAlert(msg, 'error');
+            else alert(msg);
+        } else {
+            if (typeof sellerAlert === 'function') sellerAlert("เกิดข้อผิดพลาดในการลบ: " + e.message, "error");
+            else alert("Error Delete: " + e.message);
+        }
     }
 }
 
@@ -400,27 +456,45 @@ window.restoreDefaultSparePartsConfig = restoreDefaultSparePartsConfig;
 
 window.movePartTypeUp = async function(index) {
     if (index <= 0) return;
-    const types = [...(sparePartsConfig.partTypes || [])];
-    const temp = types[index];
-    types[index] = types[index - 1];
-    types[index - 1] = temp;
-    
+
     try {
-        await db.collection('settings').doc('spare_parts').set({ partTypes: types }, { merge: true });
+        await db.runTransaction(async (transaction) => {
+            const configRef = db.collection('settings').doc('spare_parts');
+            const doc = await transaction.get(configRef);
+            if (!doc.exists) return;
+            
+            let data = doc.data();
+            const types = [...(data.partTypes || [])];
+            if (index >= types.length) return;
+
+            const temp = types[index];
+            types[index] = types[index - 1];
+            types[index - 1] = temp;
+            
+            transaction.update(configRef, { partTypes: types });
+        });
     } catch(err) {
         console.error("Move Error:", err);
     }
 }
 
 window.movePartTypeDown = async function(index) {
-    const types = [...(sparePartsConfig.partTypes || [])];
-    if (index >= types.length - 1) return;
-    const temp = types[index];
-    types[index] = types[index + 1];
-    types[index + 1] = temp;
-    
     try {
-        await db.collection('settings').doc('spare_parts').set({ partTypes: types }, { merge: true });
+        await db.runTransaction(async (transaction) => {
+            const configRef = db.collection('settings').doc('spare_parts');
+            const doc = await transaction.get(configRef);
+            if (!doc.exists) return;
+            
+            let data = doc.data();
+            const types = [...(data.partTypes || [])];
+            if (index >= types.length - 1) return;
+
+            const temp = types[index];
+            types[index] = types[index + 1];
+            types[index + 1] = temp;
+            
+            transaction.update(configRef, { partTypes: types });
+        });
     } catch(err) {
         console.error("Move Error:", err);
     }
@@ -517,7 +591,18 @@ function initModelsDragDrop(container) {
             refreshCategoryUI();
 
             try {
-                await db.collection('settings').doc('spare_parts').set({ models: newModels }, { merge: true });
+                await db.runTransaction(async (transaction) => {
+                    const configRef = db.collection('settings').doc('spare_parts');
+                    const doc = await transaction.get(configRef);
+                    if (!doc.exists) return;
+
+                    let data = doc.data();
+                    const newModels = [...(data.models || [])];
+                    const [moved] = newModels.splice(fromIdx, 1);
+                    newModels.splice(toIdx, 0, moved);
+
+                    transaction.update(configRef, { models: newModels });
+                });
             } catch(err) {
                 console.error('Drag-drop save error:', err);
             }

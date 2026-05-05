@@ -909,7 +909,7 @@
                 const counts = { all: 0, pay: 0, ship: 0, receive: 0, completed: 0, cancel: 0, return: 0 };
                 counts.all = allOrders.length;
                 allOrders.forEach(o => {
-                    const s = o.status;
+                    const s = (o.status || '').trim();
                     if (s === 'ที่ต้องชำระ') counts.pay++;
                     else if (s === 'ที่ต้องจัดส่ง') counts.ship++;
                     else if (s === 'ที่ต้องได้รับ' || s === 'เตรียมจัดส่งแล้ว' || s === 'Processed') counts.receive++;
@@ -942,7 +942,7 @@
                 const filtered = displayOrders.filter(o => {
                     // 1. Tab Filter
                     let tabMatch = false;
-                    const s = o.status;
+                    const s = (o.status || '').trim();
                     if (filter === 'all') tabMatch = true;
                     else if (filter === 'pay') tabMatch = (s === 'ที่ต้องชำระ');
                     else if (filter === 'ship') tabMatch = (s === 'ที่ต้องจัดส่ง');
@@ -1010,7 +1010,7 @@
                             <div style="flex: 1; display: flex; align-items: center; gap: 8px;">
                                 <div style="color: #faad14; font-size: 1.2rem;">●</div>
                                 <div style="font-size: 0.95rem; color: #555;">
-                                    ${status === 'ที่ต้องจัดส่ง' ? 'รอผู้ขายจัดส่งและแจ้งเลขพัสดุ...' : 'ผู้ขายกำลังเตรียมจัดส่งสินค้าและแจ้งเลขพัสดุ...'}
+                                    ${((order.status || '').trim() === 'ที่ต้องจัดส่ง') ? 'รอผู้ขายจัดส่งและแจ้งเลขพัสดุ...' : 'พัสดุกำลังเดินทางไปหาคุณ...'}
                                 </div>
                             </div>
                             ` : '')}

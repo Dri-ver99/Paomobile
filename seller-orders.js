@@ -147,7 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     const cloudWeight = statusPriority[o.status] || 0;
 
                     if (localWeight > cloudWeight) {
-                        return { ...o, status: localO.status }; // Keep local advanced status
+                        // Keep local advanced status and tracking info
+                        return { 
+                            ...o, 
+                            status: localO.status,
+                            trackingNum: localO.trackingNum || o.trackingNum,
+                            trackingLink: localO.trackingLink || o.trackingLink
+                        };
                     }
                 }
                 return o;
@@ -387,8 +393,10 @@ function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink 
         if (trackingLink) updateObj.trackingLink = trackingLink;
 
         if (window.db) {
-            db.collection('orders').doc(orderId).update(updateObj)
-                .catch(err => console.error("Firestore update failed:", err));
+            const docId = orderId.trim();
+            db.collection('orders').doc(docId).update(updateObj)
+                .then(() => console.log("[Seller Sync] Firestore updated:", docId, newStatus))
+                .catch(err => console.error("Firestore update failed for", docId, err));
         }
 
         const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
