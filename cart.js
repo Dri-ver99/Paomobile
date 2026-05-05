@@ -364,21 +364,24 @@
             const summaryCountEl = document.getElementById('cartSummaryCount');
             if (summaryCountEl) summaryCountEl.textContent = totalItemsCount;
         },
-        checkout() {
+        async checkout() {
             const cart = CartAPI.getAll();
             if (cart.length === 0) {
-                alert('ตะกร้าสินค้าว่างเปล่า กรุณาเลือกสินค้าก่อนสั่งซื้อ');
+                if (window.sellerAlert) await sellerAlert('ตะกร้าสินค้าว่างเปล่า\nกรุณาเลือกสินค้าก่อนสั่งซื้อ', 'warning');
+                else alert('ตะกร้าสินค้าว่างเปล่า กรุณาเลือกสินค้าก่อนสั่งซื้อ');
                 return;
             }
             const hasSelected = cart.some(i => i.selected !== false);
             if (!hasSelected) {
-                alert('กรุณาเลือกสินค้าที่ต้องการสั่งซื้ออย่างน้อย 1 ชิ้น');
+                if (window.sellerAlert) await sellerAlert('กรุณาเลือกสินค้าที่ต้องการสั่งซื้ออย่างน้อย 1 ชิ้น', 'warning');
+                else alert('กรุณาเลือกสินค้าที่ต้องการสั่งซื้ออย่างน้อย 1 ชิ้น');
                 return;
             }
 
             // --- Authentication Guard ---
             if (window.AuthAPI && !window.AuthAPI.isLoggedIn()) {
-                alert('กรุณาเข้าสู่ระบบก่อนดำเนินการสั่งซื้อสินค้า');
+                if (window.sellerAlert) await sellerAlert('กรุณาเข้าสู่ระบบก่อนดำเนินการสั่งซื้อสินค้า', 'info');
+                else alert('กรุณาเข้าสู่ระบบก่อนดำเนินการสั่งซื้อสินค้า');
                 window.AuthAPI.redirectToLogin();
                 return;
             }
