@@ -36,14 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 1. Auth & Load Logic
     const SELLER_EMAIL = 'sattawat2560@gmail.com';
-    let authUnsubscribe = null;
 
-    // ── Always start voucher sync immediately (read is public) ──
-    // Auth state only controls write (save button)
-    startVoucherSync();
-
+    // ── Auth State: only controls UI/write permissions, NOT voucher loading ──
     if (firebase.auth) {
         firebase.auth().onAuthStateChanged(user => {
             const authEmail = document.getElementById('authEmail');
@@ -51,69 +46,132 @@ document.addEventListener('DOMContentLoaded', () => {
             const loginBtn = document.getElementById('adminLoginBtn');
             const logoutBtn = document.getElementById('adminLogoutBtn');
             const saveBtn = document.getElementById('btnSaveVoucher');
-
             const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
 
             if (user || localAdminActive) {
-                const email = user ? (user.email || "").toLowerCase() : SELLER_EMAIL.toLowerCase();
+                const email = user ? (user.email || '').toLowerCase() : SELLER_EMAIL.toLowerCase();
                 const isAdmin = email === SELLER_EMAIL.toLowerCase();
-
-                if (authEmail) authEmail.textContent = email + (user ? "" : " (จำสิทธิ์ 🔒)");
+                if (authEmail) authEmail.textContent = email + (user ? '' : ' (จำสิทธิ์ 🔒)');
                 if (authIndicator) authIndicator.className = 'admin-status-dot ' + (isAdmin ? 'online' : 'warning');
-
                 const authWarning = document.getElementById('auth-cloud-warning');
-                if (authWarning) {
-                    authWarning.style.display = (isAdmin && user) ? 'none' : 'flex';
-                }
-
+                if (authWarning) authWarning.style.display = (isAdmin && user) ? 'none' : 'flex';
                 if (isAdmin) {
                     if (loginBtn) loginBtn.style.display = 'none';
                     if (logoutBtn) logoutBtn.style.display = 'block';
-                    if (saveBtn) {
-                        saveBtn.disabled = false;
-                        saveBtn.style.opacity = '1';
-                    }
+                    if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = '1'; }
                     localStorage.setItem('paomobile_admin_active', 'true');
                 } else {
                     if (loginBtn) loginBtn.style.display = 'block';
                     if (logoutBtn) logoutBtn.style.display = 'block';
-                    if (saveBtn) {
-                        saveBtn.disabled = true;
-                        saveBtn.style.opacity = '0.5';
-                    }
+                    if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.5'; }
                 }
             } else {
-                const isFileProtocol = window.location.protocol === 'file:';
-                if (authEmail) authEmail.textContent = isFileProtocol ? "โหมด Local" : "กรุณาล็อกอิน Admin";
+                const isFile = window.location.protocol === 'file:';
+                if (authEmail) authEmail.textContent = isFile ? 'โหมด Local' : 'กรุณาล็อกอิน Admin';
                 if (authIndicator) authIndicator.className = 'admin-status-dot offline';
-
                 const authWarning = document.getElementById('auth-cloud-warning');
                 if (authWarning) authWarning.style.display = 'flex';
-
-                if (loginBtn) {
-                    loginBtn.style.display = 'block';
-                    loginBtn.onclick = sellerLogin;
-                }
-                if (logoutBtn) logoutBtn.style.display = 'none';
+                const loginBtn2 = document.getElementById('adminLoginBtn');
+                if (loginBtn2) { loginBtn2.style.display = 'block'; loginBtn2.onclick = window.sellerLogin; }
+                const logoutBtn2 = document.getElementById('adminLogoutBtn');
+                if (logoutBtn2) logoutBtn2.style.display = 'none';
                 const saveBtn2 = document.getElementById('btnSaveVoucher');
-                if (saveBtn2) {
-                    saveBtn2.disabled = true;
-                    saveBtn2.style.opacity = '0.5';
-                }
+                if (saveBtn2) { saveBtn2.disabled = true; saveBtn2.style.opacity = '0.5'; }
             }
         });
     }
 
-// ── Settings Management ──
-window.saveSettings = function() {
-    const baseUrl = document.getElementById('setting-base-url').value.trim();
-    if (!baseUrl) {
-        alert("กรุณาระบุ URL เว็บไซต์ครับ");
-        return;
-    }
-    localStorage.setItem('paomobile_base_url', baseUrl);
-    alert("✅ บันทึกโดเมนเว็บไซต์เรียบร้อยแล้วครับ!");
-};
+    // ── Start Voucher Sync IMMEDIATELY (reads are public, no auth needed) ──
+    const now = new Date().toISOString().split('T')[0];
+    db.collection('vouchers').onSnapshot((snapshot) => {
+        if (statusEl) statusEl.innerHTML = '<span style="color:#52c41a">&bull; Firestore: เชื่อมต่อแล้ว</span>';
+
+        if (snapshot.empty) {
+            voucherListBody.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        // Admin sees ALL vouchers — no expiry filter (mark expired visually instead)
+        const today = new Date().toISOString().split('T')[0];
+        const allDocs = [];
+        snapshot.forEach(doc => allDocs.push(doc));
+
+        if (allDocs.length === 0) {
+            voucherListBody.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        window.cachedVouchers = allDocs;
+
+        emptyState.style.display = 'none';
+
+        allDocs.sort((a, b) => {
+            const getMillis = (data) => {
+                try {
+                    if (data.createdAt && typeof data.createdAt.toDate === 'function') return data.createdAt.toDate().getTime();
+                    if (data.createdAt === null) return Date.now();
+                    if (data.createdAt && data.createdAt.seconds) return data.createdAt.seconds * 1000;
+                    if (data.createdAt) return new Date(data.createdAt).getTime() || 0;
+                } catch(e) {}
+                return 0;
+            };
+            return getMillis(b.data()) - getMillis(a.data());
+        });
+
+        let html = '';
+        allDocs.forEach((doc) => {
+            const v = doc.data();
+            const id = doc.id;
+            const isDiscount = v.type === 'discount';
+            const typeLabel = isDiscount ? 'ส่วนลดสินค้า' : 'ส่งพัสดุฟรี';
+            const typeClass = isDiscount ? 'tag-discount' : 'tag-ship';
+            const showHomeIcon = v.showOnHomepage ? '<span style="color:#27ae60">✅ เปิด</span>' : '<span style="color:#999">❌ ปิด</span>';
+            const isExpired = !v.isPermanent && v.expiry && v.expiry < today;
+            const expiryDisplay = v.isPermanent ? '♾️ ถาวร' : formatDate(v.expiry);
+            const expiryStyle = v.isPermanent ? 'color:#27ae60;font-weight:600;' : (isExpired ? 'color:#ff4d4f;text-decoration:line-through;' : '');
+            const expiredBadge = isExpired ? '<span style="background:#ff4d4f;color:#fff;font-size:0.65rem;padding:1px 5px;border-radius:8px;margin-left:4px;">หมดอายุ</span>' : '';
+            html += `
+                <tr id="row-${id}" style="${isExpired ? 'opacity:0.6;' : ''}">
+                    <td data-label="รหัส / ชื่อ">
+                        <div style="font-weight:600;color:#222;">${v.code}${expiredBadge}</div>
+                        <div style="font-size:0.8rem;color:#888;">${v.title}</div>
+                    </td>
+                    <td data-label="ประเภท"><span class="v-type-tag ${typeClass}">${typeLabel}</span></td>
+                    <td data-label="ส่วนลด"><strong style="color:#ee4d2d;">฿${v.value}</strong></td>
+                    <td data-label="หน้าแรก" style="text-align:center;font-size:0.8rem;">${showHomeIcon}</td>
+                    <td data-label="ขั้นต่ำ">฿${v.minPurchase || 0}</td>
+                    <td data-label="หมดอายุ" style="${expiryStyle}">
+                        ${expiryDisplay}
+                    </td>
+                    <td data-label="จัดการ">
+                        <div style="display:flex;gap:5px;justify-content:flex-end;">
+                            <button class="btn-gen-qr" onclick="prepareQRModal('${v.code}','${v.expiry||''}')" title="สร้าง Secure QR">🎟 สแกน</button>
+                            <button class="btn-gen-qr" style="background:#f39c12" onclick="editVoucher('${id}')" title="แก้ไข">✏️</button>
+                            <button class="btn-delete" onclick="deleteVoucher('${id}','${v.code}',this)" title="ลบคูปอง">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
+        });
+        voucherListBody.innerHTML = html;
+    }, (err) => {
+        console.error('Snapshot error:', err);
+        if (statusEl) statusEl.innerHTML = `<span style="color:red">&bull; Firestore Error: ${err.code}</span>`;
+        if (err.code === 'permission-denied') {
+            const authWarning = document.getElementById('auth-cloud-warning');
+            if (authWarning) authWarning.style.display = 'flex';
+        }
+    });
+
+
+    // ── Settings Save ──
+    window.saveSettings = function() {
+        const baseUrl = document.getElementById('setting-base-url').value.trim();
+        if (!baseUrl) { alert('กรุณาระบุ URL เว็บไซต์ครับ'); return; }
+        localStorage.setItem('paomobile_base_url', baseUrl);
+        alert('✅ บันทึกโดเมนเว็บไซต์เรียบร้อยแล้วครับ!');
+    };
 
     // --- Authentication Functions (Exported to window) ---
     window.sellerLogin = function() {
@@ -137,125 +195,6 @@ window.saveSettings = function() {
         }
     };
 
-    function startVoucherSync() {
-        if (authUnsubscribe) authUnsubscribe(); // Prevent duplicate listeners
-
-        const vouchersCol = db.collection('vouchers');
-        // เอา orderBy ออก เพื่อให้ดึงคูปองเก่าๆ ที่ไม่มีฟิลด์ createdAt ติดมาด้วย
-        authUnsubscribe = vouchersCol.onSnapshot((snapshot) => {
-            if (statusEl) statusEl.innerHTML = '<span style="color:#52c41a">&bull; Firestore: เชื่อมต่อแล้ว</span>';
-            
-            if (snapshot.empty) {
-                voucherListBody.innerHTML = '';
-                emptyState.style.display = 'block';
-                return;
-            }
-
-            emptyState.style.display = 'none';
-            let html = '';
-
-            const now = new Date().toISOString().split('T')[0];
-            const visibleDocs = [];
-            snapshot.forEach(doc => {
-                const v = doc.data();
-                // Include if permanent, or no expiry set, or expiry is today or future
-                if (v.isPermanent || !v.expiry || v.expiry >= now) {
-                    visibleDocs.push(doc);
-                }
-            });
-
-            if (visibleDocs.length === 0) {
-                voucherListBody.innerHTML = '';
-                emptyState.style.display = 'block';
-                return;
-            }
-
-            // นำมาเรียงลำดับด้วย JavaScript แทน (อันใหม่สุดขึ้นก่อน, อันที่ไม่มีวันที่ให้อยู่ล่างสุด)
-            visibleDocs.sort((a, b) => {
-                const dataA = a.data();
-                const dataB = b.data();
-                
-                const getMillis = (data) => {
-                    try {
-                        if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-                            return data.createdAt.toDate().getTime();
-                        }
-                        if (data.createdAt === null) return Date.now(); // Pending local write
-                        if (data.createdAt && data.createdAt.seconds) return data.createdAt.seconds * 1000;
-                        if (data.createdAt) return new Date(data.createdAt).getTime() || 0;
-                    } catch(e) {}
-                    return 0; // undefined or missing (old items)
-                };
-
-                return getMillis(dataB) - getMillis(dataA);
-            });
-
-            visibleDocs.forEach((doc) => {
-                const v = doc.data();
-                const id = doc.id;
-                const isDiscount = v.type === 'discount';
-                const typeLabel = isDiscount ? 'ส่วนลดสินค้า' : 'ส่งพัสดุฟรี';
-                const typeClass = isDiscount ? 'tag-discount' : 'tag-ship';
-                
-                const showHomeIcon = v.showOnHomepage ? '<span style="color:#27ae60">✅ เปิด</span>' : '<span style="color:#999">❌ ปิด</span>';
-
-                html += `
-                    <tr id="row-${id}">
-                        <td data-label="รหัส / ชื่อ">
-                            <div style="font-weight: 600; color: #222;">${v.code}</div>
-                            <div style="font-size: 0.8rem; color: #888;">${v.title}</div>
-                        </td>
-                        <td data-label="ประเภท"><span class="v-type-tag ${typeClass}">${typeLabel}</span></td>
-                        <td data-label="ส่วนลด"><strong style="color: #ee4d2d;">฿${v.value}</strong></td>
-                        <td data-label="หน้าแรก" style="text-align: center; font-size: 0.8rem;">${showHomeIcon}</td>
-                        <td data-label="ขั้นต่ำ">฿${v.minPurchase || 0}</td>
-                        <td data-label="หมดอายุ" style="color: ${v.isPermanent ? '#27ae60' : 'inherit'}; font-weight: ${v.isPermanent ? '600' : 'normal'};">
-                            ${v.isPermanent ? '♾️ ถาวร' : formatDate(v.expiry)}
-                        </td>
-                        <td data-label="จัดการ">
-                            <div style="display:flex; gap:5px; justify-content: flex-end;">
-                                <button class="btn-gen-qr" onclick="prepareQRModal('${v.code}', '${v.expiry || ''}')" title="สร้าง Secure QR">🎫 สแกน</button>
-                                <button class="btn-gen-qr" style="background:#f39c12" onclick="editVoucher('${id}')" title="จัดการการแสดงผล/แก้ไข">✏️</button>
-                                <button class="btn-delete" onclick="deleteVoucher('${id}', '${v.code}', this)" title="ลบคูปอง">🗑️</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-            voucherListBody.innerHTML = html;
-        }, (err) => {
-            console.error("Snapshot error:", err);
-            if (statusEl) statusEl.innerHTML = `<span style="color:red">&bull; Firestore Error: ${err.code}</span>`;
-            
-            // Check for permission denied and update UI
-            if (err.code === 'permission-denied') {
-                const authWarning = document.getElementById('auth-cloud-warning');
-                if (authWarning) authWarning.style.display = 'flex';
-                
-                const currentUser = firebase.auth().currentUser;
-                const email = currentUser ? (currentUser.email || "Unknown") : "Not Logged In";
-                // alert("สิทธิ์ไม่ถูกต้อง: ระบบไม่สามารถโหลดข้อมูลได้\n\nอีเมลปัจจุบัน: " + email + "\nกรุณาล็อกอินใหม่ด้วยเมล sattawat2560@gmail.com เท่านั้นครับ");
-            }
-        });
-    }
-
-    window.sellerLogin = () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider)
-            .then(result => {
-                console.log("Login success:", result.user.email);
-            })
-            .catch(error => {
-                console.error("Login failed:", error);
-                alert("เข้าสู่ระบบไม่สำเร็จ: " + error.message);
-            });
-    };
-
-    window.sellerLogout = () => {
-        if (confirm("ต้องการออกจากระบบใช่หรือไม่?")) {
-            firebase.auth().signOut();
-        }
-    };
 
     // 2. Handle Form Submission
     voucherForm.addEventListener('submit', async (e) => {
@@ -411,9 +350,22 @@ window.saveSettings = function() {
         content.style.display = 'none';
 
         try {
-            const doc = await db.collection('vouchers').doc(id).get();
-            if (!doc.exists) return;
-            const v = doc.data();
+            let v = null;
+            if (window.cachedVouchers) {
+                const cachedDoc = window.cachedVouchers.find(d => d.id === id);
+                if (cachedDoc) v = cachedDoc.data();
+            }
+            
+            if (!v) {
+                // Fallback to network if not in cache for some reason
+                const doc = await db.collection('vouchers').doc(id).get();
+                if (!doc.exists) {
+                    closeEditModal();
+                    return;
+                }
+                v = doc.data();
+            }
+            
             window.lastVData = v;
 
             document.getElementById('editVHeader').textContent = v.code;

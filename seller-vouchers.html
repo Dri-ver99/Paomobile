@@ -398,10 +398,7 @@
         <div class="voucher-container">
             <!-- Settings Card -->
             <div class="card" style="margin-bottom: 20px; border: 1px solid #e0e0e0; background: #fffaf0;">
-                <div class="card-title" style="color: #d35400; display: flex; justify-content: space-between; align-items: center;">
-                <div>🌐 ตั้งค่าโดเมนเว็บไซต์</div>
-                <button onclick="emergencyClearVouchers()" style="background: #ff4d4f; color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">🚨 ล้างคูปองทั้งหมด (แก้บัค)</button>
-            </div>
+                <div class="card-title" style="color: #d35400;">🌐 ตั้งค่าโดเมนเว็บไซต์</div>
                 <div class="form-group" style="margin-bottom: 15px;">
                     <p style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">ระบุ URL เว็บไซต์ของคุณเพื่อให้สแกน QR ผ่านมือถือได้ (เช่น <code>https://paomobile-85e39.web.app</code>)</p>
                     <div style="display: flex; gap: 10px;">
@@ -536,7 +533,15 @@
                         </tr>
                     </thead>
                     <tbody id="voucherListBody">
-                        <!-- Injected by JS -->
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 30px; color: #666;">
+                                <div style="display: inline-block; width: 24px; height: 24px; border: 3px solid #f3f3f3; border-top: 3px solid #ee4d2d; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                <div style="margin-top: 10px; font-weight: 500;">กำลังโหลดข้อมูลคูปอง...</div>
+                                <style>
+                                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                                </style>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
                 <div id="v-empty" class="empty-state" style="display: none;">ยังไม่มีการสร้างคูปอง</div>
@@ -627,8 +632,13 @@
                     <div class="form-group" style="text-align: left;">
                         <label>ระยะเวลาที่ใช้งานได้</label>
                         <select id="qrSelDuration" style="margin-bottom: 15px;">
-                            <option value="60">1 ชั่วโมง (แนะนํา)</option>
+                            <option value="5">5 นาที</option>
+                            <option value="10">10 นาที</option>
+                            <option value="15">15 นาที</option>
                             <option value="30">30 นาที</option>
+                            <option value="60" selected>1 ชั่วโมง (แนะนํา)</option>
+                            <option value="720">12 ชั่วโมง</option>
+                            <option value="1440">24 ชั่วโมง</option>
                             <option value="permanent">ถาวร (จนกว่าคูปองจะหมดอายุ)</option>
                         </select>
                     </div>
@@ -709,9 +719,15 @@
         };
         firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
+        
+        // Enable offline persistence for faster loading
+        db.enablePersistence({ synchronizeTabs: true })
+            .catch(function(err) {
+                console.warn("Firestore Persistence error:", err.code);
+            });
     </script>
     <script src="seller-presence.js"></script>
-    <script src="seller-vouchers.js?v=2.0"></script>
+    <script src="seller-vouchers.js"></script>
 <div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
             aria-label="Close Search">&#x2715;</button>
         <div class="search-modal-container">
