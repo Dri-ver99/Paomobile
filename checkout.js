@@ -1,4 +1,4 @@
-﻿/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
 (function() {
     if (window.__alertOverrideInjected) return;
     window.__alertOverrideInjected = true;
@@ -508,11 +508,11 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             });
         }
 
-        async function confirmVoucherSelection() {
+        function confirmVoucherSelection() {
             const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
             const merged = getMergedVouchers();
             
-            // Validate Selections
+            // Validate Selections against minPurchase (Usage limits are already verified during rendering)
             const codesToVerify = [tempShipCode, tempDiscountCode].filter(Boolean);
             
             for (const code of codesToVerify) {
@@ -520,27 +520,6 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 if (vData && subtotal < (vData.minPurchase || 0)) {
                     alert(`โค้ด ${code} ใช้ได้เมื่อมียอดซื้อขั้นต่ำ ฿${vData.minPurchase.toLocaleString()} ขึ้นไปครับ`);
                     return;
-                }
-
-                if (window.db) {
-                    try {
-                        const user = JSON.parse(localStorage.getItem('paomobile_user'));
-                        const email = user ? user.email : '';
-                        const snap = await db.collection('orders')
-                            .where('customerEmail', '==', email)
-                            .where('appliedVoucherCode', '==', code) // We'll keep checking against single field for legacy sync
-                            .get();
-                        
-                        const usedCount = snap.docs.filter(doc => doc.data().status !== 'ยกเลิกแล้ว').length;
-                        const limit = vData.usageLimit || 1;
-
-                        if (usedCount >= limit && !vData.isPermanent) {
-                            alert(`ขออภัยครับ คุณใช้สิทธิ์โค้ด ${code} ครบ ${limit} ครั้งตามกำหนดแล้วครับ`);
-                            return;
-                        }
-                    } catch (e) {
-                        console.error("Usage validation failed:", e);
-                    }
                 }
             }
 
@@ -810,8 +789,12 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         }
                     }
 
-                    // 3. Save to Cloud (MUST WAIT)
-                    await syncToCloud(globalOrderData);
+                    // 3. Save to Cloud (Optimized wait)
+                    // Wait max 800ms for cloud sync to prevent long UI freeze. Background sync will continue if slower.
+                    await Promise.race([
+                        syncToCloud(globalOrderData),
+                        new Promise(resolve => setTimeout(resolve, 800))
+                    ]);
 
                     // 4. Clear Cart
                     const rawCart = localStorage.getItem(getCartKey()) || '[]';
@@ -831,10 +814,10 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         const successOverlay = document.getElementById('successOverlay');
                         if (successOverlay) {
                             successOverlay.classList.add('show');
-                            // Auto redirect after 3 seconds
+                            // Auto redirect after 1.2 seconds
                             setTimeout(() => {
                                 window.location.href = 'purchases.html?tab=ship';
-                            }, 3000);
+                            }, 1200);
                         } else {
                             // Fallback if modal missing
                             alert('ขอบคุณที่สั่งซื้อสินค้า! (v1.2.10)\nรายการถูกส่งเข้าสู่ระบบ Seller Centre เรียบร้อยแล้วคับ');

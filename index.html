@@ -469,12 +469,13 @@
                 width: 98%;
                 border-radius: 20px;
                 height: 84px;
-                /* Fixed height for consistency */
             }
 
             .v-banner-content {
-                padding: 0 40px 0 10px !important;
+                padding: 0 40px 0 0 !important; /* Space for close button */
                 height: 100% !important;
+                margin-left: 18px; /* Further shifted right for better centering */
+                width: calc(100% - 65px) !important;
             }
 
             .swiper-slide {
@@ -482,15 +483,19 @@
                 justify-content: center !important;
                 align-items: center !important;
                 width: 100% !important;
+                padding: 0 5px;
+                box-sizing: border-box;
             }
 
             .v-mini-card {
-                min-width: 260px;
+                width: 100% !important;
+                min-width: unset !important;
                 height: 68px;
             }
 
             .vmc-left {
                 width: 65px;
+                padding: 0 !important; /* Center text perfectly on mobile */
             }
 
             .vmc-val {
@@ -1168,8 +1173,21 @@
                 let myVouchers = JSON.parse(localStorage.getItem(storageKey) || '[]');
                 if (myVouchers.some(v => v.code === code)) { alert("คุณมีคูปองนี้อยู่แล้วครับ!"); return; }
                 btn.innerHTML = '🕒'; btn.style.pointerEvents = 'none';
-                myVouchers.push({ code, value, type, claimedAt: new Date().toISOString() });
+                
+                let fullVoucher = { code, value, type, claimedAt: new Date().toISOString() };
+                if (window._homeVouchers) {
+                    const found = window._homeVouchers.find(x => x.code === code);
+                    if (found) fullVoucher = { ...found, claimedAt: new Date().toISOString() };
+                }
+                
+                myVouchers.push(fullVoucher);
                 localStorage.setItem(storageKey, JSON.stringify(myVouchers));
+
+                try {
+                    await db.collection('vouchers_redemptions').add({
+                        code: code, email: user.email, at: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch(e) { console.error('Failed to sync to firestore', e); }
 
                 // Show Success Toast
                 showClaimSuccess(code, value, type);
@@ -1246,6 +1264,8 @@
                         return getMillis(b) - getMillis(a);
                     });
 
+                    window._homeVouchers = vouchers;
+
                     if (vouchers.length === 0) {
                         strip.style.display = 'none';
                         return;
@@ -1291,9 +1311,8 @@
                         strip.style.display = 'block';
                         voucherSwiperInstance = new Swiper(content, {
                             direction: 'horizontal',
-                            loop: displayedCount > 3,
+                            loop: displayedCount > 1,
                             slidesPerView: 1,
-                            slidesPerGroup: 1,
                             centeredSlides: true,
                             speed: 800,
                             autoplay: { delay: 3500, disableOnInteraction: false },
