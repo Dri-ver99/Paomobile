@@ -1,4 +1,4 @@
-﻿/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
 (function() {
     if (window.__alertOverrideInjected) return;
     window.__alertOverrideInjected = true;
@@ -777,7 +777,13 @@ badge.textContent = '⚫ ปิดให้บริการ';
 
         updatePresence();
         if (presenceInterval) clearInterval(presenceInterval);
-        presenceInterval = setInterval(updatePresence, 30000); // 30s heartbeat
+        
+        // Update presence every 5 minutes instead of 30 seconds to save writes
+        presenceInterval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                updatePresence();
+            }
+        }, 300000); 
 
         if (chatUnsubscribe) chatUnsubscribe();
         

@@ -1,4 +1,4 @@
-﻿/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
 (function() {
     if (window.__alertOverrideInjected) return;
     window.__alertOverrideInjected = true;
@@ -171,7 +171,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             ...o, 
                             status: localO.status,
                             trackingNum: localO.trackingNum || o.trackingNum,
-                            trackingLink: localO.trackingLink || o.trackingLink
+                            trackingLink: localO.trackingLink || o.trackingLink,
+                            cancelReason: localO.cancelReason || o.cancelReason,
+                            returnReason: localO.returnReason || o.returnReason
                         };
                     }
                 }
@@ -328,8 +330,24 @@ function renderOrders() {
             <tbody>
                 ${filtered.map(order => {
                     const items = order.items || [];
-                    const firstItemName = items.length > 0 ? items[0].name : (order.status === 'DEBUG-TEST' ? 'รายการทดสอบ (Debug)' : 'ไม่ระบุสินค้า');
-                    const others = items.length > 1 ? ` <br><span style="font-size:0.8rem; color:#888;">และรายการอื่นอีก ${items.length - 1} รายการ</span>` : '';
+                    const itemsHtml = items.map(item => {
+                        let itemName = item.name || 'ไม่ระบุชื่อสินค้า';
+                        let variantText = '';
+                        if (item.options && typeof item.options === 'string') {
+                            variantText = ` <span style="color:#ee4d2d; font-size: 0.85rem;">[${item.options}]</span>`;
+                        } else if (item.variant) {
+                            variantText = ` <span style="color:#ee4d2d; font-size: 0.85rem;">[${item.variant}]</span>`;
+                        } else if (item.color) {
+                            variantText = ` <span style="color:#ee4d2d; font-size: 0.85rem;">[${item.color}]</span>`;
+                        }
+                        return `<div style="font-weight: 500; font-size: 0.9rem; line-height: 1.4; margin-bottom: 4px;">
+                                   <span style="display:inline-block; min-width: 24px; color:#555; font-weight:600;">x${item.quantity || 1}</span> 
+                                   <span style="color:#222;">${itemName}</span>${variantText}
+                                </div>`;
+                    }).join('');
+                    
+                    const emptyItemStr = order.status === 'DEBUG-TEST' ? 'รายการทดสอบ (Debug)' : 'ไม่ระบุสินค้า';
+                    const displayHtml = items.length > 0 ? itemsHtml : `<div style="font-weight: 500; font-size: 0.9rem;">${emptyItemStr}</div>`;
                     
                     const sourceText = order.orderSource ? order.orderSource : 'ไม่ระบุ';
                     const sourcePills = sourceText.split(',').map(s => {
@@ -345,7 +363,7 @@ function renderOrders() {
                         <tr>
                             <td data-label="หมายเลขคำสั่งซื้อ" style="color: #4080ff; font-family: monospace; font-size: 0.95rem;">${order.id}</td>
                             <td data-label="สินค้า">
-                                <div style="font-weight: 500;">${firstItemName}${others}</div>
+                                ${displayHtml}
                                 <div style="font-size: 0.8rem; color: #757575; margin-top: 4px;">ลูกค้า: ${order.customerName || 'ไม่ระบุชื่อ'} (${order.customerPhone || '-'})</div>
                                 <div>${sourcePills}</div>
                             </td>
@@ -423,6 +441,12 @@ function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink 
         if(idx > -1) {
             globalOrders[idx] = { ...globalOrders[idx], ...updateObj };
             localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
+            
+            // Broadcast the update so customer tabs update instantly
+            try {
+                const bc = new BroadcastChannel('pao_order_sync');
+                bc.postMessage({ type: 'SELLER_ORDER_UPDATE', updatedOrder: globalOrders[idx] });
+            } catch (e) {}
         }
     } catch(e) {
         console.error("Failed to update status:", e);
@@ -452,7 +476,16 @@ function viewOrderDetails(orderId, isDispatch = false) {
 
     // Populate data (always, for both modes)
     document.getElementById('modalCustomerName').textContent = order.customerName || 'ไม่ระบุชื่อ';
-    document.getElementById('modalCustomerProfile').textContent = order.customerProfileName || order.customerNickname || order.customerEmail || 'ไม่มีข้อมูล';
+    const profileEl = document.getElementById('modalCustomerProfile');
+    profileEl.textContent = order.customerProfileName || order.customerNickname || order.customerEmail || 'ไม่มีข้อมูล';
+    profileEl.onclick = () => {
+        const contactId = order.customerEmail || order.uid;
+        if (contactId) {
+            window.location.href = `seller-chat.html?id=${contactId.toLowerCase().trim()}`;
+        } else {
+            alert("ไม่พบข้อมูลติดต่อสำหรับลูกค้ารายนี้คับ");
+        }
+    };
     document.getElementById('modalCustomerPhone').textContent = order.customerPhone || 'N/A';
     document.getElementById('modalShippingMethod').textContent = order.shippingMethod || 'รับที่ร้าน';
     document.getElementById('modalCustomerAddress').textContent = order.customerAddress || 'ไม่มีข้อมูลที่อยู่';
@@ -469,12 +502,26 @@ function viewOrderDetails(orderId, isDispatch = false) {
         slipGroup.style.display = 'none';
     }
 
-    // Return Reason Info
+    // Return / Cancel Reason Info
     const returnGroup = document.getElementById('returnReasonGroup');
-    if (order.returnReason) {
+    let reasonText = order.cancelReason || order.returnReason;
+    
+    const isCancelledState = order.status === 'ยกเลิกแล้ว' || order.status === 'Cancelled';
+    const isReturnState = order.status === 'คืนเงิน/คืนสินค้า' || order.status === 'Return';
+
+    // Fallback for older orders that were cancelled/returned before we started tracking reasons
+    if (!reasonText && (isCancelledState || isReturnState)) {
+        reasonText = isCancelledState ? 'ไม่ได้ระบุเหตุผล (ออเดอร์เก่า / กดยกเลิกอัตโนมัติ)' : 'ไม่ได้ระบุเหตุผล';
+    }
+    
+    if (reasonText && (isCancelledState || isReturnState || order.cancelReason || order.returnReason)) {
         if (returnGroup) {
             returnGroup.style.display = 'block';
-            document.getElementById('modalReturnReason').textContent = order.returnReason;
+            const titleEl = returnGroup.querySelector('div:first-child');
+            if (titleEl) {
+                titleEl.innerHTML = (isCancelledState || order.cancelReason) ? '⚠️ เหตุผลการยกเลิกคำสั่งซื้อ' : '⚠️ เหตุผลการคืนสินค้า';
+            }
+            document.getElementById('modalReturnReason').textContent = reasonText;
         }
     } else {
         if (returnGroup) returnGroup.style.display = 'none';
@@ -483,13 +530,36 @@ function viewOrderDetails(orderId, isDispatch = false) {
     // Voucher Info & Summary Discount Row
     const vGroup = document.getElementById('voucherInfoGroup');
     const summaryDiscountRow = document.getElementById('summaryDiscountRow');
-    if (order.appliedVoucherCode || order.discountAmount) {
+    const vDiscRow = document.getElementById('modalVoucherDiscountRow');
+    const vShipRow = document.getElementById('modalVoucherShipRow');
+    
+    // Check if either ship code or discount code was used
+    if (order.appliedVoucherCode || order.appliedDiscountCode || order.appliedShipCode || order.discountAmount) {
         vGroup.style.display = 'block';
-        document.getElementById('modalVoucherCode').textContent = order.appliedVoucherCode || 'โค้ดส่วนลด';
-        document.getElementById('modalDiscountAmount').textContent = `-฿${(order.discountAmount || 0).toLocaleString()}`;
-        if (summaryDiscountRow) {
+        
+        const discCode = order.appliedDiscountCode || order.appliedVoucherCode;
+        if (discCode || order.discountAmount) {
+            if (vDiscRow) vDiscRow.style.display = 'flex';
+            document.getElementById('modalVoucherCode').textContent = discCode || 'คูปองทั่วไป';
+            document.getElementById('modalDiscountAmount').textContent = `-฿${(order.discountAmount || 0).toLocaleString()}`;
+        } else {
+            if (vDiscRow) vDiscRow.style.display = 'none';
+        }
+        
+        if (order.appliedShipCode) {
+            if (vShipRow) vShipRow.style.display = 'flex';
+            document.getElementById('modalShipCode').textContent = order.appliedShipCode;
+            // Assuming default shipping is 50, otherwise we'd need to save actual shipping discount.
+            document.getElementById('modalShipDiscountAmount').textContent = `ส่งฟรี (-฿50)`;
+        } else {
+            if (vShipRow) vShipRow.style.display = 'none';
+        }
+
+        if (summaryDiscountRow && order.discountAmount > 0) {
             summaryDiscountRow.style.display = 'flex';
             document.getElementById('modalSummaryDiscount').textContent = `-฿${(order.discountAmount || 0).toLocaleString()}`;
+        } else if (summaryDiscountRow) {
+            summaryDiscountRow.style.display = 'none';
         }
     } else {
         vGroup.style.display = 'none';
@@ -570,10 +640,41 @@ function closeSlipLightbox() {
     if (lb) { lb.style.opacity = '0'; setTimeout(() => lb.style.display = 'none', 300); }
 }
 
-function forceManualSync() {
+function forceManualSync(fromBroadcast = false) {
     if (window.db) {
         db.collection('orders').get().then(snapshot => {
-            ordersData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            let fetchedOrders = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            
+            // Apply the same advanced merging logic to prevent overwriting local advanced states
+            const localGlobal = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+            const localMap = new Map();
+            localGlobal.forEach(o => localMap.set(o.id, o));
+            
+            fetchedOrders = fetchedOrders.map(o => {
+                if (localMap.has(o.id)) {
+                    const localO = localMap.get(o.id);
+                    const statusPriority = {
+                        'ที่ต้องชำระ': 1, 'ที่ต้องจัดส่ง': 2, 'เตรียมจัดส่งแล้ว': 3, 'Processed': 3,
+                        'ที่ต้องได้รับ': 4, 'สำเร็จแล้ว': 5, 'Completed': 5, 'ยกเลิกแล้ว': 6, 'คืนเงิน/คืนสินค้า': 6
+                    };
+                    const localWeight = statusPriority[localO.status] || 0;
+                    const cloudWeight = statusPriority[o.status] || 0;
+
+                    if (localWeight > cloudWeight || (fromBroadcast && localWeight >= cloudWeight)) {
+                        return { 
+                            ...o, 
+                            status: localO.status,
+                            trackingNum: localO.trackingNum || o.trackingNum,
+                            trackingLink: localO.trackingLink || o.trackingLink,
+                            cancelReason: localO.cancelReason || o.cancelReason,
+                            returnReason: localO.returnReason || o.returnReason
+                        };
+                    }
+                }
+                return o;
+            });
+
+            ordersData = fetchedOrders;
             ordersData.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
             localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
             renderOrders();

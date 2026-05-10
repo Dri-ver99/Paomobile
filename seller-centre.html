@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -135,18 +135,17 @@
             </a>
         </div>
         <nav class="sidebar-menu">
-            <!-- Home Section -->
             <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
                 <a href="index.html" class="menu-item-home" style="margin-top: 0;">
                     <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
                 </a>
             </div>
-
             <div class="menu-section">
                 <p class="menu-title">เมนูหลัก</p>
                 <a href="seller-centre.html" class="menu-item active"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
                 <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
                 <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
                 <a href="#promotion-card" class="menu-item" onclick="document.getElementById('promotion-card').scrollIntoView({behavior:'smooth'}); return false;"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
             </div>
             <div class="menu-section">
@@ -160,6 +159,7 @@
                 <p class="menu-title">สินค้า</p>
                 <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
                 <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
             </div>
         </nav>
     </aside>
@@ -246,9 +246,9 @@
                         <span class="stat-label">สินค้าทั้งหมด</span>
                         <span class="insight-val" id="insight-products">0</span>
                     </div>
-                    <div class="insight-item">
-                        <span class="stat-label">จำนวนการคลิกสินค้า</span>
-                        <span class="insight-val">--</span>
+                    <div class="insight-item" style="cursor: pointer;" onclick="location.href='seller-customers.html'">
+                        <span class="stat-label">ลูกค้าทั้งหมด</span>
+                        <span class="insight-val" id="insight-customers">0</span>
                     </div>
                     <div class="insight-item">
                         <span class="stat-label">คำสั่งซื้อ</span>
@@ -499,22 +499,23 @@
             </div>
             <div class="mobile-sidebar-content">
                 <nav class="sidebar-menu">
-                    <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
-                        <a href="index.html" class="menu-item-home" style="margin-top: 0;">
-                            <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
-                        </a>
-                    </div>
                     <div class="menu-section">
-                        <p class="menu-title">เมนูหลัก</p>
-                        <a href="seller-centre.html" class="menu-item active"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                        <a href="index.html" class="menu-item-home"><span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า</a>
+                        <a href="seller-centre.html" class="menu-item active"><span class="menu-icon">📊</span> แผงควบคุม</a>
                         <a href="seller-chat.html" class="menu-item"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
-                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> โค้ดส่วนลด</a>
+                        <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
                         <a href="#promotion-card" class="menu-item" onclick="toggleSellerMobileMenu(false); document.getElementById('promotion-card').scrollIntoView({behavior:'smooth'}); return false;"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
                     </div>
                     <div class="menu-section">
                         <p class="menu-title">คำสั่งซื้อ</p>
                         <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">สินค้า</p>
                         <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
                     </div>
                 </nav>
             </div>

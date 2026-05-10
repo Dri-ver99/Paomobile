@@ -37,11 +37,13 @@
         // 1. Initial Heartbeat
         updateStatus(true);
 
-        // 2. Periodic Heartbeat (Every 45 seconds)
-        // Keep online even if in background, as long as the tab is open
+        // 2. Periodic Heartbeat (Every 3 minutes) to heavily reduce Writes Quota
+        // Only update if the document is visible to prevent unnecessary writes while tab is in background
         setInterval(() => {
-            updateStatus(true);
-        }, 45000);
+            if (document.visibilityState === 'visible') {
+                updateStatus(true);
+            }
+        }, 180000); // 3 minutes
 
         // 3. Handle Offline/Online browser events
         window.addEventListener('online', () => updateStatus(true));

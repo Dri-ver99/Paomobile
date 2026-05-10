@@ -36,6 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const elSales = document.getElementById('insight-sales');
     if (elSales) elSales.textContent = localStorage.getItem('pao_last_sales_total') || '฿0';
 
+    const elCustomers = document.getElementById('insight-customers');
+    if (elCustomers) elCustomers.textContent = localStorage.getItem('pao_total_customers_count') || '0';
+
     // Initial render from local orders cache
     updateDashboard();
 
@@ -190,6 +193,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, err => {
             console.warn("Chat unread sync error:", err);
+        });
+
+        // Customers Sync
+        db.collection('users').onSnapshot(snapshot => {
+            const count = snapshot.size;
+            localStorage.setItem('pao_total_customers_count', count);
+            const el = document.getElementById('insight-customers');
+            if (el) el.textContent = count;
+        }, err => {
+            console.warn("Customer sync failed:", err);
         });
 
         // Promotion List Sync
@@ -438,6 +451,7 @@ function updateDashboard() {
     const cachedProductCount = localStorage.getItem('pao_total_products_count') || 17;
     const cachedVouchersCount = localStorage.getItem('pao_total_vouchers_count') || 0; 
     const cachedOutstockCount = localStorage.getItem('pao_outstock_count') || 0; 
+    const cachedCustomersCount = localStorage.getItem('pao_total_customers_count') || 0; 
 
     const elements = [
         { el: document.getElementById('stat-unpaid'), val: stats.unpaid },
@@ -446,6 +460,7 @@ function updateDashboard() {
         { el: document.getElementById('stat-cancelled'), val: stats.refund },
         { el: document.getElementById('stat-total-products'), val: cachedProductCount },
         { el: document.getElementById('insight-products'), val: cachedProductCount },
+        { el: document.getElementById('insight-customers'), val: cachedCustomersCount },
         { el: document.getElementById('stat-vouchers'), val: cachedVouchersCount },
         { el: document.getElementById('insight-today-orders'), val: todayOrdersCount },
         { el: document.getElementById('insight-today-sales'), val: '฿' + todaySalesTotal.toLocaleString() },

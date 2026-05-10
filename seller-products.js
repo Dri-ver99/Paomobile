@@ -1,4 +1,4 @@
-﻿/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
 (function() {
     if (window.__alertOverrideInjected) return;
     window.__alertOverrideInjected = true;
@@ -359,16 +359,8 @@ function restartFirestoreListener() {
 
     let query = db.collection('products');
     
-    // Server-side filtering logic matching products-sync.js exactly
-    if (currentCategory && currentCategory !== 'all') {
-        let categoryList = [currentCategory];
-        if (currentCategory === 'new') categoryList = ['new', 'มือ 1', 'มือหนึ่ง'];
-        else if (currentCategory === 'used') categoryList = ['used', 'มือ 2', 'มือสอง'];
-        else if (currentCategory === 'accessory') categoryList = ['accessory', 'อุปกรณ์', 'อุปกรณ์เสริม'];
-        else if (currentCategory === 'parts') categoryList = ['parts', 'อะไหล่'];
-        
-        query = query.where('category', 'in', categoryList);
-    }
+    // Seller Centre loads ALL products once for instant tab switching
+    // No server-side category filter here.
     
     // Add a limit for safety (same as customer side)
     query = query.limit(2000); 
@@ -391,22 +383,11 @@ function restartFirestoreListener() {
 
         const mergedMap = new Map();
         
-        // 1. First, populate with non-deleted baseline items that match current category
+        // 1. First, populate with all non-deleted baseline items
         MOCK_PRODUCTS_BASELINE.forEach(p => {
              const isOriginalPart = p.id.endsWith('-orig');
              if (isOriginalPart || !deletedMockIds.includes(p.id)) {
-                 // Check if it matches current category (synonym aware)
-                 let matches = true;
-                 if (currentCategory !== 'all') {
-                     const pCat = (p.category || "").toLowerCase();
-                     const target = currentCategory.toLowerCase();
-                     if (target === 'new') matches = (pCat === 'new' || pCat === 'มือ 1' || pCat === 'มือหนึ่ง');
-                     else if (target === 'used') matches = (pCat === 'used' || pCat === 'มือ 2' || pCat === 'มือสอง');
-                     else if (target === 'accessory') matches = (pCat === 'accessory' || pCat === 'อุปกรณ์' || pCat === 'อุปกรณ์เสริม');
-                     else if (target === 'parts') matches = (pCat === 'parts' || pCat === 'อะไหล่');
-                     else matches = (pCat === target);
-                 }
-                 if (matches) mergedMap.set(p.id, p);
+                 mergedMap.set(p.id, p);
              }
         });
         
@@ -475,8 +456,8 @@ function setFilterCategory(cat) {
         else t.classList.remove('active');
     });
 
-    // Mirroring Customer system: restart listener on tab change
-    restartFirestoreListener();
+    // Filter locally for instant UI update
+    filterProducts();
 }
 window.setFilterCategory = setFilterCategory;
 

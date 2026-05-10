@@ -1,4 +1,4 @@
-﻿/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
 (function() {
     if (window.__alertOverrideInjected) return;
     window.__alertOverrideInjected = true;
@@ -82,6 +82,7 @@
     
     let activeChatId = null;
     let messagesUnsubscribe = null;
+    let chatListUnsubscribe = null; // Track chat list listener to prevent duplicates
     let allChats = []; // Global cache for chat list filtering
     let pendingChatFile = null;
     let pendingChatType = null;
@@ -90,54 +91,87 @@
 
     // 1. Load Chat List (Real-time)
     function loadChatList() {
-        const chatListArea = document.getElementById('chatList');
-        // Initial Skeletons while waiting for Firestore
-        if (chatListArea) {
-            chatListArea.innerHTML = Array(6).fill(0).map(() => `
-                <div class="chat-skeleton">
-                    <div class="skeleton-avatar skeleton-animate"></div>
-                    <div class="skeleton-info">
-                        <div class="skeleton-line skeleton-animate"></div>
-                        <div class="skeleton-line short skeleton-animate"></div>
-                    </div>
-                </div>
-            `).join('');
+        console.log("[SellerChat] loadChatList() called");
+        
+        // Prevent duplicate listeners
+        if (chatListUnsubscribe) {
+            chatListUnsubscribe();
+            chatListUnsubscribe = null;
         }
 
-        db.collection('chats')
-            .orderBy('lastTimestamp', 'desc')
-            .onSnapshot(snapshot => {
-                allChats = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                // Small artificial delay for smooth transition from skeleton
-                setTimeout(() => renderChatList(), 200);
+        // Get db reference
+        var _db = window.db || db;
+        if (!_db) {
+            console.error("[SellerChat] No db available in loadChatList!");
+            var listArea = document.getElementById('chatList');
+            if (listArea) listArea.innerHTML = '<div style="padding:40px; text-align:center; color:#ef4444;">❌ Firebase ยังไม่พร้อม กรุณารีเฟรชหน้าเว็บครับ</div>';
+            return;
+        }
+
+        var chatListArea = document.getElementById('chatList');
+        
+        // --- INSTANT LOAD: Try loading from Local Cache first ---
+        try {
+            var cached = localStorage.getItem('paomobile_chat_cache');
+            if (cached) {
+                allChats = JSON.parse(cached);
+                if (allChats && allChats.length > 0) {
+                    console.log("[SellerChat] Instant render from cache:", allChats.length);
+                    renderChatList();
+                }
+            }
+        } catch(e) { console.warn("Cache load failed", e); }
+
+        // Initial Skeletons ONLY if cache is empty
+        if (chatListArea && allChats.length === 0) {
+            chatListArea.innerHTML = Array(6).fill(0).map(function() { return '<div class="chat-skeleton"><div class="skeleton-avatar skeleton-animate"></div><div class="skeleton-info"><div class="skeleton-line skeleton-animate"></div><div class="skeleton-line short skeleton-animate"></div></div></div>'; }).join('');
+        }
+
+        chatListUnsubscribe = _db.collection('chats')
+            .onSnapshot(function(snapshot) {
+                allChats = snapshot.docs.map(function(doc) {
+                    var data = doc.data();
+                    data.id = doc.id;
+                    return data;
+                });
+                
+                // Sort in memory
+                allChats.sort(function(a, b) {
+                    var getT = function(x) { 
+                        if (x.lastTimestamp && x.lastTimestamp.toMillis) return x.lastTimestamp.toMillis();
+                        if (x.lastTimestamp && x.lastTimestamp.seconds) return x.lastTimestamp.seconds * 1000;
+                        return 0; 
+                    };
+                    return getT(b) - getT(a);
+                });
+
+                // --- SAVE TO CACHE: Store for next instant load ---
+                try {
+                    localStorage.setItem('paomobile_chat_cache', JSON.stringify(allChats));
+                } catch(e) {}
+
+                console.log("[SellerChat] Firestore Sync:", allChats.length, "chats");
+                renderChatList();
                 
                 // If Cloud is active, hide the local-only warning
-                const warning = document.getElementById('auth-cloud-warning');
+                var warning = document.getElementById('auth-cloud-warning');
                 if (warning) warning.style.display = 'none';
-            }, err => {
-                console.error("[SellerChat] Load Error:", err.message);
-                const listArea = document.getElementById('chatList');
+            }, function(err) {
+                console.error("[SellerChat] Load Error:", err.message, err.code);
+                var listArea = document.getElementById('chatList');
                 if (listArea) {
-                    listArea.innerHTML = `
-                        <div style="padding:40px; text-align:center;">
-                            <div style="color:#ef4444; font-weight:600; font-size:1.1rem; margin-bottom:10px;">⚠️ ไม่มีสิทธิ์เข้าถึงข้อมูล</div>
-                            <div style="color:#64748b; font-size:0.85rem; margin-bottom:20px;">
-                                ${err.code === 'permission-denied' ? 'บัญชีปัจจุบันไม่มีสิทธิ์ Admin สำหรับ Cloud Sync' : err.message}
-                            </div>
-                            <button onclick="sellerLogin()" style="background:#ee4d2d; color:white; border:none; padding:8px 20px; border-radius:30px; font-weight:600; cursor:pointer;">ล็อกอิน Admin (Cloud)</button>
-                        </div>
-                    `;
+                    var errMsg = err.code === 'permission-denied' ? 'บัญชีปัจจุบันไม่มีสิทธิ์ Admin สำหรับ Cloud Sync' : err.message;
+                    listArea.innerHTML = '<div style="padding:40px; text-align:center;"><div style="color:#ef4444; font-weight:600; font-size:1.1rem; margin-bottom:10px;">⚠️ ไม่มีสิทธิ์เข้าถึงข้อมูล</div><div style="color:#64748b; font-size:0.85rem; margin-bottom:20px;">' + errMsg + '</div><button onclick="sellerLogin()" style="background:#ee4d2d; color:white; border:none; padding:8px 20px; border-radius:30px; font-weight:600; cursor:pointer;">ล็อกอิน Admin (Cloud)</button></div>';
                 }
                 // Show Cloud warning if we get a permission denied
                 if (err.code === 'permission-denied') {
-                    const warning = document.getElementById('auth-cloud-warning');
+                    var warning = document.getElementById('auth-cloud-warning');
                     if (warning) warning.style.display = 'flex';
                 }
             });
     }
+    // Expose to window for HTML fallback
+    window.loadChatList = loadChatList;
 
     // New: Unified rendering with search and filter
     window.renderChatList = () => {
@@ -192,7 +226,7 @@
                     </div>
                     <div class="chat-item-content">
                         <div class="chat-item-header">
-                            <div class="chat-item-name">${chat.userName || 'ลูกค้าใหม่'}</div>
+                            <div class="chat-item-name">${(chat.userName && chat.userName !== 'ลูกค้าใหม่') ? chat.userName : chat.id}</div>
                             <div class="chat-item-time">${time}</div>
                         </div>
                         <div class="chat-item-snippet">
@@ -229,25 +263,49 @@
 
     // 2. Open Specific Chat
     window.openChat = async (chatId) => {
-        if (activeChatId === chatId) return;
+        if (!chatId) return;
+        
+        // Normalize chatId (email should be lowercase)
+        chatId = chatId.trim().toLowerCase();
+        
         activeChatId = chatId;
         
-        const chatDoc = await db.collection('chats').doc(chatId).get();
-        const chatData = chatDoc.data();
-        const initial = chatData.userName ? chatData.userName.charAt(0).toUpperCase() : chatId.charAt(0).toUpperCase();
-        const avatarHtml = chatData.userAvatar 
+        // --- INSTANT UI: Use cached data from allChats if available ---
+        var cachedChat = allChats.find(function(c) { return c.id === chatId; });
+        var chatData = cachedChat || { userName: chatId, userAvatar: "" };
+        
+        // Render the UI structure immediately
+        renderChatLayout(chatId, chatData);
+        
+        // Fetch full data in background if needed
+        if (!cachedChat) {
+            db.collection('chats').doc(chatId).get().then(function(doc) {
+                if (doc.exists) {
+                    var fullData = doc.data();
+                    updateChatHeader(fullData);
+                }
+            }).catch(function(e) { console.warn("Background fetch error:", e); });
+        }
+    };
+
+    // Helper to render the main chat area layout
+    function renderChatLayout(chatId, chatData) {
+        var initial = chatData.userName ? chatData.userName.charAt(0).toUpperCase() : chatId.charAt(0).toUpperCase();
+        var avatarHtml = chatData.userAvatar 
             ? `<img src="${chatData.userAvatar}" style="width:100%; height:100%; object-fit:cover;">` 
             : `<span style="color:white;">${initial}</span>`;
         
-        const chatMain = document.getElementById('chatMain');
-        chatMain.innerHTML = `
+        var chatMainEl = document.getElementById('chatMain');
+        if (!chatMainEl) return;
+
+        chatMainEl.innerHTML = `
             <div class="chat-header-shopee">
                 <div style="display:flex; align-items:center;">
                     <div class="btn-back-chat" style="color:#fff; cursor:pointer; margin-right:15px; font-size:1.4rem; background:none; border:none; padding:0; display:flex; align-items:center; justify-content:center;" onclick="closeMobileChat()">⬅️</div>
                     <div class="header-user-info">
                         <div class="header-user-avatar" style="overflow:hidden; border:1px solid rgba(255,255,255,0.2); background:#333;">${avatarHtml}</div>
                         <div style="display:flex; flex-direction:column;">
-                            <div class="header-user-name" style="color:#fff;">${chatData.userName || chatId}</div>
+                            <div class="header-user-name" style="color:#fff;">${(chatData.userName && chatData.userName !== 'ลูกค้าใหม่') ? chatData.userName : chatId}</div>
                             <div id="sellerPresenceNode" style="font-size:0.75rem; color:#fff; font-weight:700; background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:10px; margin-top:4px; display:inline-block;">
                                 ${chatData.presence && chatData.presence.page ? `กำลังดูหน้า: ${chatData.presence.page}` : 'กำลังดูสินค้า'}
                             </div>
@@ -263,7 +321,6 @@
                 <div style="text-align:center; padding:40px; color:#94a3b8;">กำลังโหลดข้อความ...</div>
             </div>
             
-            <!-- File Preview Area (Seller Side) -->
             <div id="sellerChatPreview" class="preview-container-seller" style="display:none;">
                 <img id="sellerPreviewImg" class="preview-thumb-seller" src="">
                 <div style="flex:1; min-width:0;">
@@ -273,7 +330,7 @@
                 <div class="preview-remove-seller" onclick="removeChatPreview()">✕</div>
             </div>
 
-            <div id="chatFooter" class="chat-footer" style="padding: 12px 15px 55px; border-top: 1px solid #f1f5f9; background:#fff; position: relative; padding-bottom: calc(55px + env(safe-area-inset-bottom));">
+            <div id="chatFooter" class="chat-footer" style="padding: 12px 15px 55px; border-top: 1px solid #f1f5f9; background:#fff; position: relative;">
                 <div style="display:flex; align-items:center; gap:10px; width:100%;">
                     <div class="input-tools" style="display:flex; gap:12px; font-size:1.4rem; color:#666;">
                         <label for="sellerFileUpload" style="cursor:pointer;" title="ส่งรูปภาพ">🖼️</label>
@@ -289,20 +346,39 @@
             </div>
         `;
 
-        // v1.8.0 - Mobile Transition
-        const layout = document.querySelector('.chat-layout');
+        // Update sidebar visual
+        renderChatList();
+
+        // Mobile transition
+        var layout = document.querySelector('.chat-layout');
         if (layout) layout.classList.add('show-chat');
 
-        // Mark as Read
-        db.collection('chats').doc(chatId).update({ unreadCount: 0 }).catch(e => console.warn("[SellerChat] Unread update failed:", e));
+        // Load messages immediately
+        startMessagesListener(chatId);
 
-        // Load Messages
+        // Mark as Read
+        db.collection('chats').doc(chatId).update({ unreadCount: 0 }).catch(function(){});
+    }
+
+    function updateChatHeader(data) {
+        var nameEl = document.querySelector('.header-user-name');
+        if (nameEl) {
+            nameEl.textContent = (data.userName && data.userName !== 'ลูกค้าใหม่') ? data.userName : (activeChatId || "");
+        }
+        
+        var avatarEl = document.querySelector('.header-user-avatar');
+        if (avatarEl && data.userAvatar) {
+            avatarEl.innerHTML = `<img src="${data.userAvatar}" style="width:100%; height:100%; object-fit:cover;">`;
+        }
+    }
+
+    function startMessagesListener(chatId) {
         if (messagesUnsubscribe) messagesUnsubscribe();
         
-        const msgsArea = document.getElementById('chatMessages');
+        var msgsArea = document.getElementById('chatMessages');
         messagesUnsubscribe = db.collection('chats').doc(chatId).collection('messages')
             .orderBy('timestamp', 'asc')
-            .onSnapshot(snapshot => {
+            .onSnapshot(function(snapshot) {
                 if (snapshot.empty) {
                     msgsArea.innerHTML = '<div style="text-align:center; padding:60px 20px; color:#94a3b8; font-size:0.9rem;">👋 เริ่มการสนทนากับลูกค้าได้เลยครับ<br><span style="font-size:0.8rem; opacity:0.7;">(หากลูกค้าส่งข้อความมา จะแสดงที่นี่ทันที)</span></div>';
                     return;
@@ -659,77 +735,40 @@
         }
     };
 
-    // 5. Auth Strategy & Init (Optimized)
-    async function initSellerChat() {
-        const currentDB = window.db || (typeof db !== 'undefined' ? db : null);
-        if (currentDB) {
-            setupAuthAndLoad();
-        } else {
-            const checkDB = setInterval(() => {
-                const retryDB = window.db || (typeof db !== 'undefined' ? db : null);
-                if (retryDB) {
-                    clearInterval(checkDB);
-                    setupAuthAndLoad();
-                }
-            }, 50);
+    // 5. Direct Init — No complex auth gating, just load chats
+    function initSellerChat() {
+        console.log("[SellerChat] initSellerChat() called");
+        
+        // Just call loadChatList directly - it handles its own db check
+        try {
+            loadChatList();
+            console.log("[SellerChat] loadChatList() dispatched successfully");
+        } catch (err) {
+            console.error("[SellerChat] loadChatList() threw:", err);
         }
 
-        async function setupAuthAndLoad() {
-            if (!window.db) return;
+        // Handle URL deep-link (?id=email) for opening specific chat
+        handleUrlDeepLink();
+    }
 
-            firebase.auth().onAuthStateChanged(async user => {
-                const authEmail = document.getElementById('authEmail');
-                const authIndicator = document.getElementById('authIndicator');
-                const loginBtn = document.getElementById('adminLoginBtn');
-                const logoutBtn = document.getElementById('adminLogoutBtn');
-                const cloudWarning = document.getElementById('auth-cloud-warning');
-                
-                const SELLER_EMAIL = 'sattawat2560@gmail.com';
-                const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
-                
-                // 1. Initial State Check
-                let email = "";
-                let isCloudAdmin = false;
-
-                if (user) {
-                    email = (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "").toLowerCase().trim();
-                    isCloudAdmin = email === SELLER_EMAIL.toLowerCase().trim();
-                }
-
-                // 2. UI Updates
-                if (authEmail) authEmail.textContent = email || (localAdminActive ? "ADMIN (จำสิทธิ์ 🔒)" : "ลงชื่อเข้าใช้ Admin");
-                
-                if (authIndicator) {
-                    authIndicator.classList.remove('online', 'warning', 'offline');
-                    if (isCloudAdmin) authIndicator.classList.add('online');
-                    else if (localAdminActive) authIndicator.classList.add('warning');
-                    else authIndicator.classList.add('offline');
-                }
-
-                if (isCloudAdmin) {
-                    // FULL CLOUD ACCESS
-                    if (cloudWarning) cloudWarning.style.display = 'none';
-                    if (loginBtn) loginBtn.style.display = 'none';
-                    if (logoutBtn) logoutBtn.style.display = 'block';
-                    loadChatList();
-                    localStorage.setItem('paomobile_admin_active', 'true');
-                } else if (localAdminActive) {
-                    // LOCAL BYPASS MODE
-                    if (cloudWarning) cloudWarning.style.display = 'flex';
-                    if (loginBtn) loginBtn.style.display = 'block';
-                    if (logoutBtn) logoutBtn.style.display = 'block';
-                    loadChatList(); // Try to load, if permission denied, the onSnapshot error will catch it
-                } else {
-                    // NOT AUTHENTICATED
-                    if (cloudWarning) cloudWarning.style.display = 'flex';
-                    if (loginBtn) loginBtn.style.display = 'block';
-                    if (logoutBtn) logoutBtn.style.display = 'none';
-                    const listArea = document.getElementById('chatList');
-                    if (listArea) listArea.innerHTML = '<div style="padding:40px; text-align:center; color:#64748b;">กรุณาล็อกอิน Admin เพื่อจัดการแชทจาก Cloud</div>';
-                }
-            });
+    // Handle direct link to a specific chat (?id=email)
+    function handleUrlDeepLink() {
+        try {
+            var urlParams = new URLSearchParams(window.location.search);
+            var targetId = urlParams.get('id');
+            if (targetId) {
+                console.log("[SellerChat] Deep-link detected, opening chat:", targetId);
+                setTimeout(function() {
+                    openChat(targetId);
+                    // Clean up URL to avoid re-opening on reload
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }, 300);
+            }
+        } catch(e) {
+            console.warn("[SellerChat] Deep-link error:", e);
         }
     }
+    window.handleUrlDeepLink = handleUrlDeepLink;
 
     window.sellerLogin = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -897,10 +936,11 @@
         }
     };
 
-    // Initialize only after Firebase setup in HTML is done
-    if (document.readyState === 'loading') {
-        window.addEventListener('DOMContentLoaded', initSellerChat);
-    } else {
+    // Initialize — try immediately, the script loads after Firebase init in HTML
+    try {
+        console.log("[SellerChat] IIFE end reached, calling initSellerChat()");
         initSellerChat();
+    } catch(initErr) {
+        console.error("[SellerChat] CRITICAL: initSellerChat failed:", initErr);
     }
 })();

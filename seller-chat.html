@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -11,10 +11,36 @@
     <style>
         :root {
             --shopee-orange: #ee4d2d;
+            --shopee-orange-hover: #d73211;
             --shopee-bg: #f8f9fa;
             --seller-bubble: #ee4d2d;
             --user-bubble: #ffffff;
             --sidebar-active: #f1f1f1;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+            --border-color: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        /* Ensure main sidebar matches other pages exactly */
+        .sidebar {
+            width: var(--sidebar-width) !important;
+            background-color: #fff;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+        .menu-item {
+            font-size: 0.95rem !important;
+            padding: 12px 20px !important;
+            color: var(--text-main) !important;
+        }
+        .menu-title {
+            font-size: 0.8rem !important;
+            padding: 0 20px !important;
+            margin-bottom: 10px !important;
         }
         body { font-family: 'Outfit', 'Noto Sans Thai', sans-serif; background: var(--shopee-bg); height: 100vh; overflow: hidden; margin:0; }
         
@@ -378,18 +404,18 @@
             </a>
         </div>
         <nav class="sidebar-menu">
-            <!-- Home Section -->
             <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
                 <a href="index.html" class="menu-item-home" style="margin-top: 0;">
                     <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
                 </a>
             </div>
-
             <div class="menu-section">
                 <p class="menu-title">เมนูหลัก</p>
                 <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
                 <a href="seller-chat.html" class="menu-item active" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
                 <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
@@ -402,6 +428,7 @@
                 <p class="menu-title">สินค้า</p>
                 <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
                 <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
             </div>
         </nav>
     </aside>
@@ -498,14 +525,18 @@
         };
         firebase.initializeApp(firebaseConfig);
         var db = firebase.firestore();
+        window.db = db; // Explicitly set on window for IIFE access
         
-        // v1.2.16 - Enable Persistence for Instant Chat Loading
+        // v1.2.16 - Enable Persistence (non-blocking)
         try {
             db.enablePersistence({ synchronizeTabs: true }).catch(err => {
                 if (err.code == 'failed-precondition') console.warn("Persistence failed: multiple tabs.");
                 else if (err.code == 'unimplemented') console.warn("Persistence unsupported.");
+                else console.warn("Persistence error:", err.code);
             });
-        } catch(e) {}
+        } catch(e) { console.warn("Persistence setup error:", e); }
+        
+        console.log("[SellerChat HTML] Firebase initialized, db =", !!db, "window.db =", !!window.db);
     </script>
     <script src="seller-presence.js"></script>
     <!-- Mobile Sidebar Overlay -->
@@ -520,21 +551,23 @@
             </div>
             <div class="mobile-sidebar-content">
                 <nav class="sidebar-menu">
-                    <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
-                        <a href="index.html" class="menu-item-home" style="margin-top: 0;">
-                            <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
-                        </a>
-                    </div>
                     <div class="menu-section">
-                        <p class="menu-title">เมนูหลัก</p>
-                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                        <a href="index.html" class="menu-item-home"><span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า</a>
+                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม</a>
                         <a href="seller-chat.html" class="menu-item active"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
-                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> โค้ดส่วนลด</a>
+                        <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                        <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
                     </div>
                     <div class="menu-section">
                         <p class="menu-title">คำสั่งซื้อ</p>
                         <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">สินค้า</p>
                         <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
                     </div>
                 </nav>
             </div>
@@ -549,6 +582,45 @@
         }
     </script>
     <script src="seller-chat.js"></script>
+    <script>
+        // FALLBACK: If seller-chat.js fails for any reason, force-load chats after 2 seconds
+        setTimeout(function() {
+            var chatList = document.getElementById('chatList');
+            if (chatList && chatList.innerHTML.indexOf('กำลังโหลดรายการแชท') !== -1) {
+                console.warn("[FALLBACK] Chat list still showing initial text after 2s. Force-loading...");
+                if (window.loadChatList) {
+                    window.loadChatList();
+                } else if (window.db || typeof db !== 'undefined') {
+                    // Direct fallback if loadChatList not exposed
+                    var _db = window.db || db;
+                    _db.collection('chats').get().then(function(snapshot) {
+                        var html = '';
+                        if (snapshot.empty) {
+                            chatList.innerHTML = '<div style="text-align:center; padding:60px 40px; color:#666;">🔔 ยังไม่มีบทสนทนาในขณะนี้</div>';
+                            return;
+                        }
+                        snapshot.forEach(function(doc) {
+                            var chat = doc.data();
+                            var name = chat.userName || doc.id;
+                            var initial = name.charAt(0).toUpperCase();
+                            var snippet = chat.lastMessage || 'เริ่มการสนทนา';
+                            html += '<div class="chat-item" onclick="openChat(\'' + doc.id + '\')">' +
+                                '<div class="chat-item-avatar"><span>' + initial + '</span></div>' +
+                                '<div class="chat-item-content">' +
+                                '<div class="chat-item-header"><div class="chat-item-name">' + name + '</div></div>' +
+                                '<div class="chat-item-snippet">' + snippet + '</div>' +
+                                '</div></div>';
+                        });
+                        chatList.innerHTML = html;
+                        console.log("[FALLBACK] Loaded", snapshot.size, "chats via fallback");
+                    }).catch(function(err) {
+                        console.error("[FALLBACK] Error:", err);
+                        chatList.innerHTML = '<div style="padding:40px; text-align:center; color:#ef4444;">❌ ' + err.message + '</div>';
+                    });
+                }
+            }
+        }, 2000);
+    </script>
 <div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
             aria-label="Close Search">&#x2715;</button>
         <div class="search-modal-container">
