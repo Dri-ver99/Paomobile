@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -993,11 +993,17 @@
                     const btn = document.getElementById('btnSave');
                     btn.disabled = true; btn.textContent = '🕒 กำลังจดจำลง Cloud...';
 
+                    let currentEmail = firebase.auth().currentUser.email;
+                    if (!currentEmail) {
+                        const inputEl = document.getElementById('inputEmail');
+                        currentEmail = (inputEl ? inputEl.value.trim() : "") || userData.email || "";
+                    }
+
                     const payload = {
                         name: document.getElementById('inputName').value.trim(),
                         phone: document.getElementById('inputPhone').value.trim(),
                         avatar: userData.avatar || "",
-                        email: firebase.auth().currentUser.email,
+                        email: currentEmail,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
 
@@ -1009,6 +1015,7 @@
                         userData.name = payload.name;
                         userData.phone = payload.phone;
                         userData.avatar = payload.avatar;
+                        userData.email = payload.email; // Prevent email from disappearing
                         localStorage.setItem('paomobile_user', JSON.stringify(userData));
 
                         // Trigger Global Nav Refresh
@@ -1022,7 +1029,7 @@
                 });
             }
 
-            firebase.auth().onAuthStateChanged(user => {
+            firebase.auth().onAuthStateChanged(async user => {
                 if (!user) { window.location.href = 'login.html'; return; }
                 if (db) {
                     db.collection('users').doc(user.uid).onSnapshot(doc => {
@@ -1036,10 +1043,46 @@
                     });
                 }
                 const KEY = 'pao_user_vouchers_' + user.email;
-                const activeVouchers = purgeExpiredVouchers(user.email);
-                renderVouchers(activeVouchers);
+                
+                // Render from cache immediately for zero loading time
+                const activeVouchersCache = purgeExpiredVouchers(user.email);
+                renderVouchers(activeVouchersCache);
+
+                // Sync in background and re-render if there are updates
+                syncVouchersFromFirestore(user.email).then(updatedVouchers => {
+                    renderVouchers(updatedVouchers);
+                });
             });
         });
+
+        async function syncVouchersFromFirestore(email) {
+            const KEY = 'pao_user_vouchers_' + email;
+            let list = JSON.parse(localStorage.getItem(KEY)) || [];
+            
+            try {
+                const snap = await db.collection('vouchers_redemptions').where('email', '==', email).get();
+                if (!snap.empty) {
+                    let updated = false;
+                    const redeemedCodes = snap.docs.map(d => d.data().code);
+                    for (const code of redeemedCodes) {
+                        if (!list.some(v => v.code === code)) {
+                            const vSnap = await db.collection('vouchers').where('code', '==', code).get();
+                            if (!vSnap.empty) {
+                                const v = vSnap.docs[0].data();
+                                list.push({ ...v, id: vSnap.docs[0].id });
+                                updated = true;
+                            }
+                        }
+                    }
+                    if (updated) {
+                        localStorage.setItem(KEY, JSON.stringify(list));
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to sync vouchers", e);
+            }
+            return purgeExpiredVouchers(email);
+        }
 
 
         function purgeExpiredVouchers(email) {

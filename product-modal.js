@@ -356,6 +356,42 @@ window.ProductDetail = {
             addBtn.innerText = 'เพิ่มลงในตะกร้าสินค้า';
             buyBtn.innerText = 'ซื้อเลย';
         }
+
+        // --- Background Fetch for Full Details (Compensate for cache limits) ---
+        if (window.db && product.id) {
+            window.db.collection('products').doc(product.id).get().then(doc => {
+                if (doc.exists) {
+                    const fullData = doc.data();
+                    
+                    // Only update if the user is still viewing THIS product
+                    if (this.currentProduct && this.currentProduct.id === product.id) {
+                        let needsUpdate = false;
+                        
+                        if (fullData.description && fullData.description !== this.currentProduct.description) {
+                            this.currentProduct.description = fullData.description;
+                            if (descEl) descEl.innerHTML = fullData.description;
+                        }
+                        
+                        if (fullData.images && fullData.images.length > this.getImages().length) {
+                            this.currentProduct.images = fullData.images;
+                            needsUpdate = true;
+                        }
+
+                        // Also update variations if they were truncated
+                        if (fullData.variations && JSON.stringify(fullData.variations) !== JSON.stringify(this.currentProduct.variations)) {
+                            this.currentProduct.variations = fullData.variations;
+                            if (!this.currentVariation) {
+                                this.renderVariations();
+                            }
+                        }
+
+                        if (needsUpdate) {
+                            this.renderImages();
+                        }
+                    }
+                }
+            }).catch(e => console.warn('[ProductDetail] Failed to fetch full details', e));
+        }
     },
 
     openByElement(el) {

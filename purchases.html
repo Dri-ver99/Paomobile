@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -519,28 +519,29 @@
                 <div class="cancel-radio-group">
                     <label class="cancel-radio-label">
                         <input type="radio" name="cancelReason" value="ต้องการเปลี่ยนที่อยู่ในการจัดส่ง"
-                            onchange="enableCancelConfirmBtn()">
+                            onchange="toggleCancelOtherInput()">
                         ต้องการเปลี่ยนที่อยู่ในการจัดส่ง
                     </label>
                     <label class="cancel-radio-label">
                         <input type="radio" name="cancelReason" value="ต้องการเพิ่ม/เปลี่ยนโค้ดส่วนลด"
-                            onchange="enableCancelConfirmBtn()">
+                            onchange="toggleCancelOtherInput()">
                         ต้องการเพิ่ม/เปลี่ยนโค้ดส่วนลด
                     </label>
                     <label class="cancel-radio-label">
                         <input type="radio" name="cancelReason" value="ต้องการแก้ไขรายละเอียดคำสั่งซื้อ"
-                            onchange="enableCancelConfirmBtn()">
+                            onchange="toggleCancelOtherInput()">
                         ต้องการแก้ไขรายละเอียดคำสั่งซื้อ (เปลี่ยนขนาด, สี, จำนวน เป็นต้น)
                     </label>
                     <label class="cancel-radio-label">
                         <input type="radio" name="cancelReason" value="ไม่ต้องการซื้อสินค้านี้แล้ว"
-                            onchange="enableCancelConfirmBtn()">
+                            onchange="toggleCancelOtherInput()">
                         ไม่ต้องการซื้อสินค้านี้แล้ว
                     </label>
                     <label class="cancel-radio-label">
-                        <input type="radio" name="cancelReason" value="อื่น ๆ" onchange="enableCancelConfirmBtn()">
+                        <input type="radio" name="cancelReason" value="อื่น ๆ" onchange="toggleCancelOtherInput()">
                         อื่น ๆ
                     </label>
+                    <textarea id="cancelReasonOtherText" style="display:none; width: 100%; margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid #ddd; resize: none; font-family: inherit; font-size: 0.95rem; box-sizing: border-box;" rows="2" placeholder="โปรดระบุเหตุผลการยกเลิกคำสั่งซื้อ..."></textarea>
                 </div>
             </div>
             <div class="cancel-modal-footer">
@@ -1122,17 +1123,50 @@
             // Listen for localStorage changes from seller dashboard (cross-tab)
             window.addEventListener('storage', function (e) {
                 if (e.key === getOrdersKey() || e.key === 'pao_global_orders') {
-                    const freshOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+                    // Pull from the correct source that triggered the event
+                    const sourceKey = e.key === 'pao_global_orders' ? 'pao_global_orders' : getOrdersKey();
+                    const freshOrders = JSON.parse(localStorage.getItem(sourceKey) || '[]');
                     if (freshOrders.length > 0) {
+                        let updated = false;
                         freshOrders.forEach(fo => {
                             const idx = ordersData.findIndex(o => o.id === fo.id);
-                            if (idx > -1) ordersData[idx] = fo;
+                            if (idx > -1) {
+                                // Prevent overriding with stale data
+                                if (ordersData[idx].status !== fo.status || ordersData[idx].trackingNum !== fo.trackingNum || ordersData[idx].trackingLink !== fo.trackingLink) {
+                                    ordersData[idx] = { ...ordersData[idx], ...fo };
+                                    updated = true;
+                                }
+                            }
                         });
-                        const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
-                        renderOrders(ordersData, activeTab);
+                        if (updated) {
+                            // Sync back to our local guest order storage
+                            localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
+                            const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                            updateTabCounts(ordersData);
+                            renderOrders(ordersData, activeTab);
+                        }
                     }
                 }
             });
+
+            // Listen for instant BroadcastChannel updates from Seller Centre
+            try {
+                const bc = new BroadcastChannel('pao_order_sync');
+                bc.addEventListener('message', function(event) {
+                    if (event.data && event.data.type === 'SELLER_ORDER_UPDATE' && event.data.updatedOrder) {
+                        const updated = event.data.updatedOrder;
+                        const idx = ordersData.findIndex(o => o.id === updated.id);
+                        if (idx > -1) {
+                            ordersData[idx] = { ...ordersData[idx], ...updated };
+                            localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
+                            
+                            const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                            updateTabCounts(ordersData);
+                            renderOrders(ordersData, activeTab);
+                        }
+                    }
+                });
+            } catch (e) { }
 
             setInterval(function () {
                 let changed = false;
@@ -1231,6 +1265,24 @@
                 if (btnConfirm) btnConfirm.disabled = true;
 
                 document.querySelectorAll('input[name="cancelReason"]').forEach(el => el.checked = false);
+                const otherText = document.getElementById('cancelReasonOtherText');
+                if (otherText) {
+                    otherText.style.display = 'none';
+                    otherText.value = '';
+                }
+            };
+
+            window.toggleCancelOtherInput = function() {
+                const btnConfirm = document.getElementById('btnConfirmCancel');
+                if (btnConfirm) btnConfirm.disabled = false;
+                const otherText = document.getElementById('cancelReasonOtherText');
+                const isOtherSelected = document.querySelector('input[name="cancelReason"]:checked')?.value === 'อื่น ๆ';
+                if(isOtherSelected) {
+                    otherText.style.display = 'block';
+                    otherText.focus();
+                } else {
+                    otherText.style.display = 'none';
+                }
             };
 
             window.closeCancelModal = function () {
@@ -1249,10 +1301,23 @@
                 let order = currentOrders.find(o => o.id === currentCancelOrderId);
 
                 if (order) {
+                    let selectedReason = document.querySelector('input[name="cancelReason"]:checked')?.value || 'ไม่ระบุเหตุผล';
+                    if (selectedReason === 'อื่น ๆ') {
+                        const otherText = document.getElementById('cancelReasonOtherText')?.value.trim();
+                        selectedReason = 'อื่นๆ: ' + (otherText || 'ไม่ระบุเหตุผล');
+                    }
                     order.status = 'ยกเลิกแล้ว';
-                    // Optional: You could save the selected reason to the order object here:
-                    // const selectedReason = document.querySelector('input[name="cancelReason"]:checked')?.value;
-                    // order.cancelReason = selectedReason;
+                    order.cancelReason = selectedReason;
+                    order.cancelDate = new Date().toISOString();
+
+                    // 1. Firebase Sync
+                    if (typeof db !== 'undefined' && db.collection) {
+                        db.collection('orders').doc(currentCancelOrderId).update({
+                            status: 'ยกเลิกแล้ว',
+                            cancelReason: selectedReason,
+                            cancelDate: order.cancelDate
+                        }).catch(err => console.error("[Cloud Error] Cancel update failed:", err));
+                    }
 
                     localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
                     // Global sync
@@ -1261,11 +1326,25 @@
                         let go = globalOrders.find(o => o.id === currentCancelOrderId);
                         if (go) {
                             go.status = 'ยกเลิกแล้ว';
+                            go.cancelReason = selectedReason;
                             localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
                         }
                     } catch (e) { }
-
-                    renderOrders(currentOrders, document.querySelector('.order-tab.active')?.dataset.filter || 'all');
+                    
+                    // Force switch to "Cancel" tab
+                    document.querySelectorAll('.order-tab').forEach(t => {
+                        if (t.dataset.filter === 'cancel') t.classList.add('active');
+                        else t.classList.remove('active');
+                    });
+                    
+                    updateTabCounts(currentOrders);
+                    renderOrders(currentOrders, 'cancel');
+                    
+                    // Notify other tabs
+                    try {
+                        const bc = new BroadcastChannel('pao_order_sync');
+                        bc.postMessage({ type: 'REFRESH_ORDERS', orderId: currentCancelOrderId });
+                    } catch (e) { }
                 }
 
                 closeCancelModal();
@@ -1684,15 +1763,38 @@
                 </div>
                 <div class="return-arrow">›</div>
             </div>
-            <div class="return-option" onclick="executeReturnOrder('อื่นๆ')">
+            <div class="return-option" onclick="window.handleReturnOther(event)">
                 <div class="return-icon">⚙️</div>
                 <div class="return-text">
-                    <div class="return-title">อื่นๆ</div>
+                    <div class="return-title">อื่นๆ <span id="returnOtherArrow" class="return-arrow" style="font-size: 1rem; margin-left: 5px; display: inline-block;">▼</span></div>
+                    <div id="returnOtherInputContainer" style="display: none; margin-top: 10px;" onclick="event.stopPropagation()">
+                        <textarea id="returnReasonOtherText" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; resize: none; font-family: inherit; font-size: 0.9rem; box-sizing: border-box;" rows="2" placeholder="โปรดระบุเหตุผลการคืนสินค้า..."></textarea>
+                        <button style="margin-top: 8px; width: 100%; border-radius: 6px; border: none; background: #ee4d2d; color: #fff; padding: 8px; font-weight: 500; cursor: pointer;" onclick="window.submitReturnOther(event)">ยืนยันการคืนสินค้า</button>
+                    </div>
                 </div>
-                <div class="return-arrow">›</div>
             </div>
         </div>
     </div>
+    
+    <script>
+        window.handleReturnOther = function(event) {
+            const container = document.getElementById('returnOtherInputContainer');
+            const arrow = document.getElementById('returnOtherArrow');
+            if(container.style.display === 'none') {
+                container.style.display = 'block';
+                arrow.style.transform = 'rotate(180deg)';
+                document.getElementById('returnReasonOtherText').focus();
+            } else {
+                container.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        };
+        window.submitReturnOther = function(event) {
+            event.stopPropagation();
+            const text = document.getElementById('returnReasonOtherText').value.trim();
+            executeReturnOrder('อื่นๆ: ' + (text || 'ไม่ระบุเหตุผล'));
+        };
+    </script>
 <script src="premium-alerts.js"></script>
 </body>
 
