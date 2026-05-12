@@ -745,6 +745,9 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-8m0 0V4m0 8h8m-8 0H4"></path></svg>
                     จัดการหมวดหมู่
                 </button>
+                <button class="btn-add-product" style="background: #fadb14; color: #856404;" onclick="restoreLostProducts()">
+                    <span>🔄</span> กู้คืนสินค้า
+                </button>
                 <button class="btn-add-product" onclick="openAddModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     เพิ่มสินค้าใหม่
@@ -883,10 +886,14 @@
                         <h4 style="margin: 0; display: flex; align-items: center; gap: 8px; color: #856404;">
                             <span style="font-size: 1.2rem;">✨</span> ตัวเลือกสินค้า (Variations)
                         </h4>
-                        <button type="button" onclick="addVariationRow()" style="background: #ee4d2d; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
-                            + เพิ่มตัวเลือก
-                        </button>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="addVariationRow()" style="background: #52c41a; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+                                + เพิ่มทีละอัน
+                            </button>
+                        </div>
                     </div>
+
+
                     
                     <div id="variationContainer" style="display: flex; flex-direction: column; gap: 15px; padding: 10px 0;">
                         <!-- Variations will be injected here -->
@@ -1028,7 +1035,9 @@
             <button class="bulk-btn bulk-btn-brand" onclick="openBulkBrandModal()">🏷️ แก้แบรนด์</button>
             <button class="bulk-btn bulk-btn-category" onclick="openBulkCategoryModal()">📂 แก้หมวดหมู่</button>
             <button class="bulk-btn" onclick="openBulkSpecsModal()" style="background:#fff3e0; color:#e65100; border:1px solid #ffcc80;">📝 แก้ข้อมูลเพิ่มเติม</button>
-            <button class="bulk-btn bulk-btn-merge" onclick="mergeSelectedProducts()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff;">🔗 รวมที่เลือก</button>
+            <button class="bulk-btn bulk-btn-merge" onclick="mergeSelectedProducts(false)" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff;" title="สินค้าแต่ละรายการจะกลายเป็น 1 ตัวเลือกย่อย">🔗 รวมแยกชุด</button>
+            <button class="bulk-btn bulk-btn-merge" onclick="mergeSelectedProducts(true)" style="background: linear-gradient(135deg, #3494e6 0%, #ec6ead 100%); color: #fff;" title="นำตัวเลือกย่อยจากทุกรายการที่เลือกมารวมกัน">🖇️ รวมต่อตัวเลือก</button>
+            <button class="bulk-btn" onclick="splitSelectedProducts()" style="background: #fff; color: #475569; border: 1px solid #e2e8f0; font-weight: 600;" title="แยกสินค้าที่มีตัวเลือกย่อยออกเป็นรายการเดี่ยว">✂️ แยกรายการ</button>
             <button class="bulk-btn bulk-btn-delete" onclick="bulkDeleteSelected()">🗑️ ลบที่เลือก</button>
             <button class="bulk-btn bulk-btn-cancel" onclick="clearSelection()">✕ ยกเลิก</button>
         </div>
@@ -1210,7 +1219,9 @@
             <div class="search-results-area" id="searchResults"></div>
         </div>
     </div>
-    <script src="search.js"></script><script src="premium-alerts.js"></script>
+    <script src="search.js"></script>
+    <script src="premium-alerts.js"></script>
+    <script src="restore-products.js"></script>
 </body>
 </html>
 

@@ -26,8 +26,8 @@ window.addEventListener('error', function(e) {
 
 function sellerAlert(message, type = 'info') {
     return new Promise(resolve => {
-        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️', delete: '🗑️', merge: '🔗' };
-        const colors = { success: '#52c41a', error: '#ff4d4f', warning: '#faad14', info: '#1890ff', delete: '#ff4d4f', merge: '#764ba2' };
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️', delete: '🗑️', merge: '🔗', concatenate: '📝' };
+        const colors = { success: '#52c41a', error: '#ff4d4f', warning: '#faad14', info: '#1890ff', delete: '#ff4d4f', merge: '#764ba2', concatenate: '#A68A64' };
         const icon = icons[type] || icons.info;
         const color = colors[type] || colors.info;
 
@@ -583,6 +583,59 @@ function getDisplayPrice(product) {
 // ── Variations Management ──────────────────────────────────────────
 let variationImages = {}; // Track base64 strings for each variation row
 
+window.generateVariationsFromGroups = function() {
+    const gName1 = document.getElementById('vGroupName1').value.trim();
+    const gVals1 = document.getElementById('vGroupValues1').value.split(',').map(v => v.trim()).filter(v => v);
+    
+    const gName2 = document.getElementById('vGroupName2').value.trim();
+    const gVals2 = document.getElementById('vGroupValues2').value.split(',').map(v => v.trim()).filter(v => v);
+    
+    if (gVals1.length === 0) {
+        sellerAlert('กรุณาใส่ค่าในกลุ่มที่ 1 อย่างน้อย 1 ค่าครับ (เช่น ชื่อรุ่น)', 'warning');
+        return;
+    }
+    
+    // Clear existing
+    const container = document.getElementById('variationContainer');
+    container.innerHTML = '';
+    variationImages = {};
+    
+    // Generate combinations
+    if (gVals2.length === 0) {
+        // Single group
+        gVals1.forEach(v1 => {
+            addVariationRow({ name: v1 });
+        });
+    } else {
+        // 2 groups
+        gVals1.forEach(v1 => {
+            gVals2.forEach(v2 => {
+                const combinedName = `${v1} - ${v2}`;
+                addVariationRow({ name: combinedName });
+            });
+        });
+    }
+    
+    sellerAlert(`สร้างรายการผสมกันสำเร็จ ${container.children.length} รายการครับ ✨\nอย่าลืมใส่ราคาและรูปภาพให้แต่ละรายการนะครับ`, 'success');
+}
+
+window.applyBulkVariationPrice = function() {
+    const price = parseFloat(document.getElementById('vBulkPrice').value);
+    if (isNaN(price) || price < 0) {
+        sellerAlert('กรุณาใส่ราคาที่ต้องการอัปเดตครับ', 'warning');
+        return;
+    }
+    
+    const inputs = document.querySelectorAll('.v-price');
+    if (inputs.length === 0) return;
+    
+    inputs.forEach(input => {
+        input.value = price;
+    });
+    
+    sellerAlert(`อัปเดตราคาทั้งหมดเป็น ฿${price.toLocaleString()} สำเร็จ ${inputs.length} รายการครับ`, 'success');
+}
+
 window.addVariationRow = function(data = null) {
     const container = document.getElementById('variationContainer');
     const hint = document.getElementById('noVariationHint');
@@ -598,50 +651,109 @@ window.addVariationRow = function(data = null) {
     const row = document.createElement('div');
     row.className = 'variation-row';
     row.dataset.id = rowId;
-    row.style.cssText = "display: flex; gap: 20px; align-items: start; background: #fff; padding: 18px; border-radius: 12px; border: 1px solid #ddd; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.04);";
+    row.style.cssText = "display: flex; flex-direction: column; gap: 0; background: #fff; border-radius: 16px; border: 1px solid #e5e7eb; position: relative; box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden; margin-bottom: 5px;";
     
     // Initial image state
     if (data && data.img) variationImages[rowId] = data.img;
 
     row.innerHTML = `
-        <div style="flex-shrink: 0;">
-            <div style="position: relative; width: 80px; height: 80px; border-radius: 10px; border: 1px dashed #bbb; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 4px rgba(0,0,0,0.05);">
-                <div style="width: 100%; height: 100%; cursor: pointer;" onclick="variationImages['${rowId}'] ? viewFullImage(variationImages['${rowId}']) : this.parentElement.nextElementSibling.click()">
-                    ${variationImages[rowId] ? `<img src="${variationImages[rowId]}" style="width: 100%; height: 100%; object-fit: contain;">` : '<span style="font-size: 2rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%;">🖼️</span>'}
+        <div style="display: flex; gap: 20px; align-items: start; padding: 20px; background: #fff;">
+            <div style="flex-shrink: 0;">
+                <div style="position: relative; width: 85px; height: 85px; border-radius: 14px; border: 1px dashed #cbd5e1; overflow: hidden; background: #f8fafc; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="width: 100%; height: 100%; cursor: pointer;" onclick="variationImages['${rowId}'] ? viewFullImage(variationImages['${rowId}']) : this.parentElement.nextElementSibling.click()">
+                        ${variationImages[rowId] ? `<img src="${variationImages[rowId]}" style="width: 100%; height: 100%; object-fit: contain;">` : '<span style="font-size: 2.2rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%; opacity: 0.5;">🖼️</span>'}
+                    </div>
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(31, 41, 55, 0.7); color: #fff; font-size: 0.65rem; text-align: center; padding: 5px; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(4px);" onmouseover="this.style.background='rgba(31, 41, 55, 0.9)'" onmouseout="this.style.background='rgba(31, 41, 55, 0.7)'" onclick="this.parentElement.nextElementSibling.click()">เปลี่ยนรูป</div>
                 </div>
-                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: #fff; font-size: 0.65rem; text-align: center; padding: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(0,0,0,0.8)'" onmouseout="this.style.background='rgba(0,0,0,0.6)'" onclick="this.parentElement.nextElementSibling.click()">เปลี่ยนรูป</div>
-            </div>
-            <input type="file" accept="image/*" style="display: none;" onchange="handleVariationImgUpload(event, '${rowId}')">
-        </div>
-        
-        <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-            <div style="grid-column: span 2;">
-                <label style="display: block; font-size: 0.75rem; color: #888; margin-bottom: 4px; font-weight: 600;">ชื่อตัวเลือกสินค้า</label>
-                <input type="text" placeholder="เช่น สีขาว, 128GB, งานเครื่องแท้..." value="${data?.name || ''}" class="v-name" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.95rem; font-weight: 600;">
+                <input type="file" accept="image/*" style="display: none;" onchange="handleVariationImgUpload(event, '${rowId}')">
             </div>
             
-            <div>
-                <label style="display: block; font-size: 0.75rem; color: #888; margin-bottom: 4px; font-weight: 600;">ราคาของตัวเลือกนี้ (฿)</label>
-                <div style="position: relative;">
-                    <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; color: #999;">฿</span>
-                    <input type="number" placeholder="0" value="${data?.price || ''}" class="v-price" style="width: 100%; padding: 10px 10px 10px 25px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.95rem; font-weight: 700; color: #ee4d2d;">
+            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div style="grid-column: span 2;">
+                    <label style="display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 6px; font-weight: 700;">ชื่อตัวเลือกสินค้าหลัก</label>
+                    <input type="text" placeholder="เช่น หน้าจอ S20 (แท้), แบตเตอรี่ iPhone 13..." value="${data?.name || ''}" class="v-name" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 1rem; font-weight: 700; color: #1e293b; background: #fbfcfe; transition: border 0.2s;" onfocus="this.style.borderColor='#ee4d2d'">
+                </div>
+                
+                <div>
+                    <label style="display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 6px; font-weight: 700;">ราคาพื้นฐาน (฿)</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; color: #94a3b8; font-weight: 700;">฿</span>
+                        <input type="number" placeholder="0" value="${data?.price || ''}" class="v-price" style="width: 100%; padding: 12px 12px 12px 30px; border: 1px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 1rem; font-weight: 800; color: #ee4d2d; background: #fbfcfe;">
+                    </div>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 10px; background: #fef2f2; padding: 0 15px; border-radius: 10px; border: 1px solid #fee2e2;">
+                    <input type="checkbox" class="v-stock" id="stock-${rowId}" ${data?.isOutOfStock ? 'checked' : ''} style="width: 20px; height: 20px; cursor: pointer; accent-color: #ef4444;">
+                    <label for="stock-${rowId}" style="font-size: 0.85rem; font-weight: 700; color: #b91c1c; cursor: pointer;">สินค้าหมด</label>
                 </div>
             </div>
             
-            <div style="grid-column: span 2; display: flex; align-items: center; gap: 8px; background: #fffcf5; padding: 10px; border-radius: 8px; border: 1px solid #f9da8b;">
-                <input type="checkbox" class="v-stock" id="stock-${rowId}" ${data?.isOutOfStock ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
-                <label for="stock-${rowId}" style="font-size: 0.85rem; font-weight: 700; color: #856404; cursor: pointer;">ทำเครื่องหมายว่า "หมด" (Out of Stock)</label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" onclick="moveVariationUp(this)" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b; cursor: pointer; font-size: 0.7rem; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'" title="เลื่อนขึ้น">▲</button>
+                <button type="button" onclick="moveVariationDown(this)" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #64748b; cursor: pointer; font-size: 0.7rem; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'" title="เลื่อนลง">▼</button>
+                <button type="button" onclick="removeVariationRow(this)" style="background: #fff1f0; border: 1px solid #ffa39e; color: #ff4d4f; cursor: pointer; font-size: 1.1rem; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#ff4d4f'; this.style.color='#fff';" onmouseout="this.style.background='#fff1f0'; this.style.color='#ff4d4f';" title="ลบ">&times;</button>
             </div>
         </div>
-        
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-            <button type="button" onclick="moveVariationUp(this)" style="background: #e6f7ff; border: 1px solid #91d5ff; color: #1890ff; cursor: pointer; font-size: 0.8rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#1890ff'; this.style.color='#fff';" onmouseout="this.style.background='#e6f7ff'; this.style.color='#1890ff';" title="เลื่อนขึ้น">▲</button>
-            <button type="button" onclick="moveVariationDown(this)" style="background: #e6f7ff; border: 1px solid #91d5ff; color: #1890ff; cursor: pointer; font-size: 0.8rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#1890ff'; this.style.color='#fff';" onmouseout="this.style.background='#e6f7ff'; this.style.color='#1890ff';" title="เลื่อนลง">▼</button>
-            <button type="button" onclick="removeVariationRow(this)" style="background: #fff1f0; border: 1px solid #ffa39e; color: #ff4d4f; cursor: pointer; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#ff4d4f'; this.style.color='#fff';" onmouseout="this.style.background='#fff1f0'; this.style.color='#ff4d4f';" title="ลบตัวเลือก">&times;</button>
+
+        <!-- Nested Sub-Options -->
+        <div style="padding: 0 20px 20px 40px; background: #fdfdfd; border-top: 1px solid #f8fafc;">
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px; position: relative;">
+                <div style="position: absolute; left: -20px; top: -10px; bottom: 15px; width: 2px; background: #e2e8f0; border-radius: 0 0 0 10px;"></div>
+                <div style="position: absolute; left: -20px; top: 15px; width: 15px; height: 2px; background: #e2e8f0;"></div>
+                
+                <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">📋 ชื่อหัวข้อ:</span>
+                    <input type="text" placeholder="เช่น สี, ความจุ, ประกัน..." value="${data?.subLabel || 'ตัวเลือกย่อย'}" class="v-sub-label" style="padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: #ee4d2d; background: #fff; width: 100%; max-width: 200px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                </div>
+            </div>
+            
+            <div class="sub-options-container" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                <!-- Sub-variation rows will be here -->
+            </div>
+            
+            <button type="button" onclick="addSubVariationRow('${rowId}')" style="background: #fff; border: 2px dashed #ee4d2d; color: #ee4d2d; padding: 10px 20px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; width: fit-content; box-shadow: 0 2px 8px rgba(238, 77, 45, 0.05);" onmouseover="this.style.background='#ee4d2d'; this.style.color='#fff'; this.style.borderStyle='solid';" onmouseout="this.style.background='#fff'; this.style.color='#ee4d2d'; this.style.borderStyle='dashed';">
+                <span style="font-size: 1.2rem;">+</span> เพิ่มตัวเลือกย่อยให้รุ่นนี้
+            </button>
         </div>
     `;
     
     container.appendChild(row);
+
+    // Restore sub-options if any
+    if (data && data.subOptions) {
+        data.subOptions.forEach(sub => addSubVariationRow(rowId, sub));
+    }
+}
+
+
+window.addSubVariationRow = function(parentId, data = null) {
+    const parentRow = document.querySelector(`.variation-row[data-id="${parentId}"]`);
+    if (!parentRow) return;
+    const container = parentRow.querySelector('.sub-options-container');
+    const subId = data?.id || "sub-" + Date.now() + Math.random().toString(16).slice(2, 5);
+    
+    const subRow = document.createElement('div');
+    subRow.className = 'sub-variation-row';
+    subRow.dataset.id = subId;
+    subRow.style.cssText = "display: flex; gap: 15px; align-items: center; background: #fff; padding: 12px 18px; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.02); transition: all 0.2s; margin-left: 5px;";
+    
+    subRow.innerHTML = `
+        <div style="flex: 2;">
+            <label style="display: block; font-size: 0.65rem; color: #94a3b8; margin-bottom: 4px; font-weight: 700;">ชื่อย่อย (เช่น สีดำ)</label>
+            <input type="text" placeholder="ใส่ชื่อสี หรือความจุ" value="${data?.name || ''}" class="sv-name" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; font-weight: 700; color: #334155; background: #f8fafc;">
+        </div>
+        <div style="flex: 1.2;">
+            <label style="display: block; font-size: 0.65rem; color: #94a3b8; margin-bottom: 4px; font-weight: 700;">ราคาพิเศษ (฿)</label>
+            <div style="position: relative;">
+                <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: #cbd5e1; font-weight: 700;">฿</span>
+                <input type="number" placeholder="ราคาเฉพาะสีนี้" value="${data?.price || ''}" class="sv-price" style="width: 100%; padding: 10px 10px 10px 25px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; font-weight: 800; color: #ee4d2d; background: #f8fafc;">
+            </div>
+        </div>
+        <div style="flex-shrink: 0; padding-top: 18px;">
+            <button type="button" onclick="this.closest('.sub-variation-row').remove()" style="background: #fef2f2; border: 1px solid #fee2e2; color: #ef4444; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; transition: all 0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='#fff';" onmouseout="this.style.background='#fef2f2'; this.style.color='#ef4444';" title="ลบตัวเลือกย่อย">&times;</button>
+        </div>
+    `;
+    container.appendChild(subRow);
 }
 
 window.moveVariationUp = function(btn) {
@@ -979,6 +1091,7 @@ function openEditModal(id) {
     vContainer.innerHTML = '';
     variationImages = {};
     const priceHintEdit = document.getElementById('priceAutoHint');
+
     if (p.variations && p.variations.length > 0) {
         document.getElementById('noVariationHint').style.display = 'none';
         if (priceHintEdit) priceHintEdit.style.display = 'inline';
@@ -1039,12 +1152,24 @@ async function handleFormSubmit(e) {
         // Collect variations first
         const variations = Array.from(document.querySelectorAll('.variation-row')).map(row => {
             const rid = row.dataset.id;
+            
+            // Collect sub-options for this variation
+            const subOptions = Array.from(row.querySelectorAll('.sub-variation-row')).map(srow => {
+                return {
+                    id: srow.dataset.id,
+                    name: srow.querySelector('.sv-name').value,
+                    price: parseFloat(srow.querySelector('.sv-price').value) || 0
+                };
+            });
+
             return {
                 id: rid,
                 name: row.querySelector('.v-name').value,
                 price: parseFloat(row.querySelector('.v-price').value) || 0,
                 img: variationImages[rid] || "",
-                isOutOfStock: row.querySelector('.v-stock').checked
+                isOutOfStock: row.querySelector('.v-stock').checked,
+                subLabel: row.querySelector('.v-sub-label').value || "ตัวเลือกย่อย",
+                subOptions: subOptions.length > 0 ? subOptions : null
             };
         });
         
@@ -1059,7 +1184,7 @@ async function handleFormSubmit(e) {
             }
         }
         if (isNaN(mainPrice)) mainPrice = 0;
-        
+
         const data = {
             id: id,
             name: document.getElementById('formName').value,
@@ -1127,12 +1252,12 @@ async function handleFormSubmit(e) {
 
         // --- 2. Background Cloud Sync (fire-and-forget, does NOT block UI) ---
         if (typeof db !== 'undefined' && db && checkCloudPermission()) {
-            db.collection('products').doc(id).set(data, { merge: true })
-                .then(() => console.log("☁️ Cloud Sync Successful"))
-                .catch(syncErr => console.error("❌ Cloud Sync Error:", syncErr));
+            await db.collection('products').doc(id).set(data, { merge: true });
+            console.log("☁️ Cloud Sync Successful");
         } else {
-            console.warn("⚠️ Cloud sync skipped - product saved locally only. Customers won't see it until synced.");
+            console.warn("⚠️ Cloud sync skipped - product saved locally only.");
         }
+        return true; // Success
     } catch (err) {
         console.error("❌ Submission Error:", err);
         // Always reset button on error so user can retry
@@ -1140,7 +1265,14 @@ async function handleFormSubmit(e) {
             btn.disabled = false;
             btn.textContent = "💾 บันทึกสินค้า";
         }
-        await sellerAlert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message, 'error');
+        
+        let errorMsg = err.message;
+        if (errorMsg.includes('maximum document size')) {
+            errorMsg = "ข้อมูลสินค้ามีขนาดใหญ่เกินไป (เกิน 1MB)!\n\nสาเหตุ: มีรูปภาพหรือตัวเลือกสินค้ามากเกินไป กรุณาลดจำนวนรูปภาพหรือแบ่งสินค้าเป็นรายการย่อยครับ";
+        }
+        
+        await sellerAlert('เกิดข้อผิดพลาดในการบันทึก: ' + errorMsg, 'error');
+        return false; // Failed
     }
 }
 
@@ -1790,7 +1922,7 @@ async function saveInlinePrice() {
 
 // ── Merge Products System ─────────────────────────────────────────────
 
-async function mergeSelectedProducts() {
+async function mergeSelectedProducts(flatten = false) {
     const count = selectedProductIds.size;
     if (count < 2) {
         await sellerAlert('กรุณาเลือกสินค้าอย่างน้อย 2 รายการเพื่อรวมครับ', 'warning');
@@ -1807,7 +1939,11 @@ async function mergeSelectedProducts() {
 
     // Confirm merge
     const nameList = products.map(p => `• ${p.name}`).join('\n');
-    if (!await sellerConfirm(`รวมสินค้า ${count} รายการเป็นสินค้าเดียว?\n\n${nameList}\n\nสินค้าตัวเดิมจะถูกลบ และสร้างสินค้าใหม่จากข้อมูลที่เลือก`, 'merge')) return;
+    const confirmMsg = flatten 
+        ? `📦 รวมตัวเลือกจากสินค้า ${count} รายการเข้าด้วยกัน?\n\n${nameList}\n\n⚠️ สำคัญ: เมื่อคุณตรวจสอบและกด "บันทึก" ในหน้าถัดไป สินค้าต้นฉบับทั้ง ${count} รายการจะถูกลบออกถาวร และแทนที่ด้วยสินค้าใหม่ชิ้นนี้ครับ`
+        : `🔗 รวมสินค้า ${count} รายการเป็นสินค้าเดียว?\n\n${nameList}\n\n⚠️ สำคัญ: เมื่อคุณตรวจสอบและกด "บันทึก" ในหน้าถัดไป สินค้าต้นฉบับทั้ง ${count} รายการจะถูกลบออกถาวร และเปลี่ยนเป็น "ตัวเลือกย่อย" ในสินค้าใหม่ชิ้นนี้ครับ`;
+
+    if (!await sellerConfirm(confirmMsg, 'merge')) return;
 
     // Use first product as the base
     const base = products[0];
@@ -1817,24 +1953,48 @@ async function mergeSelectedProducts() {
     const mergedName = products.map(p => p.name).join(' + ');
 
     // Collect all images from all products
-    const allImages = [];
+    const tempImages = [];
     products.forEach(p => {
-        if (p.images && p.images.length > 0) {
-            p.images.forEach(img => { if (img && !allImages.includes(img)) allImages.push(img); });
-        } else if (p.img) {
-            if (!allImages.includes(p.img)) allImages.push(p.img);
-        }
+        const pImages = p.images || (p.img ? [p.img] : []);
+        pImages.forEach(img => {
+            if (img && !tempImages.includes(img)) {
+                tempImages.push(img);
+            }
+        });
     });
 
-    // Create variations from each selected product
-    const mergedVariations = products.map((p, idx) => {
-        return {
-            id: "v-merged-" + Date.now() + "-" + idx,
-            name: p.name,
-            price: p.price || 0,
-            img: p.img || (p.images && p.images[0]) || "",
-            isOutOfStock: p.isOutOfStock || false
-        };
+    const MAX_IMAGES = 12;
+    if (tempImages.length > MAX_IMAGES) {
+        const proceed = await sellerConfirm(
+            `⚠️ ตรวจพบรูปภาพทั้งหมด ${tempImages.length} รูป ซึ่งเกินขีดจำกัดสูงสุด ${MAX_IMAGES} รูปต่อหนึ่งสินค้า\n\nหากดำเนินการต่อ ระบบจะเก็บไว้เพียง ${MAX_IMAGES} รูปแรกเท่านั้น\n\nคุณต้องการดำเนินการรวมสินค้าต่อหรือไม่?`,
+            'warning'
+        );
+        if (!proceed) return;
+    }
+
+    const allImages = tempImages.slice(0, MAX_IMAGES);
+
+    // Create variations: Flatten if requested and product already has variations
+    let mergedVariations = [];
+    products.forEach((p, pIdx) => {
+        if (flatten && p.variations && p.variations.length > 0) {
+            // Flatten existing variations
+            p.variations.forEach((v, vIdx) => {
+                mergedVariations.push({
+                    ...v,
+                    id: "v-merged-" + Date.now() + "-" + pIdx + "-" + vIdx
+                });
+            });
+        } else {
+            // Use product itself as a single variation
+            mergedVariations.push({
+                id: "v-merged-" + Date.now() + "-" + pIdx,
+                name: p.name,
+                price: p.price || 0,
+                img: p.img || (p.images && p.images[0]) || "",
+                isOutOfStock: p.isOutOfStock || false
+            });
+        }
     });
 
     // Calculate main price from lowest variation
@@ -1931,7 +2091,8 @@ async function mergeSelectedProducts() {
 // Override handleFormSubmit to handle merge cleanup
 const _originalHandleFormSubmit = handleFormSubmit;
 async function handleMergeAwareSubmit(e) {
-    await _originalHandleFormSubmit(e);
+    const success = await _originalHandleFormSubmit(e);
+    if (!success) return; // DON'T delete originals if save failed!
 
     // After successful save, delete original products if in merge mode
     if (window._isMergeMode && window._mergeOriginalIds) {
@@ -1969,6 +2130,85 @@ async function handleMergeAwareSubmit(e) {
 // Replace the form submit handler
 window.handleFormSubmit = handleMergeAwareSubmit;
 
+async function splitSelectedProducts() {
+    const count = selectedProductIds.size;
+    if (count === 0) return;
+
+    const ids = Array.from(selectedProductIds);
+    const productsToSplit = ids.map(id => allProducts.find(p => p.id === id)).filter(p => p && p.variations && p.variations.length > 0);
+
+    if (productsToSplit.length === 0) {
+        await sellerAlert('กรุณาเลือกสินค้าที่มีตัวเลือกย่อยเพื่อแยกครับ', 'warning');
+        return;
+    }
+
+    const confirmMsg = `✂️ แยกสินค้า ${productsToSplit.length} รายการออกเป็นสินค้าเดี่ยวตามตัวเลือกย่อยหรือไม่?\n\n⚠️ เมื่อบันทึก สินค้าที่รวมกันไว้จะถูกลบออก และแทนที่ด้วยสินค้าแยกชิ้นตามจำนวนตัวเลือกย่อยที่มีครับ`;
+    if (!await sellerConfirm(confirmMsg, 'warning')) return;
+
+    if (!checkCloudPermission()) return;
+
+    try {
+        const batch = (typeof db !== 'undefined' && db) ? db.batch() : null;
+        const now = new Date().toISOString();
+        const email = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : "local-seller";
+
+        const newAllProducts = [...allProducts];
+
+        for (const p of productsToSplit) {
+            // Create new standalone products from each variation
+            p.variations.forEach((v, idx) => {
+                const newId = "p-split-" + Date.now() + "-" + Math.random().toString(16).slice(2, 6);
+                const newP = {
+                    ...p, // Inherit metadata (category, brand, emoji, specs, etc.)
+                    id: newId,
+                    name: v.name,
+                    price: v.price || p.price,
+                    img: v.img || p.img || (p.images && p.images[0]) || "",
+                    images: v.img ? [v.img] : (p.images || []),
+                    variations: [], // Standalone has no variations
+                    isOutOfStock: v.isOutOfStock || false,
+                    updatedAt: now,
+                    lastUpdatedBy: email
+                };
+                
+                // Add to local state
+                newAllProducts.unshift(newP);
+
+                // Add to cloud batch
+                if (batch) {
+                    batch.set(db.collection('products').doc(newId), newP);
+                }
+            });
+
+            // Remove original merged product
+            const originalIdx = newAllProducts.findIndex(item => item.id === p.id);
+            if (originalIdx !== -1) newAllProducts.splice(originalIdx, 1);
+
+            if (batch) {
+                batch.delete(db.collection('products').doc(p.id));
+            }
+        }
+
+        // Apply changes
+        allProducts = newAllProducts;
+        try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+        
+        if (batch) {
+            await batch.commit();
+            console.log(`✂️ Split products: created items from ${productsToSplit.length} merged products`);
+        }
+
+        selectedProductIds.clear();
+        filterProducts();
+        updateBulkActionBar();
+        await sellerAlert(`แยกสินค้าสำเร็จ! สร้างสินค้าใหม่จากตัวเลือกย่อยเรียบร้อยครับ`, 'success');
+
+    } catch (err) {
+        console.error('❌ Split failed:', err);
+        await sellerAlert('เกิดข้อผิดพลาดในการแยกสินค้าครับ: ' + err.message, 'error');
+    }
+}
+
 // ── Global Exports ──────────────────────────────────────────────────
 window.openAddModal = openAddModal;
 window.openEditModal = openEditModal;
@@ -2004,4 +2244,5 @@ window.openInlinePrice = openInlinePrice;
 window.closeInlinePrice = closeInlinePrice;
 window.saveInlinePrice = saveInlinePrice;
 window.mergeSelectedProducts = mergeSelectedProducts;
+window.splitSelectedProducts = splitSelectedProducts;
 
