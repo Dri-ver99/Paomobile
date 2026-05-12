@@ -228,7 +228,7 @@ window.ProductDetail = {
                         <div class="pd-shipping-info">ค่าจัดส่งที่คำนวณในขั้นตอนการชำระเงิน</div>
                         
                         <div id="pdVariationSection" class="pd-selector-item" style="display: none;">
-                            <span class="pd-label" id="pdVariationLabel">ตัวเลือกสินค้า</span>
+                            <span class="pd-label" id="pdVariationLabel" style="display: none;">ตัวเลือกสินค้า</span>
                             <div class="pd-options" id="pdVariationOptions"></div>
                         </div>
 
@@ -414,12 +414,39 @@ window.ProductDetail = {
 
         if (p.variations && p.variations.length > 0) {
             section.style.display = 'block';
-            optionsEl.innerHTML = p.variations.map(v => `
-                <button class="pd-option ${this.currentVariation?.id === v.id ? 'selected' : ''} ${v.isOutOfStock ? 'sold-out' : ''}" 
-                        onclick="window.ProductDetail.selectVariation('${v.id}')">
-                    ${v.name}
-                </button>
-            `).join('');
+            
+            // Tier 1: Main Variations
+            let html = `
+                <div class="pd-tier-1" style="margin-bottom: 15px;">
+                    <div class="pd-options">
+                        ${p.variations.map(v => `
+                            <button class="pd-option ${this.currentVariation?.id === v.id ? 'selected' : ''} ${v.isOutOfStock ? 'sold-out' : ''}" 
+                                    onclick="window.ProductDetail.selectVariation('${v.id}')">
+                                ${v.name}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Tier 2: Sub Variations (if Tier 1 is selected and has sub-options)
+            if (this.currentVariation && this.currentVariation.subOptions && this.currentVariation.subOptions.length > 0) {
+                html += `
+                    <div class="pd-tier-2" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9;">
+                        <span class="pd-label">${this.currentVariation.subLabel || 'ตัวเลือกย่อย'}</span>
+                        <div class="pd-options">
+                            ${this.currentVariation.subOptions.map(sv => `
+                                <button class="pd-option ${this.currentSubVariation?.id === sv.id ? 'selected' : ''}" 
+                                        onclick="window.ProductDetail.selectSubVariation('${sv.id}')">
+                                    ${sv.name}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            optionsEl.innerHTML = html;
         } else {
             section.style.display = 'none';
         }
@@ -430,12 +457,11 @@ window.ProductDetail = {
         if (!v) return;
 
         this.currentVariation = v;
+        this.currentSubVariation = null; // Reset sub-selection
 
-        // Update Price UI
-        const pricePromoEl = document.querySelector('.pd-price-promo');
-        const price = v.price || this.currentProduct.price;
-        if (pricePromoEl) pricePromoEl.textContent = '฿' + price.toLocaleString();
-
+        // Update Price UI (if no sub-options, use main price; otherwise show range/main)
+        this.updatePriceAndStockUI();
+        
         // Update Name UI
         const nameEl = document.querySelector('.pd-name');
         if (nameEl) nameEl.textContent = v.name || this.currentProduct.name;
@@ -443,28 +469,63 @@ window.ProductDetail = {
         // Update Image if variation has one
         if (v.img) {
             const mainImg = document.getElementById('pdMainImg');
-            if (mainImg) {
-                mainImg.src = v.img;
-            }
-        }
-
-        // Update Buttons state based on variation stock
-        const addBtn = document.getElementById('pdAddToCartBtn');
-        const buyBtn = document.getElementById('pdBuyNowBtn');
-        if (v.isOutOfStock) {
-            addBtn.classList.add('disabled');
-            buyBtn.classList.add('disabled');
-            buyBtn.style.display = 'none'; // Hide Buy Now button
-            addBtn.innerText = 'สินค้าหมด';
-        } else {
-            addBtn.classList.remove('disabled');
-            buyBtn.classList.remove('disabled');
-            buyBtn.style.display = 'flex'; // Show Buy Now button
-            addBtn.innerText = 'เพิ่มลงในตะกร้าสินค้า';
-            buyBtn.innerText = 'ซื้อเลย';
+            if (mainImg) mainImg.src = v.img;
         }
 
         this.renderVariations();
+    },
+
+    selectSubVariation(subId) {
+        if (!this.currentVariation || !this.currentVariation.subOptions) return;
+        const sv = this.currentVariation.subOptions.find(s => s.id === subId);
+        if (!sv) return;
+
+        this.currentSubVariation = sv;
+        this.updatePriceAndStockUI();
+        this.renderVariations();
+    },
+
+    updatePriceAndStockUI() {
+        const p = this.currentProduct;
+        const v = this.currentVariation;
+        const sv = this.currentSubVariation;
+        
+        const pricePromoEl = document.querySelector('.pd-price-promo');
+        const addBtn = document.getElementById('pdAddToCartBtn');
+        const buyBtn = document.getElementById('pdBuyNowBtn');
+
+        // Calculate current price
+        let price = p.price;
+        if (sv && sv.price) {
+            price = sv.price;
+        } else if (v && v.price) {
+            price = v.price;
+        }
+
+        if (pricePromoEl) pricePromoEl.textContent = '฿' + price.toLocaleString();
+
+        // Check stock
+        const isOutOfStock = p.isOutOfStock || (v && v.isOutOfStock);
+        
+        // If sub-options exist but none selected, disable buy button for clarity
+        const needsSubSelection = v && v.subOptions && v.subOptions.length > 0 && !sv;
+
+        if (isOutOfStock) {
+            addBtn.classList.add('disabled');
+            buyBtn.classList.add('disabled');
+            buyBtn.style.display = 'none';
+            addBtn.innerText = 'สินค้าหมด';
+        } else if (needsSubSelection) {
+            addBtn.classList.add('disabled');
+            buyBtn.classList.add('disabled');
+            addBtn.innerText = 'กรุณาเลือกตัวเลือกย่อย';
+        } else {
+            addBtn.classList.remove('disabled');
+            buyBtn.classList.remove('disabled');
+            buyBtn.style.display = 'flex';
+            addBtn.innerText = 'เพิ่มลงในตะกร้าสินค้า';
+            buyBtn.innerText = 'ซื้อเลย';
+        }
     },
 
     renderImages() {
@@ -602,6 +663,7 @@ window.ProductDetail = {
         if (!this.currentProduct) return;
         const p = this.currentProduct;
         const v = this.currentVariation;
+        const sv = this.currentSubVariation;
 
         // Check product stock
         if (p.isOutOfStock) {
@@ -624,9 +686,9 @@ window.ProductDetail = {
             return;
         }
 
-        const productId = this.currentProduct.id + (v ? `-${v.id}` : '');
-        const itemName = this.currentProduct.name + (v ? ` (${v.name})` : '');
-        const price = v ? (v.price || this.currentProduct.price) : this.currentProduct.price;
+        const productId = this.currentProduct.id + (v ? `-${v.id}` : '') + (sv ? `-${sv.id}` : '');
+        const itemName = v ? (`${v.name}${sv ? ' - ' + sv.name : ''}`) : this.currentProduct.name;
+        const price = sv ? (sv.price || v.price || p.price) : (v ? (v.price || p.price) : p.price);
 
         let cartImg = (v && v.img) ? v.img : (this.currentProduct.img || (this.currentProduct.images && this.currentProduct.images[0]));
 
@@ -645,7 +707,7 @@ window.ProductDetail = {
                 img: cartImg,
                 emoji: this.currentProduct.emoji,
                 qty: this.qty,
-                variationName: v ? v.name : null
+                variationName: v ? (v.name + (sv ? ' - ' + sv.name : '')) : null
             });
         }
 
