@@ -112,7 +112,10 @@ const ProductSync = {
 
         // Use onSnapshot for instant loading via Firestore local cache and real-time updates
         query.onSnapshot(snapshot => {
-            const firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const firestoreProducts = snapshot.docs.map(doc => {
+                const data = { id: doc.id, ...doc.data() };
+                return (typeof window.optimizeProduct === 'function') ? window.optimizeProduct(data) : data;
+            });
             
             // Client-side fallback for synonyms (if any were missed by the server query)
             const isMatch = (p) => {
