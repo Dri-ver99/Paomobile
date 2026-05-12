@@ -104,7 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Sync All Products (Multi-category Search) with Safety Limit
     db.collection('products').limit(2000).onSnapshot(snapshot => {
-      firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      firestoreProducts = snapshot.docs.map(doc => {
+          const data = { id: doc.id, ...doc.data() };
+          return (typeof window.optimizeProduct === 'function') ? window.optimizeProduct(data) : data;
+      });
       console.log(`[SearchSync] Synced ${firestoreProducts.length} global products`);
       updateMergedProducts();
       // Re-trigger search if input has value

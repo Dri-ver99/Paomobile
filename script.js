@@ -64,6 +64,25 @@ navbar.classList.toggle('scrolled', window.scrollY > 40);
         }));
     });
     observer.observe(document.body, { childList: true, subtree: true });
+
+    // ── Global Memory Optimizer Helper ──
+    window.optimizeProduct = function(p) {
+        if (!p) return p;
+        const op = { ...p };
+        // Truncate long descriptions to save significant memory in global index/list
+        if (op.description && op.description.length > 300) {
+            op.description = op.description.substring(0, 300) + '...';
+        }
+        // Only keep first 2 images for list/search view, remove heavy rest
+        if (op.images && op.images.length > 2) {
+            op.images = op.images.slice(0, 2);
+        }
+        // Keep specs short if they are massive
+        if (op.specs && op.specs.length > 500) {
+            op.specs = op.specs.substring(0, 500) + '...';
+        }
+        return op;
+    };
 })();
 const menuToggle = document.getElementById('menuToggle');
 const mobileMenu = document.getElementById('mobileMenu');

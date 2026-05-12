@@ -368,10 +368,10 @@ function restartFirestoreListener() {
     productUnsubscribe = query.onSnapshot(snapshot => {
         console.log(`[Seller Sync] Success: Received ${snapshot.size} items from Cloud for ${currentCategory}`);
         
-        const firestoreProducts = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        const firestoreProducts = snapshot.docs.map(doc => {
+            const data = { id: doc.id, ...doc.data() };
+            return (typeof window.optimizeProduct === 'function') ? window.optimizeProduct(data) : data;
+        });
 
         // Robust Merge Logic (Mirroring products-sync.js logic more closely)
         const isOriginalMock = (p) => {
@@ -1047,9 +1047,24 @@ function openAddModal() {
     document.getElementById('productModal').style.display = 'flex';
 }
 
-function openEditModal(id) {
-    const p = allProducts.find(item => item.id === id);
+async function openEditModal(id) {
+    let p = allProducts.find(item => item.id === id);
     if (!p) return;
+
+    // ── Memory Optimization Safety ──
+    // Since 'allProducts' contains lightweight/optimized versions of products to save RAM,
+    // we must fetch the FULL original document from Firestore before editing to ensure
+    // that massive Base64 images and full descriptions are not lost during the save process.
+    if (typeof db !== 'undefined' && db && !id.startsWith('new-') && !id.startsWith('used-') && !id.startsWith('acc-')) {
+        try {
+            const doc = await db.collection('products').doc(id).get();
+            if (doc.exists) {
+                p = { id: doc.id, ...doc.data() };
+            }
+        } catch (e) {
+            console.warn("[Edit] Failed to fetch full document, using cached version.", e);
+        }
+    }
 
     document.getElementById('modalTitle').textContent = "แก้ไขสินค้า";
     document.getElementById('formProductId').value = p.id;
