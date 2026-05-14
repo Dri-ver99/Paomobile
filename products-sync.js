@@ -79,12 +79,23 @@ const ProductSync = {
             this.allProducts = [];
         }
 
-        if (typeof db === 'undefined' || !db) {
+        const firestore = window.db || (typeof db !== 'undefined' ? db : null);
+        
+        if (!firestore) {
+            console.warn("[Sync] Waiting for Firestore (db)...");
             setTimeout(() => this.listen(), 500);
             return;
         };
 
-        db.collection('settings').doc('deleted_products').onSnapshot(doc => {
+        // 0. Diagnostic Timeout: If no data after 8s, show retry button
+        setTimeout(() => {
+            if (!this.hasLoadedOnce && this.noResults) {
+                console.warn("[Sync] Data fetch timeout.");
+                this.noResults.innerHTML = `⏳ ยังไม่ได้รับข้อมูลจากเซิร์ฟเวอร์... <button onclick="location.reload()" style="background:#ee4d2d; color:white; border:none; padding:5px 10px; border-radius:5px; margin-left:10px; cursor:pointer; font-family:inherit;">ลองโหลดใหม่</button>`;
+            }
+        }, 8000);
+
+        firestore.collection('settings').doc('deleted_products').onSnapshot(doc => {
             if (doc.exists) {
                 this.deletedIds = doc.data().deletedIds || [];
                 this.render();
@@ -92,7 +103,7 @@ const ProductSync = {
         }, err => console.warn("[Sync] Deleted List Sync Error:", err));
 
         // 2. Optimized Real-time Firestore Listen
-        let query = db.collection('products');
+        let query = firestore.collection('products');
         
         // For standard categories, filter on server for performance
         if (this.category && this.category !== 'all' && this.category !== 'parts') {
