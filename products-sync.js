@@ -102,8 +102,11 @@ const ProductSync = {
             if (this.category === 'new') categoryList = ['new', 'มือ 1', 'มือหนึ่ง'];
             else if (this.category === 'used') categoryList = ['used', 'มือ 2', 'มือสอง'];
             else if (this.category === 'accessory') categoryList = ['accessory', 'อุปกรณ์', 'อุปกรณ์เสริม'];
-            else if (this.category === 'parts') categoryList = ['parts', 'อะไหล่'];
+            else if (this.category === 'parts') {
+                categoryList = ['parts', 'spare-parts', 'อะไหล่', 'อะไหล่มือถือ', 'spareparts'];
+            }
             
+            console.log(`[Sync] Requesting category: ${this.category} with list:`, categoryList);
             query = query.where('category', 'in', categoryList);
         }
         
@@ -126,12 +129,18 @@ const ProductSync = {
                 if (targetCat === 'new') return pCat === 'new' || pCat === 'มือ 1' || pCat === 'มือหนึ่ง';
                 if (targetCat === 'used') return pCat === 'used' || pCat === 'มือ 2' || pCat === 'มือสอง';
                 if (targetCat === 'accessory') return pCat === 'accessory' || pCat === 'อุปกรณ์' || pCat === 'อุปกรณ์เสริม';
-                if (targetCat === 'parts') return pCat === 'parts' || pCat === 'อะไหล่';
+                
+                // Robust Parts Matching
+                if (targetCat === 'parts') {
+                    const partsSynonyms = ['parts', 'spare-parts', 'อะไหล่', 'อะไหล่มือถือ', 'spareparts'];
+                    return partsSynonyms.includes(pCat);
+                }
                 
                 return pCat === targetCat;
             };
 
             const matchingFirestore = firestoreProducts.filter(isMatch);
+            console.log(`[Sync] Received ${firestoreProducts.length} docs from Firestore, ${matchingFirestore.length} matched '${this.category}'`);
 
             // ── Seller-Edit-First Merge Logic ──
             const mergedMap = new Map();
