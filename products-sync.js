@@ -53,16 +53,9 @@ const ProductSync = {
         const baselineIds = new Set(baselineForCategory.map(p => p.id));
         const cacheKey = `pao_cache_${this.category}`;
 
-        // 1. Instant Cache Render (Zero-Flash) with TTL
-        let isCacheValid = false;
+        // 1. Instant Cache Render (Zero-Flash)
         try {
             const cached = localStorage.getItem(cacheKey);
-            const cachedTime = localStorage.getItem(cacheKey + '_time');
-            // 15 minutes TTL
-            if (cached && cachedTime && (Date.now() - parseInt(cachedTime) < 15 * 60 * 1000)) {
-                isCacheValid = true;
-            }
-
             if (cached) {
                 this.allProducts = JSON.parse(cached);
                 this.render();
@@ -102,23 +95,16 @@ const ProductSync = {
             if (this.category === 'new') categoryList = ['new', 'มือ 1', 'มือหนึ่ง'];
             else if (this.category === 'used') categoryList = ['used', 'มือ 2', 'มือสอง'];
             else if (this.category === 'accessory') categoryList = ['accessory', 'อุปกรณ์', 'อุปกรณ์เสริม'];
-            else if (this.category === 'parts') {
-                categoryList = ['parts', 'spare-parts', 'อะไหล่', 'อะไหล่มือถือ', 'spareparts'];
-            }
+            else if (this.category === 'parts') categoryList = ['parts', 'อะไหล่'];
             
-            console.log(`[Sync] Requesting category: ${this.category} with list:`, categoryList);
             query = query.where('category', 'in', categoryList);
         }
         
         // Add a limit for safety (prevents massive accidental reads)
         query = query.limit(1000); 
 
-        // Use onSnapshot for instant loading via Firestore local cache and real-time updates
-        query.onSnapshot(snapshot => {
-            const firestoreProducts = snapshot.docs.map(doc => {
-                const data = { id: doc.id, ...doc.data() };
-                return (typeof window.optimizeProduct === 'function') ? window.optimizeProduct(data) : data;
-            });
+        this.unsubscribe = query.onSnapshot(snapshot => {
+            const firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
             // Client-side fallback for synonyms (if any were missed by the server query)
             const isMatch = (p) => {
@@ -129,63 +115,48 @@ const ProductSync = {
                 if (targetCat === 'new') return pCat === 'new' || pCat === 'มือ 1' || pCat === 'มือหนึ่ง';
                 if (targetCat === 'used') return pCat === 'used' || pCat === 'มือ 2' || pCat === 'มือสอง';
                 if (targetCat === 'accessory') return pCat === 'accessory' || pCat === 'อุปกรณ์' || pCat === 'อุปกรณ์เสริม';
-                
-                // Robust Parts Matching
-                if (targetCat === 'parts') {
-                    const partsSynonyms = ['parts', 'spare-parts', 'อะไหล่', 'อะไหล่มือถือ', 'spareparts'];
-                    return partsSynonyms.includes(pCat);
-                }
+                if (targetCat === 'parts') return pCat === 'parts' || pCat === 'อะไหล่';
                 
                 return pCat === targetCat;
             };
 
-            const matchingFirestore = firestoreProducts.filter(isMatch);
-            console.log(`[Sync] Received ${firestoreProducts.length} docs from Firestore, ${matchingFirestore.length} matched '${this.category}'`);
+                const matchingFirestore = firestoreProducts.filter(isMatch);
 
-            // ── Seller-Edit-First Merge Logic ──
-            const mergedMap = new Map();
+                // ── Seller-Edit-First Merge Logic ──
+                // Use a Map so Firestore data ALWAYS wins over baseline mocks.
+                // This ensures any edits made by the Seller are immediately visible
+                // to customers without stale-cache interference.
+                const mergedMap = new Map();
 
-            // 1. Start with baseline (lowest priority)
-            baselineForCategory.forEach(p => mergedMap.set(p.id, p));
+                // 1. Start with baseline (lowest priority)
+                baselineForCategory.forEach(p => mergedMap.set(p.id, p));
 
-            // 2. Overwrite with live Firestore data (highest priority)
-            matchingFirestore.forEach(p => mergedMap.set(p.id, p));
+                // 2. Overwrite with live Firestore data (highest priority)
+                //    This guarantees Seller edits (name, price, images, variations)
+                //    are always reflected on the customer side.
+                matchingFirestore.forEach(p => mergedMap.set(p.id, p));
 
-            const finalProducts = Array.from(mergedMap.values());
-            this.allProducts = finalProducts;
-            this.hasLoadedOnce = true;
-            
-            this.debounceRender();
+                const finalProducts = Array.from(mergedMap.values());
+                this.allProducts = finalProducts;
+                this.hasLoadedOnce = true;
+                
+                this.debounceRender();
 
-            // Always refresh cache with latest Firestore data so next page load
-            // shows the most up-to-date Seller edits.
-            try {
-                // Strip massive data to prevent QuotaExceededError which breaks the fast-load cache
-                const optimizedCache = finalProducts.map(p => {
-                    const op = { ...p };
-                    if (op.description && op.description.length > 400) {
-                        op.description = op.description.substring(0, 400) + '...';
-                    }
-                    if (op.images && op.images.length > 2) {
-                        op.images = op.images.slice(0, 2);
-                    }
-                    return op;
-                });
-                localStorage.setItem(cacheKey, JSON.stringify(optimizedCache));
-                localStorage.setItem(cacheKey + '_time', Date.now().toString());
-            } catch(e) {
-                console.warn('[Sync] Cache save failed', e);
-                // If cache is still full, clear it so stale data doesn't persist
-                localStorage.removeItem(cacheKey);
-                localStorage.removeItem(cacheKey + '_time');
-            }
+                // Always refresh cache with latest Firestore data so next page load
+                // shows the most up-to-date Seller edits.
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify(finalProducts));
+                } catch(e) {
+                    // If cache is full, clear it so stale data doesn't persist
+                    localStorage.removeItem(cacheKey);
+                }
 
-            this.autoOpenFromUrl();
-        }, err => {
-            console.error("[Sync] Firestore Fetch Error:", err);
-            this.hasLoadedOnce = true;
-            this.render();
-        });
+                this.autoOpenFromUrl();
+            }, err => {
+                console.error("[Sync] Firestore Listen Error:", err);
+                this.hasLoadedOnce = true;
+                this.render();
+            });
     },
 
     debounceRender: function() {
