@@ -104,8 +104,8 @@ const ProductSync = {
             query = query.where('category', 'in', categoryList);
         }
         
-        // Limit to 300 for faster initial load
-        query = query.limit(300);
+        // Limit to 20 for near-instant initial load
+        query = query.limit(20);
         this.currentQuery = query;
 
         // ── 2. Snapshot Listeners ──
@@ -117,6 +117,9 @@ const ProductSync = {
         }, err => console.warn("[Sync] Deleted List Sync Error:", err));
 
         this.queryUnsubscribe = query.onSnapshot(snapshot => {
+            if (this.noResults && !this.hasLoadedOnce) {
+                this.noResults.innerHTML = `⏳ ตรวจพบข้อมูล ${snapshot.size} รายการ กำลังประมวลผล...`;
+            }
             this.handleSnapshot(snapshot);
         }, err => {
             console.error("[Sync] Firestore Fetch Error:", err);
