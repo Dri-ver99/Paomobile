@@ -72,38 +72,41 @@ const ProductSync = {
             return;
         };
 
-        // ── 0. Setup Query ──
+        // ── 0. Diagnostic Timeout: If no data after 2s, try fallback .get() immediately ──
+        setTimeout(() => {
+            if (!this.hasLoadedOnce) {
+                console.log("[Sync] Switching to fast-fetch mode...");
+                if (this.noResults) {
+                    this.noResults.innerHTML = `⏳ กำลังโหลดสินค้าอย่างรวดเร็ว...`;
+                }
+                this.currentQuery.get().then(snapshot => {
+                    if (!this.hasLoadedOnce) this.handleSnapshot(snapshot);
+                }).catch(err => {
+                    console.error("[Sync] Fast-fetch failed:", err);
+                    if (this.noResults && !this.hasLoadedOnce) {
+                        this.noResults.innerHTML = `❌ ไม่สามารถโหลดข้อมูลได้ <button onclick="location.reload()" style="background:#ee4d2d; color:white; border:none; padding:5px 10px; border-radius:5px; margin-left:10px; cursor:pointer; font-family:inherit;">ลองอีกครั้ง</button>`;
+                    }
+                });
+            }
+        }, 2000);
+
+        // ── 1. Setup Query ──
         let query = firestore.collection('products');
-        if (this.category && this.category !== 'all' && this.category !== 'parts') {
+        
+        // Use broad server-side filter for speed
+        if (this.category && this.category !== 'all') {
             let categoryList = [this.category];
             if (this.category === 'new') categoryList = ['new', 'มือ 1', 'มือหนึ่ง'];
             else if (this.category === 'used') categoryList = ['used', 'มือ 2', 'มือสอง'];
             else if (this.category === 'accessory') categoryList = ['accessory', 'อุปกรณ์', 'อุปกรณ์เสริม'];
+            else if (this.category === 'parts') categoryList = ['parts', 'spare-parts', 'อะไหล่', 'อะไหล่มือถือ', 'spareparts'];
+            
             query = query.where('category', 'in', categoryList);
         }
-        query = query.limit(1000);
+        
+        // Limit to 300 for faster initial load
+        query = query.limit(300);
         this.currentQuery = query;
-
-        // ── 1. Diagnostic Timeout: If no data after 8s, try fallback .get() ──
-        setTimeout(() => {
-            if (!this.hasLoadedOnce) {
-                console.warn("[Sync] onSnapshot hung, attempting fallback .get()...");
-                if (this.noResults) {
-                    this.noResults.innerHTML = `⏳ กำลังใช้ระบบสำรองดึงข้อมูล...`;
-                }
-                this.currentQuery.get().then(snapshot => {
-                    if (!this.hasLoadedOnce) {
-                        console.log("[Sync] Fallback .get() successful");
-                        this.handleSnapshot(snapshot);
-                    }
-                }).catch(err => {
-                    console.error("[Sync] Fallback .get() failed:", err);
-                    if (this.noResults && !this.hasLoadedOnce) {
-                        this.noResults.innerHTML = `❌ ไม่สามารถเชื่อมต่อฐานข้อมูลได้ <button onclick="location.reload()" style="background:#ee4d2d; color:white; border:none; padding:5px 10px; border-radius:5px; margin-left:10px; cursor:pointer; font-family:inherit;">ลองอีกครั้ง</button>`;
-                    }
-                });
-            }
-        }, 8000);
 
         // ── 2. Snapshot Listeners ──
         firestore.collection('settings').doc('deleted_products').onSnapshot(doc => {
