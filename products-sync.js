@@ -107,11 +107,22 @@ const ProductSync = {
             query = query.where('category', 'in', categoryList);
         }
         
-        // Add a limit for safety (prevents massive accidental reads)
-        query = query.limit(1000); 
+        // Limit initial fetch — pagination shows 12/page so 100 is plenty for first view
+        query = query.limit(100); 
 
-        // Use onSnapshot for instant loading via Firestore local cache and real-time updates
-        query.onSnapshot(snapshot => {
+        // ── Fallback Timeout: If Firestore takes >5s, force render what we have ──
+        const fallbackTimer = setTimeout(() => {
+            if (!this.hasLoadedOnce) {
+                console.warn('[Sync] Firestore timeout — showing cached/baseline data');
+                this.hasLoadedOnce = true;
+                this.render();
+            }
+        }, 5000);
+
+        // Use .get() instead of onSnapshot to avoid persistent connection overhead
+        // (onSnapshot with 700+ products w/ base64 images causes hang/quota issues)
+        query.get().then(snapshot => {
+            clearTimeout(fallbackTimer);
             const firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
             // Client-side fallback for synonyms (if any were missed by the server query)
@@ -129,6 +140,7 @@ const ProductSync = {
             };
 
             const matchingFirestore = firestoreProducts.filter(isMatch);
+            console.log(`[Sync] Fetched ${matchingFirestore.length} products for ${this.category}`);
 
             // ── Seller-Edit-First Merge Logic ──
             const mergedMap = new Map();
@@ -169,7 +181,36 @@ const ProductSync = {
             }
 
             this.autoOpenFromUrl();
-        }, err => {
+
+            // ── Background: Fetch remaining products if limit was hit ──
+            if (snapshot.size >= 100 && this.category === 'parts') {
+                const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+                query.startAfter(lastDoc).limit(900).get().then(extraSnap => {
+                    if (extraSnap.size > 0) {
+                        console.log(`[Sync] Background loaded ${extraSnap.size} more products`);
+                        extraSnap.docs.forEach(doc => {
+                            const p = { id: doc.id, ...doc.data() };
+                            if (isMatch(p)) mergedMap.set(p.id, p);
+                        });
+                        this.allProducts = Array.from(mergedMap.values());
+                        this.debounceRender();
+                        
+                        // Update cache with full data
+                        try {
+                            const fullCache = this.allProducts.map(p => {
+                                const op = { ...p };
+                                if (op.description && op.description.length > 400) op.description = op.description.substring(0, 400) + '...';
+                                if (op.images && op.images.length > 2) op.images = op.images.slice(0, 2);
+                                return op;
+                            });
+                            localStorage.setItem(cacheKey, JSON.stringify(fullCache));
+                            localStorage.setItem(cacheKey + '_time', Date.now().toString());
+                        } catch(e) { localStorage.removeItem(cacheKey); }
+                    }
+                }).catch(err => console.warn('[Sync] Background fetch failed:', err));
+            }
+        }).catch(err => {
+            clearTimeout(fallbackTimer);
             console.error("[Sync] Firestore Fetch Error:", err);
             this.hasLoadedOnce = true;
             this.render();
