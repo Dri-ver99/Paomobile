@@ -37,10 +37,13 @@ const ProductSync = {
 
         if (!this.grid) return;
 
-        // Force clear cache if we switched to a v4.1 catalog structure (reverted)
-        if (!localStorage.getItem('pao_cache_v4_sys_revert')) {
-            localStorage.clear();
-            localStorage.setItem('pao_cache_v4_sys_revert', 'true');
+        // Force clear stale cache when deploying new sync logic (v5 = .get() fix)
+        if (!localStorage.getItem('pao_cache_v5_getfix')) {
+            // Clear all product caches to force fresh Firestore fetch
+            ['pao_cache_parts', 'pao_cache_new', 'pao_cache_used', 'pao_cache_accessory',
+             'pao_cache_parts_time', 'pao_cache_new_time', 'pao_cache_used_time', 'pao_cache_accessory_time'
+            ].forEach(k => localStorage.removeItem(k));
+            localStorage.setItem('pao_cache_v5_getfix', 'true');
         }
 
         this.listen();
@@ -110,18 +113,17 @@ const ProductSync = {
         // Limit initial fetch — pagination shows 12/page so 100 is plenty for first view
         query = query.limit(100); 
 
-        // ── Fallback Timeout: If Firestore takes >5s, force render what we have ──
+        // ── Fallback Timeout: If Firestore takes >8s, force render what we have ──
         const fallbackTimer = setTimeout(() => {
             if (!this.hasLoadedOnce) {
                 console.warn('[Sync] Firestore timeout — showing cached/baseline data');
                 this.hasLoadedOnce = true;
                 this.render();
             }
-        }, 5000);
+        }, 8000);
 
-        // Use .get() instead of onSnapshot to avoid persistent connection overhead
-        // (onSnapshot with 700+ products w/ base64 images causes hang/quota issues)
-        query.get().then(snapshot => {
+        // Use onSnapshot for reliable Firestore connection (.get() fails on Vercel)
+        query.onSnapshot(snapshot => {
             clearTimeout(fallbackTimer);
             const firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
@@ -140,7 +142,7 @@ const ProductSync = {
             };
 
             const matchingFirestore = firestoreProducts.filter(isMatch);
-            console.log(`[Sync] Fetched ${matchingFirestore.length} products for ${this.category}`);
+            console.log(`[Sync] Loaded ${matchingFirestore.length} products for ${this.category}`);
 
             // ── Seller-Edit-First Merge Logic ──
             const mergedMap = new Map();
@@ -175,41 +177,12 @@ const ProductSync = {
                 localStorage.setItem(cacheKey + '_time', Date.now().toString());
             } catch(e) {
                 console.warn('[Sync] Cache save failed', e);
-                // If cache is still full, clear it so stale data doesn't persist
                 localStorage.removeItem(cacheKey);
                 localStorage.removeItem(cacheKey + '_time');
             }
 
             this.autoOpenFromUrl();
-
-            // ── Background: Fetch remaining products if limit was hit ──
-            if (snapshot.size >= 100 && this.category === 'parts') {
-                const lastDoc = snapshot.docs[snapshot.docs.length - 1];
-                query.startAfter(lastDoc).limit(900).get().then(extraSnap => {
-                    if (extraSnap.size > 0) {
-                        console.log(`[Sync] Background loaded ${extraSnap.size} more products`);
-                        extraSnap.docs.forEach(doc => {
-                            const p = { id: doc.id, ...doc.data() };
-                            if (isMatch(p)) mergedMap.set(p.id, p);
-                        });
-                        this.allProducts = Array.from(mergedMap.values());
-                        this.debounceRender();
-                        
-                        // Update cache with full data
-                        try {
-                            const fullCache = this.allProducts.map(p => {
-                                const op = { ...p };
-                                if (op.description && op.description.length > 400) op.description = op.description.substring(0, 400) + '...';
-                                if (op.images && op.images.length > 2) op.images = op.images.slice(0, 2);
-                                return op;
-                            });
-                            localStorage.setItem(cacheKey, JSON.stringify(fullCache));
-                            localStorage.setItem(cacheKey + '_time', Date.now().toString());
-                        } catch(e) { localStorage.removeItem(cacheKey); }
-                    }
-                }).catch(err => console.warn('[Sync] Background fetch failed:', err));
-            }
-        }).catch(err => {
+        }, err => {
             clearTimeout(fallbackTimer);
             console.error("[Sync] Firestore Fetch Error:", err);
             this.hasLoadedOnce = true;
