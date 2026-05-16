@@ -1049,74 +1049,85 @@ function openAddModal() {
 
 async function openEditModal(id) {
     let p = allProducts.find(item => item.id === id);
-    if (!p) return;
+    if (!p) { console.warn("[Edit] Product not found:", id); return; }
 
-    // ── Memory Optimization Safety ──
-    // Since 'allProducts' contains lightweight/optimized versions of products to save RAM,
-    // we must fetch the FULL original document from Firestore before editing to ensure
-    // that massive Base64 images and full descriptions are not lost during the save process.
-    if (typeof db !== 'undefined' && db && !id.startsWith('new-') && !id.startsWith('used-') && !id.startsWith('acc-')) {
-        try {
-            const doc = await db.collection('products').doc(id).get();
-            if (doc.exists) {
-                p = { id: doc.id, ...doc.data() };
+    // Show loading feedback
+    const editBtn = document.querySelector(`tr[data-id="${id}"] .btn-edit`);
+    if (editBtn) { editBtn.textContent = '⏳'; editBtn.disabled = true; }
+
+    try {
+        // ── Fetch full document from Firestore (with timeout) ──
+        if (typeof db !== 'undefined' && db && !id.startsWith('new-') && !id.startsWith('used-') && !id.startsWith('acc-')) {
+            try {
+                const fetchPromise = db.collection('products').doc(id).get();
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000));
+                const doc = await Promise.race([fetchPromise, timeoutPromise]);
+                if (doc && doc.exists) {
+                    p = { id: doc.id, ...doc.data() };
+                }
+            } catch (e) {
+                console.warn("[Edit] Firestore fetch failed, using cached version.", e.message);
             }
-        } catch (e) {
-            console.warn("[Edit] Failed to fetch full document, using cached version.", e);
         }
-    }
 
-    document.getElementById('modalTitle').textContent = "แก้ไขสินค้า";
-    document.getElementById('formProductId').value = p.id;
-    document.getElementById('formName').value = p.name;
-    document.getElementById('formBrand').value = p.brand || '';
-    document.getElementById('formPrice').value = p.price;
-    document.getElementById('formCategory').value = p.category;
-    document.getElementById('formDescription').value = p.description || "";
-    document.getElementById('formEmoji').value = p.emoji || "";
-    document.getElementById('formBadge').value = p.badge || "";
-    document.getElementById('formSpecs').value = p.specs || "";
+        document.getElementById('modalTitle').textContent = "แก้ไขสินค้า";
+        document.getElementById('formProductId').value = p.id;
+        document.getElementById('formName').value = p.name;
+        document.getElementById('formBrand').value = p.brand || '';
+        document.getElementById('formPrice').value = p.price;
+        document.getElementById('formCategory').value = p.category;
+        document.getElementById('formDescription').value = p.description || "";
+        document.getElementById('formEmoji').value = p.emoji || "";
+        document.getElementById('formBadge').value = p.badge || "";
+        document.getElementById('formSpecs').value = p.specs || "";
 
-    // Load Stock Status
-    const stockSelect = document.getElementById('formStockStatus');
-    if (stockSelect) {
-        stockSelect.value = p.isOutOfStock ? "out_of_stock" : "in_stock";
-    }
+        // Load Stock Status
+        const stockSelect = document.getElementById('formStockStatus');
+        if (stockSelect) {
+            stockSelect.value = p.isOutOfStock ? "out_of_stock" : "in_stock";
+        }
 
-    // Spare parts specific loading
-    if (p.category === 'parts') {
-        document.getElementById('formPartModel').value = p.partModel || "";
+        // Spare parts specific loading
+        if (p.category === 'parts') {
+            document.getElementById('formPartModel').value = p.partModel || "";
+            document.getElementById('formPartType').value = p.partType || "";
+        }
+        togglePartsFields();
+
+        // Restore uploaded images from existing product data
+        if (p.images && p.images.length) {
+            uploadedImages = [...p.images];
+        } else if (p.img) {
+            uploadedImages = [p.img];
+        } else {
+            uploadedImages = [];
+        }
+        refreshImgPreviews();
         document.getElementById('formPartType').value = p.partType || "";
-    }
-    togglePartsFields();
+        
+        // Variations loading
+        const vContainer = document.getElementById('variationContainer');
+        vContainer.innerHTML = '';
+        variationImages = {};
+        const priceHintEdit = document.getElementById('priceAutoHint');
 
-    // Restore uploaded images from existing product data
-    if (p.images && p.images.length) {
-        uploadedImages = [...p.images];
-    } else if (p.img) {
-        uploadedImages = [p.img];
-    } else {
-        uploadedImages = [];
-    }
-    refreshImgPreviews();
-    document.getElementById('formPartType').value = p.partType || ""; // Then set the value
-    
-    // Variations loading
-    const vContainer = document.getElementById('variationContainer');
-    vContainer.innerHTML = '';
-    variationImages = {};
-    const priceHintEdit = document.getElementById('priceAutoHint');
+        if (p.variations && p.variations.length > 0) {
+            document.getElementById('noVariationHint').style.display = 'none';
+            if (priceHintEdit) priceHintEdit.style.display = 'inline';
+            p.variations.forEach(v => addVariationRow(v));
+        } else {
+            document.getElementById('noVariationHint').style.display = 'block';
+            if (priceHintEdit) priceHintEdit.style.display = 'none';
+        }
 
-    if (p.variations && p.variations.length > 0) {
-        document.getElementById('noVariationHint').style.display = 'none';
-        if (priceHintEdit) priceHintEdit.style.display = 'inline';
-        p.variations.forEach(v => addVariationRow(v));
-    } else {
-        document.getElementById('noVariationHint').style.display = 'block';
-        if (priceHintEdit) priceHintEdit.style.display = 'none';
+        document.getElementById('productModal').style.display = 'flex';
+    } catch (err) {
+        console.error("[Edit] Error opening edit modal:", err);
+        alert("เกิดข้อผิดพลาดในการเปิดแก้ไข: " + err.message);
+    } finally {
+        // Restore button
+        if (editBtn) { editBtn.textContent = 'แก้ไข'; editBtn.disabled = false; }
     }
-
-    document.getElementById('productModal').style.display = 'flex';
 }
 
 function updatePartTypeDropdown() {

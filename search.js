@@ -102,13 +102,34 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // 2. Sync All Products (Multi-category Search) with Safety Limit
-    db.collection('products').limit(2000).onSnapshot(snapshot => {
+    // 2. Sync All Products (Multi-category Search) — lightweight index only
+    db.collection('products').limit(500).onSnapshot(snapshot => {
       firestoreProducts = snapshot.docs.map(doc => {
-          const data = { id: doc.id, ...doc.data() };
-          return (typeof window.optimizeProduct === 'function') ? window.optimizeProduct(data) : data;
+          const raw = doc.data();
+          // Build ultra-lightweight search object — strip ALL heavy data
+          const lite = {
+              id: doc.id,
+              name: raw.name || '',
+              price: raw.price || 0,
+              brand: raw.brand || '',
+              category: raw.category || '',
+              emoji: raw.emoji || '📦',
+              tags: raw.tags || [],
+              partModel: raw.partModel || '',
+              partType: raw.partType || '',
+              badge: raw.badge || '',
+              // Keep img ONLY if it's a URL (not Base64)
+              img: (raw.img && !raw.img.startsWith('data:image')) ? raw.img : '',
+              // Keep only first URL-based image for thumbnail
+              images: Array.isArray(raw.images) 
+                  ? raw.images.filter(i => typeof i === 'string' && !i.startsWith('data:image')).slice(0, 1) 
+                  : [],
+              specs: (raw.specs || '').substring(0, 100),
+              variations: raw.variations ? raw.variations.map(v => ({ name: v.name, price: v.price })) : []
+          };
+          return lite;
       });
-      console.log(`[SearchSync] Synced ${firestoreProducts.length} global products`);
+      console.log(`[SearchSync] Synced ${firestoreProducts.length} lightweight products`);
       updateMergedProducts();
       // Re-trigger search if input has value
       if (searchInput && searchInput.value) {
