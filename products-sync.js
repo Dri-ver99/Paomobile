@@ -34,26 +34,34 @@ const ProductSync = {
             }
         }, err => console.warn("[Sync] Deleted list error:", err));
 
-        // Build query
-        let query = db.collection('products');
+
+        // Build query — load ALL products (no server-side filter to avoid index issues)
+        let query = db.collection('products').limit(500);
+
+        // Build category list for client-side filtering
+        this.categoryList = null;
         if (this.category && this.category !== 'all') {
-            let categoryList = [this.category];
-            if (this.category === 'parts') categoryList = ['parts', 'อะไหล่'];
-            else if (this.category === 'new') categoryList = ['new', 'มือ 1', 'มือหนึ่ง'];
-            else if (this.category === 'used') categoryList = ['used', 'มือ 2', 'มือสอง'];
-            else if (this.category === 'accessory') categoryList = ['accessory', 'อุปกรณ์', 'อุปกรณ์เสริม'];
-            query = query.where('category', 'in', categoryList);
+            if (this.category === 'parts') this.categoryList = ['parts', 'อะไหล่'];
+            else if (this.category === 'new') this.categoryList = ['new', 'มือ 1', 'มือหนึ่ง'];
+            else if (this.category === 'used') this.categoryList = ['used', 'มือ 2', 'มือสอง'];
+            else if (this.category === 'accessory') this.categoryList = ['accessory', 'อุปกรณ์', 'อุปกรณ์เสริม'];
+            else this.categoryList = [this.category];
         }
 
         // Load up to 500 items but strip heavy data immediately
-        query.limit(500).onSnapshot(snapshot => {
-            const products = snapshot.docs.map(doc => {
+        query.onSnapshot(snapshot => {
+            let products = snapshot.docs.map(doc => {
                 const raw = { id: doc.id, ...doc.data() };
                 // ★ Strip heavy data to save memory ★
                 return this.lightweightProduct(raw);
             });
 
-            console.log(`[Sync] Loaded ${products.length} lightweight products for "${this.category}"`);
+            // ★ Client-side category filter ★
+            if (this.categoryList) {
+                products = products.filter(p => this.categoryList.includes(p.category));
+            }
+
+            console.log(`[Sync] Loaded ${products.length} products for "${this.category}" (from ${snapshot.size} total)`);
             this.allProducts = products;
             this.hasLoadedOnce = true;
             this.currentPage = 1;
