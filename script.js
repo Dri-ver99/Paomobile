@@ -64,40 +64,6 @@ navbar.classList.toggle('scrolled', window.scrollY > 40);
         }));
     });
     observer.observe(document.body, { childList: true, subtree: true });
-
-    // ── Global Memory Optimizer Helper ──
-    // Helper: check if a string is a heavy Base64 data URI
-    function isBase64(s) { return typeof s === 'string' && s.startsWith('data:image'); }
-
-    window.optimizeProduct = function(p) {
-        if (!p) return p;
-        const op = { ...p };
-        // ── KEEP main img for grid display ──
-        // Only strip EXTRA gallery images (images array) to save memory
-        if (Array.isArray(op.images)) {
-            // Keep only first 2 images, strip the rest
-            op.images = op.images.slice(0, 2);
-        }
-        // Strip Base64 from variations (heavy but not needed for grid)
-        if (Array.isArray(op.variations)) {
-            op.variations = op.variations.map(v => {
-                if (!v) return v;
-                const ov = { ...v };
-                if (isBase64(ov.img)) ov.img = '';
-                if (Array.isArray(ov.images)) ov.images = [];
-                return ov;
-            });
-        }
-        // Truncate long descriptions to save memory
-        if (op.description && op.description.length > 300) {
-            op.description = op.description.substring(0, 300) + '...';
-        }
-        // Keep specs short if they are massive
-        if (op.specs && op.specs.length > 500) {
-            op.specs = op.specs.substring(0, 500) + '...';
-        }
-        return op;
-    };
 })();
 const menuToggle = document.getElementById('menuToggle');
 const mobileMenu = document.getElementById('mobileMenu');

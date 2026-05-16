@@ -641,10 +641,7 @@
         
         try {
             const snapshot = await db.collection('products').get();
-            const firestoreProducts = snapshot.docs.map(doc => {
-                const data = { id: doc.id, ...doc.data() };
-                return (typeof window.optimizeProduct === 'function') ? window.optimizeProduct(data) : data;
-            });
+            const firestoreProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             
             // Merge logic (matches seller-products.js)
             const mergedMap = new Map();
