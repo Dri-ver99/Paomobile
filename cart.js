@@ -242,7 +242,7 @@
                 list.innerHTML = cart.map(item => `
                     <div class="cart-item" data-id="${item.id}">
                         <div class="cart-item-img">
-                            ${item.img ? `<img src="${item.img}" alt="${item.name}">` : (item.emoji || '📦')}
+                            ${item.img ? `<img src="${item.img.startsWith('http') ? item.img : encodeURI(item.img)}" alt="${item.name}">` : (item.emoji || '📦')}
                         </div>
                         <div class="cart-item-info">
                             <div class="cart-item-name">${item.name}</div>
@@ -326,7 +326,7 @@
                                     </label>
                                 </div>
                                 <div class="item-main">
-                                    <img src="${item.img || 'logo.png'}" alt="${item.name}" class="item-img">
+                                    <img src="${item.img ? (item.img.startsWith('http') ? item.img : encodeURI(item.img)) : 'logo.png'}" alt="${item.name}" class="item-img">
                                     <div class="item-info">
                                         <div class="item-name">${item.name}</div>
                                         <div class="item-variation">${item.variation || ''}</div>
