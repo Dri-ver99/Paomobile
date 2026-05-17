@@ -523,7 +523,7 @@ function filterProducts() {
                 <input type="checkbox" class="product-checkbox" ${isSelected ? 'checked' : ''} onchange="toggleSelectProduct('${p.id}')">
             </td>
             <td class="product-img-cell">
-                ${p.img ? `<img src="${p.img}" class="product-img-mini">` : `<div class="product-img-mini">${p.emoji || '📦'}</div>`}
+                ${p.img ? `<img src="${p.img.startsWith('http') ? p.img : encodeURI(p.img)}" class="product-img-mini">` : `<div class="product-img-mini">${p.emoji || '📦'}</div>`}
             </td>
             <td>
                 <div class="product-name-info">

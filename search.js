@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Thumbnail: real image or emoji fallback
         const thumbHTML = p.img
-          ? `<img src="${p.img}" alt="${p.name}" class="sr-product-img">`
+          ? `<img src="${p.img.startsWith('http') ? p.img : encodeURI(p.img)}" alt="${p.name}" class="sr-product-img">`
           : `<div class="sr-icon">${p.emoji || '📦'}</div>`;
 
         // Price display: range for variations

@@ -303,7 +303,8 @@ const ProductSync = {
         const isAboveFold = index < 8;
         const loadingAttr = isAboveFold ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" decoding="async"';
         
-        let imgHTML = p.img ? `<img src="${p.img}" alt="${p.name}" ${loadingAttr} style="opacity: 0; transition: opacity 0.4s ease-in;" onload="this.style.opacity=1">` : `<div class="product-emoji-placeholder" style="font-size: 3rem; height: 100%; display: flex; align-items: center; justify-content: center;">${p.emoji || '📦'}</div>`;
+        let imgSrc = p.img ? (p.img.startsWith('http') ? p.img : encodeURI(p.img)) : '';
+        let imgHTML = p.img ? `<img src="${imgSrc}" alt="${p.name}" ${loadingAttr} style="opacity: 0; transition: opacity 0.4s ease-in;" onload="this.style.opacity=1">` : `<div class="product-emoji-placeholder" style="font-size: 3rem; height: 100%; display: flex; align-items: center; justify-content: center;">${p.emoji || '📦'}</div>`;
 
         // Store product data using index reference (avoid HTML encoding issues)
         if (!window._paoProductMap) window._paoProductMap = {};
