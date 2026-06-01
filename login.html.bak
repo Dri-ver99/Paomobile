@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เธฅเธเธเธทเนเธญเน€เธเนเธฒเนเธเน - Paomobile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Noto Sans Thai', 'Outfit', sans-serif;
+            background-color: #f7f7f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #111;
+        }
+        .login-card {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 480px;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            height: auto;
+            margin: 0 auto 32px auto;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: left;
+            letter-spacing: -0.02em;
+        }
+        .subtitle {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .btn-social {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            border: 1px solid #e5e7eb;
+            background-color: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: background-color 0.2s;
+            font-family: inherit;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        .divider:not(:empty)::before { margin-right: 16px; }
+        .divider:not(:empty)::after { margin-left: 16px; }
+
+        .input-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #111;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #111;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus {
+            border-color: #7fa9ee;
+        }
+
+        /* Registration Specific Styles */
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 32px;
+            position: relative;
+        }
+        .btn-back {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            color: #555;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .btn-back:hover { color: #111; }
+        
+        .toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+    user-select: none;
+    z-index: 10;
+}
+
+.toggle-password:hover {
+    color: #64748b;
+}
+
+.toggle-password svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+}
+        .reg-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 26px;
+            font-weight: 700;
+            color: #1e293b;
+            white-space: nowrap;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+        .consent-group {
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .consent-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+        .consent-item input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            margin-top: 1px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #fff;
+            position: relative;
+        }
+        .consent-item input[type="checkbox"]:checked {
+            background-color: #fff;
+            border-color: #d1d5db;
+        }
+        .consent-item input[type="checkbox"]:checked::after {
+            content: 'โ“';
+            position: absolute;
+            left: 5px;
+            top: -1px;
+            color: #4b5563;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .consent-item span a {
+            color: #7fa9ee;
+            text-decoration: underline;
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #7fa9ee;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 32px 24px;
+                box-shadow: none;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+        }
+        .auth-extra-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+        }
+        .auth-extra-links a {
+            font-size: 14px;
+            color: #7fa9ee !important;
+            text-decoration: underline !important;
+            font-weight: 500;
+        }
+
+        /* Forgot Password Specific Styles */
+        .forgot-pass-desc {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .btn-link {
+            background: none;
+            border: none;
+            color: #0b5edd;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 24px;
+            font-family: inherit;
+        }
+        .btn-link:hover {
+            color: #094db3;
+            text-decoration: underline;
+        }
+
+        /* Success View Styling */
+        #successView {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .success-icon {
+            width: 90px;
+            height: 90px;
+            background: #ecfdf5;
+            color: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+            animation: success-pulse 2s infinite;
+        }
+        @keyframes success-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .success-icon svg {
+            width: 50px;
+            height: 50px;
+        }
+        .success-icon svg polyline {
+            stroke-width: 4;
+            stroke-dasharray: 100;
+            animation: checkmark-draw 0.6s ease-in-out forwards;
+        }
+        @keyframes checkmark-draw {
+            from { stroke-dashoffset: 100; opacity: 0; }
+            to { stroke-dashoffset: 0; opacity: 1; }
+        }
+        .success-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+        .success-text {
+            color: #64748b;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 32px;
+        }
+        .btn-continue {
+            width: 100%;
+            background: #94a3b8; /* Default inactive */
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: not-allowed;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+        .btn-continue.active {
+            background: #0b5edd;
+            cursor: pointer;
+        }
+        .btn-continue.active:hover {
+            background: #094db3;
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+            text-align: left;
+        }
+        .btn-success-finish {
+            width: 100%;
+            background: #0b5edd;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-success-finish:hover {
+            background: #094db3;
+        }
+
+        /* Terms Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+        .modal-content {
+            background: #fff;
+            width: 100%;
+            max-width: 700px;
+            max-height: 85vh;
+            border-radius: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            animation: modal-fade-in 0.3s ease-out;
+        }
+        @keyframes modal-fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+            color: #1e293b;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        .modal-body {
+            padding: 32px;
+            overflow-y: auto;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #475569;
+            text-align: left;
+            scroll-behavior: smooth;
+        }
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .modal-body h3 {
+            font-size: 17px;
+            font-weight: 700;
+            margin: 28px 0 12px 0;
+            color: #0f172a;
+            border-left: 4px solid #0052cc;
+            padding-left: 12px;
+        }
+        .modal-body p {
+            margin-bottom: 20px;
+        }
+        .modal-body h3:first-child {
+            margin-top: 0;
+        }
+        .modal-body b {
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">เธเธณเธฅเธฑเธเธเธฃเธฐเธกเธงเธฅเธเธฅ...</div>
+</div>
+
+<div class="login-card">
+    <!-- Login View -->
+    <div id="loginView">
+        <a href="index.html">
+            <img src="logo.png" alt="Paomobile Logo" class="logo" onerror="this.onerror=null; this.src='https://placehold.co/80x80?text=Logo';">
+        </a>
+        <h1>เธฅเธเธเธทเนเธญเน€เธเนเธฒเนเธเน</h1>
+        <p class="subtitle">เธฅเธเธเธทเนเธญเน€เธเนเธฒเนเธเนเธซเธฃเธทเธญเธชเธฃเนเธฒเธเธเธฑเธเธเธตเธเธนเนเนเธเน</p>
+
+        <!-- In-App Browser Guide -->
+        <div id="webviewNotice" style="display: none; background: #fff9db; border: 1px solid #fcc419; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; font-size: 14px;">
+            <p>โ ๏ธ <b>เธเธเธเนเธญเธเธณเธเธฑเธ”:</b> เธซเธฒเธเน€เธเธดเธ”เธเนเธฒเธเนเธญเธ (LINE/FB) เนเธเธฃเธ”เน€เธฅเธทเธญเธ "เน€เธเธดเธ”เธ”เนเธงเธขเน€เธเธฃเธฒเธงเนเน€เธเธญเธฃเนเธซเธฅเธฑเธ" เน€เธเธทเนเธญเนเธเนเธเธฒเธ Google Login</p>
+        </div>
+        
+        <div id="loginFormArea">
+            <div class="input-group">
+                <label>เธญเธตเน€เธกเธฅ</label>
+                <input type="email" id="emailInput" placeholder="เธฃเธฐเธเธธเธญเธตเน€เธกเธฅเธเธนเนเนเธเนเธเธฒเธ">
+            </div>
+            <div class="input-group" style="display: none;" id="passwordGroup">
+                <label for="passwordInput">เธฃเธซเธฑเธชเธเนเธฒเธ</label>
+                <div style="position: relative;">
+                    <input type="password" id="passwordInput" placeholder="โ€ขโ€ขโ€ขโ€ขโ€ขโ€ขโ€ขโ€ข">
+                    <span class="toggle-password" data-target="passwordInput" title="เนเธชเธ”เธ/เธเนเธญเธเธฃเธซเธฑเธชเธเนเธฒเธ">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                    </span>
+                </div>
+            </div>
+            
+            <button class="btn-continue active" id="btnEmailLogin">เธ”เธณเน€เธเธดเธเธเธฒเธฃเธ•เนเธญ</button>
+
+            <div class="auth-extra-links">
+                <a id="btnShowCreateAccount" href="javascript:void(0)">เธชเธฃเนเธฒเธเธเธฑเธเธเธต</a>
+                <a id="btnForgotPassword" href="javascript:void(0)">เธฅเธทเธกเธฃเธซเธฑเธชเธเนเธฒเธ?</a>
+            </div>
+
+            <div class="divider" style="margin-top: 32px;">หรือ</div>
+
+            <button id="btnGoogleLogin" class="btn-social btn-google">
+                <span class="social-icon" style="margin-right: 12px;">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="24" height="24">
+                </span>
+                เน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธเธ”เนเธงเธขเธเธฑเธเธเธต Google
+            </button>
+
+            <a href="index.html" style="display: block; margin-top: 24px; color: #64748b; font-size: 14px;">โ เธเธฅเธฑเธเธชเธนเนเธซเธเนเธฒเธซเธฅเธฑเธ</a>
+        </div>
+    </div>
+
+    <!-- Registration View -->
+    <div id="registerView" style="display: none;">
+        <div class="card-header">
+            <button class="btn-back" id="btnBackToLogin">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <span class="reg-title">เธชเธฃเนเธฒเธเธเธฑเธเธเธตเธ”เนเธงเธขเธญเธตเน€เธกเธฅ</span>
+        </div>
+
+        <div class="input-group">
+            <label>เธญเธตเน€เธกเธฅ</label>
+            <input type="email" id="regEmail" placeholder="เธฃเธฐเธเธธเธญเธตเน€เธกเธฅเธชเธณเธซเธฃเธฑเธเธชเธกเธฑเธเธฃเธชเธกเธฒเธเธดเธ">
+            <div id="regEmailError" class="error-message">เธญเธตเน€เธกเธฅเธเธตเนเธกเธตเธเธนเนเนเธเนเธเธฒเธเนเธฅเนเธง</div>
+            <div id="regEmailHint" class="error-message">*เธเธฃเธธเธ“เธฒเธฃเธฐเธเธธเธญเธตเน€เธกเธฅเนเธซเนเธ–เธนเธเธ•เนเธญเธ (เน€เธเนเธ Paomobile@gmail.com)</div>
+        </div>
+
+        <div class="input-group">
+            <label>เธฃเธซเธฑเธชเธเนเธฒเธ</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="regPassword" placeholder="เธฃเธฐเธเธธเธฃเธซเธฑเธชเธเนเธฒเธ">
+                <span class="toggle-password" data-target="regPassword">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                </span>
+            </div>
+            <div id="regPassHint" class="error-message">*เธฃเธซเธฑเธชเธเนเธฒเธเธ•เนเธญเธเธกเธต A-Z, a-z, 0-9 เนเธฅเธฐเธญเธขเนเธฒเธเธเนเธญเธข 8 เธ•เธฑเธงเธญเธฑเธเธฉเธฃ</div>
+        </div>
+
+        <div class="input-group">
+            <label>เธขเธทเธเธขเธฑเธเธฃเธซเธฑเธชเธเนเธฒเธ</label>
+            <div class="password-input-wrapper">
+                <input type="password" id="regConfirmPassword" placeholder="เธฃเธฐเธเธธเธขเธทเธเธขเธฑเธเธฃเธซเธฑเธชเธเนเธฒเธ">
+                <span class="toggle-password" data-target="regConfirmPassword">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                </span>
+            </div>
+        </div>
+
+        <div class="consent-group">
+            <label class="consent-item">
+                <input type="checkbox" id="checkTerms" required>
+                <span>เธเธฑเธเนเธ”เนเธญเนเธฒเธเนเธฅเธฐเธขเธญเธกเธฃเธฑเธ <a href="javascript:void(0)" id="btnOpenTerms">เธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃ</a> เธเธญเธเน€เธฃเธฒ</span>
+            </label>
+            <label class="consent-item">
+                <input type="checkbox" id="checkMarketing" required>
+                <span>เธเธฑเธเธชเธเนเธเธฃเธฑเธเธเนเธญเธกเธนเธฅเธเนเธฒเธงเธชเธฒเธฃ เธชเนเธงเธเธฅเธ”เนเธฅเธฐเนเธเธฃเนเธกเธเธฑเนเธเธเนเธฒเธเธ—เธฒเธเธญเธตเน€เธกเธฅ</span>
+            </label>
+        </div>
+
+        <button class="btn-continue" id="btnContinueRegister" disabled>เธชเธฃเนเธฒเธเธเธฑเธเธเธต</button>
+    </div>
+
+    <!-- Success / Verification View -->
+    <div id="successView" style="display: none;">
+        <div class="success-icon" id="successIcon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" fill="none" style="stroke-dasharray: 100;"></polyline>
+            </svg>
+        </div>
+        <div class="success-icon" id="verifyIcon" style="display: none; background: #e0f2fe; color: #0ea5e9;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17.002V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"></path><path d="M5.45 5.11 12 12l6.55-6.89"></path><path d="m15 19 2 2 4-4"></path></svg>
+        </div>
+
+        <h2 class="success-title" id="statusTitle">เธเธฃเธธเธ“เธฒเธขเธทเธเธขเธฑเธเธ•เธฑเธงเธ•เธ</h2>
+        <p class="success-text" id="statusText">เน€เธฃเธฒเนเธ”เนเธชเนเธเธฅเธดเนเธเธเนเธขเธทเธเธขเธฑเธเธ•เธฑเธงเธ•เธเนเธเธ—เธตเนเธญเธตเน€เธกเธฅเธเธญเธเธเธธเธ“เนเธฅเนเธง<br>เนเธเธฃเธ”เธเธฅเธดเธเธฅเธดเนเธเธเนเน€เธเธทเนเธญเน€เธเนเธฒเนเธเนเธเธฒเธเธเธฑเธเธเธต Paomobile เธเนเธฐ</p>
+        
+        <div id="actionArea">
+            <button class="btn-success-finish" id="btnCheckVerify" style="background: #0ea5e9; margin-bottom: 12px; font-weight: 600;">
+                เธ•เธฃเธงเธเธชเธ–เธฒเธเธฐเธเธฒเธฃเธขเธทเธเธขเธฑเธ
+            </button>
+            <button class="btn-success-finish" id="btnSuccessFinish" style="display: none;">
+                เนเธเธ—เธตเนเธซเธเนเธฒเธซเธฅเธฑเธ
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+            <button class="btn-link" id="btnLogoutOnVerify" style="margin-top: 10px; font-size: 14px; color: #94a3b8;">เธญเธญเธเธเธฒเธเธฃเธฐเธเธ</button>
+        </div>
+
+        <div id="verifyArea" style="margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+            <p style="font-size: 14px; color: #64748b; margin-bottom: 8px;">เธขเธฑเธเนเธกเนเนเธ”เนเธฃเธฑเธเธญเธตเน€เธกเธฅเธขเธทเธเธขเธฑเธ?</p>
+            <button class="btn-link" id="btnResendVerify" style="margin-top: 0; font-size: 15px; color: #0b5edd; font-weight: bold;">เธชเนเธเธญเธตเน€เธกเธฅเธขเธทเธเธขเธฑเธเธญเธตเธเธเธฃเธฑเนเธ</button>
+        </div>
+    </div>
+
+    <!-- Forgot Password View -->
+    <div id="forgotPasswordView" style="display: none;">
+        <div class="card-header">
+            <button class="btn-back" id="btnBackFromForgot">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <span class="reg-title">เธฅเธทเธกเธฃเธซเธฑเธชเธเนเธฒเธ</span>
+        </div>
+
+        <p class="forgot-pass-desc">
+            Paomobile เธเธฐเธ—เธณเธเธฒเธฃเธชเนเธเธฅเธดเธเธเนเธ•เธฑเนเธเธฃเธซเธฑเธชเธเนเธฒเธเนเธซเธกเนเนเธเธขเธฑเธเธญเธตเน€เธกเธฅเธเธญเธเธเธธเธ“ เน€เธเธทเนเธญเธขเธทเธเธขเธฑเธเธเธงเธฒเธกเน€เธเนเธเน€เธเนเธฒเธเธญเธเธเธฑเธเธเธต
+        </p>
+
+        <div class="input-group">
+            <label>เธญเธตเน€เธกเธฅ</label>
+            <input type="email" id="forgotIdentifier" placeholder="เธฃเธฐเธเธธเธญเธตเน€เธกเธฅเธ—เธตเนเนเธเนเธชเธกเธฑเธเธฃเธชเธกเธฒเธเธดเธ">
+            <div id="forgotError" class="error-message">เนเธกเนเธเธเธเธฑเธเธเธตเธเธนเนเนเธเนเธเธฒเธเนเธเธฃเธฐเธเธ</div>
+        </div>
+
+        <button class="btn-continue active" id="btnSendReset" style="margin-top: 24px;">เธชเนเธเธฃเธซเธฑเธชเธขเธทเธเธขเธฑเธ</button>
+        
+        <button class="btn-link" id="lnkBackToLogin">เน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธ</button>
+    </div>
+</div>
+
+<!-- Terms of Service Modal -->
+<div id="termsModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>เธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃ</h2>
+            <button class="modal-close" id="btnCloseTerms">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <h3>เธ เธฒเธเธฃเธงเธก</h3>
+            <p>เน€เธงเนเธเนเธเธ•เนเธเธตเนเธ”เธณเน€เธเธดเธเธเธฒเธฃเนเธ”เธข Paomobile เธ•เธฅเธญเธ”เธ—เธฑเนเธเน€เธงเนเธเนเธเธ•เน เธเธณเธงเนเธฒ โ€เน€เธฃเธฒโ€ โ€เธเธงเธเน€เธฃเธฒโ€ เนเธฅเธฐ โ€เธเธญเธเน€เธฃเธฒโ€ เธซเธกเธฒเธขเธ–เธถเธ Paomobile เนเธ”เธข Paomobile เน€เธเนเธเธเธนเนเธเธณเน€เธชเธเธญเน€เธงเนเธเนเธเธ•เนเธเธตเน เธฃเธงเธกเธ–เธถเธเธเนเธญเธกเธนเธฅ เน€เธเธฃเธทเนเธญเธเธกเธทเธญ เนเธฅเธฐเธเธฃเธดเธเธฒเธฃเธ—เธฑเนเธเธซเธกเธ”เธ—เธตเนเธกเธตเธญเธขเธนเนเนเธเน€เธงเนเธเนเธเธ•เนเธเธตเนเนเธซเนเธเธฑเธเธเธธเธ“ เธเธถเนเธเน€เธเนเธเธเธนเนเนเธเน เนเธ”เธขเธกเธตเน€เธเธทเนเธญเธเนเธเธงเนเธฒเธเธธเธ“เธเธฐเธ•เนเธญเธเธขเธญเธกเธฃเธฑเธเธเนเธญเธเธณเธซเธเธ” เน€เธเธทเนเธญเธเนเธ เธเนเธขเธเธฒเธข เนเธฅเธฐเธเธฃเธฐเธเธฒเธจเธ—เธฑเนเธเธซเธกเธ”เธ—เธตเนเธฃเธฐเธเธธเนเธงเนเธ—เธตเนเธเธตเน</p>
+            
+            <p>เธเธฒเธฃเน€เธเนเธฒเธเธกเน€เธงเนเธเนเธเธ•เนเธเธญเธเน€เธฃเธฒเนเธฅเธฐ/เธซเธฃเธทเธญเธเธทเนเธญเธชเธดเธเธเนเธฒเธเธฒเธเธญเธขเนเธฒเธเธเธฒเธเน€เธฃเธฒ เธซเธกเธฒเธขเธเธงเธฒเธกเธงเนเธฒเธเธธเธ“เน€เธเนเธฒเธฃเนเธงเธก โ€เธเธฃเธดเธเธฒเธฃโ€ เธเธญเธเน€เธฃเธฒ เนเธฅเธฐเธ•เธเธฅเธเธ—เธตเนเธเธฐเธเธเธดเธเธฑเธ•เธดเธ•เธฒเธกเธเนเธญเธเธณเธซเธเธ”เนเธฅเธฐเน€เธเธทเนเธญเธเนเธเธ•เนเธญเนเธเธเธตเน (โ€เธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃโ€, โ€เธเนเธญเธเธณเธซเธเธ”โ€) เธฃเธงเธกเธ–เธถเธเธเนเธญเธเธณเธซเธเธ”เนเธฅเธฐเน€เธเธทเนเธญเธเนเธเน€เธเธดเนเธกเน€เธ•เธดเธกเนเธฅเธฐเธเนเธขเธเธฒเธขเธ—เธตเนเธญเนเธฒเธเธญเธดเธเนเธเธ—เธตเนเธเธตเน เนเธฅเธฐ/เธซเธฃเธทเธญเธชเธฒเธกเธฒเธฃเธ–เน€เธเนเธฒเธ–เธถเธเนเธ”เนเธเนเธฒเธเนเธฎเน€เธเธญเธฃเนเธฅเธดเธเธเน เธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเนเธกเธตเธเธฅเธเธฑเธเธเธนเนเนเธเนเน€เธงเนเธเนเธเธ•เนเธ—เธธเธเธเธ เธฃเธงเธกเธ–เธถเธเนเธ•เนเนเธกเนเธเธณเธเธฑเธ”เน€เธเธตเธขเธเธเธนเนเนเธเนเธ—เธตเนเน€เธเนเธเน€เธเธฃเธฒเธงเนเน€เธเธญเธฃเน เน€เธงเธเน€เธ”เธญเธฃเน เธฅเธนเธเธเนเธฒ เธเธนเนเธเธฒเธข เนเธฅเธฐ/เธซเธฃเธทเธญเธเธนเนเธกเธตเธชเนเธงเธเธชเธเธฑเธเธชเธเธธเธเน€เธเธทเนเธญเธซเธฒ</p>
+            
+            <p>เนเธเธฃเธ”เธญเนเธฒเธเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเนเธญเธขเนเธฒเธเธฅเธฐเน€เธญเธตเธขเธ”เธเนเธญเธเน€เธเนเธฒเธ–เธถเธเธซเธฃเธทเธญเนเธเนเน€เธงเนเธเนเธเธ•เนเธเธญเธเน€เธฃเธฒ เธเธฒเธฃเน€เธเนเธฒเธ–เธถเธเธซเธฃเธทเธญเนเธเนเธเธฒเธเธชเนเธงเธเนเธ”เธเธญเธเน€เธงเนเธเนเธเธ•เนเธเนเธ•เธฒเธก เธซเธกเธฒเธขเธเธงเธฒเธกเธงเนเธฒเธเธธเธ“เธ•เธเธฅเธเธ—เธตเนเธเธฐเธเธเธดเธเธฑเธ•เธดเธ•เธฒเธกเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเน เธซเธฒเธเธเธธเธ“เนเธกเนเน€เธซเนเธเธ”เนเธงเธขเธเธฑเธเธเนเธญเธเธณเธซเธเธ”เนเธฅเธฐเน€เธเธทเนเธญเธเนเธเธ—เธฑเนเธเธซเธกเธ”เธเธญเธเธเนเธญเธ•เธเธฅเธเธเธตเน เธเธธเธ“เธเธฐเนเธกเนเธชเธฒเธกเธฒเธฃเธ–เน€เธเนเธฒเธ–เธถเธเน€เธงเนเธเนเธเธ•เนเธซเธฃเธทเธญเนเธเนเธเธฃเธดเธเธฒเธฃเนเธ”เน เนเธ”เน เธซเธฒเธเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเนเธ–เธทเธญเน€เธเนเธเธเนเธญเน€เธชเธเธญ เธเธฒเธฃเธขเธญเธกเธฃเธฑเธเธเธฐเธเธณเธเธฑเธ”เน€เธเธเธฒเธฐเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเนเธญเธขเนเธฒเธเธเธฑเธ”เนเธเนเธ</p>
+            
+            <p>เธเธตเน€เธเธญเธฃเนเธซเธฃเธทเธญเน€เธเธฃเธทเนเธญเธเธกเธทเธญเนเธซเธกเนเนเธ”เธเนเธ•เธฒเธกเธ—เธตเนเน€เธเธดเนเธกเน€เธเนเธฒเธกเธฒเนเธเธฃเนเธฒเธเธเนเธฒเธเธฑเธเธเธธเธเธฑเธเธเธฐเธ•เนเธญเธเน€เธเนเธเนเธเธ•เธฒเธกเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเธ”เนเธงเธข เธเธธเธ“เธชเธฒเธกเธฒเธฃเธ–เธ”เธนเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธงเธญเธฃเนเธเธฑเธเธฅเนเธฒเธชเธธเธ”เนเธ”เนเธ—เธธเธเน€เธกเธทเนเธญเธ—เธตเนเธซเธเนเธฒเธเธตเน เน€เธฃเธฒเธเธญเธชเธเธงเธเธชเธดเธ—เธเธดเนเนเธเธเธฒเธฃเธญเธฑเธเน€เธ”เธ• เน€เธเธฅเธตเนเธขเธเนเธเธฅเธ เธซเธฃเธทเธญเนเธ—เธเธ—เธตเนเธชเนเธงเธเนเธ”เธชเนเธงเธเธซเธเธถเนเธเธเธญเธเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเน เนเธ”เธขเธเธฒเธฃเนเธเธชเธ•เนเธเธฒเธฃเธญเธฑเธเน€เธ”เธ•เนเธฅเธฐ/เธซเธฃเธทเธญเธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธเธเธเน€เธงเนเธเนเธเธ•เนเธเธญเธเน€เธฃเธฒ เน€เธเนเธเธเธงเธฒเธกเธฃเธฑเธเธเธดเธ”เธเธญเธเธเธญเธเธเธธเธ“เธ—เธตเนเธเธฐเธ•เนเธญเธเธ•เธฃเธงเธเธชเธญเธเธซเธเนเธฒเธเธตเนเน€เธเนเธเธฃเธฐเธขเธฐเน€เธเธทเนเธญเธ”เธนเธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธ เธเธฒเธฃเธ—เธตเนเธเธธเธ“เธขเธฑเธเธเธเนเธเนเธเธฒเธเธซเธฃเธทเธญเน€เธเนเธฒเธ–เธถเธเน€เธงเนเธเนเธเธ•เนเธ•เนเธญเธซเธฅเธฑเธเธเธฒเธเธ—เธตเนเธกเธตเธเธฒเธฃเนเธเธชเธ•เนเธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธเนเธ”เน เธเธฐเธ–เธทเธญเน€เธเนเธเธเธฒเธฃเธขเธญเธกเธฃเธฑเธเธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธเน€เธซเธฅเนเธฒเธเธฑเนเธ</p>
+            
+            <p>Paomobile เน€เธเนเธเธเธนเนเนเธซเนเธเธฃเธดเธเธฒเธฃเนเธเธฅเธ•เธเธญเธฃเนเธกเธญเธตเธเธญเธกเน€เธกเธดเธฃเนเธเธญเธญเธเนเธฅเธเนเธ—เธตเนเธเนเธงเธขเนเธซเนเน€เธฃเธฒเธชเธฒเธกเธฒเธฃเธ–เธเธฒเธขเธชเธดเธเธเนเธฒเนเธฅเธฐเธเธฃเธดเธเธฒเธฃเธเธญเธเน€เธฃเธฒเนเธซเนเธเธฑเธเธเธธเธ“เนเธ”เน</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 1 - เธเนเธญเธเธณเธซเธเธ”เน€เธเธตเนเธขเธงเธเธฑเธเธฃเนเธฒเธเธเนเธฒเธญเธญเธเนเธฅเธเน</h3>
+            <p>เธเธฒเธฃเธขเธญเธกเธฃเธฑเธเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเน เธซเธกเธฒเธขเธเธงเธฒเธกเธงเนเธฒเธเธธเธ“เธฃเธฑเธเธฃเธญเธเธงเนเธฒเธเธธเธ“เธกเธตเธญเธฒเธขเธธเธเธฃเธฃเธฅเธธเธเธดเธ•เธดเธ เธฒเธงเธฐเธญเธขเนเธฒเธเธเนเธญเธขเธ•เธฒเธกเน€เธเธ“เธ‘เนเธ—เธตเนเธเธเธซเธกเธฒเธขเธเธณเธซเธเธ”เนเธเธฃเธฑเธเธซเธฃเธทเธญเธเธฑเธเธซเธงเธฑเธ”เธ—เธตเนเธเธธเธ“เธญเธฒเธจเธฑเธขเธญเธขเธนเน เธซเธฃเธทเธญเธเธธเธ“เธกเธตเธญเธฒเธขเธธเธเธฃเธฃเธฅเธธเธเธดเธ•เธดเธ เธฒเธงเธฐเธ•เธฒเธกเน€เธเธ“เธ‘เนเธ—เธตเนเธเธเธซเธกเธฒเธขเธเธณเธซเธเธ”เนเธเธฃเธฑเธเธซเธฃเธทเธญเธเธฑเธเธซเธงเธฑเธ”เธ—เธตเนเธเธธเธ“เธญเธฒเธจเธฑเธขเธญเธขเธนเน เนเธฅเธฐเธเธธเธ“เธขเธดเธเธขเธญเธกเนเธซเนเน€เธฃเธฒเธญเธเธธเธเธฒเธ•เนเธซเนเธเธนเนเน€เธขเธฒเธงเนเนเธเธเธงเธฒเธกเธ”เธนเนเธฅเธเธญเธเธเธธเธ“เธชเธฒเธกเธฒเธฃเธ–เนเธเนเน€เธงเนเธเนเธเธ•เนเธเธตเนเนเธ”เน</p>
+            <p>เธเธธเธ“เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เนเธเนเธชเธดเธเธเนเธฒเธเธญเธเน€เธฃเธฒเน€เธเธทเนเธญเธงเธฑเธ•เธ–เธธเธเธฃเธฐเธชเธเธเนเธ—เธตเนเธเธดเธ”เธเธเธซเธกเธฒเธขเธซเธฃเธทเธญเนเธกเนเนเธ”เนเธฃเธฑเธเธญเธเธธเธเธฒเธ• เนเธฅเธฐเธซเนเธฒเธกเธฅเธฐเน€เธกเธดเธ”เธเธเธซเธกเธฒเธขเนเธ”เน เนเธเน€เธเธ•เธญเธณเธเธฒเธเธจเธฒเธฅเธเธญเธเธเธธเธ“ (เธฃเธงเธกเธ–เธถเธเนเธ•เนเนเธกเนเธเธณเธเธฑเธ”เน€เธเธตเธขเธเธเธเธซเธกเธฒเธขเธฅเธดเธเธชเธดเธ—เธเธดเน) เธเธ“เธฐเนเธเนเธเธฃเธดเธเธฒเธฃเธเธตเน</p>
+            <p>เธเธธเธ“เธเธฐเธ•เนเธญเธเนเธกเนเธชเนเธเธ•เนเธญเน€เธงเธดเธฃเนเธกเธซเธฃเธทเธญเนเธงเธฃเธฑเธชเธซเธฃเธทเธญเนเธเนเธ”เนเธ”เน เธ—เธตเนเธกเธตเธฅเธฑเธเธฉเธ“เธฐเธ—เธณเธฅเธฒเธขเธฅเนเธฒเธ</p>
+            <p>เธเธฒเธฃเธเนเธฒเธเธทเธเธซเธฃเธทเธญเธเธฒเธฃเธฅเธฐเน€เธกเธดเธ”เธเนเธญเธเธณเธซเธเธ”เนเธ”เน เธเธฐเธชเนเธเธเธฅเนเธซเนเธเธฃเธดเธเธฒเธฃเธเธญเธเธเธธเธ“เธชเธดเนเธเธชเธธเธ”เธฅเธเธ—เธฑเธเธ—เธต</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 2 - เน€เธเธทเนเธญเธเนเธเธ—เธฑเนเธงเนเธ</h3>
+            <p>เน€เธฃเธฒเธเธญเธชเธเธงเธเธชเธดเธ—เธเธดเนเนเธเธเธฒเธฃเธเธเธดเน€เธชเธเธเธฒเธฃเนเธซเนเธเธฃเธดเธเธฒเธฃเนเธเนเธเธธเธเธเธฅเนเธ”เธเนเธ•เธฒเธกเธ”เนเธงเธขเน€เธซเธ•เธธเธเธฅเนเธ”เธเนเธ•เธฒเธกเนเธ”เนเธ—เธธเธเน€เธกเธทเนเธญ</p>
+            <p>เธเธธเธ“เน€เธเนเธฒเนเธเธงเนเธฒเน€เธเธทเนเธญเธซเธฒเธเธญเธเธเธธเธ“ (เนเธกเนเธฃเธงเธกเธ–เธถเธเธเนเธญเธกเธนเธฅเธเธฑเธ•เธฃเน€เธเธฃเธ”เธดเธ•) เธญเธฒเธเธกเธตเธเธฒเธฃเธ–เนเธฒเธขเนเธญเธเนเธเธเนเธกเนเน€เธเนเธฒเธฃเธซเธฑเธชเนเธฅเธฐเธกเธตเธชเนเธงเธเนเธ (เธ) เธเธฒเธฃเธ–เนเธฒเธขเนเธญเธเธเนเธฒเธเน€เธเธฃเธทเธญเธเนเธฒเธขเธ•เนเธฒเธเน เนเธฅเธฐ (เธ) เธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธเน€เธเธทเนเธญเนเธซเนเธชเธญเธ”เธเธฅเนเธญเธเนเธฅเธฐเธเธฃเธฑเธเนเธซเนเน€เธเนเธฒเธเธฑเธเธเนเธญเธเธณเธซเธเธ”เธ—เธฒเธเน€เธ—เธเธเธดเธเธเธญเธเน€เธเธฃเธทเธญเธเนเธฒเธขเธซเธฃเธทเธญเธญเธธเธเธเธฃเธ“เนเธ—เธตเนเน€เธเธทเนเธญเธกเธ•เนเธญ เธเนเธญเธกเธนเธฅเธเธฑเธ•เธฃเน€เธเธฃเธ”เธดเธ•เธเธฐเธกเธตเธเธฒเธฃเน€เธเนเธฒเธฃเธซเธฑเธชเน€เธชเธกเธญเนเธเธฃเธฐเธซเธงเนเธฒเธเธเธฒเธฃเธ–เนเธฒเธขเนเธญเธเธเนเธฒเธเน€เธเธฃเธทเธญเธเนเธฒเธข</p>
+            <p>เธเธธเธ“เธ•เธเธฅเธเธ—เธตเนเธเธฐเนเธกเนเธ—เธณเธเธฒเธฃเธเธฅเธดเธ•เธเนเธณ เธ—เธณเธเนเธณ เธเธฑเธ”เธฅเธญเธ เธเธฒเธข เธเธฒเธขเธ•เนเธญ เธซเธฃเธทเธญเนเธเนเธเธฃเธฐเนเธขเธเธเนเธเธฒเธเธชเนเธงเธเนเธ”เธชเนเธงเธเธซเธเธถเนเธเธเธญเธเธเธฃเธดเธเธฒเธฃ เธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃ เธซเธฃเธทเธญเธเธฒเธฃเน€เธเนเธฒเธ–เธถเธเธเธฃเธดเธเธฒเธฃเธซเธฃเธทเธญเธเธนเนเธ•เธดเธ”เธ•เนเธญเธเธเน€เธงเนเธเนเธเธ•เนเธเนเธฒเธเธเธฃเธดเธเธฒเธฃเธ—เธตเนเธกเธญเธเนเธซเน เนเธ”เธขเนเธกเนเนเธ”เนเธฃเธฑเธเธญเธเธธเธเธฒเธ•เน€เธเนเธเธฅเธฒเธขเธฅเธฑเธเธฉเธ“เนเธญเธฑเธเธฉเธฃเธเธฒเธเน€เธฃเธฒเธญเธขเนเธฒเธเธเธฑเธ”เนเธเนเธ</p>
+            <p>เธซเธฑเธงเน€เธฃเธทเนเธญเธเธ—เธตเนเนเธเนเนเธเธเนเธญเธ•เธเธฅเธเธเธตเนเธฃเธฐเธเธธเนเธงเนเน€เธเธทเนเธญเธเธงเธฒเธกเธชเธฐเธ”เธงเธเน€เธ—เนเธฒเธเธฑเนเธ เนเธฅเธฐเธเธฐเนเธกเนเธเธณเธเธฑเธ”เธซเธฃเธทเธญเธชเนเธเธเธฅเธเธฃเธฐเธ—เธเนเธ”เน เธ•เนเธญเธเนเธญเธเธณเธซเธเธ”เน€เธซเธฅเนเธฒเธเธตเน</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 3 - เธเธงเธฒเธกเธ–เธนเธเธ•เนเธญเธ เธเธงเธฒเธกเธชเธกเธเธนเธฃเธ“เน เนเธฅเธฐเธเธงเธฒเธกเน€เธเนเธเธเธฑเธเธเธธเธเธฑเธเธเธญเธเธเนเธญเธกเธนเธฅ</h3>
+            <p>เน€เธฃเธฒเนเธกเนเธฃเธฑเธเธเธดเธ”เธเธญเธเธซเธฒเธเธเนเธญเธกเธนเธฅเธเธเน€เธงเนเธเนเธเธ•เนเธเธตเนเนเธกเนเธ–เธนเธเธ•เนเธญเธ เนเธกเนเธชเธกเธเธนเธฃเธ“เน เธซเธฃเธทเธญเนเธกเนเน€เธเนเธเธเธฑเธเธเธธเธเธฑเธ เน€เธเธทเนเธญเธซเธฒเธเธเน€เธงเนเธเนเธเธ•เนเธเธตเนเธเธฑเธ”เธ—เธณเธเธถเนเธเน€เธเธทเนเธญเนเธซเนเธเนเธญเธกเธนเธฅเธ—เธฑเนเธงเนเธเน€เธ—เนเธฒเธเธฑเนเธ เนเธฅเธฐเนเธกเนเธเธงเธฃเธเธถเนเธเธเธฒเธซเธฃเธทเธญเนเธเนเน€เธเนเธเธเนเธญเธกเธนเธฅเธเธทเนเธเธเธฒเธเน€เธเธตเธขเธเธญเธขเนเธฒเธเน€เธ”เธตเธขเธงเนเธเธเธฒเธฃเธ•เธฑเธ”เธชเธดเธเนเธเนเธ”เธขเนเธกเนเธเธฃเธถเธเธฉเธฒเนเธซเธฅเนเธเธเนเธญเธกเธนเธฅเธซเธฅเธฑเธเธ—เธตเนเธ–เธนเธเธ•เนเธญเธ เธชเธกเธเธนเธฃเธ“เน เธซเธฃเธทเธญเน€เธเนเธเธเธฑเธเธเธธเธเธฑเธเธเธงเนเธฒ เธเธฒเธฃเธญเนเธฒเธเธญเธดเธเน€เธเธทเนเธญเธซเธฒเธเธเน€เธงเนเธเนเธเธ•เนเธเธตเนเธ–เธทเธญเน€เธเนเธเธเธงเธฒเธกเน€เธชเธตเนเธขเธเธเธญเธเธเธธเธ“</p>
+            <p>เน€เธงเนเธเนเธเธ•เนเธเธตเนเธญเธฒเธเธกเธตเธเนเธญเธกเธนเธฅเธเธฒเธเธเธฃเธฐเธเธฒเธฃเธ—เธตเนเน€เธเนเธเธเนเธญเธกเธนเธฅเนเธเธญเธ”เธตเธ• เธเนเธญเธกเธนเธฅเนเธเธญเธ”เธตเธ•เธเธฑเนเธเนเธกเนเธ–เธทเธญเน€เธเนเธเธเนเธญเธกเธนเธฅเธเธฑเธเธเธธเธเธฑเธเนเธฅเธฐเธกเธตเนเธงเนเน€เธเธทเนเธญเน€เธเนเธเธเนเธญเธกเธนเธฅเธญเนเธฒเธเธญเธดเธเธเธญเธเธเธธเธ“เน€เธ—เนเธฒเธเธฑเนเธ เน€เธฃเธฒเธเธญเธชเธเธงเธเธชเธดเธ—เธเธดเนเนเธเธเธฒเธฃเนเธเนเนเธเน€เธเธทเนเธญเธซเธฒเธเธเน€เธงเนเธเนเธเธ•เนเธเธตเนเนเธ”เนเธ—เธธเธเน€เธกเธทเนเธญ เนเธ•เนเน€เธฃเธฒเนเธกเนเธกเธตเธ เธฒเธฃเธฐเธเธนเธเธเธฑเธเธ—เธตเนเธเธฐเธ•เนเธญเธเธญเธฑเธเน€เธ”เธ•เธเนเธญเธกเธนเธฅเนเธ”เน เธเธเน€เธงเนเธเนเธเธ•เนเธเธญเธเน€เธฃเธฒ เธเธธเธ“เธ•เธเธฅเธเธงเนเธฒเน€เธเนเธเธเธงเธฒเธกเธฃเธฑเธเธเธดเธ”เธเธญเธเธเธญเธเธเธธเธ“เนเธเธเธฒเธฃเธ•เธฃเธงเธเธชเธญเธเธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธเธ—เธตเนเน€เธเธดเธ”เธเธถเนเธเธเธเน€เธงเนเธเนเธเธ•เนเธเธญเธเน€เธฃเธฒ</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 4 - เธเธฒเธฃเธเธฃเธฑเธเน€เธเธฅเธตเนเธขเธเธเธฃเธดเธเธฒเธฃเนเธฅเธฐเธฃเธฒเธเธฒ</h3>
+            <p>เธฃเธฒเธเธฒเธชเธดเธเธเนเธฒเธเธญเธเน€เธฃเธฒเธญเธฒเธเธกเธตเธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธเนเธ”เธขเนเธกเนเธ•เนเธญเธเนเธเนเธเนเธซเนเธเธธเธ“เธ—เธฃเธฒเธ</p>
+            <p>เน€เธฃเธฒเธเธญเธชเธเธงเธเธชเธดเธ—เธเธดเนเนเธเธเธฒเธฃเนเธเนเนเธเธซเธฃเธทเธญเธขเธธเธ•เธดเธเธฒเธฃเนเธซเนเธเธฃเธดเธเธฒเธฃ (เธซเธฃเธทเธญเธชเนเธงเธเนเธ”เธชเนเธงเธเธซเธเธถเนเธเธซเธฃเธทเธญเน€เธเธทเนเธญเธซเธฒ) เนเธ”เนเธ—เธธเธเน€เธกเธทเนเธญ เนเธ”เธขเนเธกเนเธ•เนเธญเธเนเธเนเธเนเธซเนเธเธธเธ“เธ—เธฃเธฒเธ</p>
+            <p>เน€เธฃเธฒเธเธฐเนเธกเนเธฃเธฑเธเธเธดเธ”เธ•เนเธญเธเธธเธ“เธซเธฃเธทเธญเธเธธเธเธเธฅเธ เธฒเธขเธเธญเธเธชเธณเธซเธฃเธฑเธเธเธฒเธฃเธเธฃเธฑเธเน€เธเธฅเธตเนเธขเธ เธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธเธฃเธฒเธเธฒ เธเธฒเธฃเธฃเธฐเธเธฑเธ เธซเธฃเธทเธญเธเธฒเธฃเธขเธธเธ•เธดเธเธฒเธฃเนเธซเนเธเธฃเธดเธเธฒเธฃ</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 5 - เธชเธดเธเธเนเธฒเธซเธฃเธทเธญเธเธฃเธดเธเธฒเธฃ (เธซเธฒเธเธกเธต)</h3>
+            <p>เธชเธดเธเธเนเธฒเธซเธฃเธทเธญเธเธฃเธดเธเธฒเธฃเธเธฒเธเธญเธขเนเธฒเธเธญเธฒเธเธเธฃเนเธญเธกเธเธณเธซเธเนเธฒเธขเธซเธฃเธทเธญเธเธฃเนเธญเธกเนเธซเนเธเธฃเธดเธเธฒเธฃเน€เธเธเธฒเธฐเธเนเธญเธเธ—เธฒเธเธญเธญเธเนเธฅเธเนเธเนเธฒเธเน€เธงเนเธเนเธเธ•เนเน€เธ—เนเธฒเธเธฑเนเธ เธชเธดเธเธเนเธฒเธซเธฃเธทเธญเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเนเธญเธฒเธเธกเธตเธเธณเธเธงเธเธเธณเธเธฑเธ” เนเธฅเธฐเธชเธฒเธกเธฒเธฃเธ–เธเธทเธเธซเธฃเธทเธญเน€เธเธฅเธตเนเธขเธเนเธ”เนเธ•เธฒเธกเธเนเธขเธเธฒเธขเธเธญเธเน€เธฃเธฒเน€เธ—เนเธฒเธเธฑเนเธ</p>
+            <p>เธ—เธฑเนเธเธเธตเน เน€เธฃเธฒเธเธขเธฒเธขเธฒเธกเธญเธขเนเธฒเธเน€เธ•เนเธกเธ—เธตเนเน€เธเธทเนเธญเนเธชเธ”เธเธชเธตเนเธฅเธฐเธฃเธนเธเธ เธฒเธเธเธญเธเธชเธดเธเธเนเธฒเธ—เธตเนเธเธฃเธฒเธเธเนเธเน€เธงเนเธเนเธเธ•เนเนเธซเนเธ–เธนเธเธ•เนเธญเธเธ—เธตเนเธชเธธเธ”เน€เธ—เนเธฒเธ—เธตเนเธเธฐเน€เธเนเธเนเธเนเธ”เน เน€เธฃเธฒเนเธกเนเธชเธฒเธกเธฒเธฃเธ–เธฃเธฑเธเธเธฃเธฐเธเธฑเธเธงเนเธฒเธชเธตเธเธเธเธญเธเธญเธกเธเธดเธงเน€เธ•เธญเธฃเนเธเธญเธเธเธธเธ“เธเธฐเนเธชเธ”เธเธเธฅเธ–เธนเธเธ•เนเธญเธ</p>
+            <p>เน€เธฃเธฒเธเธญเธชเธเธงเธเธชเธดเธ—เธเธดเน เนเธ•เนเนเธกเนเธกเธตเธ เธฒเธฃเธฐเธเธนเธเธเธฑเธเนเธเธเธฒเธฃเธเธณเธเธฑเธ”เธเธฒเธฃเธเธฒเธขเธชเธดเธเธเนเธฒเธซเธฃเธทเธญเธเธฃเธดเธเธฒเธฃเธเธญเธเน€เธฃเธฒเนเธซเนเธเธฑเธเธเธธเธเธเธฅ เธ เธนเธกเธดเธ เธฒเธเธ—เธฒเธเธ เธนเธกเธดเธจเธฒเธชเธ•เธฃเน เธซเธฃเธทเธญเน€เธเธ•เธญเธณเธเธฒเธเธจเธฒเธฅเนเธ”เน เนเธ”เธขเน€เธฃเธฒเธเธฐเนเธเนเธชเธดเธ—เธเธดเนเธเธตเนเน€เธเนเธเธฃเธฒเธขเธเธฃเธ“เธต เน€เธฃเธฒเธเธญเธชเธเธงเธเธชเธดเธ—เธเธดเนเนเธเธเธฒเธฃเธเธณเธเธฑเธ”เธเธณเธเธงเธเธชเธดเธเธเนเธฒเธซเธฃเธทเธญเธเธฃเธดเธเธฒเธฃเนเธ”เน เธ—เธตเนเน€เธฃเธฒเธเธณเน€เธชเธเธญ เธเธณเธญเธเธดเธเธฒเธขเธชเธดเธเธเนเธฒเธซเธฃเธทเธญเธเธฒเธฃเธเธณเธซเธเธ”เธฃเธฒเธเธฒเธชเธดเธเธเนเธฒเธ—เธฑเนเธเธซเธกเธ”เธญเธฒเธเธกเธตเธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธเนเธ”เนเธ—เธธเธเน€เธกเธทเนเธญเนเธ”เธขเนเธกเนเธ•เนเธญเธเนเธเนเธเนเธซเนเธเธธเธ“เธ—เธฃเธฒเธ เนเธ”เธขเธเธถเนเธเธญเธขเธนเนเธเธฑเธเธ”เธธเธฅเธขเธเธดเธเธดเธเธเธญเธเน€เธฃเธฒเนเธ•เนเน€เธเธตเธขเธเธเธนเนเน€เธ”เธตเธขเธง</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 6 - เธเธงเธฒเธกเธ–เธนเธเธ•เนเธญเธเธเธญเธเธเธฒเธฃเน€เธฃเธตเธขเธเน€เธเนเธเน€เธเธดเธเนเธฅเธฐเธเนเธญเธกเธนเธฅเธเธฑเธเธเธต</h3>
+            <p>เน€เธฃเธฒเธเธญเธชเธเธงเธเธชเธดเธ—เธเธดเนเนเธเธเธฒเธฃเธเธเธดเน€เธชเธเธเธณเธชเธฑเนเธเธเธทเนเธญเนเธ”เน เธ—เธตเนเธเธธเธ“เธ—เธณเธเธฑเธเน€เธฃเธฒ เน€เธฃเธฒเธญเธฒเธเธเธณเธเธฑเธ”เธซเธฃเธทเธญเธขเธเน€เธฅเธดเธเธเธณเธเธงเธเธชเธดเธเธเนเธฒเธซเธฃเธทเธญเธเธฃเธดเธเธฒเธฃเธ—เธตเนเธกเธตเธเธฒเธฃเธเธทเนเธญเธ•เนเธญเธเธ เธ•เนเธญเธเธฃเธฑเธงเน€เธฃเธทเธญเธ เธซเธฃเธทเธญเธ•เนเธญเธเธณเธชเธฑเนเธเธเธทเนเธญ เนเธ”เธขเธเธถเนเธเธญเธขเธนเนเธเธฑเธเธ”เธธเธฅเธขเธเธดเธเธดเธเธเธญเธเน€เธฃเธฒเนเธ•เนเน€เธเธตเธขเธเธเธนเนเน€เธ”เธตเธขเธง</p>
+            <p>เธเธธเธ“เธ•เธเธฅเธเธ—เธตเนเธเธฐเนเธซเนเธเนเธญเธกเธนเธฅเธเธฒเธฃเธเธทเนเธญเนเธฅเธฐเธเธฑเธเธเธตเธ—เธตเนเน€เธเนเธเธเธฑเธเธเธธเธเธฑเธ เธชเธกเธเธนเธฃเธ“เน เนเธฅเธฐเธ–เธนเธเธ•เนเธญเธเธชเธณเธซเธฃเธฑเธเธเธฒเธฃเธเธทเนเธญเธ—เธฑเนเธเธซเธกเธ”เธ—เธตเนเธ—เธณเธเธฑเธเน€เธฃเธฒ เน€เธเธทเนเธญเนเธซเนเน€เธฃเธฒเธชเธฒเธกเธฒเธฃเธ–เธ—เธณเธเธธเธฃเธเธฃเธฃเธกเธเธญเธเธเธธเธ“เนเธซเนเน€เธชเธฃเนเธเธชเธกเธเธนเธฃเธ“เนเนเธฅเธฐเธ•เธดเธ”เธ•เนเธญเธเธธเธ“เนเธ”เนเธซเธฒเธเธเธณเน€เธเนเธ</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 7 - เน€เธเธฃเธทเนเธญเธเธกเธทเธญเน€เธชเธฃเธดเธก</h3>
+            <p>เน€เธฃเธฒเธญเธฒเธเนเธซเนเธชเธดเธ—เธเธดเนเธเธธเธ“เนเธเธเธฒเธฃเน€เธเนเธฒเธ–เธถเธเน€เธเธฃเธทเนเธญเธเธกเธทเธญเธเธญเธเธเธธเธเธเธฅเธ เธฒเธขเธเธญเธ เธเธถเนเธเน€เธฃเธฒเนเธกเนเนเธ”เนเธ•เธฃเธงเธเธชเธญเธ เธเธงเธเธเธธเธก เธซเธฃเธทเธญเธเนเธญเธเธเนเธญเธกเธนเธฅเนเธ”เน เธเธธเธ“เธฃเธฑเธเธ—เธฃเธฒเธเนเธฅเธฐเธ•เธเธฅเธเนเธซเนเน€เธฃเธฒเนเธซเนเธชเธดเธ—เธเธดเนเธเธฒเธฃเน€เธเนเธฒเธ–เธถเธเน€เธเธฃเธทเนเธญเธเธกเธทเธญเธ”เธฑเธเธเธฅเนเธฒเธง "เธ•เธฒเธกเธ—เธตเนเน€เธเนเธ" เนเธฅเธฐ "เธ•เธฒเธกเธ—เธตเนเธกเธต" เนเธ”เธขเนเธกเนเธกเธตเธเธฒเธฃเธฃเธฑเธเธเธฃเธฐเธเธฑเธเนเธ”เน</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 8 - เธฅเธดเธเธเนเธเธฒเธเธเธธเธเธเธฅเธ เธฒเธขเธเธญเธ</h3>
+            <p>เน€เธเธทเนเธญเธซเธฒ เธชเธดเธเธเนเธฒ เนเธฅเธฐเธเธฃเธดเธเธฒเธฃเธเธฒเธเธญเธขเนเธฒเธเธ—เธตเนเธกเธตเนเธซเนเธเนเธฒเธเธเธฃเธดเธเธฒเธฃเธเธญเธเน€เธฃเธฒเธญเธฒเธเธกเธตเน€เธเธทเนเธญเธซเธฒเธเธฒเธเธเธธเธเธเธฅเธ เธฒเธขเธเธญเธเธฃเธงเธกเธญเธขเธนเนเธ”เนเธงเธข เน€เธฃเธฒเนเธกเนเธกเธตเธซเธเนเธฒเธ—เธตเนเนเธเธเธฒเธฃเธ•เธฃเธงเธเธชเธญเธเธซเธฃเธทเธญเธเธฃเธฐเน€เธกเธดเธเน€เธเธทเนเธญเธซเธฒเธซเธฃเธทเธญเธเธงเธฒเธกเธ–เธนเธเธ•เนเธญเธ เนเธฅเธฐเน€เธฃเธฒเนเธกเนเธฃเธฑเธเธเธฃเธฐเธเธฑเธเธชเธณเธซเธฃเธฑเธเน€เธเธทเนเธญเธซเธฒเธซเธฃเธทเธญเน€เธงเนเธเนเธเธ•เนเธเธญเธเธเธธเธเธเธฅเธ เธฒเธขเธเธญเธเธเธฑเนเธเน</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 9 - เธเธงเธฒเธกเธเธดเธ”เน€เธซเนเธเธเธญเธเธเธนเนเนเธเน เธเนเธญเน€เธชเธเธญเนเธเธฐ เนเธฅเธฐเธเธฒเธฃเธชเนเธเธญเธทเนเธเน</h3>
+            <p>เธซเธฒเธเธเธธเธ“เธชเนเธเธเธฒเธเธชเธดเนเธเธเธฒเธเธญเธขเนเธฒเธ (เน€เธเนเธ เธเธฅเธเธฒเธเน€เธเนเธฒเธเธฃเธฐเธเธงเธ”) เธซเธกเธฒเธขเธเธงเธฒเธกเธงเนเธฒเธเธธเธ“เธ•เธเธฅเธเนเธซเนเน€เธฃเธฒเธชเธฒเธกเธฒเธฃเธ–เนเธเนเนเธ เธเธฑเธ”เธฅเธญเธ เน€เธเธขเนเธเธฃเน เธเธฑเธ”เธเธณเธซเธเนเธฒเธข เนเธฅเธฐเนเธเนเธเธงเธฒเธกเธเธดเธ”เน€เธซเนเธเธ—เธตเนเธเธธเธ“เธชเนเธเธกเธฒเนเธซเนเน€เธฃเธฒเนเธเธชเธทเนเธญเธ•เนเธฒเธเน เนเธ”เนเธ—เธธเธเน€เธกเธทเนเธญเนเธ”เธขเนเธกเนเธกเธตเธเนเธญเธเธณเธเธฑเธ”</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 10 - เธเนเธญเธกเธนเธฅเธชเนเธงเธเธเธธเธเธเธฅ</h3>
+            <p>เธเธฒเธฃเธชเนเธเธเนเธญเธกเธนเธฅเธชเนเธงเธเธเธธเธเธเธฅเธเธญเธเธเธธเธ“เธเนเธฒเธเธ—เธฒเธเธซเธเนเธฒเน€เธงเนเธเนเธเธ•เนเธเธฐเธญเธขเธนเนเธ เธฒเธขเนเธ•เนเธเนเธขเธเธฒเธขเธเธงเธฒเธกเน€เธเนเธเธชเนเธงเธเธ•เธฑเธงเธเธญเธเน€เธฃเธฒ</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 11 - เธเนเธญเธเธดเธ”เธเธฅเธฒเธ” เธเธงเธฒเธกเนเธกเนเธ–เธนเธเธ•เนเธญเธ เนเธฅเธฐเธเธฒเธฃเธฅเธฐเน€เธงเนเธ</h3>
+            <p>เธเธฒเธเธเธฃเธฑเนเธเธญเธฒเธเธกเธตเธเนเธญเธกเธนเธฅเธเธเน€เธงเนเธเนเธเธ•เนเธเธญเธเน€เธฃเธฒเธซเธฃเธทเธญเนเธเธเธฃเธดเธเธฒเธฃเธ—เธตเนเธกเธตเธเนเธญเธเธดเธ”เธเธฅเธฒเธ”เธ”เนเธฒเธเธเธฒเธฃเธเธดเธกเธเน เธเธงเธฒเธกเนเธกเนเธ–เธนเธเธ•เนเธญเธ เธซเธฃเธทเธญเธเธฒเธฃเธฅเธฐเน€เธงเนเธเธ—เธตเนเธญเธฒเธเน€เธเธตเนเธขเธงเธเนเธญเธเธเธฑเธเธเธณเธญเธเธดเธเธฒเธขเธชเธดเธเธเนเธฒ เธเธฒเธฃเธเธณเธซเธเธ”เธฃเธฒเธเธฒ เนเธเธฃเนเธกเธเธฑเธ เธเนเธญเน€เธชเธเธญ เธเนเธฒเธเธฑเธ”เธชเนเธเธชเธดเธเธเนเธฒ เธฃเธฐเธขเธฐเน€เธงเธฅเธฒเธเธฒเธฃเธเธเธชเนเธ เนเธฅเธฐเธเธงเธฒเธกเธเธฃเนเธญเธกเนเธเธเธฒเธฃเธเธณเธซเธเนเธฒเธขเธซเธฃเธทเธญเนเธซเนเธเธฃเธดเธเธฒเธฃ เน€เธฃเธฒเธเธญเธชเธเธงเธเธชเธดเธ—เธเธดเนเนเธเธเธฒเธฃเนเธเนเนเธเธเนเธญเธเธดเธ”เธเธฅเธฒเธ” เธเธงเธฒเธกเนเธกเนเธ–เธนเธเธ•เนเธญเธ เธซเธฃเธทเธญเธเธฒเธฃเธฅเธฐเน€เธงเนเธเนเธ”เน เนเธฅเธฐเธเธญเธชเธเธงเธเธชเธดเธ—เธเธดเนเนเธเธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธเธซเธฃเธทเธญเธญเธฑเธเน€เธ”เธ•เธเนเธญเธกเธนเธฅ เธซเธฃเธทเธญเธขเธเน€เธฅเธดเธเธเธณเธชเธฑเนเธเธเธทเนเธญเธซเธฒเธเธเนเธญเธกเธนเธฅเนเธ”เน เนเธเธเธฃเธดเธเธฒเธฃเธซเธฃเธทเธญเธเธเน€เธงเนเธเนเธเธ•เนเธ—เธตเนเน€เธเธตเนเธขเธงเธเนเธญเธเนเธกเนเธ–เธนเธเธ•เนเธญเธเนเธ”เนเธ—เธธเธเน€เธกเธทเนเธญเนเธ”เธขเนเธกเนเธ•เนเธญเธเนเธเนเธเนเธซเนเธ—เธฃเธฒเธเธฅเนเธงเธเธซเธเนเธฒ</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 12 - เธเธฒเธฃเนเธเนเธเธฒเธเธ—เธตเนเนเธกเนเธญเธเธธเธเธฒเธ•</h3>
+            <p>เธเธญเธเน€เธซเธเธทเธญเธเธฒเธเธเนเธญเธซเนเธฒเธกเธญเธทเนเธเน เธ•เธฒเธกเธ—เธตเนเธฃเธฐเธเธธเนเธเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃ เธเธธเธ“เนเธกเนเนเธ”เนเธฃเธฑเธเธญเธเธธเธเธฒเธ•เนเธซเนเนเธเนเน€เธงเนเธเนเธเธ•เนเธซเธฃเธทเธญเน€เธเธทเนเธญเธซเธฒเธเธญเธเน€เธงเนเธเนเธเธ•เนเน€เธเธทเนเธญเธงเธฑเธ•เธ–เธธเธเธฃเธฐเธชเธเธเนเธ—เธตเนเธเธดเธ”เธเธเธซเธกเธฒเธข เน€เธเธทเนเธญเธเธฑเธเธเธงเธเธเธนเนเธญเธทเนเธเนเธซเนเธเธฃเธฐเธ—เธณเธซเธฃเธทเธญเธกเธตเธชเนเธงเธเธฃเนเธงเธกเนเธเธเธดเธเธเธฃเธฃเธกเธ—เธตเนเธเธดเธ”เธเธเธซเธกเธฒเธข เธซเธฃเธทเธญเน€เธเธทเนเธญเธฅเธฐเน€เธกเธดเธ”เธเนเธญเธเธฑเธเธเธฑเธ เธเธ เธเธเธซเธกเธฒเธข เธซเธฃเธทเธญเธเนเธญเธเธฑเธเธเธฑเธ•เธดเนเธเธ—เนเธญเธเธ–เธดเนเธเนเธ”เน เธ—เธฑเนเธเนเธเธฃเธฐเธ”เธฑเธเธเธฒเธเธฒเธเธฒเธ•เธด เธซเธฃเธทเธญเธฃเธฐเธ”เธฑเธเธฃเธฑเธเธเธฒเธฅเธเธฅเธฒเธ</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 13 - เธเธฒเธฃเธชเธเธงเธเธชเธดเธ—เธเธดเนเธเธฒเธฃเธฃเธฑเธเธเธฃเธฐเธเธฑเธ เธเธฒเธฃเธเธณเธเธฑเธ”เธเธงเธฒเธกเธฃเธฑเธเธเธดเธ”</h3>
+            <p>เน€เธฃเธฒเนเธกเนเธฃเธฑเธเธเธฃเธฐเธเธฑเธเธซเธฃเธทเธญเธฃเธฑเธเธฃเธญเธเธงเนเธฒเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเธเธญเธเน€เธฃเธฒเธเธฐเนเธกเนเธซเธขเธธเธ”เธเธฐเธเธฑเธ เธ—เธฑเธเน€เธงเธฅเธฒ เธเธฅเธญเธ”เธ เธฑเธข เธซเธฃเธทเธญเธเธฃเธฒเธจเธเธฒเธเธเนเธญเธเธดเธ”เธเธฅเธฒเธ” เธเธธเธ“เธ•เธเธฅเธเนเธ”เธขเธเธฑเธ”เนเธเนเธเธงเนเธฒเธเธฒเธฃเนเธเนเธซเธฃเธทเธญเนเธกเนเธชเธฒเธกเธฒเธฃเธ–เนเธเนเธเธฃเธดเธเธฒเธฃเนเธ”เนเธเธญเธเธเธธเธ“เธ–เธทเธญเน€เธเนเธเธเธงเธฒเธกเน€เธชเธตเนเธขเธเธเธญเธเธเธธเธ“เนเธ•เนเน€เธเธตเธขเธเธเธนเนเน€เธ”เธตเธขเธง</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 14 - เธเธฒเธฃเธเธ”เนเธเนเธเนเธฒเธชเธดเธเนเธซเธกเธ—เธ”เนเธ—เธ</h3>
+            <p>เธเธธเธ“เธ•เธเธฅเธเธ—เธตเนเธเธฐเธเธ”เน€เธเธข เธเธเธเนเธญเธ เนเธฅเธฐเธ–เธทเธญเธงเนเธฒ Paomobile เนเธฅเธฐเธเธฃเธดเธฉเธฑเธ—เนเธกเน เธเธฃเธดเธฉเธฑเธ—เนเธเน€เธเธฃเธทเธญ เนเธกเนเธกเธตเธชเนเธงเธเธฃเธฑเธเธเธดเธ”เธ•เนเธญเธเธฒเธฃเน€เธฃเธตเธขเธเธฃเนเธญเธเธซเธฃเธทเธญเธเธงเธฒเธกเธ•เนเธญเธเธเธฒเธฃเนเธ”เน เธฃเธงเธกเธ–เธถเธเธเนเธฒเธ—เธเธฒเธขเธเธงเธฒเธกเธ—เธตเนเธชเธกเน€เธซเธ•เธธเธชเธกเธเธฅเธ—เธตเนเน€เธเธดเธ”เธเธถเนเธเธเธฒเธเธเธธเธเธเธฅเธ เธฒเธขเธเธญเธ เธญเธฑเธเน€เธเธทเนเธญเธเธกเธฒเธเธฒเธเธซเธฃเธทเธญเน€เธเธดเธ”เธเธถเนเธเธเธฒเธเธเธฒเธฃเธเนเธฒเธเธทเธเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเน</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 15 - เธเธฒเธฃเนเธขเธเธญเธญเธเธเธฒเธเธเธฑเธเนเธ”เนเธเธญเธเธเนเธญเธเธณเธซเธเธ”</h3>
+            <p>เนเธเธเธฃเธ“เธตเธ—เธตเนเธกเธตเธเธฒเธฃเธเธดเธเธฒเธฃเธ“เธฒเธเนเธญเธเธณเธซเธเธ”เนเธ”เน เธเธญเธเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเนเนเธซเนเน€เธเนเธเธเธฒเธฃเธเธฃเธฐเธ—เธณเธ—เธตเนเธเธดเธ”เธเธเธซเธกเธฒเธข เน€เธเนเธเนเธกเธเธฐ เธซเธฃเธทเธญเนเธกเนเธชเธฒเธกเธฒเธฃเธ–เธเธฑเธเธเธฑเธเนเธเนเนเธ”เน เธเนเธญเธเธณเธซเธเธ”เธ”เธฑเธเธเธฅเนเธฒเธงเธเธฐเธขเธฑเธเธเธเธชเธฒเธกเธฒเธฃเธ–เธเธฑเธเธเธฑเธเนเธเนเนเธ”เนเน€เธ•เนเธกเธ—เธตเนเธ•เธฒเธกเธ—เธตเนเธเธเธซเธกเธฒเธขเธ—เธตเนเน€เธเธตเนเธขเธงเธเนเธญเธเธญเธเธธเธเธฒเธ•</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 16 - เธเธฒเธฃเธชเธดเนเธเธชเธธเธ”เธชเธฑเธเธเธฒ</h3>
+            <p>เธเนเธญเธเธนเธเธเธฑเธเนเธฅเธฐเธเธงเธฒเธกเธฃเธฑเธเธเธดเธ”เธเธญเธเธเนเธฒเธขเธ•เนเธฒเธเน เธ—เธตเนเน€เธเธดเธ”เธเธถเนเธเธเนเธญเธเธงเธฑเธเธ—เธตเนเธชเธดเนเธเธชเธธเธ”เธชเธฑเธเธเธฒเธเธฐเธขเธฑเธเธเธเธกเธตเธเธฅเธเธฑเธเธเธฑเธเนเธเนเธ•เนเธญเนเธเนเธกเนเธเนเธญเธ•เธเธฅเธเธเธตเนเธเธฐเธชเธดเนเธเธชเธธเธ”เธฅเธ เน€เธเธทเนเธญเธงเธฑเธ•เธ–เธธเธเธฃเธฐเธชเธเธเนเธ—เธฑเนเธเธซเธกเธ” เนเธ”เธขเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเนเธเธฐเธกเธตเธเธฅเธเธฑเธเธเธฑเธเนเธเนเธเธเธเธงเนเธฒเธเธฐเธกเธตเธเธฒเธฃเนเธเนเธเธขเธธเธ•เธดเนเธ”เธขเธเธธเธ“เธซเธฃเธทเธญเน€เธฃเธฒ</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 17 - เธเนเธญเธ•เธเธฅเธเธ—เธฑเนเธเธซเธกเธ”</h3>
+            <p>เธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเนเนเธฅเธฐเธเนเธขเธเธฒเธขเธซเธฃเธทเธญเธเธเธเธฒเธฃเธ”เธณเน€เธเธดเธเธเธฒเธเนเธ”เน เธ—เธตเนเน€เธฃเธฒเนเธเธชเธ•เนเนเธงเนเธเธเน€เธงเนเธเนเธเธ•เนเธเธตเน เธ–เธทเธญเน€เธเนเธเธเนเธญเธ•เธเธฅเธเนเธฅเธฐเธเธงเธฒเธกเน€เธเนเธฒเนเธเธ—เธฑเนเธเธซเธกเธ”เธฃเธฐเธซเธงเนเธฒเธเธเธธเธ“เธเธฑเธเน€เธฃเธฒ</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 18 - เธเธเธซเธกเธฒเธขเธ—เธตเนเธเธฑเธเธเธฑเธเนเธเน</h3>
+            <p>เธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเนเนเธฅเธฐเธเนเธญเธ•เธเธฅเธเนเธขเธเธ•เนเธฒเธเธซเธฒเธเนเธ”เน เธ—เธตเนเน€เธเธตเนเธขเธงเธเนเธญเธเธเธฑเธเธเธฃเธดเธเธฒเธฃเธ—เธตเนเน€เธฃเธฒเธกเธญเธเนเธซเนเธเธธเธ“เธเธฐเธญเธขเธนเนเธ เธฒเธขเนเธ•เนเนเธฅเธฐเธ•เธตเธเธงเธฒเธกเธ•เธฒเธกเธเธเธซเธกเธฒเธขเธเธญเธเธเธฃเธฐเน€เธ—เธจเนเธ—เธข</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 19 - เธเธฒเธฃเน€เธเธฅเธตเนเธขเธเนเธเธฅเธเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃ</h3>
+            <p>เธเธธเธ“เธชเธฒเธกเธฒเธฃเธ–เธ”เธนเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธงเธญเธฃเนเธเธฑเธเธฅเนเธฒเธชเธธเธ”เนเธ”เนเธ—เธธเธเน€เธกเธทเนเธญเธ—เธตเนเธซเธเนเธฒเธเธตเน เน€เธฃเธฒเธเธญเธชเธเธงเธเธชเธดเธ—เธเธดเนเนเธเธเธฒเธฃเธญเธฑเธเน€เธ”เธ• เน€เธเธฅเธตเนเธขเธเนเธเธฅเธ เธซเธฃเธทเธญเนเธ—เธเธ—เธตเนเธชเนเธงเธเนเธ”เธชเนเธงเธเธซเธเธถเนเธเธเธญเธเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเน€เธซเธฅเนเธฒเธเธตเน</p>
+
+            <h3>เธชเนเธงเธเธ—เธตเน 20 - เธเนเธญเธกเธนเธฅเธ•เธดเธ”เธ•เนเธญ</h3>
+            <p>เนเธเธฃเธ”เธชเนเธเธเธณเธ–เธฒเธกเน€เธเธตเนเธขเธงเธเธฑเธเธเนเธญเธเธณเธซเธเธ”เนเธเธเธฒเธฃเนเธเนเธเธฃเธดเธเธฒเธฃเธ–เธถเธเน€เธฃเธฒเธ—เธตเน <b>paomobile@gmail.com</b></p>
+            <p><b>Paomobile Official</b><br>
+            เธญเธตเน€เธกเธฅ: paomobile@gmail.com<br>
+            เน€เธงเนเธเนเธเธ•เน: www.paomobile.com<br>
+            เนเธ—เธฃ: 0xx-xxx-xxxx</p>
+        </div>
+    </div>
+</div>
+
+<!-- UI Interactivity Script (Standard - Works on local file://) -->
+<script>
+    // --- UI State & Transitions ---
+    function initExtraActions() {
+       console.log("[UI] Initializing view transitions and validation...");
+       
+       const showCreateBtn = document.getElementById("btnShowCreateAccount");
+       if (showCreateBtn) {
+           showCreateBtn.addEventListener("click", function(e) {
+               e.preventDefault();
+               console.log("[UI] Switching to Register View");
+               
+               // Sync identifier from login to register
+               const loginVal = document.getElementById("emailInput").value.trim();
+               if (loginVal) {
+                   document.getElementById("regEmail").value = loginVal;
+                   // Trigger validation on the new field
+                   const event = new Event('input', { bubbles: true });
+                   document.getElementById("regEmail").dispatchEvent(event);
+               }
+
+               document.getElementById("loginView").style.display = "none";
+               document.getElementById("registerView").style.display = "block";
+               window.scrollTo({ top: 0, behavior: 'smooth' });
+           });
+       }
+
+       const backBtn = document.getElementById("btnBackToLogin");
+       if (backBtn) {
+           backBtn.addEventListener("click", function(e) {
+               e.preventDefault();
+               console.log("[UI] Returning to Login View");
+
+               // Sync identifier from register back to login
+               const regVal = document.getElementById("regEmail").value.trim();
+               if (regVal) {
+                   document.getElementById("emailInput").value = regVal;
+               }
+
+               document.getElementById("registerView").style.display = "none";
+               document.getElementById("loginView").style.display = "block";
+               window.scrollTo({ top: 0, behavior: 'smooth' });
+           });
+       }
+
+        const checkVerifyBtn = document.getElementById("btnCheckVerify");
+        if (checkVerifyBtn) {
+            checkVerifyBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                console.log("[UI] Checking verification status...");
+                if (window.checkVerificationState) {
+                    window.checkVerificationState();
+                }
+            });
+        }
+
+        const logoutVerifyBtn = document.getElementById("btnLogoutOnVerify");
+        if (logoutVerifyBtn) {
+            logoutVerifyBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                console.log("[UI] Logout from verification requested.");
+                if (window.handleForceLogout) {
+                    window.handleForceLogout();
+                } else {
+                    window.location.reload();
+                }
+            });
+        }
+
+        // --- Terms Modal Logic ---
+        const termsModal = document.getElementById("termsModal");
+        const btnOpenTerms = document.getElementById("btnOpenTerms");
+        const btnCloseTerms = document.getElementById("btnCloseTerms");
+
+        if (btnOpenTerms && termsModal) {
+            btnOpenTerms.addEventListener("click", function(e) {
+                e.preventDefault();
+                e.stopPropagation(); // Prevent label click
+                termsModal.style.display = "flex";
+            });
+        }
+
+        if (btnCloseTerms && termsModal) {
+            btnCloseTerms.addEventListener("click", function() {
+                termsModal.style.display = "none";
+            });
+        }
+
+        if (termsModal) {
+            termsModal.addEventListener("click", function(e) {
+                if (e.target === termsModal) {
+                    termsModal.style.display = "none";
+                }
+            });
+        }
+
+        const successFinishBtn = document.getElementById("btnSuccessFinish");
+        if (successFinishBtn) {
+            successFinishBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                console.log("[UI] Success complete. Redirecting to Home.");
+                if (window.finishLoginWithUser) {
+                    window.finishLoginWithUser();
+                } else {
+                    window.location.replace("index.html");
+                }
+            });
+        }
+ 
+        const resendVerifyBtn = document.getElementById("btnResendVerify");
+        if (resendVerifyBtn) {
+            resendVerifyBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                console.log("[UI] Requesting verification email...");
+                if (window.sendVerificationEmail) {
+                    window.sendVerificationEmail();
+                }
+            });
+        }
+ 
+        const forgotPassBtn = document.getElementById("btnForgotPassword");
+        if (forgotPassBtn) {
+            forgotPassBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                console.log("[UI] Switching to Forgot Password View");
+                
+                // Sync identifier
+                const loginVal = document.getElementById("emailInput").value.trim();
+                if (loginVal) {
+                    document.getElementById("forgotIdentifier").value = loginVal;
+                }
+
+                document.getElementById("loginView").style.display = "none";
+                document.getElementById("forgotPasswordView").style.display = "block";
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        const backFromForgotBtn = document.getElementById("btnBackFromForgot");
+        const lnkBackToLogin = document.getElementById("lnkBackToLogin");
+        [backFromForgotBtn, lnkBackToLogin].forEach(btn => {
+            if (btn) {
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    console.log("[UI] Returning to Login from Forgot Password");
+                    
+                    const forgotVal = document.getElementById("forgotIdentifier").value.trim();
+                    if (forgotVal) {
+                        document.getElementById("emailInput").value = forgotVal;
+                    }
+
+                    document.getElementById("forgotPasswordView").style.display = "none";
+                    document.getElementById("loginView").style.display = "block";
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+        });
+
+        // --- Registration Logic & Validation ---
+        const regEmail = document.getElementById("regEmail");
+        const regPassword = document.getElementById("regPassword");
+        const regConfirmPassword = document.getElementById("regConfirmPassword");
+        const regPhone = document.getElementById("regPhone");
+        const checkTerms = document.getElementById("checkTerms");
+        const checkMarketing = document.getElementById("checkMarketing");
+        const regBtn = document.getElementById("btnContinueRegister");
+        const emailError = document.getElementById("regEmailError");
+        const emailHint = document.getElementById("regEmailHint");
+        const passHint = document.getElementById("regPassHint");
+
+        let isEmailAvailable = true;
+        let emailDebounceTimer;
+
+        function validateForm() {
+            if (!regEmail || !regPassword || !regBtn) return;
+
+            const identifier = regEmail.value.trim();
+            const pass = regPassword.value;
+            const confirmPass = regConfirmPassword.value;
+            
+            // 1. Password Complexity Check (Allow symbols)
+            const hasUpper = /[A-Z]/.test(pass);
+            const hasLower = /[a-z]/.test(pass);
+            const hasNumber = /[0-9]/.test(pass);
+            const validChars = /^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/.test(pass);
+            const isLongEnough = pass.length >= 8;
+            const isPassValid = hasUpper && hasLower && hasNumber && validChars && isLongEnough;
+
+            // 2. Confirm Password Match
+            const isMatch = pass === confirmPass && pass !== "";
+
+            // 3. Identifier Check (Email Only)
+            const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+            const isIdentifierValid = isEmailFormatValid && isEmailAvailable;
+
+            // 4. Checkboxes (Only Terms is REQUIRED)
+            const isChecked = (checkTerms && checkTerms.checked) && (checkMarketing && checkMarketing.checked);
+
+            // Toggle Hints
+            if (identifier.length > 0 && !isEmailFormatValid) {
+                if (emailHint) emailHint.style.display = "block";
+            } else {
+                if (emailHint) emailHint.style.display = "none";
+            }
+
+            if (pass.length > 0 && !isPassValid) {
+                if (passHint) passHint.style.display = "block";
+            } else {
+                if (passHint) passHint.style.display = "none";
+            }
+
+            if (isPassValid && isMatch && isIdentifierValid && isChecked) {
+                regBtn.classList.add("active");
+                regBtn.disabled = false;
+            } else {
+                regBtn.classList.remove("active");
+                regBtn.disabled = true;
+            }
+        }
+
+        // Run once to initialize hints state
+        validateForm();
+
+        // Email Availability Check (Debounced)
+        if (regEmail) {
+            regEmail.addEventListener("input", () => {
+                let identifier = regEmail.value.trim();
+                // Real-time normalization
+                identifier = identifier.toLowerCase();
+                
+                if (emailError) emailError.style.display = "none";
+                isEmailAvailable = true; 
+                
+                clearTimeout(emailDebounceTimer);
+                
+                const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+
+                if (isEmailFormatValid) {
+                    emailDebounceTimer = setTimeout(() => {
+                        if (window.checkIdentifierExists) {
+                            window.checkIdentifierExists(identifier).then(res => {
+                                if (res.exists) {
+                                    if (emailError) emailError.style.display = "block";
+                                    isEmailAvailable = false;
+                                } else {
+                                    isEmailAvailable = true;
+                                }
+                                validateForm();
+                            });
+                        }
+                    }, 500);
+                }
+                validateForm();
+            });
+        }
+
+        [regPassword, regConfirmPassword, checkTerms, checkMarketing].forEach(el => {
+            if (el) {
+                el.addEventListener("input", validateForm);
+                if (el.type === "checkbox") el.addEventListener("change", validateForm);
+            }
+        });
+        
+        initPasswordVisibility();
+        initForgotPasswordLogic();
+    }
+
+    function initForgotPasswordLogic() {
+        const btnSendReset = document.getElementById("btnSendReset");
+        const forgotIdentifier = document.getElementById("forgotIdentifier");
+        const forgotError = document.getElementById("forgotError");
+
+        if (btnSendReset) {
+            btnSendReset.addEventListener("click", async () => {
+                const identifier = forgotIdentifier.value.trim();
+                if (!identifier) {
+                    alert("เธเธฃเธธเธ“เธฒเธฃเธฐเธเธธเธญเธตเน€เธกเธฅเธซเธฃเธทเธญเน€เธเธญเธฃเนเนเธ—เธฃเธจเธฑเธเธ—เนเธเธฃเธฑเธ");
+                    return;
+                }
+
+                if (window.sendResetEmailAction) {
+                    window.sendResetEmailAction(identifier);
+                } else {
+                    alert("เธฃเธฐเธเธเธเธณเธฅเธฑเธเน€เธเธทเนเธญเธกเธ•เนเธญเธเธฑเธเน€เธเธดเธฃเนเธเน€เธงเธญเธฃเน เธเธฃเธธเธ“เธฒเธฃเธญเธชเธฑเธเธเธฃเธนเนเนเธฅเนเธงเธฅเธญเธเนเธซเธกเนเธเธฃเธฑเธ (Authentication module not ready)");
+                    console.error("[Auth] sendResetEmailAction not found");
+                }
+            });
+
+            forgotIdentifier.addEventListener("keypress", (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    btnSendReset.click();
+                }
+            });
+        }
+    }
+
+    function initPasswordVisibility() {
+        // Password Visibility Toggle
+        const eyeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        const eyeOffIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+        document.querySelectorAll(".toggle-password").forEach(btn => {
+            btn.addEventListener("click", function() {
+                const targetId = this.getAttribute("data-target");
+                const input = document.getElementById(targetId);
+                if (!input) return;
+                if (input.type === "password") {
+                    input.type = "text";
+                    this.innerHTML = eyeIcon;
+                } else {
+                    input.type = "password";
+                    this.innerHTML = eyeOffIcon;
+                }
+            });
+        });
+    }
+
+    // Initialize UI immediately
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initExtraActions);
+    } else {
+        initExtraActions();
+    }
+
+</script>
+
+<!-- Firebase SDK Implementation (Module) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getAuth, signInWithRedirect, signInWithPopup, getRedirectResult, GoogleAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+  // Inlined Config for reliability on local files
+  const firebaseConfig = {
+    apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+    authDomain: "paomobile-85e39.firebaseapp.com",
+    projectId: "paomobile-85e39",
+    storageBucket: "paomobile-85e39.firebasestorage.app",
+    messagingSenderId: "844151679424",
+    appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+    measurementId: "G-BZYNZ9B9LQ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // IMPROVED: Returns {exists: boolean, email?: string}
+  window.checkIdentifierExists = async (rawIdentifier) => {
+    console.log("[Auth] Checking existence for:", rawIdentifier);
+    try {
+        const identifier = normalizeIdentifier(rawIdentifier);
+        const isEmail = identifier.includes("@");
+        console.log("[Auth] Normalized:", identifier, "(isEmail:", isEmail, ")");
+        
+        // 1. Check Firestore first (Universal Lookup)
+        let querySnapshot;
+        try {
+            const q = query(
+                collection(db, "users"), 
+                where(isEmail ? "email" : "phone", "==", identifier)
+            );
+            querySnapshot = await getDocs(q);
+        } catch (firestoreErr) {
+            console.warn("[Auth] Firestore query failed (likely permission rules):", firestoreErr.message);
+            // Fallback to null snapshot to continue with step 2/3
+            querySnapshot = { empty: true };
+        }
+        
+        if (!querySnapshot.empty) {
+            const userData = querySnapshot.docs[0].data();
+            console.log("[Auth] Found in Firestore:", userData);
+            let resolvedEmail = userData.email || (isEmail ? identifier : `${identifier}@paomobile.auth`);
+            if (/^[0-9]{10}$/.test(resolvedEmail)) resolvedEmail = `${resolvedEmail}@paomobile.auth`;
+            return { exists: true, email: resolvedEmail };
+        }
+
+        // 2. Fallback to direct Firebase Auth for emails not yet in Firestore
+        if (isEmail) {
+            const methods = await fetchSignInMethodsForEmail(auth, identifier);
+            if (methods.length > 0) return { exists: true, email: identifier };
+        }
+
+        // 3. Fallback to Virtual Email for phone numbers not yet in Firestore
+        if (!isEmail && identifier.length === 10) {
+            const virtualEmail = `${identifier}@paomobile.auth`;
+            try {
+                const methods = await fetchSignInMethodsForEmail(auth, virtualEmail);
+                if (methods.length > 0) return { exists: true, email: virtualEmail };
+            } catch(e) {}
+        }
+
+        return { exists: false };
+    } catch (e) {
+        console.warn("[Auth] Identifier check error:", e);
+        return { exists: false };
+    }
+  };
+
+  // --- Resilience State ---
+  let isNavigating = false;
+  let isCheckingRedirect = true;
+  let isRegistering = false;
+  let verificationInterval;
+
+  const overlay = document.getElementById('loadingOverlay');
+  const showLoading = (reason = "") => {
+      console.log("[Auth] showLoading called. Reason:", reason);
+      if (overlay) overlay.style.display = 'flex';
+  };
+  const hideLoading = (force = false, reason = "") => {
+      console.log("[Auth] hideLoading called. Force:", force, "Reason:", reason);
+      if (isNavigating && !force) {
+          console.warn("[Auth] hideLoading BLOCKED by isNavigating (Reason: " + reason + ")");
+          return;
+      }
+      if (overlay) overlay.style.display = 'none';
+  };
+
+  window.transitionToVerification = (name) => {
+      console.log("[Auth] ---> transitionToVerification triggered for:", name);
+      isRegistering = true; 
+      
+      const loginView = document.getElementById("loginView");
+      const registerView = document.getElementById("registerView");
+      const successView = document.getElementById("successView");
+
+      if (loginView) loginView.style.display = "none";
+      if (registerView) registerView.style.display = "none";
+      if (successView) {
+          successView.style.display = "block";
+          
+          // Check if user is already verified (e.g. Google users)
+          const user = auth.currentUser;
+          if (user && user.emailVerified) {
+              updateUIForVerified(name);
+          } else {
+              updateUIForUnverified();
+              startVerificationCheck(); // Start auto-reloading
+          }
+      }
+
+      hideLoading(true, "Success view transition");
+      
+      window.finishLoginWithUser = () => {
+          console.log("[Auth] finishLoginWithUser called manually");
+          isRegistering = false;
+          isNavigating = false;
+          finishLogin(name);
+      };
+  };
+
+  function updateUIForVerified(name) {
+      document.getElementById("successIcon").style.display = "flex";
+      document.getElementById("verifyIcon").style.display = "none";
+      document.getElementById("statusTitle").textContent = "เธชเธกเธฑเธเธฃเน€เธชเธฃเนเธเธชเธดเนเธ";
+      document.getElementById("statusText").innerHTML = `เธขเธดเธเธ”เธตเธ”เนเธงเธขเธเนเธฐ! เธเธฑเธเธเธต ${name} เธเธญเธเธเธธเธ“<br>เธเธฃเนเธญเธกเนเธเนเธเธฒเธเน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธงเธเนเธฐ`;
+      document.getElementById("btnCheckVerify").style.display = "none";
+      document.getElementById("btnSuccessFinish").style.display = "block";
+      document.getElementById("verifyArea").style.display = "none";
+      
+      // Sync verified status to local session
+      const userDataStr = localStorage.getItem('paomobile_user');
+      if (userDataStr) {
+          const userData = JSON.parse(userDataStr);
+          userData.isVerified = true;
+          localStorage.setItem('paomobile_user', JSON.stringify(userData));
+          console.log("[Auth] Local session sync: Marked as verified");
+      }
+      
+      // Removed auto-redirect to allow user to see success state
+      console.log("[Auth] Verification successful. Success view is active.");
+  }
+
+  function updateUIForUnverified() {
+      document.getElementById("successIcon").style.display = "none";
+      document.getElementById("verifyIcon").style.display = "flex";
+      document.getElementById("statusTitle").textContent = "เธเธฃเธธเธ“เธฒเธขเธทเธเธขเธฑเธเธญเธตเน€เธกเธฅ";
+      const user = auth.currentUser;
+      const emailStr = user ? user.email : "เธญเธตเน€เธกเธฅเธเธญเธเธเธธเธ“";
+      document.getElementById("statusText").innerHTML = `เน€เธฃเธฒเนเธ”เนเธชเนเธเธฅเธดเธเธเนเธขเธทเธเธขเธฑเธเนเธเธ—เธตเน <b>${emailStr}</b> เน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธงเธเนเธฐ<br>เธเธฃเธธเธ“เธฒเธเธฅเธดเธเธฅเธดเธเธเนเนเธเธญเธตเน€เธกเธฅเน€เธเธทเนเธญเน€เธเธดเธ”เนเธเนเธเธฒเธเธเธฑเธเธเธตเธเนเธฐ`;
+      document.getElementById("btnCheckVerify").style.display = "block";
+      document.getElementById("btnSuccessFinish").style.display = "none";
+      document.getElementById("verifyArea").style.display = "block";
+  }
+
+  let lastEmailSentTime = 0;
+  const RESEND_COOLDOWN = 60000; // Increased to 60 seconds to match Firebase
+
+  window.checkVerificationState = async (auto = false) => {
+      const user = auth.currentUser;
+      if (!user) return;
+      
+      if (!auto) {
+          showLoading("Checking status...");
+      }
+
+      await user.reload();
+      if (user.emailVerified) {
+          console.log("[Auth] User is now verified!");
+          if (verificationInterval) clearInterval(verificationInterval);
+          updateUIForVerified(user.displayName || user.email.split('@')[0]);
+          if (!auto) hideLoading(true, "Verified");
+      } else {
+          if (!auto) {
+              console.log("[Auth] Still unverified.");
+              alert("เธเธญเธญเธ เธฑเธขเธเธฃเธฑเธ เธเธฑเธเธเธตเธเธญเธเธเธธเธ“เธขเธฑเธเนเธกเนเนเธ”เนเธฃเธฑเธเธเธฒเธฃเธขเธทเธเธขเธฑเธเธเธฃเธฑเธ เธฃเธเธเธงเธเธ•เธฃเธงเธเธชเธญเธเธฅเธดเธเธเนเนเธเธญเธตเน€เธกเธฅเธญเธตเธเธเธฃเธฑเนเธเธเธฐเธเธฃเธฑเธ\n\n(เธซเธฒเธเนเธกเนเธเธเนเธเธเธฅเนเธญเธเธเธฒเน€เธเนเธฒ เธเธฃเธธเธ“เธฒเธฅเธญเธเน€เธเนเธเนเธ 'เธเธ”เธซเธกเธฒเธขเธเธขเธฐ', 'เธ–เธฑเธเธเธขเธฐ' เธซเธฃเธทเธญ 'เนเธเธฃเนเธกเธเธฑเธ' เธ”เธนเธเธฐเธเธฃเธฑเธ)");
+              hideLoading(true, "Still unverified");
+          }
+      }
+  };
+
+  function startResendCountdown() {
+      const btn = document.getElementById("btnResendVerify");
+      if (!btn) return;
+      
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+      btn.style.cursor = "not-allowed";
+      
+      const updateBtn = () => {
+          const now = Date.now();
+          const remaining = Math.ceil((RESEND_COOLDOWN - (now - lastEmailSentTime)) / 1000);
+          
+          if (remaining > 0) {
+              btn.textContent = `(${remaining})`;
+              setTimeout(updateBtn, 1000);
+          } else {
+              btn.disabled = false;
+              btn.style.opacity = "1";
+              btn.style.cursor = "pointer";
+              btn.textContent = "เธชเนเธเธญเธตเน€เธกเธฅเธขเธทเธเธขเธฑเธเธญเธตเธเธเธฃเธฑเนเธ";
+          }
+      };
+      
+      updateBtn();
+  }
+
+  function startVerificationCheck() {
+      if (verificationInterval) clearInterval(verificationInterval);
+      verificationInterval = setInterval(() => {
+          const successView = document.getElementById("successView");
+          if (successView && successView.style.display === "block") {
+              window.checkVerificationState(true);
+          } else {
+              clearInterval(verificationInterval);
+          }
+      }, 3000);
+  }
+
+  window.handleForceLogout = async () => {
+      showLoading("Signing out...");
+      try {
+          if (verificationInterval) clearInterval(verificationInterval);
+          await auth.signOut();
+          localStorage.clear();
+          window.location.replace("index.html");
+      } catch (err) {
+          console.error("Logout error:", err);
+          window.location.replace("index.html");
+      }
+  };
+
+  // --- Action Bindings ---
+  window.sendResetEmailAction = async (rawIdentifier) => {
+      showLoading("Sending reset email");
+      const errEl = document.getElementById("forgotError");
+      if (errEl) errEl.style.display = "none";
+
+      try {
+          const res = await window.checkIdentifierExists(rawIdentifier);
+          if (!res.exists) {
+              if (errEl) errEl.style.display = "block";
+              hideLoading(true, "Identifier not found");
+              return;
+          }
+
+          const targetEmail = res.email;
+          const isPhone = /^[0-9]{10}$/.test(rawIdentifier);
+          console.log("[Auth] Triggering Firebase Reset for:", targetEmail, "(isPhone:", isPhone, ")");
+          
+          await sendPasswordResetEmail(auth, targetEmail);
+          console.log("[Auth] Firebase Success: Reset email sent.");
+          
+          if (isPhone) {
+              alert("เน€เธฃเธฒเนเธ”เนเธชเนเธเธฅเธดเธเธเนเธชเธณเธซเธฃเธฑเธเธ•เธฑเนเธเธฃเธซเธฑเธชเธเนเธฒเธเนเธซเธกเนเนเธเนเธซเนเธเธธเธ“เธ—เธฒเธ SMS เน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธงเธเธฃเธฑเธ เธเธฃเธธเธ“เธฒเธ•เธฃเธงเธเธชเธญเธเนเธฅเธฐเธ”เธณเน€เธเธดเธเธเธฒเธฃเธ•เธฒเธกเธเธฑเนเธเธ•เธญเธ");
+          } else {
+              alert("เน€เธฃเธฒเนเธ”เนเธชเนเธเธฅเธดเธเธเนเธชเธณเธซเธฃเธฑเธเธ•เธฑเนเธเธฃเธซเธฑเธชเธเนเธฒเธเนเธซเธกเนเนเธเนเธซเนเธเธธเธ“เธ—เธฒเธเธญเธตเน€เธกเธฅเน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธงเธเธฃเธฑเธ\n\n(เธซเธฒเธเนเธกเนเธเธเนเธเธเธฅเนเธญเธเธเธฒเน€เธเนเธฒ เธเธฃเธธเธ“เธฒเธฅเธญเธเน€เธเนเธเนเธเธซเธเนเธฒ 'เธเธ”เธซเธกเธฒเธขเธเธขเธฐ (Spam)', 'เธ–เธฑเธเธเธขเธฐ' เธซเธฃเธทเธญ 'เนเธเธฃเนเธกเธเธฑเธ' เธ”เธนเธเธฐเธเธฃเธฑเธ)");
+          }
+          
+          // Return to login
+          document.getElementById("forgotPasswordView").style.display = "none";
+          document.getElementById("loginView").style.display = "block";
+          
+      } catch (error) {
+          console.error("[Auth] Reset error:", error);
+          alert("เน€เธเธดเธ”เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”: " + error.message);
+      } finally {
+          hideLoading(true, "Reset complete");
+      }
+  };
+ 
+  // --- Verification Email Action ---
+  window.sendVerificationEmail = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+          alert("เธเธฃเธธเธ“เธฒเน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธเธเนเธญเธเธเธญเธขเธทเธเธขเธฑเธเธเธฑเธเธเธตเธเธฃเธฑเธ");
+          return;
+      }
+ 
+      if (user.email.endsWith('@paomobile.auth')) {
+          alert("เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เธชเนเธเธญเธตเน€เธกเธฅเธขเธทเธเธขเธฑเธเธชเธณเธซเธฃเธฑเธเธเธฑเธเธเธตเธ—เธตเนเธชเธกเธฑเธเธฃเธ”เนเธงเธขเน€เธเธญเธฃเนเนเธ—เธฃเธจเธฑเธเธ—เนเนเธ”เนเธเธฃเธฑเธ");
+          return;
+      }
+ 
+      const now = Date.now();
+      if (now - lastEmailSentTime < RESEND_COOLDOWN) {
+          const timeToWait = Math.ceil((RESEND_COOLDOWN - (now - lastEmailSentTime)) / 1000);
+          alert(`เธเธฃเธธเธ“เธฒเธฅเธญเธเนเธซเธกเนเนเธเธญเธตเธ ${timeToWait} เธงเธดเธเธฒเธ—เธตเธเนเธฐ`);
+          return;
+      }
+
+      showLoading("Sending verification email");
+      try {
+          await sendEmailVerification(user);
+          lastEmailSentTime = Date.now();
+          startResendCountdown();
+          alert("เน€เธฃเธฒเนเธ”เนเธชเนเธเธฅเธดเธเธเนเธขเธทเธเธขเธฑเธเธเธฑเธเธเธตเนเธเนเธซเนเธเธธเธ“เธญเธตเธเธเธฃเธฑเนเธเนเธฅเนเธงเธเธฃเธฑเธ เธเธฃเธธเธ“เธฒเธ•เธฃเธงเธเธชเธญเธเนเธเธเธฅเนเธญเธเธเธ”เธซเธกเธฒเธข (เธซเธฃเธทเธญเนเธเธซเธเนเธฒ 'เธเธ”เธซเธกเธฒเธขเธเธขเธฐ', 'เธ–เธฑเธเธเธขเธฐ' เธซเธฃเธทเธญ 'เนเธเธฃเนเธกเธเธฑเธ') เธเธฐเธเธฃเธฑเธ");
+      } catch (error) {
+          console.error("[Auth] Verification error:", error);
+          if (error.code === 'auth/too-many-requests') {
+              lastEmailSentTime = Date.now(); // Reset timer to force wait
+              startResendCountdown();
+              alert("เธฃเธฐเธเธเธชเนเธเธญเธตเน€เธกเธฅเธขเธทเธเธขเธฑเธเธเธฑเนเธงเธเธฃเธฒเธงเน€เธเธดเธเธเธตเธ”เธเธณเธเธฑเธ”เนเธฅเนเธงเธเธฃเธฑเธ เธเธฃเธธเธ“เธฒเธฃเธญเธเธฃเธฐเธกเธฒเธ“ 60 เธงเธดเธเธฒเธ—เธตเธ•เธฒเธกเธ•เธฑเธงเน€เธฅเธเธเธเธเธธเนเธก เนเธฅเนเธงเธเนเธญเธขเธเธ”เธขเธทเธเธขเธฑเธเนเธซเธกเนเธญเธตเธเธเธฃเธฑเนเธเธเธฐเธเธฃเธฑเธ");
+          } else {
+              alert("เน€เธเธดเธ”เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”: " + error.message);
+          }
+      } finally {
+          hideLoading(true, "Verification complete");
+      }
+  };
+ 
+  // --- WebView Detection ---
+  function detectRestrictedBrowser() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      const isRestricted = /Line|FBAN|FBAV|Instagram|Messenger|WhatsApp|FB_IAB|FBSS/i.test(ua);
+      
+      if (isRestricted) {
+          console.warn("[Auth] Restricted WebView detected:", ua);
+          const notice = document.getElementById('webviewNotice');
+          if (notice) notice.style.display = 'block';
+          
+          const formArea = document.getElementById('loginFormArea');
+          if (formArea) formArea.style.opacity = '0.7';
+          return true;
+      }
+      return false;
+  }
+
+  // --- Normalization Helper ---
+  function normalizeIdentifier(val) {
+      const trimmed = val.trim();
+      if (trimmed.includes("@")) return trimmed.toLowerCase();
+      // Remove all non-digits for phone numbers
+      return trimmed.replace(/\D/g, "");
+  }
+
+  // --- Auth Initializer (Sequenced Flow) ---
+  async function initAuth() {
+      if (!auth) return;
+
+      // 1. Handle actual logout request (Wait for it to finish)
+      if (localStorage.getItem('pao_logout_pending')) {
+          console.log("[Auth] Logout signal detected. Forcing signOut...");
+          showLoading(); // Ensure spinner is up
+          await auth.signOut();
+          localStorage.removeItem('pao_logout_pending');
+          console.log("[Auth] Cloud sign-out complete.");
+          hideLoading();
+      }
+
+      // 2. Check for Google Redirect Result
+      await checkRedirectResult();
+      
+      // 3. Release redirect lock (Observer can now handle UI)
+      isCheckingRedirect = false;
+      console.log("[Auth] Redirect check finished. Observer active.");
+  }
+
+  // --- Start the flow ---
+  detectRestrictedBrowser();
+  initAuth();
+
+  // --- Observer (The persistent sentry) ---
+  onAuthStateChanged(auth, async (user) => {
+      console.log("[Auth] Observer: State changed. Registering:", isRegistering, "Navigating:", isNavigating);
+      if (isCheckingRedirect || isRegistering) {
+          console.log("[Auth] Observer: BLOCKED (Redirect check or Registering)");
+          return;
+      }
+      
+      if (user && !isNavigating) {
+          console.log("[Auth] State: IN -> Initializing session for:", user.email, "Verified:", user.emailVerified);
+          
+          if (!user.emailVerified && !(user.email || '').endsWith('@paomobile.auth') && !user.providerData.some(p => p.providerId === 'google.com')) {
+              console.log("[Auth] User not verified. Forcing Verification View.");
+              window.transitionToVerification(user.displayName || user.email.split('@')[0]);
+              return;
+          }
+
+          await saveUserToFirestore(user, 'state_change');
+          
+          // Only redirect if we are STILL on the login page
+          if (window.location.pathname.endsWith('login.html')) {
+              finishLogin(user.displayName || user.email.split('@')[0]);
+          }
+      } else {
+          console.log("[Auth] State: OUT");
+          hideLoading();
+      }
+  });
+
+  // Check result of redirect sign-in
+  async function checkRedirectResult() {
+      try {
+          const result = await getRedirectResult(auth);
+          if (result && result.user) {
+              console.log("[Auth] Redirect Success:", result.user.email);
+              await saveUserToFirestore(result.user, 'google_redirect');
+              finishLogin(result.user.displayName || result.user.email.split('@')[0]);
+          }
+      } catch (error) {
+          console.error("[Auth] Redirect Failure:", error);
+          hideLoading();
+      }
+  }
+
+  // Final Redirection Sequence (With Lock)
+  async function finishLogin(name) {
+      console.log("[Auth] finishLogin check triggered for:", name);
+      if (isNavigating && (!overlay || overlay.style.display !== 'flex')) {
+          console.warn("[Auth] finishLogin BLOCKED: Already navigating");
+          return;
+      }
+
+      const user = auth.currentUser;
+      // CRITICAL: Block finish if not verified (unless phone/google)
+      if (user && !user.emailVerified && !(user.email || '').endsWith('@paomobile.auth') && !user.providerData.some(p => p.providerId === 'google.com')) {
+          console.warn("[Auth] finishLogin BLOCKED: Email not verified");
+          isNavigating = false;
+          hideLoading();
+          window.transitionToVerification(name || user.displayName || user.email.split('@')[0]);
+          return;
+      }
+
+      isNavigating = true; 
+      showLoading("finishLogin init");
+      
+      if (!localStorage.getItem('paomobile_user')) {
+          if (user) {
+              console.log("[Auth] Initializing session data...");
+              await saveUserToFirestore(user, 'recovery');
+          }
+      }
+
+      await wait(800); 
+      window.location.replace("index.html");
+  }
+
+  // --- Save user data to Firestore (Optimistic & Non-blocking) ---
+  async function saveUserToFirestore(user, provider) {
+      console.log("[Auth] Saving local session...");
+      
+      let name = user.displayName;
+      let email = user.email || '';
+      
+      // Detect and mask virtual emails for phone users
+      if (email.endsWith('@paomobile.auth')) {
+          email = email.split('@')[0]; // Mask the domain, keep only phone
+          name = email; // Use full 10-digit phone as name
+      } else if (!name && email) {
+          name = email.split('@')[0];
+      }
+      
+      const originalEmail = user.email || '';
+      const isVerified = user.emailVerified || 
+                         originalEmail.endsWith('@paomobile.auth') || 
+                         provider.includes('google') ||
+                         user.providerData.some(p => p.providerId === 'google.com');
+
+      const userData = {
+          uid: user.uid,
+          name: name || 'Member',
+          email: email,
+          photo: user.photoURL || "",
+          isVerified: !!isVerified
+      };
+      
+      localStorage.setItem('paomobile_user', JSON.stringify(userData));
+      
+      if (db) {
+          const userRef = doc(db, "users", user.uid);
+          setDoc(userRef, {
+              ...userData,
+              photoURL: userData.photo,
+              provider: provider,
+              lastLogin: new Date()
+          }, { merge: true });
+      }
+  }
+
+  // Handle Google Login
+  const btnGoogle = document.getElementById('btnGoogleLogin');
+  if (btnGoogle) {
+      btnGoogle.addEventListener('click', async () => {
+          if (detectRestrictedBrowser()) return;
+          
+          showLoading("Google Auth Start");
+          const provider = new GoogleAuthProvider();
+          
+          try {
+              // Try Popup first as it's more reliable and better UX on desktop
+              console.log("[Auth] Attempting Google Popup...");
+              const result = await signInWithPopup(auth, provider);
+              if (result.user) {
+                  console.log("[Auth] Popup Success:", result.user.email);
+                  await saveUserToFirestore(result.user, 'google_popup');
+                  finishLogin(result.user.displayName || result.user.email.split('@')[0]);
+              }
+          } catch (error) {
+              console.warn("[Auth] Popup failed or blocked, falling back to Redirect:", error.code);
+              if (error.code === 'auth/popup-closed-by-user') {
+                  hideLoading();
+                  return;
+              }
+              // Fallback to Redirect for mobile/webviews where popups are often blocked
+              try {
+                  await signInWithRedirect(auth, provider);
+              } catch (redirectError) {
+                  console.error("[Auth] Redirect failed:", redirectError);
+                  hideLoading();
+                  alert("เนเธกเนเธชเธฒเธกเธฒเธฃเธ–เน€เธเธทเนเธญเธกเธ•เนเธญเธเธฑเธ Google เนเธ”เนเนเธเธเธ“เธฐเธเธตเนเธเธฃเธฑเธ: " + redirectError.message);
+              }
+          }
+      });
+  }
+
+  // Handle Email Login/Continue
+  const btnLogin = document.getElementById('btnEmailLogin');
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const passwordGroup = document.getElementById('passwordGroup');
+
+  if (btnLogin) {
+      btnLogin.addEventListener('click', async () => {
+          const identifier = normalizeIdentifier(emailInput.value);
+          if (!identifier) return;
+
+          if (identifier.endsWith('@paomobile.auth')) {
+              hideLoading();
+              alert("เธเธฃเธธเธ“เธฒเนเธเนเน€เธเธญเธฃเนเนเธ—เธฃเธจเธฑเธเธ—เน 10 เธซเธฅเธฑเธ เนเธซเนเธ–เธนเธเธ•เนเธญเธ");
+              return;
+          }
+
+          showLoading();
+          const res = await window.checkIdentifierExists(identifier);
+          
+          if (!res.exists) {
+              hideLoading();
+              if (confirm("เนเธกเนเธเธเธเธฑเธเธเธตเธเธนเนเนเธเนเนเธเธฃเธฐเธเธเธเนเธฐ เธ•เนเธญเธเธเธฒเธฃเธชเธฃเนเธฒเธเธเธฑเธเธเธตเนเธซเธกเนเธ”เนเธงเธขเธญเธตเน€เธกเธฅเธเธตเนเน€เธฅเธขเนเธซเธกเธเธฐ?")) {
+                  console.log("[Auth] Seamless transition to Register View");
+                  const registerView = document.getElementById("registerView");
+                  const loginView = document.getElementById("loginView");
+                  if (registerView && loginView) {
+                      loginView.style.display = "none";
+                      registerView.style.display = "block";
+                      const regEmail = document.getElementById("regEmail");
+                      if (regEmail) {
+                          regEmail.value = emailInput.value;
+                          // Trigger validation
+                          const event = new Event('input', { bubbles: true });
+                          regEmail.dispatchEvent(event);
+                      }
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+              }
+              return;
+          }
+
+          if (passwordGroup.style.display === 'none') {
+              hideLoading();
+              passwordGroup.style.display = 'block';
+              btnLogin.textContent = "เน€เธเนเธฒเธชเธนเนเธฃเธฐเธเธ";
+              return;
+          }
+
+          const password = passwordInput.value;
+          if (!password) {
+              hideLoading();
+              alert("เธเธฃเธธเธ“เธฒเธเธฃเธญเธเธฃเธซเธฑเธชเธเนเธฒเธเธเธฃเธฑเธ");
+              return;
+          }
+
+          try {
+              const cred = await signInWithEmailAndPassword(auth, res.email, password);
+              console.log("[Auth] Email Login Success:", cred.user.email);
+              await saveUserToFirestore(cred.user, 'email_login');
+              finishLogin(cred.user.displayName || cred.user.email.split('@')[0]);
+          } catch (error) {
+              hideLoading();
+              console.error("[Auth] Login error:", error.code);
+              if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                  alert("เธฃเธซเธฑเธชเธเนเธฒเธเนเธกเนเธ–เธนเธเธ•เนเธญเธเธเธฃเธฑเธ");
+              } else {
+                  alert("เน€เธเธดเธ”เธเนเธญเธเธดเธ”เธเธฅเธฒเธ”: " + error.message);
+              }
+          }
+      });
+
+      // Support Enter key for Login
+      [emailInput, passwordInput].forEach(input => {
+          if (input) {
+              input.addEventListener('keypress', (e) => {
+                  if (e.key === 'Enter') {
+                      e.preventDefault();
+                      btnLogin.click();
+                  }
+              });
+          }
+      });
+  }
+
+  // Handle Registration
+  const btnRegContinue = document.getElementById('btnContinueRegister');
+  if (btnRegContinue) {
+      btnRegContinue.addEventListener('click', async () => {
+          const email = document.getElementById('regEmail').value.trim().toLowerCase();
+          const password = document.getElementById('regPassword').value;
+          
+          if (!email.includes("@")) {
+              alert("เธเธฃเธธเธ“เธฒเธฃเธฐเธเธธเธญเธตเน€เธกเธฅเนเธซเนเธ–เธนเธเธ•เนเธญเธ");
+              return;
+          }
+
+              showLoading("Registration begin");
+              isRegistering = true;
+              isNavigating = true;
+
+              try {
+                  const cred = await createUserWithEmailAndPassword(auth, email, password);
+                  console.log("[Auth] Firebase User Created:", cred.user.uid);
+                  
+                  const name = email.split('@')[0];
+                  
+                  // Background persistence (Non-blocking)
+                  const userRef = doc(db, "users", cred.user.uid);
+                  setDoc(userRef, {
+                      uid: cred.user.uid,
+                      name: name,
+                      email: email, 
+                      phone: "", // No phone during email registration
+                      marketing: document.getElementById("checkMarketing").checked,
+                      provider: 'email_registration',
+                      createdAt: new Date()
+                  }).then(() => console.log("[Auth] Firestore persistence complete."));
+
+                   // Send Verification Email immediately
+                   await sendEmailVerification(cred.user);
+                   console.log("[Auth] Verification email sent automatically.");
+
+                   // Switch to Verification View
+                   window.transitionToVerification(name);
+
+              } catch (error) {
+                  console.error("[Auth] Registration caught error:", error);
+                  isRegistering = false;
+                  isNavigating = false;
+                  hideLoading(true, "Registration error alert");
+                  if (error.code === 'auth/email-already-in-use') {
+                      alert("เธญเธตเน€เธกเธฅเธซเธฃเธทเธญเน€เธเธญเธฃเนเนเธ—เธฃเธเธตเนเธ–เธนเธเนเธเนเธเธฒเธเนเธเนเธฅเนเธงเธเธฃเธฑเธ");
+                   } else {
+                       // Only alert if it's NOT a reference error we just fixed, 
+                       // but better yet, just show the error if it's actually an auth error.
+                       alert("เธเธฒเธฃเธฅเธเธ—เธฐเน€เธเธตเธขเธเธเธดเธ”เธเธฅเธฒเธ”: " + error.message);
+                   }
+              }
+      });
+
+      // Support Enter key for Registration
+      ['regEmail', 'regPassword', 'regConfirmPassword', 'regPhone'].forEach(id => {
+          const input = document.getElementById(id);
+          if (input) {
+              input.addEventListener('keypress', (e) => {
+                  if (e.key === 'Enter' && !btnRegContinue.disabled) {
+                      e.preventDefault();
+                      btnRegContinue.click();
+                  }
+              });
+          }
+      });
+  }
+
+  function wait(ms) { return new Promise(res => setTimeout(res, ms)); }
+</script>
+
+</body>
+</html>
+
+
+
+
+

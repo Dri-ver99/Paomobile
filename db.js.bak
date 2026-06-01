@@ -1,0 +1,232 @@
+// Supabase is loaded via UMD script tag in HTML, so window.supabase is available.
+// ----------------------------------------------------
+// 1. SUPABASE INITIALIZATION
+// ----------------------------------------------------
+const supabaseUrl = 'https://ivnayulkvlxjnwfwjxmj.supabase.co';
+const supabaseKey = 'sb_publishable_ZZPe_GiGq-5W780KOI64yg_zzsjWvq7';
+
+window.getSupabaseClient = () => {
+    if (window.supabaseClientInstance) return window.supabaseClientInstance;
+    const sbLib = (typeof supabase !== 'undefined') ? supabase : window.supabase;
+    if (!sbLib || !sbLib.createClient) { throw new Error("Supabase not found"); }
+    window.supabaseClientInstance = sbLib.createClient(supabaseUrl, supabaseKey);
+    window.supabase = window.supabaseClientInstance;
+    return window.supabaseClientInstance;
+};
+const getClient = window.getSupabaseClient;
+getClient(); // Initialize immediately!
+const getClientOld = () => {
+    if (window.supabaseClientInstance) return window.supabaseClientInstance;
+    
+    const sbLib = (typeof supabase !== 'undefined') ? supabase : window.supabase;
+    if (!sbLib || !sbLib.createClient) {
+        alert("Supabase library not loaded! Please check internet connection.");
+        throw new Error("Supabase not found");
+    }
+    
+    window.supabaseClientInstance = sbLib.createClient(supabaseUrl, supabaseKey);
+    window.supabase = window.supabaseClientInstance;
+    return window.supabaseClientInstance;
+};
+
+// ----------------------------------------------------
+// 2. FIREBASE V8 FIRESTORE COMPATIBILITY LAYER
+// ----------------------------------------------------
+
+class SupabaseDocRef {
+    constructor(col, id) {
+        this.originalCol = col;
+        this.col = col;
+        this.id = id;
+
+        // Route chats subcollections to flat chat_messages table
+        if (col.startsWith('chats/') && col.endsWith('/messages')) {
+            this.col = 'chat_messages';
+        }
+    }
+    collection(subcol) {
+        return new SupabaseCollectionRef(this.originalCol + '/' + this.id + '/' + subcol);
+    }
+    async get() {
+        const { data, error } = await getClient().from(this.col).select('*').eq('id', this.id).maybeSingle();
+        if (error) {
+            console.error(`[Supabase] getDoc Error (${this.col}/${this.id}):`, JSON.stringify(error));
+            throw error;
+        }
+        if (!data) return { exists: false, data: () => null, id: this.id };
+        return { exists: true, data: () => data, id: this.id };
+    }
+    async set(data, options = {}) {
+        const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+        if (options.merge) return this.update(cleanData);
+        const { error } = await getClient().from(this.col).upsert({ id: this.id, ...cleanData });
+        if (error) throw error;
+    }
+    async update(data) {
+        const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+        const { error } = await getClient().from(this.col).update(cleanData).eq('id', this.id);
+        if (error) throw error;
+    }
+    async delete() {
+        const { error } = await getClient().from(this.col).delete().eq('id', this.id);
+        if (error) throw error;
+    }
+    onSnapshot(cb, errCb) {
+        this.get().then(snap => cb(snap)).catch(errCb || console.error);
+        const randId = Math.random().toString(36).substring(2, 9);
+    delete(docRef) {
+        this.ops.push({ type: 'delete', ref: docRef });
+    }
+    async commit() {
+        // Execute sequentially to avoid RPC requirement
+        for (const op of this.ops) {
+            try {
+                if (op.type === 'delete') await op.ref.delete();
+                else if (op.type === 'update') await op.ref.update(op.data);
+                else await op.ref.set(op.data);
+            } catch (e) {
+                console.error("[Supabase Batch] Error committing op:", op, e);
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------
+// 3. FIREBASE AUTH COMPATIBILITY LAYER
+// ----------------------------------------------------
+
+const signInWithEmailAndPassword = async (authObj, email, password) => {
+    const { data, error } = await getClient().auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return { user: { uid: data.user.id, email: data.user.email } };
+};
+
+const createUserWithEmailAndPassword = async (authObj, email, password) => {
+    const { data, error } = await getClient().auth.signUp({ email, password });
+    if (error) throw error;
+    return { user: { uid: data.user.id, email: data.user.email } };
+};
+
+const onAuthStateChanged = (authObj, callback) => {
+    const buildUser = (session) => ({
+        uid: session.user.id,
+        email: session.user.email,
+        displayName: session.user.user_metadata?.name || session.user.email.split("@")[0],
+        photoURL: session.user.user_metadata?.avatar || "",
+        emailVerified: !!session.user.email_confirmed_at,
+        providerData: session.user.app_metadata?.providers?.map(p => ({ providerId: p + ".com" })) || []
+    });
+
+    getClient().auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+            callback(buildUser(session));
+        } else {
+            try {
+                const lsUser = JSON.parse(localStorage.getItem('paomobile_user'));
+                if (lsUser && lsUser.uid) { callback(lsUser); return; }
+            } catch (e) {}
+            callback(null);
+        }
+    });
+
+    const { data: authListener } = getClient().auth.onAuthStateChange((event, session) => {
+        if (session) {
+            callback(buildUser(session));
+        } else {
+            try {
+                const lsUser = JSON.parse(localStorage.getItem('paomobile_user'));
+                if (lsUser && lsUser.uid) { callback(lsUser); return; }
+            } catch (e) {}
+            callback(null);
+        }
+    });
+
+    return () => authListener.subscription.unsubscribe();
+};
+
+const signOut = async (authObj) => {
+    localStorage.removeItem('paomobile_user');
+    const { error } = await getClient().auth.signOut();
+    if (error) throw error;
+};
+
+const sendPasswordResetEmail = async (authObj, email) => {
+    const { error } = await getClient().auth.resetPasswordForEmail(email);
+    if (error) throw error;
+};
+
+// ----------------------------------------------------
+// 4. EXPORT TO GLOBAL SCOPE
+// ----------------------------------------------------
+
+const authMock = { 
+    currentUser: null,
+    onAuthStateChanged: (callback) => {
+        return onAuthStateChanged(null, callback);
+    },
+    signInAnonymously: async () => {
+        const { data, error } = await getClient().auth.signInAnonymously();
+        if (error) throw error;
+        return { user: { uid: data.user.id } };
+    }
+};
+
+// Keep currentUser updated lazily after page load
+window.addEventListener('DOMContentLoaded', () => {
+    try {
+        getClient().auth.onAuthStateChange((event, session) => {
+            if (session) {
+                authMock.currentUser = { uid: session.user.id, email: session.user.email };
+            } else {
+                authMock.currentUser = null;
+            }
+        });
+    } catch (e) {
+        console.warn("Failed to initialize auth listener:", e);
+    }
+});
+
+window.db = {
+    collection: (name) => new SupabaseCollectionRef(name),
+    batch: () => new SupabaseBatch(),
+    runTransaction: async (callback) => {
+        const transaction = {
+            get: async (ref) => await ref.get(),
+            set: (ref, data) => ref.set(data),
+            update: (ref, data) => ref.update(data),
+            delete: (ref) => ref.delete()
+        };
+        return await callback(transaction);
+    }
+};
+
+window.auth = authMock;
+
+window.sendEmailVerification = async () => { console.log('[Supabase] Verification email is handled automatically by signUp.'); };
+window.firebaseAuth = {
+    signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail
+};
+
+const firestoreMock = () => window.db;
+firestoreMock.FieldValue = {
+    serverTimestamp: () => new Date().toISOString(),
+    increment: (n) => n
+};
+
+// Global Firebase Mock so inline scripts don't fail
+window.firebase = {
+    apps: [{ name: '[DEFAULT]' }],
+    initializeApp: () => {},
+    firestore: firestoreMock,
+    auth: () => window.auth,
+    storage: () => window.storage || {},
+    analytics: () => ({})
+};
+
+// Mock enableIndexedDbPersistence which is used in seller-centre.html
+window.db.enablePersistence = async () => {};
+window.db.enableIndexedDbPersistence = async () => {};
+
+console.log("Supabase V8 Compatibility Layer Initialized");
+
+
