@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8" />
@@ -529,16 +529,20 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
         renderSlider(defaultPromo);
 
         // ── Then update from Firestore when ready ──
-        db.collection('promotions').onSnapshot(snap => {
-            const promos = snap.docs
-                .map(d => ({ id: d.id, ...d.data() }))
-                .filter(p => p.active !== false)
-                .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-            // Only update if Firestore actually has data
-            if (promos.length > 0) renderSlider(promos);
-        }, err => {
-            console.warn('[Promo] Firestore error:', err);
-            // Already showing defaultPromo, nothing to do
+        firebase.auth().signInAnonymously().then(() => {
+            db.collection('promotions').onSnapshot(snap => {
+                const promos = snap.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .filter(p => p.active !== false)
+                    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+                // Only update if Firestore actually has data
+                if (promos.length > 0) renderSlider(promos);
+            }, err => {
+                console.warn('[Promo] Firestore error:', err);
+                // Already showing defaultPromo, nothing to do
+            });
+        }).catch(err => {
+            console.error('[Promo] Anon Auth error:', err);
         });
 
         /* ── Package selector helper (per slide) ── */
