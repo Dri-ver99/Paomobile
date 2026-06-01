@@ -1380,7 +1380,7 @@
 
                 // 3. Identifier Check (Email Only)
                 const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-                const isIdentifierValid = isEmailFormatValid && isEmailAvailable;
+                const isIdentifierValid = isEmailFormatValid; // Bypass public.users check due to orphaned records
 
                 // 4. Checkboxes (Only Terms is REQUIRED)
                 const isChecked = (checkTerms && checkTerms.checked) && (checkMarketing && checkMarketing.checked);
@@ -1423,22 +1423,6 @@
                     clearTimeout(emailDebounceTimer);
 
                     const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-
-                    if (isEmailFormatValid) {
-                        emailDebounceTimer = setTimeout(() => {
-                            if (window.checkIdentifierExists) {
-                                window.checkIdentifierExists(identifier).then(res => {
-                                    if (res.exists) {
-                                        if (emailError) emailError.style.display = "block";
-                                        isEmailAvailable = false;
-                                    } else {
-                                        isEmailAvailable = true;
-                                    }
-                                    validateForm();
-                                });
-                            }
-                        }, 500);
-                    }
                     validateForm();
                 });
             }
@@ -2046,7 +2030,7 @@
                 avatar: existingData.avatar || existingData.photo || finalAvatar,
                 photo: existingData.photo || existingData.avatar || finalAvatar,
                 phone: existingData.phone || "",
-                isVerified: !!(user.emailVerified || provider.includes('google') || existingData.isVerified)
+                isVerified: existingData.isVerified === false ? false : !!(user.emailVerified || provider.includes('google') || existingData.isVerified)
             };
 
             // Save to local session IMMEDIATELY so app feels fast
@@ -2255,13 +2239,15 @@
 
                     // Background persistence (Non-blocking)
 
-                    window.supabase.from("users").insert([{
+                    window.supabase.from("users").upsert([{
                         uid: cred.user.id,
+                        id: cred.user.id, // Primary key for upsert
                         name: name,
                         email: email,
                         phone: "",
                         marketing: document.getElementById("checkMarketing").checked,
-                        provider: "email_registration"
+                        provider: "email_registration",
+                        isVerified: false
                     }]).then(() => console.log("[Auth] Supabase persistence complete."));
                     
                     console.log("[Auth] Forcing verification email send via Supabase resend...");
@@ -2274,7 +2260,13 @@
                     isRegistering = false;
                     isNavigating = false;
                     hideLoading(true, "Registration error alert");
-                    if (error.code === 'auth/email-already-in-use') {
+                    if (error.message && error.message.toLowerCase().includes('already registered')) {
+                        alert("อีเมลนี้มีผู้ใช้งานแล้วครับ หรือระบบได้ส่งลิงก์ยืนยันไปแล้ว");
+                        if (emailError) {
+                            emailError.style.display = "block";
+                            emailError.textContent = "อีเมลนี้มีผู้ใช้งานแล้ว";
+                        }
+                    } else if (error.code === 'auth/email-already-in-use') {
                         alert("อีเมลนี้ถูกใช้งานแล้วครับ");
                     } else if (error.message && error.message.toLowerCase().includes('rate limit')) {
                         alert("ระบบจำกัดการสมัครชั่วคราวเนื่องจากคุณทดสอบสมัครรัวๆ เกินโควต้าของระบบ (Email rate limit exceeded)\n\nวิธีแก้:\n1. ใช้อีเมลอื่นทดสอบ\n2. หรือไปที่เว็บ Supabase -> Authentication -> Rate Limits เพื่อเพิ่มลิมิตครับ\n3. หรือรอประมาณ 60 นาทีครับ");
