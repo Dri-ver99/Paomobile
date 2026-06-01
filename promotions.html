@@ -528,22 +528,33 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
         // ── Show promotion image IMMEDIATELY (no waiting for Firestore) ──
         renderSlider(defaultPromo);
 
-        // ── Then update from Firestore when ready ──
-        firebase.auth().signInAnonymously().then(() => {
-            db.collection('promotions').onSnapshot(snap => {
-                const promos = snap.docs
-                    .map(d => ({ id: d.id, ...d.data() }))
-                    .filter(p => p.active !== false)
-                    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-                // Only update if Firestore actually has data
-                if (promos.length > 0) renderSlider(promos);
-            }, err => {
-                console.warn('[Promo] Firestore error:', err);
-                // Already showing defaultPromo, nothing to do
-            });
-        }).catch(err => {
-            console.error('[Promo] Anon Auth error:', err);
-        });
+        // ── Then update from Supabase when ready ──
+        if (window.supabase) {
+            const fetchPromotions = async () => {
+                const { data, error } = await window.supabase.from('promotions').select('*');
+                if (error) {
+                    console.warn('[Promo] Supabase error:', error);
+                    return;
+                }
+                if (data && data.length > 0) {
+                    const promos = data
+                        .filter(p => p.active !== false)
+                        .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+                    if (promos.length > 0) renderSlider(promos);
+                }
+            };
+            
+            fetchPromotions();
+            
+            // Realtime subscription
+            window.supabase.channel('public:promotions')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'promotions' }, () => {
+                    fetchPromotions();
+                })
+                .subscribe();
+        } else {
+            console.warn('[Promo] Supabase not found');
+        }
 
         /* ── Package selector helper (per slide) ── */
         window.selectPromoPackage = function(num, slideEl) {
