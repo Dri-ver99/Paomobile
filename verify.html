@@ -1,0 +1,262 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ยืนยันอีเมล - Paomobile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
+            background-color: #f7f7f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #111;
+        }
+        .login-card {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 480px;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            height: auto;
+            margin: 0 auto 32px auto;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1e293b;
+            letter-spacing: -0.02em;
+        }
+        .subtitle {
+            font-size: 15px;
+            color: #64748b;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+        .btn-primary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+            color: #fff;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+            font-family: inherit;
+            margin-top: 20px;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+        }
+        .btn-primary:disabled {
+            background: #cbd5e1;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: #dcfce7;
+            color: #22c55e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px auto;
+        }
+        .error-icon {
+            width: 64px;
+            height: 64px;
+            background: #fee2e2;
+            color: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px auto;
+        }
+        .icon-svg {
+            width: 32px;
+            height: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card" id="mainCard">
+        <!-- Initial View -->
+        <div id="verifyInitialView">
+            <img src="logo.png" alt="Paomobile Logo" class="logo">
+            <h1>ยืนยันการสมัครสมาชิก</h1>
+            <p class="subtitle">คลิกที่ปุ่มด้านล่างเพื่อยืนยันอีเมลของคุณและเริ่มต้นใช้งาน Paomobile ครับ</p>
+            
+            <button class="btn-primary" id="btnVerify" onclick="verifyEmail()">
+                <svg class="icon-svg" style="width: 20px; height: 20px; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 17.002V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"></path>
+                    <path d="M5.45 5.11 12 12l6.55-6.89"></path>
+                    <path d="m15 19 2 2 4-4"></path>
+                </svg>
+                ยืนยันอีเมลของฉัน
+            </button>
+            <div id="loadingMsg" style="display: none; margin-top: 20px; color: #64748b; font-size: 14px;">
+                กำลังตรวจสอบข้อมูล กรุณารอสักครู่...
+            </div>
+        </div>
+
+        <!-- Success View -->
+        <div id="verifySuccessView" style="display: none;">
+            <div class="success-icon">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h1>ยืนยันอีเมลสำเร็จ!</h1>
+            <p class="subtitle">บัญชีของคุณได้รับการยืนยันเรียบร้อยแล้ว<br>ตอนนี้คุณสามารถเข้าใช้งานเว็บไซต์ได้ทันทีครับ</p>
+            <button class="btn-primary" onclick="goToSite()">
+                เข้าสู่เว็บไซต์
+                <svg style="width: 18px; height: 18px; margin-left: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Error View -->
+        <div id="verifyErrorView" style="display: none;">
+            <div class="error-icon">
+                <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+            <h1>ไม่สามารถยืนยันได้</h1>
+            <p class="subtitle" id="errorText">ลิงก์ยืนยันไม่ถูกต้อง หรืออาจจะหมดอายุไปแล้วครับ</p>
+            <button class="btn-primary" onclick="window.location.href='login.html'">
+                กลับไปหน้าเข้าสู่ระบบ
+            </button>
+        </div>
+    </div>
+
+    <!-- Load Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+    
+    <script>
+        let tokenHash = '';
+        let tokenType = '';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            tokenHash = urlParams.get('token_hash');
+            tokenType = urlParams.get('type') || 'signup';
+
+            if (!tokenHash) {
+                // Also check hash fragment just in case
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                tokenHash = hashParams.get('token_hash');
+                if (!tokenType) tokenType = hashParams.get('type') || 'signup';
+            }
+
+            if (!tokenHash) {
+                showError("ไม่พบรหัสยืนยันในลิงก์ กรุณาตรวจสอบลิงก์จากอีเมลอีกครั้งครับ");
+                document.getElementById('btnVerify').disabled = true;
+            }
+        });
+
+        async function verifyEmail() {
+            if (!tokenHash) return;
+
+            const btn = document.getElementById('btnVerify');
+            const loading = document.getElementById('loadingMsg');
+            
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            loading.style.display = 'block';
+
+            try {
+                // Ensure supabase is ready
+                if (!window.supabase) {
+                    window.getSupabaseClient();
+                }
+
+                const { data, error } = await window.supabase.auth.verifyOtp({
+                    token_hash: tokenHash,
+                    type: tokenType
+                });
+
+                if (error) throw error;
+
+                // Success! Update local storage so the user is treated as logged in and verified.
+                if (data && data.session && data.session.user) {
+                    const user = data.session.user;
+                    const isGoogle = (user.app_metadata?.providers || []).includes('google');
+                    
+                    const finalUser = {
+                        uid: user.id,
+                        email: user.email,
+                        displayName: user.user_metadata?.name || user.email.split('@')[0],
+                        photoURL: user.user_metadata?.avatar || "",
+                        emailVerified: true,
+                        isVerified: true, // Key flag for auth.js
+                        providerData: isGoogle ? [{providerId: 'google.com'}] : []
+                    };
+                    localStorage.setItem('paomobile_user', JSON.stringify(finalUser));
+                    localStorage.removeItem('pending_verification_email');
+                }
+
+                showSuccess();
+            } catch (error) {
+                console.error("[Verify Error]:", error);
+                let msg = "เกิดข้อผิดพลาดในการยืนยันตัวตน โปรดลองใหม่อีกครั้ง";
+                if (error.message.includes("expired") || error.message.includes("Token")) {
+                    msg = "ลิงก์นี้หมดอายุหรือถูกใช้งานไปแล้วครับ กรุณาเข้าสู่ระบบเพื่อขอลิงก์ใหม่";
+                }
+                showError(msg);
+            }
+        }
+
+        function showSuccess() {
+            document.getElementById('verifyInitialView').style.display = 'none';
+            document.getElementById('verifyErrorView').style.display = 'none';
+            document.getElementById('verifySuccessView').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('verifyInitialView').style.display = 'none';
+            document.getElementById('verifySuccessView').style.display = 'none';
+            document.getElementById('verifyErrorView').style.display = 'block';
+            document.getElementById('errorText').textContent = message;
+        }
+
+        function goToSite() {
+            window.location.replace('index.html');
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+

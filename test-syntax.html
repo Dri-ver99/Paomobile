@@ -1,0 +1,23 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<script>
+window.onerror = function(msg, url, line, col, error) {
+    document.title = "ERR|" + msg + "|" + line + "|" + col;
+};
+</script>
+<script src="seller-chat.js"></script>
+<script>
+if (!document.title.startsWith("ERR|")) {
+    document.title = "SUCCESS";
+}
+</script>
+</head>
+<body></body>
+</html>
+
+
+
+
+
+
