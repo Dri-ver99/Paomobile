@@ -1,0 +1,544 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รับคูปองส่วนลด — Paomobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ee4d2d;
+            --gold: #fbc02d;
+            --dark: #020617;
+            --glass: rgba(15, 23, 42, 0.7);
+            --success: #10b981;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
+            background: var(--dark);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ✨ Premium Animated Mesh Gradient Background */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            filter: blur(80px);
+            opacity: 0.6;
+        }
+
+        .light-1 {
+            position: absolute;
+            background: radial-gradient(circle, #ee4d2d 0%, transparent 60%);
+            width: 50vw;
+            height: 50vw;
+            top: -10%;
+            left: -10%;
+            animation: float 25s infinite alternate;
+        }
+
+        .light-2 {
+            position: absolute;
+            background: radial-gradient(circle, #f1c40f 0%, transparent 60%);
+            width: 40vw;
+            height: 40vw;
+            bottom: -5%;
+            right: -5%;
+            animation: float 20s infinite alternate-reverse;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(15%, 15%); }
+        }
+
+        .container {
+            text-align: center;
+            width: 92%;
+            max-width: 440px;
+            padding: 40px 30px;
+            background: var(--glass);
+            border-radius: 32px;
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8),
+                        inset 0 0 20px rgba(255, 255, 255, 0.05);
+            position: relative;
+            z-index: 10;
+            animation: containerAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes containerAppear {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .logo {
+            width: 70px;
+            margin-bottom: 25px;
+            filter: drop-shadow(0 0 10px rgba(238, 77, 45, 0.3));
+        }
+
+        .status-icon {
+            font-size: 4.5rem;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        h1 { font-size: 1.7rem; margin: 0 0 12px 0; color: #fff; font-weight: 700; letter-spacing: -0.5px; }
+        p { color: #94a3b8; line-height: 1.6; font-size: 0.95rem; margin-bottom: 25px; }
+
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--gold);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            animation: spin 0.8s linear infinite;
+            margin: 30px auto;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .btn-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--gold), #f9a825);
+            color: #000;
+            padding: 18px 30px;
+            border-radius: 18px;
+            text-decoration: none;
+            font-weight: 700;
+            margin-top: 15px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1.1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ✨ Shimmer Effect */
+        .btn-action::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -100%;
+            width: 80%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(30deg);
+            transition: 0s;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(241, 196, 15, 0.3);
+        }
+
+        .btn-action:hover::after {
+            left: 200%;
+            transition: 1s;
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            margin-top: 25px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .btn-secondary:hover { color: #fff; }
+
+        /* 🎟️ Premium Ticket Style Voucher Card */
+        .voucher-card {
+            background: #fff;
+            color: #1e293b;
+            padding: 30px 25px;
+            border-radius: 20px;
+            margin: 30px 0;
+            text-align: left;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            overflow: visible;
+        }
+
+        /* Ticket Punched Holes Effect */
+        .voucher-card::before, .voucher-card::after {
+            content: "";
+            position: absolute;
+            left: -15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            background: var(--dark);
+            border-radius: 50%;
+            z-index: 5;
+        }
+        .voucher-card::after { left: auto; right: -15px; }
+
+        .voucher-inner {
+            border-left: 5px solid var(--primary);
+            padding-left: 20px;
+        }
+
+        .voucher-card h4 { margin: 0; color: var(--primary); font-size: 1.6rem; font-weight: 800; letter-spacing: -1px; }
+        .voucher-card p { margin: 10px 0 0 0; font-size: 0.95rem; color: #475569; font-weight: 600; }
+        
+        .code-display {
+            margin-top: 20px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: #f1f5f9;
+            padding: 10px 18px;
+            border-radius: 10px;
+            display: inline-block;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            color: #334155;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .success-glow {
+            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);
+            color: var(--success);
+        }
+
+        @keyframes shrinkToWallet {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; transform: translateY(100px); }
+        }
+
+        .collect-anim {
+            animation: shrinkToWallet 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .confetti-canvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .error-text { color: #ef4444; }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+</head>
+<body>
+    <div class="ambient-bg">
+        <div class="light-1"></div>
+        <div class="light-2"></div>
+    </div>
+
+    <canvas id="confetti" class="confetti-canvas"></canvas>
+
+    <div class="container" id="mainContainer">
+        <img src="logo.png" alt="Paomobile" class="logo">
+        
+        <!-- Loading State -->
+        <div id="loadingState">
+            <div class="status-icon">🔍</div>
+            <h1 id="loadingTitle">กำลังตรวจพบลิงก์...</h1>
+            <p id="loadingText">กรุณารอสักครู่ ระบบกำลังหาของขวัญให้คุณครับ</p>
+            <div class="loader"></div>
+        </div>
+
+        <!-- Preview State (Scanned Success, but need login/action) -->
+        <div id="previewState" style="display: none;">
+            <div class="status-icon">😲</div>
+            <h1>ว้าว! คุณได้รับของขวัญ</h1>
+            <p>สแกนสิทธิ์สแกนติดแล้วค่ะ รายละเอียดคูปองของคุณ:</p>
+            
+            <div class="voucher-card" id="vCard">
+                <div class="voucher-inner">
+                    <h4 id="vTitle">ส่วนลด ฿100</h4>
+                    <p id="vDesc">ยอดซื้อขั้นต่ำ ฿0</p>
+                    <div class="code-display" id="vCode">CODE: SALE99</div>
+                </div>
+            </div>
+
+            <!-- Login Case -->
+            <div id="authRequiredArea" style="display: none;">
+                <p style="color: #ff9f43; font-weight: 600; font-size: 0.9rem;">🚫 กรุณาเข้าสู่ระบบก่อนเก็บคูปองนะค๊าบ</p>
+                <button onclick="redirectToLogin()" class="btn-action">🔐 ล็อกอินเพื่อรับคูปอง</button>
+            </div>
+
+            <!-- Collect Case -->
+            <div id="collectArea" style="display: none;">
+                <p style="color: #22c55e; font-weight: 600; font-size: 0.9rem;">✅ คุณพร้อมรับสิทธิ์แล้วค่ะ</p>
+                <button id="btnRedeem" onclick="confirmRedemption()" class="btn-action">🧧 กดเพื่อเก็บเข้ากระเป๋าตังค์ตอนนี้! 🧧</button>
+            </div>
+        </div>
+
+        <!-- Success State (After Clicking Collect) -->
+        <div id="successState" style="display: none;">
+            <div class="status-icon">🎁</div>
+            <h1 style="color: #22c55e;">เก็บคูปองเรียบร้อย!</h1>
+            <p>ของขวัญชิ้นนี้ไปรออยู่ในกระเป๋าตั้งของคุณแล้วค่ะ</p>
+            
+            <a href="member.html" class="btn-action">💳 ตรวจสอบคูปองในกระเป๋า</a>
+            <a href="index.html" class="btn-secondary">กลับสู่หน้าหลัก</a>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" style="display: none;">
+            <div class="status-icon">😞</div>
+            <h1 style="color: #ef4444;">ไม่สามารถรับคูปองได้</h1>
+            <p id="errorMsg">ลิงก์นี้หมดอายุแล้ว หรือถูกใช้งานไปแล้วครับ</p>
+            <a href="index.html" class="btn-action">กลับสู่หน้าหลัก</a>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let currentQRId = null;
+        let currentVoucherData = null;
+        let qrRef = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            currentQRId = params.get('id');
+            
+            if (!currentQRId) {
+                showError("ไม่พบคูปองที่คุณต้องการรับ (Missing ID)");
+                return;
+            }
+
+            // Start Monitoring Auth While Fetching QR Data
+            firebase.auth().onAuthStateChanged(user => {
+                handleAuthState(user);
+            });
+
+            try {
+                // 1. Fetch QR Ticket
+                qrRef = db.collection('voucher_qrs').doc(currentQRId);
+                const qrSnap = await qrRef.get();
+
+                if (!qrSnap.exists) {
+                    showError("ไม่พบข้อมูลคูปองนี้ในระบบครับ กรุณาสแกนรหัสที่ถูกต้อง");
+                    return;
+                }
+
+                const qrData = qrSnap.data();
+                const now = firebase.firestore.Timestamp.now();
+
+                // 2. Security Checks
+                if (qrData.expiresAt && now.toMillis() > qrData.expiresAt.toMillis()) {
+                    showError("ขออภัยครับ ลิงก์นี้หมดอายุแล้ว (จำกัดเวลา 1 ชม. คับ)");
+                    return;
+                }
+
+                if (qrData.usedBy) {
+                    showError("ขออภัยครับ คูปองใบนี้มีคนรับไปแล้วครับ (สิทธิ์ 1:1)");
+                    return;
+                }
+
+                // 3. Fetch Actual Voucher Data
+                const vCode = qrData.voucherCode;
+                const vSnap = await db.collection('vouchers').where('code', '==', vCode).get();
+                
+                if (vSnap.empty) {
+                    showError("ไม่พบรายละเอียดคูปองนี้ กรุณาติดต่อเพจหรือหน้าร้านครับ");
+                    return;
+                }
+                currentVoucherData = vSnap.docs[0].data();
+                currentVoucherData.id = vSnap.docs[0].id;
+
+                // 4. Show Preview UI
+                renderPreview(currentVoucherData);
+
+            } catch (err) {
+                console.error(err);
+                showError("เกิดข้อผิดพลาดในการโหลดคูปอง: " + err.message);
+            }
+        });
+
+        function handleAuthState(user) {
+            const authArea = document.getElementById('authRequiredArea');
+            const collectArea = document.getElementById('collectArea');
+            
+            if (user) {
+                console.log("[Auth] Logged in as:", user.email);
+                authArea.style.display = 'none';
+                collectArea.style.display = 'block';
+                // Sync with local storage user session
+                localStorage.setItem('paomobile_user', JSON.stringify({
+                    uid: user.uid,
+                    name: user.displayName || user.email.split('@')[0],
+                    email: user.email,
+                    isVerified: user.emailVerified
+                }));
+            } else {
+                console.log("[Auth] Not logged in");
+                authArea.style.display = 'block';
+                collectArea.style.display = 'none';
+            }
+        }
+
+        function renderPreview(v) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('previewState').style.display = 'block';
+            document.getElementById('vTitle').textContent = (v.type === 'ship') ? 'ส่งฟรี' : (v.value ? `ส่วนลด ฿${v.value.toLocaleString()}` : v.title);
+            document.getElementById('vDesc').textContent = v.desc || (v.minPurchase > 0 ? `ยอดซื้อขั้นต่ำ ฿${v.minPurchase}` : 'ไม่มีขั้นต่ำ');
+            document.getElementById('vCode').textContent = `CODE: ${v.code}`;
+        }
+
+        window.redirectToLogin = () => {
+            localStorage.setItem('redirect_after_login', window.location.href);
+            window.location.href = 'login.html';
+        };
+
+        window.confirmRedemption = async () => {
+            const btn = document.getElementById('btnRedeem');
+            const user = firebase.auth().currentUser;
+
+            if (!user) {
+                alert("กรุณาเข้าสู่ระบบก่อนครับ");
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                btn.textContent = '🕒 กำลังบันทึกสิทธิ์...';
+
+                // 1. Transactional Update
+                await db.runTransaction(async (transaction) => {
+                    const qrDoc = await transaction.get(qrRef);
+                    if (qrDoc.data().usedBy) {
+                        throw new Error("คูปองนี้มีผู้รับไปแล้วครับ");
+                    }
+
+                    const now = firebase.firestore.Timestamp.now();
+                    transaction.update(qrRef, { usedBy: user.email, redeemedAt: now });
+                    
+                    const newRedeemRef = db.collection('vouchers_redemptions').doc();
+                    transaction.set(newRedeemRef, {
+                        code: currentVoucherData.code,
+                        email: user.email,
+                        at: now,
+                        fromQR: currentQRId
+                    });
+                });
+
+                // 2. Visual Success Flow
+                document.getElementById('vCard').classList.add('collect-anim');
+                
+                setTimeout(() => {
+                    // Sync to Local Wallet
+                    const V_KEY = 'pao_user_vouchers_' + user.email;
+                    let myVouchers = JSON.parse(localStorage.getItem(V_KEY)) || [];
+                    if (!myVouchers.some(v => v.code === currentVoucherData.code)) {
+                        myVouchers.push({
+                            ...currentVoucherData,
+                            expiry: currentVoucherData.expiry // Keep consistent
+                        });
+                        localStorage.setItem(V_KEY, JSON.stringify(myVouchers));
+                    }
+
+                    document.getElementById('previewState').style.display = 'none';
+                    document.getElementById('successState').style.display = 'block';
+                    startConfetti();
+                }, 600);
+
+            } catch (err) {
+                console.error(err);
+                alert("เกิดข้อผิดพลาด: " + err.message);
+                btn.disabled = false;
+                btn.textContent = '🧧 กดเพื่อเก็บเข้ากระเป๋าตังค์ตอนนี้! 🧧';
+            }
+        };
+
+        function showError(msg) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('previewState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('errorMsg').textContent = msg;
+        }
+
+        // --- Simplified Confetti Animation ---
+        function startConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+            const colors = ['#ee4d2d', '#f1c40f', '#fff', '#3498db'];
+
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    vx: Math.random() * 4 - 2,
+                    vy: Math.random() * 4 + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 5 + 5
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.y > canvas.height) p.y = -10;
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+    </script>
+<script src="premium-alerts.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+

@@ -1,0 +1,174 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase to Supabase Migration Tool</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .log-box { width: 100%; height: 400px; overflow-y: scroll; background: #222; color: #0f0; padding: 10px; font-family: monospace; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+</head>
+<body>
+    <h1>Firebase to Supabase Migration Tool</h1>
+    <p>Click the button below to migrate data from Firestore to Supabase.</p>
+    <button id="startBtn">Start Migration</button>
+    <br><br>
+    <div id="logBox" class="log-box"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
+        };
+        const app = initializeApp(firebaseConfig);
+        const firebaseDb = getFirestore(app);
+
+        // Supabase Config
+        const supabaseUrl = 'https://ivnayulkvlxjnwfwjxmj.supabase.co';
+        const supabaseKey = 'sb_publishable_ZZPe_GiGq-5W780KOI64yg_zzsjWvq7';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const startBtn = document.getElementById('startBtn');
+        const logBox = document.getElementById('logBox');
+
+        function log(message) {
+            const p = document.createElement('div');
+            p.textContent = message;
+            logBox.appendChild(p);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function transformData(data, id) {
+            const transformed = { ...data, id };
+            for (const key in transformed) {
+                if (typeof transformed[key] === 'string' && transformed[key].trim() === "") {
+                    // Delete empty strings to let Supabase handle as NULL / DEFAULT
+                    // This fixes the timestamp "" error
+                    delete transformed[key];
+                }
+                else if (transformed[key] && typeof transformed[key] === 'object' && 'seconds' in transformed[key]) {
+                    transformed[key] = new Date(transformed[key].seconds * 1000).toISOString();
+                }
+            }
+            return transformed;
+        }
+
+        async function migrateCollection(collectionName, supabaseTableName, transform = transformData) {
+
+            log(`Starting migration for ${collectionName}...`);
+            try {
+                const querySnapshot = await getDocs(collection(firebaseDb, collectionName));
+                const docs = [];
+                querySnapshot.forEach((doc) => {
+                    docs.push(transform(doc.data(), doc.id));
+                });
+
+                if (docs.length === 0) {
+                    log(`No data found in ${collectionName}. Skipping.`);
+                    return;
+                }
+
+                log(`Found ${docs.length} documents in ${collectionName}. Inserting into Supabase ${supabaseTableName}...`);
+                
+                // Insert in smaller batches to avoid statement timeout
+                const batchSize = 10;
+                for (let i = 0; i < docs.length; i += batchSize) {
+                    const batch = docs.slice(i, i + batchSize);
+                    const { data, error } = await supabase.from(supabaseTableName).upsert(batch);
+                    if (error) {
+                        log(`Error inserting batch for ${collectionName}: ${error.message}`);
+                    } else {
+                        log(`Inserted batch ${i/batchSize + 1} for ${collectionName}`);
+                    }
+                }
+                log(`Finished migration for ${collectionName}.`);
+            } catch (err) {
+                log(`Error reading ${collectionName}: ${err.message}`);
+            }
+        }
+
+        async function migrateChats() {
+            log(`Starting migration for chats and chat_messages...`);
+            try {
+                const chatsSnapshot = await getDocs(collection(firebaseDb, 'chats'));
+                const chats = [];
+                const messages = [];
+
+                for (const docSnap of chatsSnapshot.docs) {
+                    const data = docSnap.data();
+                    const chatId = docSnap.id;
+                    chats.push(transformData(data, chatId));
+
+                    // get messages subcollection
+                    const msgsSnapshot = await getDocs(collection(firebaseDb, `chats/${chatId}/messages`));
+                    msgsSnapshot.forEach((msgDoc) => {
+                        const msgData = transformData(msgDoc.data(), msgDoc.id);
+                        messages.push({
+                            ...msgData,
+                            chatId: chatId // Using chatId instead of chat_id
+                        });
+                    });
+                }
+
+                if (chats.length > 0) {
+                    log(`Found ${chats.length} chats. Inserting...`);
+                    const { error } = await supabase.from('chats').upsert(chats);
+                    if (error) log(`Error inserting chats: ${error.message}`);
+                }
+
+                if (messages.length > 0) {
+                    log(`Found ${messages.length} messages. Inserting...`);
+                    const batchSize = 100;
+                    for (let i = 0; i < messages.length; i += batchSize) {
+                        const batch = messages.slice(i, i + batchSize);
+                        const { error } = await supabase.from('chat_messages').upsert(batch);
+                        if (error) log(`Error inserting messages batch: ${error.message}`);
+                    }
+                }
+                log(`Finished migration for chats.`);
+            } catch (err) {
+                log(`Error migrating chats: ${err.message}`);
+            }
+        }
+
+        startBtn.addEventListener('click', async () => {
+            startBtn.disabled = true;
+            logBox.innerHTML = '';
+            log('Migration started...');
+
+            await migrateCollection('products', 'products');
+            await migrateCollection('users', 'users');
+            await migrateCollection('orders', 'orders');
+            await migrateCollection('vouchers', 'vouchers');
+            await migrateCollection('vouchers_redemptions', 'vouchers_redemptions');
+            await migrateCollection('voucher_qrs', 'voucher_qrs');
+            await migrateCollection('status', 'status');
+            await migrateChats();
+
+            log('Migration completed!');
+            startBtn.disabled = false;
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

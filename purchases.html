@@ -1,0 +1,1871 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>การซื้อของฉัน — Paomobile</title>
+    <meta name="description"
+        content="Paomobile ร้านซ่อมมือถือมืออาชีพ ซ่อมจอ เปลี่ยนแบต ซ่อมบอร์ด รับทุกยี่ห้อ งานคุณภาพ รับประกันทุกชิ้น Line: @pao789" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="products.css" />
+    <link rel="stylesheet" href="purchases.css" />
+    <style>
+        /* Premium Lightbox Styles */
+        .slip-lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .slip-lightbox.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .slip-lightbox-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            background: #fff;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: default;
+        }
+
+        .slip-lightbox.show .slip-lightbox-content {
+            transform: scale(1);
+        }
+
+        .slip-lightbox-img {
+            display: block;
+            max-width: 100%;
+            max-height: calc(90vh - 40px);
+            border-radius: 8px;
+        }
+
+        .slip-lightbox-close {
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            width: 35px;
+            height: 35px;
+            background: #ee4d2d;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            border: 2px solid #fff;
+            z-index: 100;
+        }
+
+        /* ✨ Premium Success Confirmation Modal */
+        .sc-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 999999;
+            transition: opacity 0.3s ease;
+        }
+
+        .sc-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -40%);
+            width: 90%;
+            max-width: 380px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 28px;
+            padding: 40px 30px;
+            text-align: center;
+            z-index: 1000000;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .sc-modal.show {
+            display: block;
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+
+        .sc-icon-wrapper {
+            width: 80px;
+            height: 80px;
+            background: #fff8f6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 40px;
+            border: 2px solid #fee2e2;
+            animation: pulse-orange 2s infinite;
+        }
+
+        @keyframes pulse-orange {
+            0% { box-shadow: 0 0 0 0 rgba(238, 77, 45, 0.2); }
+            70% { box-shadow: 0 0 0 15px rgba(238, 77, 45, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(238, 77, 45, 0); }
+        }
+
+        .sc-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .sc-desc {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 35px;
+        }
+
+        .sc-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-sc-confirm {
+            background: linear-gradient(135deg, #ee4d2d, #ff6e40);
+            color: #fff;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 10px 20px rgba(238, 77, 45, 0.15);
+        }
+
+        .btn-sc-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(238, 77, 45, 0.25);
+        }
+
+        .btn-sc-cancel {
+            background: transparent;
+            color: #888;
+            border: 1px solid #eee;
+            padding: 14px;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-sc-cancel:hover {
+            background: #f9f9f9;
+            color: #555;
+        }
+
+        /* Return Reason Modal Styles (Refined) */
+        .return-modal-list { list-style: none; padding: 0; margin: 0; }
+        .return-option { 
+            display: flex; 
+            align-items: center; 
+            padding: 18px 24px; 
+            border-bottom: 1px solid #f8f8f8; 
+            cursor: pointer; 
+            transition: all 0.25s ease; 
+            gap: 20px; 
+            text-align: left; /* Align beautifully */
+        }
+        .return-option:hover { background: #fff8f5; }
+        .return-option:active { transform: scale(0.98); }
+        .return-option:hover .return-title { color: #ee4d2d; }
+        .return-option:hover .return-icon { transform: scale(1.15) rotate(5deg); }
+        .return-option:last-child { border-bottom: none; }
+        
+        .return-icon { 
+            font-size: 1.8rem; 
+            min-width: 48px; 
+            height: 48px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #fff5f2; 
+            border-radius: 12px; 
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .return-text { flex: 1; }
+        .return-title { font-weight: 600; color: #222; margin-bottom: 4px; font-size: 1rem; line-height: 1.4; transition: color 0.2s; }
+        .return-desc { font-size: 0.82rem; color: #777; line-height: 1.5; }
+        .return-arrow { color: #eee; font-size: 1.5rem; transition: transform 0.2s; margin-left: 5px; }
+        .return-option:hover .return-arrow { color: #ee4d2d; transform: translateX(3px); }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="logo.png" alt="Paomobile" class="logo-img" />
+                Pao<span class="accent">mobile</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li class="has-mega-menu"><a href="index.html#services">บริการ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner">
+                            <div class="mega-column"><span class="mega-title">เลือกรุ่นโทรศัพท์</span><a href="iphone.html"
+                                    class="mega-link">iPhone / iPad</a><a href="samsung.html"
+                                    class="mega-link">Samsung</a><a href="xiaomi.html" class="mega-link">Xiaomi /
+                                    POCO</a><a href="oppo.html" class="mega-link">OPPO</a><a href="vivo.html"
+                                    class="mega-link">Vivo</a><a href="huawei.html" class="mega-link">Huawei</a><a
+                                    href="realme.html" class="mega-link">Realme</a><a href="oneplus.html"
+                                    class="mega-link">OnePlus</a><a href="nokia.html" class="mega-link">Nokia</a></div>
+                            <div class="mega-column"><span class="mega-title">งานซ่อมมือถือ</span><a
+                                    href="https://line.me/R/ti/p/@pao789" target="_blank" class="mega-link">สายแพร Z
+                                    flip ,Fold</a><a href="select-green-line.html"
+                                    class="mega-link">แก้หน้าจอเป็นเส้น</a><a href="select-glass-repair.html"
+                                    class="mega-link">ลอกกระจกหน้าจอ</a><a href="select-board-repair.html"
+                                    class="mega-link">ซ่อมบอร์ดดับ</a><a href="select-screen-repair.html"
+                                    class="mega-link">เปลี่ยนหน้าจอ</a><a href="select-battery.html"
+                                    class="mega-link">เปลี่ยนแบตเตอรี่</a><a href="select-charging.html"
+                                    class="mega-link">อาการชาร์จไม่เข้า</a><a href="select-housing.html"
+                                    class="mega-link">เปลี่ยนฝาหลัง บอดี้ชุด</a></div>
+                            <div class="mega-column"><span class="mega-title">บริการเสริม</span><a
+                                    href="select-glass-film.html" class="mega-link">ติดฟิล์มกระจก</a><a
+                                    href="select-software.html" class="mega-link">ล้างเครื่อง / ลงโปรแกรม</a><a
+                                    href="select-unlock.html" class="mega-link">ปลดล็อครหัสหน้าจอ / gmail</a><a
+                                    href="accessory.html" class="mega-link">เคส / อุปกรณ์เสริม</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="index.html#why-us">ทำไมต้องเรา</a></li>
+                <li class="has-mega-menu"><a href="index.html#reviews">รีวิว</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 200px;">
+                            <div class="mega-column"><a href="index.html#reviews" class="mega-link">รีวิวลูกค้า</a><a
+                                    href="index.html#showcase" class="mega-link">รีวิวงานซ่อม</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="index.html#branches">สาขา</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner">
+                            <div class="mega-column"><a href="index.html?branch=0#branches"
+                                    class="mega-link nav-branch-link" data-branch="0">สาขาตึกคอม</a><a
+                                    href="index.html?branch=1#branches" class="mega-link nav-branch-link"
+                                    data-branch="1">สาขานาเกลือ</a><a href="index.html?branch=2#branches"
+                                    class="mega-link nav-branch-link" data-branch="2">สาขาซอยสยาม</a></div>
+                            <div class="mega-column"><a href="index.html?branch=3#branches"
+                                    class="mega-link nav-branch-link" data-branch="3">สาขาตลาดมหาชล</a><a
+                                    href="index.html?branch=4#branches" class="mega-link nav-branch-link"
+                                    data-branch="4">สาขาแหลมฉบัง</a><a href="index.html?branch=5#branches"
+                                    class="mega-link nav-branch-link" data-branch="5">สาขาพรประภานิมิตร</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="index.html#contact">ติดต่อ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 200px;">
+                            <div class="mega-column"><a href="https://www.facebook.com/profile.php?id=100063764974738"
+                                    target="_blank" class="mega-link">Facebook</a><a
+                                    href="https://line.me/R/ti/p/@pao789" target="_blank" class="mega-link">Line</a><a
+                                    href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                                    target="_blank" class="mega-link">Instagram</a><a
+                                    href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP"
+                                    target="_blank" class="mega-link">Tiktok</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="#">🛒 สั่งของ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 220px;">
+                            <div class="mega-column"><a href="new-products.html" class="mega-link">📱 สินค้ามือ 1</a><a
+                                    href="used-products.html" class="mega-link">🔁 สินค้ามือ 2</a><a href="parts.html"
+                                    class="mega-link">🔧 อะไหล่มือถือ</a><a href="accessory.html"
+                                    class="mega-link">&#x1F3A7; Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI"
+                                    target="_blank" class="mega-link">🛒 Shopee</a></div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary nav-btn" id="navCta">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                สอบถามเพิ่มเติม
+            </a>
+            <div class="nav-icon-group" style="display:flex; align-items:center; gap: 30px;">
+                <button class="search-icon-btn" id="searchBtn" aria-label="ค้นหา">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                </button>
+                <div class="account-menu-wrapper">
+                    <a href="javascript:void(0)" class="account-icon-btn" aria-label="บัญชีผู้ใช้">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </a>
+                    <div class="account-dropdown">
+                        <a href="login.html" class="dropdown-item bold">เข้าสู่ระบบ/สมัครสมาชิก</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="promotions.html" class="dropdown-item"
+                            style="padding-bottom: 8px;">รับสิทธิประโยชน์สุดพิเศษ <span class="arrow">›</span></a>
+                        <a href="purchases.html" class="dropdown-item"
+                            style="color: var(--text) !important; font-size: 0.9em; padding-top: 6px;">การซื้อของฉัน</a>
+                    </div>
+                </div>
+                <button class="cart-icon-btn" id="cartBtn" aria-label="ตะกร้าสินค้า">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <path d="M16 10a4 4 0 01-8 0" />
+                    </svg>
+                    <span class="cart-badge" style="display:none">0</span>
+                </button>
+            </div>
+            <button class="menu-toggle" id="menuToggle"
+                aria-label="Menu"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileOverlay"></div>
+    <aside class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-panels" id="mobileMenuPanels">
+            <div class="mobile-panel" id="mainPanel">
+                <div class="mobile-menu-inner"><a href="index.html">หน้าหลัก</a>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">บริการ</div>
+                        <div class="mobile-sub-menu"><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin:8px 0 4px; display:block; font-weight:600;">เลือกรุ่นโทรศัพท์</span><a
+                                href="iphone.html">iPhone / iPad</a><a href="samsung.html">Samsung</a><a
+                                href="xiaomi.html">Xiaomi / POCO</a><a href="oppo.html">OPPO</a><a
+                                href="vivo.html">Vivo</a><a href="huawei.html">Huawei</a><a
+                                href="realme.html">Realme</a><a href="oneplus.html">OnePlus</a><a
+                                href="nokia.html">Nokia</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">งานซ่อมมือถือ</span><a
+                                href="https://line.me/R/ti/p/@pao789" target="_blank">สายแพร Z flip ,Fold</a><a
+                                href="select-green-line.html">แก้หน้าจอเป็นเส้น</a><a
+                                href="select-glass-repair.html">ลอกกระจกหน้าจอ</a><a
+                                href="select-board-repair.html">ซ่อมบอร์ดดับ</a><a
+                                href="select-screen-repair.html">เปลี่ยนหน้าจอ</a><a
+                                href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a
+                                href="select-charging.html">อาการชาร์จไม่เข้า</a><a
+                                href="select-housing.html">เปลี่ยนฝาหลัง บอดี้ชุด</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">บริการเสริม</span><a
+                                href="select-glass-film.html">ติดฟิล์มกระจก</a><a
+                                href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a
+                                href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส /
+                                อุปกรณ์เสริม</a>
+                        </div>
+                    </div><a href="index.html#why-us">ทำไมต้องเรา</a>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">รีวิว</div>
+                        <div class="mobile-sub-menu"><a href="index.html#reviews">รีวิวลูกค้า</a><a
+                                href="index.html#showcase">รีวิวงานซ่อม</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">สาขา</div>
+                        <div class="mobile-sub-menu"><a href="index.html?branch=0#branches">สาขาตึกคอม</a><a
+                                href="index.html?branch=1#branches">สาขานาเกลือ</a><a
+                                href="index.html?branch=2#branches">สาขาซอยสยาม</a><a
+                                href="index.html?branch=4#branches">สาขาตลาดมหาชล</a><a
+                                href="index.html?branch=5#branches">สาขาแหลมฉบัง</a><a
+                                href="index.html?branch=6#branches">สาขาพรประภานิมิตร</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">ติดต่อ</div>
+                        <div class="mobile-sub-menu"><a href="https://www.facebook.com/profile.php?id=100063764974738"
+                                target="_blank">Facebook</a><a href="https://line.me/R/ti/p/@pao789"
+                                target="_blank">Line</a><a
+                                href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                                target="_blank">Instagram</a><a
+                                href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP"
+                                target="_blank">Tiktok</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">🛒 สั่งของ</div>
+                        <div class="mobile-sub-menu"><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin:8px 0 4px; display:block; font-weight:600;">เลือกรุ่นโทรศัพท์</span><a
+                                href="iphone.html">iPhone / iPad</a><a href="samsung.html">Samsung</a><a
+                                href="xiaomi.html">Xiaomi / POCO</a><a href="oppo.html">OPPO</a><a
+                                href="vivo.html">Vivo</a><a href="huawei.html">Huawei</a><a
+                                href="realme.html">Realme</a><a href="oneplus.html">OnePlus</a><a
+                                href="nokia.html">Nokia</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">งานซ่อมมือถือ</span><a
+                                href="https://line.me/R/ti/p/@pao789" target="_blank">สายแพร Z flip ,Fold</a><a
+                                href="select-green-line.html">แก้หน้าจอเป็นเส้น</a><a
+                                href="select-glass-repair.html">ลอกกระจกหน้าจอ</a><a
+                                href="select-board-repair.html">ซ่อมบอร์ดดับ</a><a
+                                href="select-screen-repair.html">เปลี่ยนหน้าจอ</a><a
+                                href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a
+                                href="select-charging.html">อาการชาร์จไม่เข้า</a><a
+                                href="select-housing.html">เปลี่ยนฝาหลัง บอดี้ชุด</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span
+                                style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">บริการเสริม</span><a
+                                href="select-glass-film.html">ติดฟิล์มกระจก</a><a
+                                href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a
+                                href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส /
+                                อุปกรณ์เสริม</a>
+                            <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div>
+                            <a href="new-products.html">📱 สินค้ามือ 1</a><a href="used-products.html">🔁 สินค้ามือ 2</a><a
+                                href="parts.html">🔧 อะไหล่มือถือ</a><a href="accessory.html">🎧 Accessory</a><a
+                                href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a>
+                        </div>
+                    </div><a href="https://line.me/R/ti/p/@pao789" target="_blank"
+                        class="btn btn-primary mobile-cta"><svg viewBox="0 0 24 24" width="20" height="20"
+                            stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"
+                            stroke-linejoin="round" style="margin-right: 10px; flex-shrink: 0;">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg><span>สอบถามเพิ่มเติม</span></a>
+                </div>
+            </div>
+            <div class="mobile-panel" id="subPanel">
+                <div class="mobile-panel-header"><button class="mobile-back-btn" id="mobileBackBtn"><svg
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg><span>กลับ</span></button><span class="mobile-panel-title" id="subMenuTitle"></span></div>
+                <div class="mobile-menu-inner" id="subMenuContent"></div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="purchases-container"
+        style="padding-top: 100px; background-color: #ffffff; min-height: calc(100vh - 400px);">
+        <!-- Status Tabs -->
+        <div class="order-tabs">
+            <div class="order-tab active" data-filter="all">ทั้งหมด</div>
+            <div class="order-tab" data-filter="pay">ที่ต้องชำระ</div>
+            <div class="order-tab" data-filter="ship">ที่ต้องจัดส่ง</div>
+            <div class="order-tab" data-filter="receive">ที่ต้องได้รับ</div>
+            <div class="order-tab" data-filter="completed">สำเร็จแล้ว</div>
+            <div class="order-tab" data-filter="cancel">ยกเลิกแล้ว</div>
+            <div class="order-tab" data-filter="return">คืนเงิน/คืนสินค้า</div>
+        </div>
+
+        <!-- Order Search -->
+        <div class="order-search">
+            <div class="order-search-inner" style="background: #f5f5f5; border: 1px solid #e8e8e8;">
+                <span class="order-search-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg></span>
+                <input type="text" id="orderSearchInput" placeholder="คุณสามารถค้นหาด้วยรหัสคำสั่งซื้อ หรือชื่อสินค้า"
+                    class="order-search-input">
+            </div>
+        </div>
+
+        <div id="ordersList">
+            <!-- Dynamic Content Injected Here -->
+        </div>
+
+        <!-- Cancel Order Modal -->
+        <div class="cancel-modal-overlay" id="cancelModalOverlay" style="display: none;" onclick="closeCancelModal()">
+        </div>
+        <div class="cancel-modal" id="cancelModal" style="display: none;">
+            <div class="cancel-modal-header">
+                <h3>กรุณาเลือกเหตุผลในการยกเลิก</h3>
+            </div>
+            <div class="cancel-modal-body">
+                <div class="cancel-warning-box">
+                    <span class="warning-icon">🔔</span>
+                    <p>กรุณาเลือกเหตุผลที่คุณต้องการยกเลิกคำสั่งซื้อ สินค้าทุกชิ้นในคำสั่งซื้อนี้จะถูกยกเลิก
+                        โปรดทราบว่าคุณจะไม่สามารถแก้ไขคำขอยกเลิกได้หลังกดยืนยันแล้ว</p>
+                </div>
+
+                <div class="cancel-radio-group">
+                    <label class="cancel-radio-label">
+                        <input type="radio" name="cancelReason" value="ต้องการเปลี่ยนที่อยู่ในการจัดส่ง"
+                            onchange="toggleCancelOtherInput()">
+                        ต้องการเปลี่ยนที่อยู่ในการจัดส่ง
+                    </label>
+                    <label class="cancel-radio-label">
+                        <input type="radio" name="cancelReason" value="ต้องการเพิ่ม/เปลี่ยนโค้ดส่วนลด"
+                            onchange="toggleCancelOtherInput()">
+                        ต้องการเพิ่ม/เปลี่ยนโค้ดส่วนลด
+                    </label>
+                    <label class="cancel-radio-label">
+                        <input type="radio" name="cancelReason" value="ต้องการแก้ไขรายละเอียดคำสั่งซื้อ"
+                            onchange="toggleCancelOtherInput()">
+                        ต้องการแก้ไขรายละเอียดคำสั่งซื้อ (เปลี่ยนขนาด, สี, จำนวน เป็นต้น)
+                    </label>
+                    <label class="cancel-radio-label">
+                        <input type="radio" name="cancelReason" value="ไม่ต้องการซื้อสินค้านี้แล้ว"
+                            onchange="toggleCancelOtherInput()">
+                        ไม่ต้องการซื้อสินค้านี้แล้ว
+                    </label>
+                    <label class="cancel-radio-label">
+                        <input type="radio" name="cancelReason" value="อื่น ๆ" onchange="toggleCancelOtherInput()">
+                        อื่น ๆ
+                    </label>
+                    <textarea id="cancelReasonOtherText" style="display:none; width: 100%; margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid #ddd; resize: none; font-family: inherit; font-size: 0.95rem; box-sizing: border-box;" rows="2" placeholder="โปรดระบุเหตุผลการยกเลิกคำสั่งซื้อ..."></textarea>
+                </div>
+            </div>
+            <div class="cancel-modal-footer">
+                <button class="btn-cancel-notyet" onclick="closeCancelModal()">ยังไม่ใช่เดี๋ยวนี้</button>
+                <button class="btn-cancel-confirm" id="btnConfirmCancel" disabled
+                    onclick="executeCancelOrder()">ยกเลิกคำสั่งซื้อ</button>
+            </div>
+        </div>
+
+        <!-- Change Payment Modal -->
+        <div class="cancel-modal-overlay" id="paymentModalOverlay" style="display: none;" onclick="closePaymentModal()">
+        </div>
+        <div class="cancel-modal" id="paymentModal" style="display: none; max-width: 600px;">
+            <div class="cancel-modal-header" style="padding: 24px;">
+                <h3 style="font-size: 1.15rem;">เปลี่ยนช่องทางการชำระเงิน</h3>
+            </div>
+            <div class="cancel-modal-body" style="padding: 0 24px 20px;">
+                <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                    <div style="width: 140px; flex-shrink: 0; color: #333; font-weight: 500; padding-top: 8px;">
+                        วิธีการชำระเงิน</div>
+                    <div style="flex: 1; min-width: 250px;">
+                        <div class="payment-options-grid"
+                            style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 24px;">
+                            <button class="pm-opt-btn"
+                                onclick="selectChangePayment('โอนเงินผ่านธนาคาร (กสิกรไทย)')">โอนเงินผ่านธนาคาร
+                                (กสิกรไทย)<div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24"
+                                        fill="none" stroke="white" stroke-width="3" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg></div></button>
+                            <button class="pm-opt-btn"
+                                onclick="selectChangePayment('โอนเงินผ่านธนาคาร (ไทยพาณิชย์)')">โอนเงินผ่านธนาคาร
+                                (ไทยพาณิชย์)<div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24"
+                                        fill="none" stroke="white" stroke-width="3" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg></div></button>
+                            <button class="pm-opt-btn active" onclick="selectChangePayment('QR พร้อมเพย์')">QR พร้อมเพย์
+                                <div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                        stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg></div></button>
+                            <button class="pm-opt-btn" onclick="selectChangePayment('เก็บเงินปลายทาง')">เก็บเงินปลายทาง
+                                <div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                        stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg></div></button>
+                            <button class="pm-opt-btn" onclick="selectChangePayment('ติดต่อผู้ขาย LINE')">ติดต่อผู้ขาย
+                                LINE<div class="pm-tick"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                        stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg></div></button>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    style="border-top: 1px dashed #e8e8e8; padding-top: 24px; display: flex; align-items: center; gap: 16px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ee4d2d" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="4" fill="#ee4d2d"></circle>
+                    </svg>
+                    <span id="selectedPaymentText" style="color: #333; font-size: 0.95rem;">QR พร้อมเพย์</span>
+                </div>
+            </div>
+            <div class="cancel-modal-footer">
+                <button class="btn-cancel-notyet" onclick="closePaymentModal()">ยกเลิก</button>
+                <button class="btn-cancel-confirm" onclick="executeChangePayment()">บันทึก</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <div class="logo"><img src="logo.png" alt="Paomobile" class="logo-img" />
+                        Pao<span class="accent">mobile</span></div>
+                    <p>ร้านซ่อมมือถือครบวงจร รับซ่อมทุกยี่ห้อ ทุกอาการ ด้วยอะไหล่แท้ รับประกันงานซ่อมทุกชิ้น</p>
+                    <div class="footer-social"><a href="https://www.facebook.com/profile.php?id=100063764974738"
+                            target="_blank" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                            </svg></a><a
+                            href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                            target="_blank" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                            </svg></a><a href="https://line.me/R/ti/p/@pao789" target="_blank" aria-label="LINE"><svg
+                                width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M19.365 9.864c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-2.05v.744h2.05c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-3.426a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h3.426zm-4.91 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108h-1.272a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zm-2.594 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H10.59a.106.106 0 01-.086-.044l-1.99-2.696v2.632c0 .06-.048.108-.108.108H7.134a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272c.034 0 .066.016.086.044l1.99 2.694V9.972c0-.06.048-.108.108-.108h1.272zm-5.648 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H4.941a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zM24 10.62C24 5.076 18.614 .573 12 .573S0 5.076 0 10.62c0 4.962 4.402 9.122 10.348 9.908.403.087.952.266 1.09.61.126.314.082.804.04 1.12l-.164 1.022c-.054.314-.248 1.228 1.076.67 1.324-.56 7.146-4.208 9.752-7.204C23.464 15.254 24 13.046 24 10.62z" />
+                            </svg></a><a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP"
+                            target="_blank" aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+                            </svg></a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank"
+                            aria-label="Shopee"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 1a4 4 0 0 0-4 4h1.5a2.5 2.5 0 0 1 5 0H16a4 4 0 0 0-4-4z" />
+                                <path
+                                    d="M4.5 6A1.5 1.5 0 0 0 3 7.5v13A1.5 1.5 0 0 0 4.5 22h15a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 19.5 6h-15zm7.5 4.5c-1.5 0-2.7.5-3.4 1.3-.5.5-.6 1.1-.6 1.5 0 .7.4 1.2.9 1.5.5.3 1.1.4 1.7.5.6.1 1.2.2 1.6.4.4.2.5.4.5.7 0 .3-.1.5-.4.7-.3.2-.8.4-1.5.4-.8 0-1.4-.2-1.8-.5-.3-.2-.5-.5-.6-.9H7.4c.1.8.5 1.5 1.1 1.9.7.5 1.7.8 2.8.8 1.5 0 2.7-.4 3.4-1.2.5-.5.7-1.2.7-1.7 0-.7-.3-1.2-.9-1.6-.5-.3-1.1-.5-1.7-.6-.6-.1-1.2-.2-1.6-.4-.4-.2-.5-.4-.5-.6 0-.3.2-.5.5-.7.3-.2.8-.3 1.3-.3.7 0 1.2.2 1.5.4.2.2.4.4.5.7h1.5c-.1-.7-.4-1.3-1-1.7-.6-.5-1.5-.8-2.5-.8z" />
+                            </svg></a></div>
+                </div>
+                <div class="footer-col">
+                    <h4>บริการ</h4><a href="select-screen-repair.html">ซ่อมจอ / เปลี่ยนจอ</a><a
+                        href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a
+                        href="select-board-repair.html">ซ่อมบอร์ด</a><a href="select-speaker-repair.html">ซ่อมลำโพง /
+                        ไมค์</a>
+                </div>
+                <div class="footer-col">
+                    <h4>บริการเสริม</h4><a href="select-glass-film.html">ติดฟิล์มกระจก</a><a
+                        href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a
+                        href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส /
+                        อุปกรณ์เสริม</a>
+                </div>
+                <div class="footer-col">
+                    <h4>ติดต่อเรา</h4><a href="index.html#branches">📍 6 สาขาทั่วชลบุรี</a><a
+                        href="https://line.me/R/ti/p/@pao789">💬 LINE: @pao789</a><a
+                        href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank">📘 Facebook</a><a
+                        href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                        target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</a><a
+                        href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Search Modal -->
+    <div class="site-search-overlay" id="searchOverlay">
+        <button class="search-close-btn" id="searchClose" aria-label="Close Search">&#x2715;</button>
+        <div class="search-modal-container">
+            <div class="search-hero-input">
+                <span class="search-hero-icon">&#x1F50D;</span>
+                <input type="text" id="searchInput" placeholder="ค้นหาเครื่องมือ, รุ่นมือถือ..." autocomplete="off">
+                <button class="search-clear-btn" id="searchClear" aria-label="Clear">&#x2715;</button>
+            </div>
+            <div class="search-results-area" id="searchResults"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs (Prioritized for Chat System) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+    <script src="script.js"></script>
+    <script src="cart.js"></script>
+    <script src="pao-search.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        (function () {
+            const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };
+            const getOrdersKey = () => 'pao_orders_' + getActiveUserId();
+
+            let ordersData = []; // Combined local and cloud orders
+
+            function loadLocalOnly() {
+                const local = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+                ordersData = local.length > 0 ? local : mockData;
+                ordersData = processExpirations(ordersData);
+                const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                renderOrders(ordersData, activeTab);
+            }
+
+            function processExpirations(orders) {
+                let updated = false;
+                orders.forEach(o => {
+                    if (o.status === 'ที่ต้องชำระ' && o.orderDate) {
+                        const elapsed = Date.now() - new Date(o.orderDate).getTime();
+                        if (elapsed > 30 * 60 * 1000) {
+                            o.status = 'ยกเลิกแล้ว';
+                            updated = true;
+
+                            // Sync to Cloud
+                            const userId = getActiveUserId();
+                            if (userId !== 'guest' && window.supabase) {
+                                window.supabase.from('orders').update({ status: 'ยกเลิกแล้ว' }).eq('id', o.id)
+                                    .then(({error}) => { if (error) console.warn("Background expiry sync failed for", o.id, error) });
+                                
+                                // Restore vouchers if auto-cancelled
+                                const email = o.customerEmail || (userId !== 'guest' ? JSON.parse(localStorage.getItem('paomobile_user'))?.email : null);
+                                if (email) {
+                                    const codes = [...new Set([o.appliedDiscountCode, o.appliedShipCode, o.voucherCode].filter(Boolean))];
+                                    if (codes.length > 0) {
+                                        const inserts = codes.map(c => ({ id: 'red-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 5), email, code: c }));
+                                        window.supabase.from('vouchers_redemptions').insert(inserts).then(({error}) => {
+                                            if (!error) localStorage.removeItem('pao_user_vouchers_' + email);
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                if (updated) {
+                    localStorage.setItem(getOrdersKey(), JSON.stringify(orders));
+                    try {
+                        const rawGlobal = localStorage.getItem('pao_global_orders') || '[]';
+                        let globalOrders = JSON.parse(rawGlobal);
+                        let gUpdated = false;
+                        globalOrders.forEach(go => {
+                            if (go.status === 'ที่ต้องชำระ' && go.orderDate && (Date.now() - new Date(go.orderDate).getTime() > 30 * 60 * 1000)) {
+                                go.status = 'ยกเลิกแล้ว';
+                                gUpdated = true;
+                            }
+                        });
+                        if (gUpdated) { localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders)); }
+                    } catch (e) { }
+                }
+                return orders;
+            }
+
+            // Firestore Sync (v1.2.10)
+            // Supabase Sync (v2.0.0)
+            function startCloudSync() {
+                const userId = getActiveUserId();
+                if (userId === 'guest') {
+                    console.log("[v2.0.0] Guest mode: Cloud sync disabled.");
+                    loadLocalOnly();
+                    return;
+                }
+
+                console.log("[v2.0.0] Starting Cloud Sync for user:", userId);
+
+                // Pre-render local data for instant visibility
+                const localOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+                if (localOrders.length > 0) {
+                    ordersData = localOrders;
+                    const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                    renderOrders(ordersData, activeTab);
+                }
+
+                if (!window.supabase) return;
+
+                const fetchAndMergeOrders = async () => {
+                    const { data: cloudOrders, error } = await window.supabase
+                        .from('orders')
+                        .select('*')
+                        .eq('customer', userId);
+
+                    if (error) {
+                        console.error("[v2.0.0] Sync Error:", error);
+                        loadLocalOnly();
+                        return;
+                    }
+
+                    // Merge with local (local as priority for unsynced orders if any)
+                    const localOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+                    const mergedMap = new Map();
+
+                    // Pass 1: Local
+                    localOrders.forEach(o => mergedMap.set(o.id, o));
+
+                    // Pass 2: Cloud 
+                    if (cloudOrders) {
+                        cloudOrders.forEach(o => {
+                            if (mergedMap.has(o.id)) {
+                                const localO = mergedMap.get(o.id);
+                                
+                                const statusPriority = {
+                                    'ที่ต้องชำระ': 1,
+                                    'ที่ต้องจัดส่ง': 2,
+                                    'เตรียมจัดส่งแล้ว': 3,
+                                    'Processed': 3,
+                                    'ที่ต้องได้รับ': 4,
+                                    'สำเร็จแล้ว': 5,
+                                    'Completed': 5,
+                                    'ยกเลิกแล้ว': 6,
+                                    'คืนเงิน/คืนสินค้า': 6
+                                };
+
+                                const localWeight = statusPriority[localO.status] || 0;
+                                const cloudWeight = statusPriority[o.status] || 0;
+
+                                if (localWeight > cloudWeight) {
+                                    return; // Don't overwrite with a less advanced status from cloud
+                                }
+                            }
+                            mergedMap.set(o.id, o);
+                        });
+                    }
+
+                    ordersData = Array.from(mergedMap.values()).sort((a, b) => {
+                        const dateA = new Date(a.orderDate || a.createdAt || 0);
+                        const dateB = new Date(b.orderDate || b.createdAt || 0);
+                        return dateB - dateA; // Newest first
+                    });
+
+                    ordersData = processExpirations(ordersData);
+                    localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
+
+                    console.log("[v2.0.0] Sync Success: Found", ordersData.length, "orders");
+                    const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                    renderOrders(ordersData, activeTab);
+                };
+
+                // Initial fetch
+                fetchAndMergeOrders();
+
+                // Realtime Subscription
+                window.supabase.channel('public:orders_customer_' + userId)
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `customer=eq.${userId}` }, payload => {
+                        console.log("[v2.0.0] Realtime Order Update:", payload);
+                        fetchAndMergeOrders();
+                    })
+                    .subscribe();
+            }
+
+            // Tab handler with URL param support
+            function initTabs() {
+                const params = new URLSearchParams(window.location.search);
+                const targetTab = params.get('tab');
+                if (targetTab) {
+                    const tabMap = {
+                        'pay': 'pay',
+                        'unpaid': 'pay', // v1.2.11 support both
+                        'ship': 'ship',
+                        'receive': 'receive',
+                        'completed': 'completed',
+                        'cancel': 'cancel',
+                        'return': 'return'
+                    };
+                    const filter = tabMap[targetTab] || 'all';
+                    document.querySelectorAll('.order-tab').forEach(t => {
+                        if (t.dataset.filter === filter) {
+                            t.classList.add('active');
+                        } else {
+                            t.classList.remove('active');
+                        }
+                    });
+                }
+            }
+            initTabs();
+
+            // Sync globally on load
+            startCloudSync();
+            const mockData = [
+                {
+                    id: 'PAO-L97U8JWK-W2X',
+                    orderDate: new Date().toISOString(),
+                    status: 'ที่ต้องชำระ',
+                    items: [
+                        { name: 'ชุดชาร์จ Why 20W Type C To C', price: 599, qty: 1, img: 'Why 20w-1.jpg' },
+                        { name: 'สายชาร์จ Why 60W Type C To C', price: 399, qty: 1, img: 'Why 60W-1 Type C To C - 1.jpg' }
+                    ],
+                    total: 998,
+                    method: 'QR พร้อมเพย์'
+                },
+                {
+                    id: 'PAO-L97U8P3Y-Q8N',
+                    orderDate: new Date(Date.now() - 3600000).toISOString(),
+                    status: 'ที่ต้องจัดส่ง',
+                    items: [
+                        { name: 'หูฟัง Anidary ANT004', price: 699, qty: 1, img: 'earphone-1.jpg' }
+                    ],
+                    total: 699,
+                    method: 'เก็บเงินปลายทาง'
+                }
+            ];
+
+            function formatDeadline(isoString) {
+                const d = new Date(new Date(isoString).getTime() + 30 * 60 * 1000);
+                const dd = ('0' + d.getDate()).slice(-2);
+                const mm = ('0' + (d.getMonth() + 1)).slice(-2);
+                const yy = d.getFullYear() + 543;
+                const hh = ('0' + d.getHours()).slice(-2);
+                const mi = ('0' + d.getMinutes()).slice(-2);
+                return `${dd}-${mm}-${yy} ${hh}:${mi}`;
+            }
+
+            function updateTabCounts(allOrders) {
+                const counts = { all: 0, pay: 0, ship: 0, receive: 0, completed: 0, cancel: 0, return: 0 };
+                counts.all = allOrders.length;
+                allOrders.forEach(o => {
+                    const s = (o.status || '').trim();
+                    if (s === 'ที่ต้องชำระ') counts.pay++;
+                    else if (s === 'ที่ต้องจัดส่ง') counts.ship++;
+                    else if (s === 'ที่ต้องได้รับ' || s === 'เตรียมจัดส่งแล้ว' || s === 'Processed') counts.receive++;
+                    else if (s === 'สำเร็จแล้ว' || s === 'Completed') counts.completed++;
+                    else if (s === 'ยกเลิกแล้ว') counts.cancel++;
+                    else if (s === 'คืนเงิน/คืนสินค้า') counts.return++;
+                });
+
+                document.querySelectorAll('.order-tab').forEach(tab => {
+                    const f = tab.dataset.filter;
+                    const baseLabels = { all: 'ทั้งหมด', pay: 'ที่ต้องชำระ', ship: 'ที่ต้องจัดส่ง', receive: 'ที่ต้องได้รับ', completed: 'สำเร็จแล้ว', cancel: 'ยกเลิกแล้ว', return: 'คืนเงิน/คืนสินค้า' };
+                    if (f && baseLabels[f]) {
+                        tab.textContent = baseLabels[f] + (counts[f] > 0 ? ` (${counts[f]})` : '');
+                    }
+                });
+            }
+
+            function renderOrders(orders, filter = 'all') {
+                const container = document.getElementById('ordersList');
+                if (!container) return;
+
+                // Sync status badge update
+                updateTabCounts(orders);
+
+                const displayOrders = orders;
+
+                const searchInput = document.getElementById('orderSearchInput');
+                const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+                const filtered = displayOrders.filter(o => {
+                    // 1. Tab Filter
+                    let tabMatch = false;
+                    const s = (o.status || '').trim();
+                    if (filter === 'all') tabMatch = true;
+                    else if (filter === 'pay') tabMatch = (s === 'ที่ต้องชำระ');
+                    else if (filter === 'ship') tabMatch = (s === 'ที่ต้องจัดส่ง');
+                    else if (filter === 'receive') tabMatch = (s === 'ที่ต้องได้รับ' || s === 'เตรียมจัดส่งแล้ว' || s === 'Processed');
+                    else if (filter === 'completed') tabMatch = (s === 'สำเร็จแล้ว' || s === 'Completed');
+                    else if (filter === 'cancel') tabMatch = (s === 'ยกเลิกแล้ว');
+                    else if (filter === 'return') tabMatch = (s === 'คืนเงิน/คืนสินค้า');
+
+                    if (!tabMatch) return false;
+
+                    // 2. Search Filter
+                    if (!q) return true;
+                    const idMatch = (o.id || '').toLowerCase().includes(q);
+                    const nameMatch = (o.items || []).some(item => (item.name || '').toLowerCase().includes(q));
+                    return idMatch || nameMatch;
+                });
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 100px 20px; color: #757575; background: #fff; border-radius: 4px; border: 1px solid #eee;">
+                            <div style="font-size: 4rem; margin-bottom: 20px;">📦</div>
+                            <div style="font-size: 1.1rem;">ยังไม่มีรายการสั่งซื้อในแถบนี้</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                try {
+                    container.innerHTML = filtered.map(order => {
+                        const items = order.items || [];
+                        const status = order.status || 'รอดำเนินการ';
+                        const safeDiscount = order.discountAmount || 0;
+                        const safeTotal = order.total || 0;
+                        const itemsSubtotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                        let baseShippingFee = (safeTotal + safeDiscount) - itemsSubtotal;
+                        if (order.appliedShipCode) baseShippingFee = 50;
+                        if (baseShippingFee < 0) baseShippingFee = 0;
+                        
+                        return `
+                    <div class="order-card" style="border: 1px solid #eee; margin-bottom: 20px; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.03);">
+                        <div class="order-card-body" style="padding: 15px 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f9f9f9; padding-bottom: 10px;">
+                                <div style="font-size: 0.85rem; color: #757575; font-family: monospace; display: flex; align-items: center;">
+                                    รหัสคำสั่งซื้อ: ${order.id}
+                                </div>
+                                <div class="order-status" style="font-weight: 600; color: #ee4d2d; font-size: 0.9rem;">${status}</div>
+                            </div>
+                            ${items.map((item, idx) => `
+                                <div class="order-item" style="border-bottom: none; padding: 10px 0;">
+                                    <img src="${item.img || 'logo.png'}" alt="${item.name || 'สินค้า'}" class="item-img" onerror="this.src='logo.png'" style="width: 70px; height: 70px;">
+                                    <div class="item-details">
+                                        <div class="item-name" style="font-weight: 400; font-size: 0.95rem; color: #222;">${item.name || 'ไม่ระบุชื่อสินค้า'}</div>
+                                        <div class="item-variation" style="color: #888;">จำนวน: x${item.qty || 1}</div>
+                                    </div>
+                                    <div class="item-price-info">
+                                        <div class="price-final" style="color: #ee4d2d; font-weight: 500;">฿${(item.price || 0).toLocaleString()}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <!-- Accordion Details (Hidden by default) -->
+                        <div id="details-${order.id}" style="display: none; padding: 15px 20px 5px 20px; background: #fafafa; border-top: 1px dashed #eee; font-size: 0.95rem;">
+                            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; gap: 30px;">
+                                <span style="color: #555;">รวมค่าสินค้า</span>
+                                <span style="color: #333; min-width: 80px; text-align: right;">฿${itemsSubtotal.toLocaleString()}</span>
+                            </div>
+                            ${baseShippingFee > 0 ? `
+                            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; gap: 30px;">
+                                <span style="color: #555;">ค่าจัดส่ง</span>
+                                <span style="color: #333; min-width: 80px; text-align: right;">฿${baseShippingFee.toLocaleString()}</span>
+                            </div>
+                            ` : ''}
+                            ${(order.discountAmount && order.discountAmount > 0) ? `
+                            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; gap: 30px;">
+                                <span style="color: #555;">ส่วนลดค่าสินค้า ${order.appliedDiscountCode || order.voucherCode ? `(${order.appliedDiscountCode || order.voucherCode})` : ''}</span>
+                                <span style="color: #cf1322; min-width: 80px; text-align: right;">-฿${order.discountAmount.toLocaleString()}</span>
+                            </div>
+                            ` : ''}
+                            ${order.appliedShipCode ? `
+                            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; gap: 30px;">
+                                <span style="color: #555;">โค้ดส่งฟรี (${order.appliedShipCode})</span>
+                                <span style="color: #0891b2; min-width: 80px; text-align: right;">-฿50</span>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="order-total-row" style="padding: 15px 20px; background: #fafafa; border-top: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin: 0; gap: 15px;">
+                            <div>
+                                ${order.trackingNum ? `
+                                <div style="display: flex; align-items: center; gap: 12px; min-width: 250px;">
+                                    <div style="background: #fff; border: 1.5px solid #ee4d2d; padding: 6px 15px; border-radius: 8px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 6px rgba(238, 77, 45, 0.1);">
+                                        <div style="font-size: 0.95rem; color: #555;">เลขพัสดุ: <strong onclick="window.copyTrackingNumber('${order.trackingNum}', this); event.stopPropagation();" title="คลิกเพื่อคัดลอก" style="font-family: monospace; color: #ee4d2d; font-size: 1.1rem; cursor: pointer; padding: 2px 5px; border-radius: 4px; transition: background 0.2s;">${order.trackingNum}</strong></div>
+                                        ${order.trackingLink ? `
+                                            <a href="${order.trackingLink}" target="_blank" style="background: #ee4d2d; color: #fff; text-decoration: none; padding: 6px 18px; border-radius: 6px; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; box-shadow: 0 2px 4px rgba(238, 77, 45, 0.2); display: inline-block; position: relative; z-index: 10;" onclick="event.stopPropagation()">เช็คพัสดุ</a>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                ` : (status === 'ที่ต้องจัดส่ง' || status === 'เตรียมจัดส่งแล้ว' || status === 'ที่ต้องได้รับ' ? `
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="color: #faad14; font-size: 1.2rem;">●</div>
+                                    <div style="font-size: 0.95rem; color: #555;">
+                                        ${((order.status || '').trim() === 'ที่ต้องจัดส่ง') ? 'รอผู้ขายจัดส่งและแจ้งเลขพัสดุ...' : 'พัสดุกำลังเดินทางไปหาคุณ...'}
+                                    </div>
+                                </div>
+                                ` : '')}
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="const d = document.getElementById('details-${order.id}'); d.style.display = d.style.display === 'none' ? 'block' : 'none'; const i = document.getElementById('icon-${order.id}'); i.textContent = i.textContent === 'v' ? '^' : 'v';">
+                                <div class="total-label" style="font-size: 1rem; color: #333;">${status.includes('ชำระ') ? 'จำนวนเงินที่ต้องชำระ:' : 'รวมคำสั่งซื้อ:'}</div>
+                                <div class="total-price" style="font-weight: 600; color: #ee4d2d; font-size: ${status.includes('ชำระ') ? '1.4rem' : '1.3rem'};">฿${(order.total || 0).toLocaleString()} <span id="icon-${order.id}" style="color: #888; font-size: 1rem; margin-left: 6px; display: inline-block; transform: scaleY(0.8); font-weight: 400;">v</span></div>
+                            </div>
+                        </div>
+                        <div class="order-card-footer" style="padding: 15px 20px; border-top: 1px solid #f5f5f5; background: #fff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                                <div style="font-size: 0.85rem; color: #757575;">
+                                    ${status === 'ที่ต้องชำระ' && order.orderDate ? `ชำระเงินภายใน ${formatDeadline(order.orderDate)} โดย ${order.paymentMethod || order.method || 'QR พร้อมเพย์'}${order.paymentBank ? ` (${order.paymentBank})` : ''}` : `รหัสคำสั่งซื้อ: <strong style="color: #444;">${order.id}</strong>`}
+                                </div>
+
+                                <div class="order-actions" style="gap: 12px; display: flex; align-items: center;">
+                                    ${status === 'ที่ต้องชำระ' ? `
+                                        <button class="btn-purchase btn-purchase-primary" 
+                                            onclick="window.goToPayment && window.goToPayment({id: '${order.id}', total: ${order.total}, method: '${order.method || ''}', paymentMethod: '${order.paymentMethod || ''}', paymentBank: '${order.paymentBank || ''}'})" 
+                                            style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">ชำระเงินตอนนี้</button>
+                                        <div style="position: relative; display: inline-block;">
+                                            <button class="btn-purchase" onclick="toggleDropdown('${order.id}', event)" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">เพิ่มเติม ˅</button>
+                                            <div id="dropdown-${order.id}" class="more-dropdown" style="display: none; position: absolute; bottom: 100%; right: 0; background: #fff; border: 1px solid #ee4d2d; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 2px; padding: 8px 0; min-width: 190px; z-index: 100; margin-bottom: 5px;">
+                                                <div onclick="cancelOrderUser('${order.id}')" style="padding: 10px 16px; cursor: pointer; color: #555; font-size: 0.9rem;">ยกเลิกคำสั่งซื้อ</div>
+                                                <div onclick="changePaymentUser('${order.id}', '${order.paymentMethod || 'QR พร้อมเพย์'}')" style="padding: 10px 16px; cursor: pointer; color: #555; font-size: 0.9rem;">เปลี่ยนช่องทางการชำระเงิน</div>
+                                            </div>
+                                        </div>
+                                    ` : (['ที่ต้องจัดส่ง', 'ที่ต้องได้รับ', 'เตรียมจัดส่งแล้ว', 'Processed'].includes(status) ? `
+                                        ${(status === 'ที่ต้องได้รับ' || status === 'เตรียมจัดส่งแล้ว' || status === 'Processed') ? `
+                                            <button class="btn-purchase btn-purchase-primary" 
+                                                onclick="window.markAsCompletedUser('${order.id}')" 
+                                                style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">จัดส่งสำเร็จ</button>
+                                        ` : ''}
+                                    ` : `
+                                        <button class="btn-purchase" onclick="window.requestReturn('${order.id}')" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">คืนเงิน/คืนสินค้า</button>
+                                        <button class="btn-purchase btn-purchase-primary" onclick="window.buyAgain('${order.id}')" style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">ซื้ออีกครั้ง</button>
+                                    `)}
+                                    <button class="btn-purchase" onclick="window.open('https://line.me/R/ti/p/@pao789', '_blank')" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">ติดต่อผู้ขาย</button>
+                                </div>
+                        </div>
+                    </div>`;
+                    }).join('');
+                } catch (err) {
+                    console.error("Rendering error:", err);
+                    container.innerHTML = `<div style="padding:20px; color:red;">เกิดข้อผิดพลาดในการแสดงผลรายการ</div>`;
+                }
+            }
+
+            // Expiration Process runs during startCloudSync and loadLocalOnly
+
+            // Automatic loading is now handled by startCloudSync()
+
+            // Click to copy function
+            window.copyTrackingNumber = function (num, el) {
+                navigator.clipboard.writeText(num).then(() => {
+                    const originalColor = el.style.color;
+                    const originalBg = el.style.background;
+                    el.style.color = '#fff';
+                    el.style.background = '#ee4d2d';
+
+                    const tooltip = document.createElement('div');
+                    tooltip.innerText = 'คัดลอกเรียบร้อย!';
+                    tooltip.style.position = 'fixed';
+                    tooltip.style.left = '50%';
+                    tooltip.style.top = '100px';
+                    tooltip.style.transform = 'translateX(-50%)';
+                    tooltip.style.background = 'rgba(0,0,0,0.8)';
+                    tooltip.style.color = '#fff';
+                    tooltip.style.padding = '8px 20px';
+                    tooltip.style.borderRadius = '20px';
+                    tooltip.style.zIndex = '1000';
+                    tooltip.style.fontSize = '0.9rem';
+                    tooltip.style.pointerEvents = 'none';
+                    document.body.appendChild(tooltip);
+
+                    setTimeout(() => {
+                        el.style.color = originalColor;
+                        el.style.background = originalBg;
+                        tooltip.style.opacity = '0';
+                        tooltip.style.transition = 'opacity 0.5s ease';
+                        setTimeout(() => tooltip.remove(), 500);
+                    }, 1500);
+                });
+            };
+
+            // Search event
+            const searchInputEl = document.getElementById('orderSearchInput');
+            if (searchInputEl) {
+                searchInputEl.addEventListener('input', function () {
+                    const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                    renderOrders(ordersData, activeTab);
+                });
+            }
+
+            // Tab events
+            document.querySelectorAll('.order-tab').forEach(tab => {
+                tab.addEventListener('click', function () {
+                    document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    // Removed logic that overwrote ordersData status from localStorage
+                    renderOrders(ordersData, this.dataset.filter);
+                });
+            });
+
+            // Listen for localStorage changes from seller dashboard (cross-tab)
+            window.addEventListener('storage', function (e) {
+                if (e.key === getOrdersKey() || e.key === 'pao_global_orders') {
+                    // Pull from the correct source that triggered the event
+                    const sourceKey = e.key === 'pao_global_orders' ? 'pao_global_orders' : getOrdersKey();
+                    const freshOrders = JSON.parse(localStorage.getItem(sourceKey) || '[]');
+                    if (freshOrders.length > 0) {
+                        let updated = false;
+                        freshOrders.forEach(fo => {
+                            const idx = ordersData.findIndex(o => o.id === fo.id);
+                            if (idx > -1) {
+                                // Prevent overriding with stale data
+                                if (ordersData[idx].status !== fo.status || ordersData[idx].trackingNum !== fo.trackingNum || ordersData[idx].trackingLink !== fo.trackingLink) {
+                                    ordersData[idx] = { ...ordersData[idx], ...fo };
+                                    updated = true;
+                                }
+                            }
+                        });
+                        if (updated) {
+                            // Sync back to our local guest order storage
+                            localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
+                            const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                            updateTabCounts(ordersData);
+                            renderOrders(ordersData, activeTab);
+                        }
+                    }
+                }
+            });
+
+            // Listen for instant BroadcastChannel updates from Seller Centre
+            try {
+                const bc = new BroadcastChannel('pao_order_sync');
+                bc.addEventListener('message', function(event) {
+                    if (event.data && event.data.type === 'SELLER_ORDER_UPDATE' && event.data.updatedOrder) {
+                        const updated = event.data.updatedOrder;
+                        const idx = ordersData.findIndex(o => o.id === updated.id);
+                        if (idx > -1) {
+                            ordersData[idx] = { ...ordersData[idx], ...updated };
+                            localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
+                            
+                            const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                            updateTabCounts(ordersData);
+                            renderOrders(ordersData, activeTab);
+                        }
+                    }
+                });
+            } catch (e) { }
+
+            setInterval(function () {
+                let changed = false;
+
+                // 1. Check expiration continuously in the background
+                if (ordersData && ordersData.length > 0) {
+                    const oldStatusStr = JSON.stringify(ordersData.map(o => o.status));
+                    ordersData = processExpirations(ordersData);
+                    const newStatusStr = JSON.stringify(ordersData.map(o => o.status));
+
+                    if (oldStatusStr !== newStatusStr) {
+                        changed = true;
+                    }
+                }
+
+                if (changed) {
+                    const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                    renderOrders(ordersData, activeTab);
+                }
+            }, 3000);
+
+
+            window.buyAgain = function (orderId) {
+                const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
+                const currentOrders = JSON.parse(rawOrders);
+                let order = currentOrders.find(o => o.id === orderId);
+
+                // Fallback to mock data check if not found in real orders
+                if (!order) {
+                    order = mockData.find(o => o.id === orderId);
+                }
+
+                if (!order) {
+                    alert('เกิดข้อผิดพลาด ไม่พบข้อมูลคำสั่งซื้อ');
+                    return;
+                }
+
+                const cartKey = 'pao_cart_' + getActiveUserId();
+                let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+
+                order.items.forEach(item => {
+                    const idx = cart.findIndex(i => i.name === item.name && i.variation === item.variation);
+                    if (idx >= 0) {
+                        cart[idx].qty += item.qty;
+                        cart[idx].selected = true;
+                    } else {
+                        cart.push({
+                            id: item.name, // Use name as ID roughly
+                            name: item.name,
+                            price: item.price,
+                            qty: item.qty,
+                            img: item.img,
+                            variation: item.variation || '',
+                            selected: true
+                        });
+                    }
+                });
+
+                localStorage.setItem(cartKey, JSON.stringify(cart));
+                window.location.href = 'cart.html';
+            };
+
+            // Dropdown Toggle
+            window.toggleDropdown = function (orderId, event) {
+                event.stopPropagation();
+                const dropdown = document.getElementById('dropdown-' + orderId);
+                if (dropdown) {
+                    const isVisible = dropdown.style.display === 'block';
+                    document.querySelectorAll('.more-dropdown').forEach(el => el.style.display = 'none');
+                    dropdown.style.display = isVisible ? 'none' : 'block';
+                }
+            };
+
+            document.addEventListener('click', function (e) {
+                document.querySelectorAll('.more-dropdown').forEach(el => el.style.display = 'none');
+            });
+
+            // Cancel Order Logic
+            let currentCancelOrderId = null;
+
+            window.enableCancelConfirmBtn = function () {
+                const btn = document.getElementById('btnConfirmCancel');
+                if (btn) btn.disabled = false;
+            };
+
+            window.cancelOrderUser = function (orderId) {
+                currentCancelOrderId = orderId;
+                const overlay = document.getElementById('cancelModalOverlay');
+                const modal = document.getElementById('cancelModal');
+                const btnConfirm = document.getElementById('btnConfirmCancel');
+
+                if (overlay && modal) {
+                    overlay.style.display = 'block';
+                    modal.style.display = 'block';
+                }
+                if (btnConfirm) btnConfirm.disabled = true;
+
+                document.querySelectorAll('input[name="cancelReason"]').forEach(el => el.checked = false);
+                const otherText = document.getElementById('cancelReasonOtherText');
+                if (otherText) {
+                    otherText.style.display = 'none';
+                    otherText.value = '';
+                }
+            };
+
+            window.toggleCancelOtherInput = function() {
+                const btnConfirm = document.getElementById('btnConfirmCancel');
+                if (btnConfirm) btnConfirm.disabled = false;
+                const otherText = document.getElementById('cancelReasonOtherText');
+                const isOtherSelected = document.querySelector('input[name="cancelReason"]:checked')?.value === 'อื่น ๆ';
+                if(isOtherSelected) {
+                    otherText.style.display = 'block';
+                    otherText.focus();
+                } else {
+                    otherText.style.display = 'none';
+                }
+            };
+
+            window.closeCancelModal = function () {
+                const overlay = document.getElementById('cancelModalOverlay');
+                const modal = document.getElementById('cancelModal');
+                if (overlay) overlay.style.display = 'none';
+                if (modal) modal.style.display = 'none';
+                currentCancelOrderId = null;
+            };
+
+            window.executeCancelOrder = function () {
+                if (!currentCancelOrderId) return;
+
+                const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
+                let currentOrders = JSON.parse(rawOrders);
+                let order = currentOrders.find(o => o.id === currentCancelOrderId);
+
+                if (order) {
+                    let selectedReason = document.querySelector('input[name="cancelReason"]:checked')?.value || 'ไม่ระบุเหตุผล';
+                    if (selectedReason === 'อื่น ๆ') {
+                        const otherText = document.getElementById('cancelReasonOtherText')?.value.trim();
+                        selectedReason = 'อื่นๆ: ' + (otherText || 'ไม่ระบุเหตุผล');
+                    }
+                    order.status = 'ยกเลิกแล้ว';
+                    order.cancelReason = selectedReason;
+                    order.cancelDate = new Date().toISOString();
+
+                    // 1. Supabase Sync
+                    if (window.supabase) {
+                        window.supabase.from('orders').update({
+                            status: 'ยกเลิกแล้ว',
+                            cancelReason: selectedReason,
+                            cancelDate: order.cancelDate
+                        }).eq('id', order.id).then(({error}) => {
+                            if (error) console.error("[Cloud Error] Cancel update failed:", error);
+                        });
+
+                        // Restore vouchers
+                        const email = order.customerEmail || (user ? user.email : null);
+                        if (email) {
+                            const codes = [...new Set([order.appliedDiscountCode, order.appliedShipCode, order.voucherCode].filter(Boolean))];
+                            if (codes.length > 0) {
+                                const inserts = codes.map(c => ({ id: 'red-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 5), email, code: c }));
+                                window.supabase.from('vouchers_redemptions').insert(inserts).then(({error}) => {
+                                    if (!error) localStorage.removeItem('pao_user_vouchers_' + email);
+                                });
+                            }
+                        }
+                    }
+
+                    localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
+                    // Global sync
+                    try {
+                        let globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+                        let go = globalOrders.find(o => o.id === currentCancelOrderId);
+                        if (go) {
+                            go.status = 'ยกเลิกแล้ว';
+                            go.cancelReason = selectedReason;
+                            localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
+                        }
+                    } catch (e) { }
+                    
+                    // Force switch to "Cancel" tab
+                    document.querySelectorAll('.order-tab').forEach(t => {
+                        if (t.dataset.filter === 'cancel') t.classList.add('active');
+                        else t.classList.remove('active');
+                    });
+                    
+                    updateTabCounts(currentOrders);
+                    renderOrders(currentOrders, 'cancel');
+                    
+                    // Notify other tabs
+                    try {
+                        const bc = new BroadcastChannel('pao_order_sync');
+                        bc.postMessage({ type: 'REFRESH_ORDERS', orderId: currentCancelOrderId });
+                    } catch (e) { }
+                }
+
+                closeCancelModal();
+            };
+
+            // ✅ Mark Order as Completed (Success)
+            let currentSuccessOrderId = null;
+
+            window.markAsCompletedUser = function (orderId) {
+                currentSuccessOrderId = orderId;
+                const overlay = document.getElementById('scModalOverlay');
+                const modal = document.getElementById('scModal');
+                if (overlay && modal) {
+                    overlay.style.display = 'block';
+                    setTimeout(() => {
+                        modal.classList.add('show');
+                    }, 10);
+                }
+            };
+
+            window.closeSuccessModal = function () {
+                const overlay = document.getElementById('scModalOverlay');
+                const modal = document.getElementById('scModal');
+                if (modal) modal.classList.remove('show');
+                setTimeout(() => {
+                    if (overlay) overlay.style.display = 'none';
+                    currentSuccessOrderId = null;
+                }, 300);
+            };
+
+            window.confirmSuccessOrder = function () {
+                if (!currentSuccessOrderId) return;
+                const orderId = currentSuccessOrderId.trim();
+                
+                try {
+                    const updateObj = { status: 'สำเร็จแล้ว' };
+                    
+                    // 1. Supabase Sync
+                    if (window.supabase) {
+                        window.supabase.from('orders').update(updateObj).eq('id', orderId)
+                            .then(({error}) => {
+                                if (error) console.error("[Cloud Error] Failed to update status:", error);
+                                else console.log("[Cloud] Status updated to Completed:", orderId);
+                            });
+                    }
+                    
+                    // 2. Local Storage Sync (Primary User Orders)
+                    const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
+                    let currentOrders = JSON.parse(rawOrders);
+                    let foundLocal = false;
+                    currentOrders.forEach(o => {
+                        if (o.id && o.id.trim() === orderId) {
+                            o.status = 'สำเร็จแล้ว';
+                            foundLocal = true;
+                        }
+                    });
+
+                    if (!foundLocal) {
+                        // Capture the order from in-memory data if it wasn't in local storage yet
+                        const orderFromMem = ordersData.find(o => o.id && o.id.trim() === orderId);
+                        if (orderFromMem) {
+                            const newLocalOrder = { ...orderFromMem, status: 'สำเร็จแล้ว' };
+                            currentOrders.push(newLocalOrder);
+                            foundLocal = true;
+                        }
+                    }
+
+                    if (foundLocal) {
+                        localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
+                    }
+                    
+                    // 3. Global Sync Fallback (pao_global_orders)
+                    try {
+                        let globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+                        let foundGlobal = false;
+                        globalOrders.forEach(go => {
+                            if (go.id && go.id.trim() === orderId) {
+                                go.status = 'สำเร็จแล้ว';
+                                foundGlobal = true;
+                            }
+                        });
+                        if (foundGlobal) {
+                            localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
+                        }
+                    } catch (e) { }
+
+                    // 4. Update In-Memory Data and UI
+                    const idx = ordersData.findIndex(o => o.id && o.id.trim() === orderId);
+                    if (idx > -1) {
+                        ordersData[idx].status = 'สำเร็จแล้ว';
+                    }
+                    
+                    // Force switch to "Completed" tab
+                    document.querySelectorAll('.order-tab').forEach(t => {
+                        if (t.dataset.filter === 'completed') {
+                            t.classList.add('active');
+                        } else {
+                            t.classList.remove('active');
+                        }
+                    });
+                    
+                    // Update badges and render
+                    updateTabCounts(ordersData);
+                    renderOrders(ordersData, 'completed');
+                    
+                    // ✅ Notify other tabs (Seller Centre) to refresh immediately
+                    try {
+                        const bc = new BroadcastChannel('pao_order_sync');
+                        bc.postMessage({ type: 'REFRESH_ORDERS', orderId: orderId });
+                    } catch (e) { }
+
+                    closeSuccessModal();
+                    
+                } catch (e) {
+                    console.error("Critical: confirmSuccessOrder failed:", e);
+                    // Fallback: simple refresh if everything fails
+                    closeSuccessModal();
+                    setTimeout(() => window.location.reload(), 500);
+                }
+            };
+
+            // Change Payment Logic
+            let currentChangePaymentOrderId = null;
+            let newlySelectedPayment = 'QR พร้อมเพย์';
+
+            window.goToPayment = function (order) {
+                if (!order || !order.id) return;
+                const pm = (order.paymentMethod || order.method || '').toLowerCase();
+                const pb = (order.paymentBank || '').toLowerCase();
+                const combined = pm + ' ' + pb;
+                const total = order.total || 0;
+                const ref = order.id;
+
+                // Check if it's a bank transfer
+                const isTransfer = combined.includes('โอน') ||
+                    combined.includes('bank') ||
+                    combined.includes('transfer') ||
+                    combined.includes('ไทยพาณิชย์') ||
+                    combined.includes('scb') ||
+                    combined.includes('กสิกร') ||
+                    combined.includes('kbank');
+
+                if (isTransfer) {
+                    let bank = 'scb';
+                    if (combined.includes('กสิกร') || combined.includes('kbank')) bank = 'kbank';
+                    window.location.href = `payment-transfer.html?amount=${total}&ref=${ref}&bank=${bank}`;
+                } else {
+                    // Default to QR for all other types of online payment
+                    window.location.href = `payment-qr.html?amount=${total}&ref=${ref}`;
+                }
+            };
+
+            window.changePaymentUser = function (id, currentMethod) {
+                currentChangePaymentOrderId = id;
+                const overlay = document.getElementById('paymentModalOverlay');
+                const modal = document.getElementById('paymentModal');
+                if (overlay && modal) {
+                    overlay.style.display = 'block';
+                    modal.style.display = 'block';
+                    // We need to find the correct label for selection if it's a bank transfer
+                    let initialSelection = currentMethod || 'QR พร้อมเพย์';
+
+                    // If current storage says "โอนเงินผ่านธนาคาร" we need to check which bank to highlight
+                    if (initialSelection === 'โอนเงินผ่านธนาคาร') {
+                        const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
+                        const currentOrders = JSON.parse(rawOrders);
+                        const order = currentOrders.find(o => o.id === id);
+                        if (order && order.paymentBank) {
+                            if (order.paymentBank.toLowerCase() === 'scb') initialSelection = 'โอนเงินผ่านธนาคาร (ไทยพาณิชย์)';
+                            else if (order.paymentBank.toLowerCase() === 'kbank') initialSelection = 'โอนเงินผ่านธนาคาร (กสิกรไทย)';
+                        }
+                    }
+
+                    selectChangePayment(initialSelection);
+                }
+                // Close dropdown
+                document.querySelectorAll('.more-dropdown').forEach(el => el.style.display = 'none');
+            };
+
+            window.closePaymentModal = function () {
+                const overlay = document.getElementById('paymentModalOverlay');
+                const modal = document.getElementById('paymentModal');
+                if (overlay) overlay.style.display = 'none';
+                if (modal) modal.style.display = 'none';
+                currentChangePaymentOrderId = null;
+            };
+
+            window.selectChangePayment = function (method) {
+                newlySelectedPayment = method;
+                document.querySelectorAll('.pm-opt-btn').forEach(btn => {
+                    // Extract text content excluding the SVG tick
+                    const btnText = btn.cloneNode(true);
+                    const tick = btnText.querySelector('.pm-tick');
+                    if (tick) tick.remove();
+
+                    if (btnText.innerText.trim() === method) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+                document.getElementById('selectedPaymentText').innerText = method;
+            };
+
+            window.executeChangePayment = function () {
+                if (!currentChangePaymentOrderId) return;
+
+                const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
+                let currentOrders = JSON.parse(rawOrders);
+                let order = currentOrders.find(o => o.id === currentChangePaymentOrderId);
+
+                if (order) {
+                    order.paymentMethod = newlySelectedPayment;
+
+                    if (newlySelectedPayment.includes('ไทยพาณิชย์')) {
+                        order.paymentMethod = 'โอนเงินผ่านธนาคาร';
+                        order.paymentBank = 'SCB';
+                    } else if (newlySelectedPayment.includes('กสิกร')) {
+                        order.paymentMethod = 'โอนเงินผ่านธนาคาร';
+                        order.paymentBank = 'KBank';
+                    } else if (newlySelectedPayment === 'เก็บเงินปลายทาง') {
+                        order.status = 'ที่ต้องจัดส่ง';
+                        order.paymentBank = '';
+                    } else {
+                        order.paymentBank = '';
+                    }
+
+                    // Ensure orderDate is preserved (counting from original creation)
+                    // It is already preserved as we are not modifying it.
+
+                    let updateData = {
+                        paymentMethod: order.paymentMethod,
+                        paymentBank: order.paymentBank
+                    };
+                    
+                    if (order.status) {
+                        updateData.status = order.status;
+                    }
+
+                    if (window.supabase) {
+                        window.supabase.from('orders').update(updateData).eq('id', currentChangePaymentOrderId)
+                            .then(({error}) => {
+                                if (error) {
+                                    console.error("Failed to change payment method:", error);
+                                    alert("เปลี่ยนช่องทางชำระเงินไม่สำเร็จ กรุณาลองใหม่");
+                                } else {
+                                    // Local state update for immediate feedback
+                                    localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
+                                    renderOrders(currentOrders, document.querySelector('.order-tab.active')?.dataset.filter || 'all');
+                                }
+                            });
+                    } else {
+                        // Fallback
+                        localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
+                        renderOrders(currentOrders, document.querySelector('.order-tab.active')?.dataset.filter || 'all');
+                    }
+                }
+                closePaymentModal();
+            };
+            // Slip Lightbox Functions
+            window.viewSlipLightbox = function (url) {
+                const lightbox = document.getElementById('slipLightbox');
+                const img = document.getElementById('lightboxImg');
+                if (lightbox && img) {
+                    img.src = url;
+                    lightbox.classList.add('show');
+                    document.body.style.overflow = 'hidden'; // Prevent scroll
+                }
+            };
+
+            window.closeSlipLightbox = function () {
+                const lightbox = document.getElementById('slipLightbox');
+                if (lightbox) {
+                    lightbox.classList.remove('show');
+                    document.body.style.overflow = ''; // Restore scroll
+                }
+            };
+
+            window.buyAgain = function (orderId) {
+                const order = ordersData.find(o => o.id === orderId);
+                if (order && order.items && window.CartAPI) {
+                    order.items.forEach(item => {
+                        window.CartAPI.add(item);
+                    });
+                    setTimeout(() => {
+                        if (window.CartUI) window.CartUI.open();
+                        else alert('เพิ่มสินค้าลงตะกร้าเรียบร้อยแล้วครับ!');
+                    }, 100);
+                } else {
+                    alert('ไม่สามารถทำรายการได้ในขณะนี้ กรุณาลองใหม่อีกครั้งครับ');
+                }
+            };
+
+            window.requestReturn = function (orderId) {
+                currentReturnOrderId = orderId;
+                const overlay = document.getElementById('returnModalOverlay');
+                const modal = document.getElementById('returnModal');
+                if (overlay && modal) {
+                    overlay.style.display = 'block';
+                    setTimeout(() => modal.classList.add('show'), 10);
+                }
+            };
+
+            window.closeReturnModal = function () {
+                const overlay = document.getElementById('returnModalOverlay');
+                const modal = document.getElementById('returnModal');
+                if (modal) modal.classList.remove('show');
+                setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 300);
+                currentReturnOrderId = null;
+            };
+
+            window.executeReturnOrder = function (reasonTitle) {
+                if (!currentReturnOrderId) return;
+                const orderId = currentReturnOrderId.trim();
+                
+                try {
+                    const updateObj = { 
+                        status: 'คืนเงิน/คืนสินค้า',
+                        returnReason: reasonTitle,
+                        returnDate: new Date().toISOString()
+                    };
+                    
+                    // 1. Supabase Sync
+                    if (window.supabase) {
+                        window.supabase.from('orders').update(updateObj).eq('id', orderId)
+                            .then(({error}) => { if (error) console.error("[Cloud Error] Refund update failed:", error); });
+                    }
+                    
+                    // 2. Local Storage Sync
+                    const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
+                    let currentOrders = JSON.parse(rawOrders);
+                    let foundLocal = false;
+                    currentOrders.forEach(o => {
+                        if (o.id && o.id.trim() === orderId) {
+                            o.status = 'คืนเงิน/คืนสินค้า';
+                            o.returnReason = reasonTitle;
+                            foundLocal = true;
+                        }
+                    });
+                    if (foundLocal) localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
+                    
+                    // 3. Global Sync Fallback
+                    try {
+                        let globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+                        globalOrders.forEach(go => {
+                            if (go.id && go.id.trim() === orderId) {
+                                go.status = 'คืนเงิน/คืนสินค้า';
+                                go.returnReason = reasonTitle;
+                            }
+                        });
+                        localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
+                    } catch (e) { }
+
+                    // 4. UI Update
+                    const idx = ordersData.findIndex(o => o.id && o.id.trim() === orderId);
+                    if (idx > -1) {
+                        ordersData[idx].status = 'คืนเงิน/คืนสินค้า';
+                        ordersData[idx].returnReason = reasonTitle;
+                    }
+                    
+                    // Force switch to "Return" tab
+                    document.querySelectorAll('.order-tab').forEach(t => {
+                        if (t.dataset.filter === 'return') t.classList.add('active');
+                        else t.classList.remove('active');
+                    });
+                    
+                    updateTabCounts(ordersData);
+                    renderOrders(ordersData, 'return');
+                    
+                    // ✅ Notify other tabs (Seller Centre) to refresh immediately
+                    try {
+                        const bc = new BroadcastChannel('pao_order_sync');
+                        bc.postMessage({ type: 'REFRESH_ORDERS', orderId: orderId });
+                    } catch (e) { }
+
+                    closeReturnModal();
+                    
+                } catch (e) {
+                    console.error("Return execution failed:", e);
+                    closeReturnModal();
+                }
+            };
+
+            let currentReturnOrderId = null;
+        })();
+    </script>
+
+    <!-- Success Confirmation Modal -->
+    <div class="sc-modal-overlay" id="scModalOverlay" onclick="closeSuccessModal()"></div>
+    <div class="sc-modal" id="scModal">
+        <div class="sc-icon-wrapper">📦</div>
+        <h3 class="sc-title">ยืนยันการรับสินค้า</h3>
+        <p class="sc-desc">คุณได้รับสินค้าและตรวจสอบพัสดุเรียบร้อยแล้วใช่ไหมคับ?</p>
+        <div class="sc-actions">
+            <button class="btn-sc-confirm" onclick="confirmSuccessOrder()">ยืนยันว่าได้รับสินค้าแล้ว</button>
+            <button class="btn-sc-cancel" onclick="closeSuccessModal()">ยกเลิก</button>
+        </div>
+    </div>
+
+    <!-- Return Reason Modal -->
+    <div class="sc-modal-overlay" id="returnModalOverlay" onclick="closeReturnModal()"></div>
+    <div class="sc-modal" id="returnModal" style="max-width: 500px; padding: 0; overflow: hidden;">
+        <div style="padding: 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; background: #fff; position: sticky; top: 0; z-index: 10;">
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">เลือกเหตุผลการคืนสินค้า</h3>
+            <span onclick="closeReturnModal()" style="cursor: pointer; font-size: 1.5rem; color: #999; line-height: 1;">&times;</span>
+        </div>
+        <div class="return-modal-list">
+            <div class="return-option" onclick="executeReturnOrder('ได้รับสินค้าที่มีความเสียหาย หรือสภาพไม่ดี')">
+                <div class="return-icon">🩹</div>
+                <div class="return-text">
+                    <div class="return-title">ได้รับสินค้าที่มีความเสียหาย หรือสภาพไม่ดี</div>
+                    <div class="return-desc">สินค้าที่ได้รับมีร่องรอยขีดข่วน แตกหัก รั่ว/หก หรือการทำงานไม่สมบูรณ์ หรือสินค้าหมดอายุ</div>
+                </div>
+                <div class="return-arrow">›</div>
+            </div>
+            <div class="return-option" onclick="executeReturnOrder('ได้รับสินค้ามาผิด หรือไม่ใช่สินค้าที่สั่ง')">
+                <div class="return-icon">🚫</div>
+                <div class="return-text">
+                    <div class="return-title">ได้รับสินค้ามาผิด หรือไม่ใช่สินค้าที่สั่ง</div>
+                    <div class="return-desc">สินค้าที่ได้รับมาไม่ใช่สินค้าที่สั่ง / มีความแตกต่างจากรายละเอียด / ผิดลิขสิทธิ์</div>
+                </div>
+                <div class="return-arrow">›</div>
+            </div>
+            <div class="return-option" onclick="executeReturnOrder('ได้รับสินค้าไม่ครบ หรือยังไม่ได้รับพัสดุ')">
+                <div class="return-icon">📦</div>
+                <div class="return-text">
+                    <div class="return-title">ได้รับสินค้าไม่ครบ หรือยังไม่ได้รับพัสดุ</div>
+                    <div class="return-desc">ได้รับสินค้าไม่ครบตามจำนวนที่สั่ง / มีชิ้นส่วนบางชิ้นหายไป / ได้รับกล่องเปล่า</div>
+                </div>
+                <div class="return-arrow">›</div>
+            </div>
+            <div class="return-option" onclick="window.handleReturnOther(event)">
+                <div class="return-icon">⚙️</div>
+                <div class="return-text">
+                    <div class="return-title">อื่นๆ <span id="returnOtherArrow" class="return-arrow" style="font-size: 1rem; margin-left: 5px; display: inline-block;">▼</span></div>
+                    <div id="returnOtherInputContainer" style="display: none; margin-top: 10px;" onclick="event.stopPropagation()">
+                        <textarea id="returnReasonOtherText" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; resize: none; font-family: inherit; font-size: 0.9rem; box-sizing: border-box;" rows="2" placeholder="โปรดระบุเหตุผลการคืนสินค้า..."></textarea>
+                        <button style="margin-top: 8px; width: 100%; border-radius: 6px; border: none; background: #ee4d2d; color: #fff; padding: 8px; font-weight: 500; cursor: pointer;" onclick="window.submitReturnOther(event)">ยืนยันการคืนสินค้า</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        window.handleReturnOther = function(event) {
+            const container = document.getElementById('returnOtherInputContainer');
+            const arrow = document.getElementById('returnOtherArrow');
+            if(container.style.display === 'none') {
+                container.style.display = 'block';
+                arrow.style.transform = 'rotate(180deg)';
+                document.getElementById('returnReasonOtherText').focus();
+            } else {
+                container.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        };
+        window.submitReturnOther = function(event) {
+            event.stopPropagation();
+            const text = document.getElementById('returnReasonOtherText').value.trim();
+            executeReturnOrder('อื่นๆ: ' + (text || 'ไม่ระบุเหตุผล'));
+        };
+    </script>
+<script src="premium-alerts.js"></script>
+</body>
+
+</html>
+
+
+
+
+
+
+

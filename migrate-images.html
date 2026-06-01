@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Migrate Product Images</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f8fafc; }
+        .log { background: #1e293b; color: #38bdf8; padding: 15px; border-radius: 8px; font-family: monospace; height: 300px; overflow-y: auto; white-space: pre-wrap; font-size: 14px; line-height: 1.5; margin-top: 15px; }
+        .progress-bar-container { width: 100%; background: #e2e8f0; border-radius: 8px; overflow: hidden; margin-top: 20px; height: 20px; }
+        .progress-bar { width: 0%; height: 100%; background: #10b981; transition: width 0.3s; }
+        .status { font-weight: bold; margin-top: 10px; color: #334155; }
+    </style>
+</head>
+<body>
+    <h2>เครื่องมืออัปเกรดรูปภาพสินค้าเก่าแบบอัตโนมัติ (Anti-Timeout)</h2>
+    <p style="color: #64748b;">ระบบกำลังทยอยดึงและแปลงรูปภาพแบบ Base64 ทีละชิ้น เพื่อป้องกันการ Timeout... ห้ามปิดหน้านี้จนกว่าจะถึง 100%</p>
+    
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="status" id="statusText">0% (กำลังเริ่มต้น...)</div>
+
+    <div class="log" id="log"></div>
+
+    <script>
+        function log(msg) {
+            const el = document.getElementById('log');
+            el.innerHTML += msg + "\n";
+            el.scrollTop = el.scrollHeight;
+            console.log(msg);
+        }
+
+        window.onerror = function(message, source, lineno, colno, error) {
+            log(`❌ บัคในระบบ: ` + message);
+        };
+
+        async function runMigration() {
+            try {
+                const supabaseUrl = 'https://ivnayulkvlxjnwfwjxmj.supabase.co';
+                const supabaseKey = 'sb_publishable_ZZPe_GiGq-5W780KOI64yg_zzsjWvq7';
+                
+                if (typeof supabase === 'undefined') {
+                    log("❌ Error: ไม่สามารถโหลด Supabase SDK ได้ (กรุณาเช็คอินเทอร์เน็ต)");
+                    return;
+                }
+                
+                const sbClient = supabase.createClient(supabaseUrl, supabaseKey);
+                log("✅ เชื่อมต่อฐานข้อมูลสำเร็จ!");
+
+                log("🔄 กำลังดึง 'รายชื่อ' สินค้าทั้งหมด (เพื่อป้องกัน Timeout)...");
+                const { data: allIds, error } = await sbClient.from('products').select('id');
+                
+                if (error) {
+                    log("❌ Error fetching product IDs: " + error.message);
+                    return;
+                }
+
+                log(`📦 พบรายชื่อสินค้าทั้งหมด ${allIds.length} ชิ้น. กำลังไล่สแกนและอัปเกรดทีละชิ้น...`);
+                let migratedCount = 0;
+                let total = allIds.length;
+
+                if (total === 0) {
+                    document.getElementById('progressBar').style.width = '100%';
+                    document.getElementById('statusText').innerText = '100% (ไม่มีสินค้าเลย)';
+                    return;
+                }
+
+                for (let i = 0; i < total; i++) {
+                    const productId = allIds[i].id;
+                    log(`\n⏳ [${i+1}/${total}] กำลังตรวจสอบข้อมูลของ ID: ${productId}`);
+                    
+                    try {
+                        // โหลดข้อมูลรูปภาพทีละ 1 ชิ้น ป้องกัน Timeout
+                        const { data: p, error: fetchErr } = await sbClient.from('products').select('id, name, img').eq('id', productId).single();
+                        
+                        if (fetchErr) {
+                            log(`❌ ดึงข้อมูลภาพล้มเหลว [${productId}]: ${fetchErr.message}`);
+                            continue;
+                        }
+
+                        if (p.img && p.img.startsWith('data:image')) {
+                            log(`   ✨ พบรูปภาพ Base64 ของ [${p.name || p.id}] กำลังเริ่มแปลง...`);
+                            const base64Data = p.img.split(',')[1];
+                            const byteString = atob(base64Data);
+                            const ab = new ArrayBuffer(byteString.length);
+                            const ia = new Uint8Array(ab);
+                            for (let j = 0; j < byteString.length; j++) {
+                                ia[j] = byteString.charCodeAt(j);
+                            }
+                            const blob = new Blob([ab], { type: 'image/jpeg' });
+                            
+                            const fileName = 'products/migrated_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) + '.jpg';
+                            const { error: uploadError } = await sbClient.storage.from('images').upload(fileName, blob, { contentType: 'image/jpeg', cacheControl: '3600' });
+                            
+                            if (uploadError) {
+                                log(`   ❌ อัปโหลดล้มเหลว: ${uploadError.message}`);
+                                continue;
+                            }
+
+                            const { data } = sbClient.storage.from('images').getPublicUrl(fileName);
+                            const publicUrl = data.publicUrl;
+
+                            const { error: updateError } = await sbClient.from('products').update({ img: publicUrl, images: [publicUrl] }).eq('id', p.id);
+                            if (updateError) {
+                                log(`   ❌ อัปเดตฐานข้อมูลล้มเหลว: ${updateError.message}`);
+                            } else {
+                                log(`   ✅ แปลงสำเร็จ!: ${publicUrl}`);
+                                migratedCount++;
+                            }
+                        } else {
+                            log(`   ✅ ปกติดี (ไม่ใช่ Base64) ข้าม...`);
+                        }
+                    } catch (e) {
+                        log(`❌ เกิดข้อผิดพลาดในสินค้านี้: ${e.message}`);
+                    }
+
+                    // อัปเดต %
+                    const percent = Math.round(((i + 1) / total) * 100);
+                    document.getElementById('progressBar').style.width = percent + '%';
+                    document.getElementById('statusText').innerText = `${percent}% (ตรวจสอบแล้ว ${i + 1}/${total} ชิ้น)`;
+
+                    // พักหายใจ 0.2 วินาทีให้เบราว์เซอร์ได้อัปเดตหน้าจอ
+                    await new Promise(r => setTimeout(r, 200));
+                }
+
+                log(`\n🎉 เสร็จสิ้นกระบวนการ! ระบบทำการกู้และแปลงรูปภาพสำเร็จไปทั้งหมด ${migratedCount} ชิ้น.`);
+                log("👉 ปิดหน้านี้ได้เลยครับ! รูปจะไม่บัค Timeout อีกแล้ว!");
+            } catch (err) {
+                log("❌ เกิดข้อผิดพลาดที่ไม่คาดคิด: " + err.message);
+            }
+        }
+
+        setTimeout(runMigration, 500);
+    </script>
+</body>
+</html>
+
+
+
+
+
