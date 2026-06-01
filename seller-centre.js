@@ -1,4 +1,4 @@
-﻿/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
 (function() {
     if (window.__alertOverrideInjected) return;
     window.__alertOverrideInjected = true;
@@ -766,16 +766,23 @@ let _currentPromoImgBase64 = null;
 
 /* ── Render promotion list in dashboard card ── */
 function loadPromoList() {
-    if (typeof db === 'undefined') return;
+    if (!window.supabase) return;
 
-    // No orderBy to avoid requiring a Firestore index — sort client-side
-    db.collection('promotions').onSnapshot(snapshot => {
+    const fetchPromos = async () => {
+        const { data: docs, error } = await window.supabase.from('promotions').select('*');
+        if (error) {
+            console.error('[Promo] List error:', error);
+            const area = document.getElementById('promo-list-area');
+            if (area) area.innerHTML = `<div style="color:#dc2626;padding:16px;font-size:0.85rem;">❌ โหลดไม่ได้: ${error.message}</div>`;
+            return;
+        }
+
         const area  = document.getElementById('promo-list-area');
         const count = document.getElementById('promo-count');
-        if (count) count.textContent = snapshot.size;
+        if (count) count.textContent = docs ? docs.length : 0;
         if (!area) return;
 
-        if (snapshot.empty) {
+        if (!docs || docs.length === 0) {
             area.innerHTML = `<div style="text-align:center;padding:30px 20px;color:#94a3b8;">
                 <div style="font-size:2.5rem;margin-bottom:10px;">🎁</div>
                 <div style="font-weight:600;margin-bottom:6px;">ยังไม่มีโปรโมชั่นบนคลาวด์</div>
@@ -788,7 +795,6 @@ function loadPromoList() {
         }
 
         // Sort client-side by order field
-        const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         docs.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 
         area.innerHTML = docs.map((p, idx) => {
@@ -811,11 +817,13 @@ function loadPromoList() {
                 </div>
             </div>`;
         }).join('');
-    }, err => {
-        console.error('[Promo] List error:', err);
-        const area = document.getElementById('promo-list-area');
-        if (area) area.innerHTML = `<div style="color:#dc2626;padding:16px;font-size:0.85rem;">❌ โหลดไม่ได้: ${err.message}</div>`;
-    });
+    };
+
+    fetchPromos();
+    
+    window.supabase.channel('public:promotions_admin')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'promotions' }, () => fetchPromos())
+        .subscribe();
 }
 
 /* ── Open editor modal ── */
@@ -841,8 +849,8 @@ window.openPromoEditor = async function(docId) {
 
     if (docId) {
         try {
-            const doc = await db.collection('promotions').doc(docId).get();
-            const d = doc.exists ? doc.data() : {};
+            const { data: doc, error } = await window.supabase.from('promotions').select('*').eq('id', docId).single();
+            const d = (!error && doc) ? doc : {};
             const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
             set('promoTitle', d.title); set('promoSubDesc', d.subDesc);
             set('promoDesc', d.desc);   set('promoCTALink', d.ctaLink);
@@ -910,14 +918,20 @@ window.savePromotion = async function() {
     if (_currentPromoImgBase64) payload.imageBase64 = _currentPromoImgBase64;
 
     try {
-        if (typeof db === 'undefined') throw new Error('Firestore (db) ยังไม่พร้อม กรุณาล็อกอินก่อน');
+        if (!window.supabase) throw new Error('Supabase SDK ยังไม่พร้อม');
+        
+        payload.updatedAt = new Date().toISOString();
+
         if (_currentPromoId) {
-            await db.collection('promotions').doc(_currentPromoId).set(payload, { merge: true });
+            const { error } = await window.supabase.from('promotions').update(payload).eq('id', _currentPromoId);
+            if (error) throw error;
         } else {
-            const snap = await db.collection('promotions').get();
-            payload.order = snap.size;
-            payload.createdAt = ts;
-            await db.collection('promotions').add(payload);
+            const { data: snap, error: snapErr } = await window.supabase.from('promotions').select('id');
+            if (snapErr) throw snapErr;
+            payload.order = snap ? snap.length : 0;
+            payload.createdAt = new Date().toISOString();
+            const { error: insErr } = await window.supabase.from('promotions').insert([payload]);
+            if (insErr) throw insErr;
         }
         btn.textContent = '✅ บันทึกแล้ว!';
         setTimeout(() => { btn.disabled = false; btn.textContent = '💾 บันทึก & อัปเดต'; closePromoEditor(); }, 1000);
@@ -933,7 +947,8 @@ window.deletePromotion = async function(docId) {
     const id = docId || _currentPromoId;
     if (!id || !confirm('🗑️ ลบโปรโมชั่นนี้ใช่ไหมคับ?')) return;
     try {
-        await db.collection('promotions').doc(id).delete();
+        const { error } = await window.supabase.from('promotions').delete().eq('id', id);
+        if (error) throw error;
         if (_currentPromoId === id) closePromoEditor();
     } catch(e) { alert('❌ ลบไม่สำเร็จ: ' + e.message); }
 };
@@ -949,11 +964,13 @@ window.seedDefaultPromos = async function() {
         btn.textContent = '⏳ กำลังส่งข้อมูล...';
 
         for (const p of DEFAULT_PROMOS) {
-            await db.collection('promotions').add({
+            const nowIso = new Date().toISOString();
+            const { error } = await window.supabase.from('promotions').insert([{
                 ...p,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+                createdAt: nowIso,
+                updatedAt: nowIso
+            }]);
+            if (error) console.error(error);
         }
         alert('✅ เพิ่มโปรโมชั่นเริ่มต้นสำเร็จแล้วคับ!');
         btn.textContent = originalText;

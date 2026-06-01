@@ -83,86 +83,84 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── Start Voucher Sync IMMEDIATELY (reads are public, no auth needed) ──
     const now = new Date().toISOString().split('T')[0];
-    db.collection('vouchers').onSnapshot((snapshot) => {
-        if (statusEl) statusEl.innerHTML = '<span style="color:#52c41a">&bull; Firestore: เชื่อมต่อแล้ว</span>';
+    
+    if (window.supabase) {
+        const fetchVouchersAdmin = async () => {
+            if (statusEl) statusEl.innerHTML = '<span style="color:#52c41a">&bull; Database: เชื่อมต่อแล้ว</span>';
+            const { data, error } = await window.supabase.from('vouchers').select('*');
+            if (error) {
+                console.error('Supabase fetch error:', error);
+                if (statusEl) statusEl.innerHTML = `<span style="color:red">&bull; Database Error: ${error.message}</span>`;
+                return;
+            }
 
-        if (snapshot.empty) {
-            voucherListBody.innerHTML = '';
-            emptyState.style.display = 'block';
-            return;
-        }
+            if (!data || data.length === 0) {
+                voucherListBody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
 
-        // Admin sees ALL vouchers — no expiry filter (mark expired visually instead)
-        const today = new Date().toISOString().split('T')[0];
-        const allDocs = [];
-        snapshot.forEach(doc => allDocs.push(doc));
+            // Admin sees ALL vouchers — no expiry filter (mark expired visually instead)
+            const today = new Date().toISOString().split('T')[0];
+            const allDocs = data;
 
-        if (allDocs.length === 0) {
-            voucherListBody.innerHTML = '';
-            emptyState.style.display = 'block';
-            return;
-        }
+            window.cachedVouchers = allDocs;
+            emptyState.style.display = 'none';
 
-        window.cachedVouchers = allDocs;
+            allDocs.sort((a, b) => {
+                const getMillis = (v) => {
+                    if (v.createdAt) return new Date(v.createdAt).getTime();
+                    return 0;
+                };
+                return getMillis(b) - getMillis(a);
+            });
 
-        emptyState.style.display = 'none';
+            let html = '';
+            allDocs.forEach((v) => {
+                const id = v.id;
+                const isDiscount = v.type === 'discount';
+                const typeLabel = isDiscount ? 'ส่วนลดสินค้า' : 'ส่งพัสดุฟรี';
+                const typeClass = isDiscount ? 'tag-discount' : 'tag-ship';
+                const showHomeIcon = v.showOnHomepage ? '<span style="color:#27ae60">✅ เปิด</span>' : '<span style="color:#999">❌ ปิด</span>';
+                const isExpired = !v.isPermanent && v.expiry && v.expiry < today;
+                const expiryDisplay = v.isPermanent ? '♾️ ถาวร' : formatDate(v.expiry);
+                const expiryStyle = v.isPermanent ? 'color:#27ae60;font-weight:600;' : (isExpired ? 'color:#ff4d4f;text-decoration:line-through;' : '');
+                const expiredBadge = isExpired ? '<span style="background:#ff4d4f;color:#fff;font-size:0.65rem;padding:1px 5px;border-radius:8px;margin-left:4px;">หมดอายุ</span>' : '';
+                html += `
+                    <tr id="row-${id}" style="${isExpired ? 'opacity:0.6;' : ''}">
+                        <td data-label="รหัส / ชื่อ">
+                            <div style="font-weight:600;color:#222;">${v.code}${expiredBadge}</div>
+                            <div style="font-size:0.8rem;color:#888;">${v.title}</div>
+                        </td>
+                        <td data-label="ประเภท"><span class="v-type-tag ${typeClass}">${typeLabel}</span></td>
+                        <td data-label="ส่วนลด"><strong style="color:#ee4d2d;">฿${v.value}</strong></td>
+                        <td data-label="หน้าแรก" style="text-align:center;font-size:0.8rem;">${showHomeIcon}</td>
+                        <td data-label="ขั้นต่ำ">฿${v.minPurchase || 0}</td>
+                        <td data-label="หมดอายุ" style="${expiryStyle}">
+                            ${expiryDisplay}
+                        </td>
+                        <td data-label="จัดการ">
+                            <div style="display:flex;gap:5px;justify-content:flex-end;">
+                                <button class="btn-gen-qr" onclick="prepareQRModal('${v.code}','${v.expiry||''}')" title="สร้าง Secure QR">🎟 สแกน</button>
+                                <button class="btn-gen-qr" style="background:#f39c12" onclick="editVoucher('${id}')" title="แก้ไข">✏️</button>
+                                <button class="btn-delete" onclick="deleteVoucher('${id}','${v.code}',this)" title="ลบคูปอง">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+            voucherListBody.innerHTML = html;
+        };
 
-        allDocs.sort((a, b) => {
-            const getMillis = (data) => {
-                try {
-                    if (data.createdAt && typeof data.createdAt.toDate === 'function') return data.createdAt.toDate().getTime();
-                    if (data.createdAt === null) return Date.now();
-                    if (data.createdAt && data.createdAt.seconds) return data.createdAt.seconds * 1000;
-                    if (data.createdAt) return new Date(data.createdAt).getTime() || 0;
-                } catch(e) {}
-                return 0;
-            };
-            return getMillis(b.data()) - getMillis(a.data());
-        });
+        fetchVouchersAdmin();
 
-        let html = '';
-        allDocs.forEach((doc) => {
-            const v = doc.data();
-            const id = doc.id;
-            const isDiscount = v.type === 'discount';
-            const typeLabel = isDiscount ? 'ส่วนลดสินค้า' : 'ส่งพัสดุฟรี';
-            const typeClass = isDiscount ? 'tag-discount' : 'tag-ship';
-            const showHomeIcon = v.showOnHomepage ? '<span style="color:#27ae60">✅ เปิด</span>' : '<span style="color:#999">❌ ปิด</span>';
-            const isExpired = !v.isPermanent && v.expiry && v.expiry < today;
-            const expiryDisplay = v.isPermanent ? '♾️ ถาวร' : formatDate(v.expiry);
-            const expiryStyle = v.isPermanent ? 'color:#27ae60;font-weight:600;' : (isExpired ? 'color:#ff4d4f;text-decoration:line-through;' : '');
-            const expiredBadge = isExpired ? '<span style="background:#ff4d4f;color:#fff;font-size:0.65rem;padding:1px 5px;border-radius:8px;margin-left:4px;">หมดอายุ</span>' : '';
-            html += `
-                <tr id="row-${id}" style="${isExpired ? 'opacity:0.6;' : ''}">
-                    <td data-label="รหัส / ชื่อ">
-                        <div style="font-weight:600;color:#222;">${v.code}${expiredBadge}</div>
-                        <div style="font-size:0.8rem;color:#888;">${v.title}</div>
-                    </td>
-                    <td data-label="ประเภท"><span class="v-type-tag ${typeClass}">${typeLabel}</span></td>
-                    <td data-label="ส่วนลด"><strong style="color:#ee4d2d;">฿${v.value}</strong></td>
-                    <td data-label="หน้าแรก" style="text-align:center;font-size:0.8rem;">${showHomeIcon}</td>
-                    <td data-label="ขั้นต่ำ">฿${v.minPurchase || 0}</td>
-                    <td data-label="หมดอายุ" style="${expiryStyle}">
-                        ${expiryDisplay}
-                    </td>
-                    <td data-label="จัดการ">
-                        <div style="display:flex;gap:5px;justify-content:flex-end;">
-                            <button class="btn-gen-qr" onclick="prepareQRModal('${v.code}','${v.expiry||''}')" title="สร้าง Secure QR">🎟 สแกน</button>
-                            <button class="btn-gen-qr" style="background:#f39c12" onclick="editVoucher('${id}')" title="แก้ไข">✏️</button>
-                            <button class="btn-delete" onclick="deleteVoucher('${id}','${v.code}',this)" title="ลบคูปอง">🗑️</button>
-                        </div>
-                    </td>
-                </tr>`;
-        });
-        voucherListBody.innerHTML = html;
-    }, (err) => {
-        console.error('Snapshot error:', err);
-        if (statusEl) statusEl.innerHTML = `<span style="color:red">&bull; Firestore Error: ${err.code}</span>`;
-        if (err.code === 'permission-denied') {
-            const authWarning = document.getElementById('auth-cloud-warning');
-            if (authWarning) authWarning.style.display = 'flex';
-        }
-    });
+        window.supabase.channel('public:vouchers_admin')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'vouchers' }, () => {
+                fetchVouchersAdmin();
+            })
+            .subscribe();
+    } else {
+        if (statusEl) statusEl.innerHTML = '<span style="color:red">&bull; Error: Supabase SDK Missing</span>';
+    }
 
 
     // ── Settings Save ──
@@ -241,7 +239,6 @@ document.addEventListener('DOMContentLoaded', () => {
             saveBtn.disabled = true;
             saveBtn.textContent = '⏳ กำลังบันทึก...';
 
-            const vouchersCol = db.collection('vouchers');
             const voucherData = {
                 code,
                 title,
@@ -254,25 +251,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 expiry: isPermanent ? '' : expiry,
                 isPermanent: !!isPermanent,
                 showOnHomepage,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                updatedAt: new Date().toISOString()
             };
 
             if (window.editingVoucherId) {
                 // Update
-                await vouchersCol.doc(window.editingVoucherId).update(voucherData);
+                const { error: updateErr } = await window.supabase.from('vouchers').update(voucherData).eq('id', window.editingVoucherId);
+                if (updateErr) throw updateErr;
                 alert("✅ อัปเดตคูปองเรียบร้อยแล้วครับ!");
             } else {
                 // Create New
                 // Check if code exists globally
-                const existing = await vouchersCol.where('code', '==', code).get();
-                if (!existing.empty) {
+                const { data: existing, error: fetchErr } = await window.supabase.from('vouchers').select('id').eq('code', code);
+                if (fetchErr) throw fetchErr;
+                if (existing && existing.length > 0) {
                     alert("รหัสโค้ดนี้มีอยู่แล้วในระบบครับ กรุณาเปลี่ยนรหัสใหม่");
                     saveBtn.disabled = false;
                     saveBtn.textContent = '💾 บันทึกและเปิดใช้งาน';
                     return;
                 }
-                voucherData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                await vouchersCol.add(voucherData);
+                voucherData.createdAt = new Date().toISOString();
+                const { error: insertErr } = await window.supabase.from('vouchers').insert([voucherData]);
+                if (insertErr) throw insertErr;
                 alert("สร้างคูปองเรียบร้อยแล้วครับ! 🎉");
             }
 
@@ -323,7 +323,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetBtn.disabled = true;
             }
 
-            await db.collection('vouchers').doc(id).delete();
+            const { error: delErr } = await window.supabase.from('vouchers').delete().eq('id', id);
+            if (delErr) throw delErr;
             console.log("Voucher deleted:", code);
             // No alert needed, onSnapshot will clear the row
         } catch (err) {
@@ -358,12 +359,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!v) {
                 // Fallback to network if not in cache for some reason
-                const doc = await db.collection('vouchers').doc(id).get();
-                if (!doc.exists) {
+                const { data: doc, error: docErr } = await window.supabase.from('vouchers').select('*').eq('id', id).single();
+                if (docErr || !doc) {
                     closeEditModal();
                     return;
                 }
-                v = doc.data();
+                v = doc;
             }
             
             window.lastVData = v;
@@ -447,10 +448,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.updateVField = async (field, value) => {
         if (!window.editingVoucherId) return;
         try {
-            await db.collection('vouchers').doc(window.editingVoucherId).update({
+            const { error: updErr } = await window.supabase.from('vouchers').update({
                 [field]: value,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+                updatedAt: new Date().toISOString()
+            }).eq('id', window.editingVoucherId);
+            if (updErr) throw updErr;
             console.log(`[Firestore] Updated ${field} to ${value}`);
         } catch (err) {
             alert("บันทึกไม่สำเร็จ: " + err.message);
@@ -603,20 +605,20 @@ window.emergencyClearVouchers = async () => {
     if(!isConfirm) return;
     
     try {
-        const snapshot = await db.collection('vouchers').get();
-        if (snapshot.empty) {
+        const { data: snapshot, error: fetchErr } = await window.supabase.from('vouchers').select('id');
+        if (fetchErr) throw fetchErr;
+
+        if (!snapshot || snapshot.length === 0) {
             alert("✅ ไม่มีคูปองค้างอยู่ในระบบแล้วครับ");
             return;
         }
         
-        let deletedCount = 0;
-        const batch = db.batch();
-        snapshot.docs.forEach(doc => {
-            batch.delete(doc.ref);
-            deletedCount++;
-        });
+        let deletedCount = snapshot.length;
+        // In Supabase we can delete all using a condition that matches all, or just by ID array
+        const ids = snapshot.map(s => s.id);
+        const { error: bulkDelErr } = await window.supabase.from('vouchers').delete().in('id', ids);
+        if (bulkDelErr) throw bulkDelErr;
         
-        await batch.commit();
         alert(`✅ ล้างคูปองสำเร็จแล้วจำนวน ${deletedCount} รายการครับ!`);
         window.location.reload();
     } catch (err) {
