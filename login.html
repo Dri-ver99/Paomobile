@@ -727,6 +727,15 @@
     <script>
         // Supabase Initialization (Embedded to prevent CORS/Cache issues)
         document.addEventListener("DOMContentLoaded", () => {
+            // FIX: Auto-clear huge caches to prevent QuotaExceededError during login
+            try {
+                localStorage.removeItem('pao_seller_cache');
+                ['new', 'used', 'accessory', 'parts', 'all'].forEach(cat => {
+                    localStorage.removeItem(`pao_cache_${cat}`);
+                });
+                console.log("Cleared heavy caches to free up space for login tokens.");
+            } catch(e) {}
+
             if (window.supabase && window.supabase.createClient) {
                 const supabaseUrl = 'https://ivnayulkvlxjnwfwjxmj.supabase.co';
                 const supabaseKey = 'sb_publishable_ZZPe_GiGq-5W780KOI64yg_zzsjWvq7';
