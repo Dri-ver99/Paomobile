@@ -365,6 +365,14 @@ firestoreMock.FieldValue = {
     serverTimestamp: () => new Date().toISOString(),
     increment: (n) => n
 };
+firestoreMock.Timestamp = {
+    fromDate: (date) => date.toISOString(),
+    now: () => new Date().toISOString()
+};
+firestoreMock.Timestamp = {
+    fromDate: (date) => new Date(date).toISOString(),
+    now: () => new Date().toISOString()
+};
 
 // Global Firebase Mock so inline scripts don't fail
 window.firebase = {
