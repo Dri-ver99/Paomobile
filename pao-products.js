@@ -71,9 +71,9 @@ const ProductSync = {
         this.allProducts = null;
         this.hasLoadedOnce = false;
 
-        // INSTANT LOCAL PREVIEW FIX
-        if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
-            console.log("[Sync] INSTANT LOCAL PREVIEW.");
+        // INSTANT FALLBACK PREVIEW
+        if (typeof window !== 'undefined') {
+            console.log("[Sync] INSTANT FALLBACK PREVIEW.");
             let sourceData = MOCK_PRODUCTS_BASELINE;
             if (window.FALLBACK_LIVE_DATA) {
                 sourceData = Array.isArray(window.FALLBACK_LIVE_DATA) ? window.FALLBACK_LIVE_DATA : (window.FALLBACK_LIVE_DATA.value || MOCK_PRODUCTS_BASELINE);
@@ -219,6 +219,11 @@ const ProductSync = {
 
             // 1. Start with baseline (lowest priority)
             baselineForCategory.forEach(p => mergedMap.set(p.id, p));
+            
+            if (window.FALLBACK_LIVE_DATA) {
+                const fallbackData = Array.isArray(window.FALLBACK_LIVE_DATA) ? window.FALLBACK_LIVE_DATA : (window.FALLBACK_LIVE_DATA.value || []);
+                fallbackData.filter(isMatch).forEach(p => mergedMap.set(p.id, p));
+            }
 
             // 2. Overwrite with live Firestore data (highest priority)
             matchingFirestore.forEach(p => mergedMap.set(p.id, p));
