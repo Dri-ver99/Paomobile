@@ -1,0 +1,552 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Centre — Paomobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="seller-centre.css">
+    <style>
+        body { font-family: 'Outfit', 'Noto Sans Thai', sans-serif; }
+        .stat-num, .insight-val {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: inline-block;
+        }
+
+        /* Quick QR Styles */
+        .quick-qr-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .quick-qr-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .quick-qr-item:hover {
+            transform: translateY(-2px);
+            border-color: #2D9CDB;
+        }
+        .quick-qr-code {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        .quick-qr-title {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .btn-gen-qr-small {
+            background: #2D9CDB;
+            color: #fff;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        /* QR Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            backdrop-filter: blur(4px);
+        }
+        .qr-modal {
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            animation: modalPop 0.3s ease-out;
+        }
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .qr-close {
+            position: absolute;
+            top: 15px; right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+        .qr-img {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            display: block;
+            border: 8px solid #f9f9f9;
+            border-radius: 12px;
+        }
+        .qr-link-box {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 15px;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-copy {
+            background: #ee4d2d;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="seller-centre.html" class="sidebar-logo">
+                <img src="logo.png" alt="Paomobile">
+                <span>Seller Centre</span>
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                    <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                </a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">เมนูหลัก</p>
+                <a href="seller-centre.html" class="menu-item active"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
+                <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                <a href="#promotion-card" class="menu-item" onclick="document.getElementById('promotion-card').scrollIntoView({behavior:'smooth'}); return false;"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">คำสั่งซื้อ</p>
+                <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">สินค้า</p>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Top Navigation -->
+    <header class="top-nav">
+        <div class="nav-left">
+            <button class="hamburger-menu" id="mobileMenuBtn" onclick="toggleSellerMobileMenu(true)">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h2>ยินดีต้อนรับสู่ Seller Centre</h2>
+        </div>
+        <div class="nav-right">
+            <!-- User profile removed -->
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-wrapper">
+        <div class="dashboard-header">
+            <h1 style="font-size: 1.5rem; color: #333;">ภาพรวมระบบ</h1>
+        </div>
+
+        <!-- Auth Warning Banner -->
+        <div id="auth-cloud-warning" style="display:none; background: #fff7ed; border: 1px solid #ffedd5; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">🔒</span>
+                <div>
+                    <div style="font-weight: 700; color: #9a3412;">คุณกำลังใช้โหมดข้ามสิทธิ์ (Local Bypass)</div>
+                    <div style="font-size: 0.85rem; color: #c2410c;">โปรดล็อกอินด้วย Google เพื่อดูออเดอร์ใหม่จาก Cloud คับ</div>
+                </div>
+            </div>
+            <button onclick="sellerLogin()" style="background: #ea580c; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">ล็อกอินเลย 🚀</button>
+        </div>
+
+        <div class="dashboard-content">
+            <!-- Order Stats Card -->
+            <div class="card">
+                <div class="card-title">สิ่งที่ต้องทำ</div>
+                <div class="stats-row">
+                    <div class="stat-item clickable-stat" onclick="location.href='seller-orders.html?tab=unpaid'">
+                        <span class="stat-num" id="stat-unpaid">0</span>
+                        <span class="stat-label">ที่ต้องชำระ</span>
+                    </div>
+                    <div class="stat-item clickable-stat" onclick="location.href='seller-orders.html?tab=toship'">
+                        <span class="stat-num" id="stat-toship">0</span>
+                        <span class="stat-label">ที่ต้องจัดส่ง</span>
+                    </div>
+                    <div class="stat-item clickable-stat" onclick="location.href='seller-orders.html?tab=processed'">
+                        <span class="stat-num" id="stat-processed">0</span>
+                        <span class="stat-label">เตรียมจัดส่งแล้ว</span>
+                    </div>
+                    <div class="stat-item clickable-stat" onclick="location.href='seller-orders.html?tab=cancelled'">
+                        <span class="stat-num" id="stat-cancelled">0</span>
+                        <span class="stat-label">ขอยกเลิก/คืนเงิน/คืน</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders Card -->
+            <div class="card">
+                <div class="card-title">คำสั่งซื้อล่าสุด <a href="seller-orders.html" class="card-link">ดูทั้งหมด ></a></div>
+                <div id="recent-orders-list">
+                    <!-- Dynamic Content Injected Here -->
+                </div>
+            </div>
+
+            <!-- Business Insights Card -->
+            <div class="card">
+                <div class="card-title">
+                    <span>Business Insights</span>
+                    <a href="seller-orders.html" class="card-link">ดูเพิ่มเติม ></a>
+                </div>
+                <p style="font-size: 0.75rem; color: #999; margin-top: -15px; margin-bottom: 20px;">ข้อมูลล่าสุดเมื่ออัปเดตอัตโนมัติ (ยอดขายรวมจากทุกการสั่งซื้อ)</p>
+                <div class="insights-grid">
+                    <div class="insight-item">
+                        <span class="stat-label">ยอดขาย</span>
+                        <span class="insight-val" id="insight-sales">฿0</span>
+                        <span class="insight-trend">ทั้งหมดที่ได้รับ</span>
+                    </div>
+                    <div class="insight-item">
+                        <span class="stat-label">สินค้าทั้งหมด</span>
+                        <span class="insight-val" id="insight-products">0</span>
+                    </div>
+                    <div class="insight-item" style="cursor: pointer;" onclick="location.href='seller-customers.html'">
+                        <span class="stat-label">ลูกค้าทั้งหมด</span>
+                        <span class="insight-val" id="insight-customers">0</span>
+                    </div>
+                    <div class="insight-item">
+                        <span class="stat-label">คำสั่งซื้อ</span>
+                        <span class="insight-val" id="insight-total-orders">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick QR Ticket Card -->
+            <div class="card">
+                <div class="card-title">🎫 ตั๋วรับคูปองเร่งด่วน <a href="seller-vouchers.html" class="card-link">จัดการทั้งหมด ></a></div>
+                <div id="quick-qr-list" class="quick-qr-list">
+                    <div style="grid-column: 1/-1; padding: 20px; text-align: center; color: #999;">กำลังโหลดคูปอง...</div>
+                </div>
+            </div>
+
+            <!-- Promotion Management Card -->
+            <div class="card" id="promotion-card">
+                <div class="card-title">
+                    <span>🎁 จัดการโปรโมชั่น (<span id="promo-count">0</span> รายการ)</span>
+                    <button onclick="openPromoEditor(null)" style="background:linear-gradient(135deg,#ee4d2d,#ff7a28); color:#fff; border:none; padding:8px 18px; border-radius:10px; font-size:0.85rem; font-weight:700; cursor:pointer;">
+                        ➕ เพิ่มโปรโมชั่นใหม่
+                    </button>
+                </div>
+                <div id="promo-list-area">
+                    <div style="text-align:center; padding:30px; color:#94a3b8;">กำลังโหลด...</div>
+                </div>
+                <div style="margin-top:14px; padding-top:14px; border-top:1px solid #f1f5f9; font-size:0.8rem; color:#94a3b8;">
+                    🔄 โปรโมชั่นจะสลับกันอัตโนมัติบนหน้า <a href="promotions.html" target="_blank" style="color:#4080ff;">promotions.html</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secure QR Modal -->
+        <div id="qrModalOverlay" class="modal-overlay">
+            <div class="qr-modal">
+                <span class="qr-close" onclick="closeQRModal()">&times;</span>
+                <h3 style="margin-top:0; color:#333;">🎫 Secure QR Ticket</h3>
+                <p style="font-size: 0.85rem; color:#888;">สแกนเพื่อรับคูปอง (มีอายุ 1 ชม. และใช้ได้ครั้งเดียว)</p>
+                <img id="qrImage" class="qr-img" src="" alt="Voucher QR">
+                <div id="qrTimer" style="font-weight:600; color:#ee4d2d; font-size:1.1rem; margin-bottom:10px;">00:60:00</div>
+                <div class="qr-link-box">
+                    <span id="qrLinkText" style="flex-grow:1; text-align:left; overflow:hidden; text-overflow:ellipsis;">https://paomobile.com/redeem?id=...</span>
+                    <button class="btn-copy" onclick="copyQRLink()">คัดลอก</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Promotion Editor Modal -->
+    <div id="promoEditorModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:3500; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+        <div style="background:#fff; width:700px; max-width:95vw; max-height:90vh; border-radius:20px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 25px 60px rgba(0,0,0,0.25);">
+            <!-- Modal Header -->
+            <div style="padding:20px 28px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg,#fff5f2,#fff);">
+                <div>
+                    <h3 id="promoModalTitle" style="margin:0; font-size:1.2rem; color:#0f172a;">🎁 แก้ไขโปรโมชั่น</h3>
+                    <p style="margin:4px 0 0; font-size:0.8rem; color:#94a3b8;">การเปลี่ยนแปลงจะอัปเดตทันทีบนหน้าลูกค้า</p>
+                </div>
+                <button onclick="closePromoEditor()" style="background:#f1f5f9; border:none; width:36px; height:36px; border-radius:50%; font-size:1.3rem; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#64748b;">✕</button>
+            </div>
+
+            <!-- Modal Body -->
+            <div style="overflow-y:auto; padding:28px; display:flex; flex-direction:column; gap:22px;">
+
+                <!-- Image Upload Section -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#374151; display:block; margin-bottom:10px;">📸 รูปโปรโมชั่น</label>
+                    <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;">
+                        <div id="promoImgPreviewModal" onclick="document.getElementById('promoImgInput').click()" style="width:180px; height:120px; border-radius:12px; border:2px dashed #cbd5e1; background:#f8fafc; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; position:relative; flex-shrink:0; transition:border-color 0.2s;">
+                            <img id="promoImgPreviewImg" src="" alt="" style="width:100%; height:100%; object-fit:cover; display:none; border-radius:10px;">
+                            <div id="promoImgUploadPlaceholder" style="display:flex; flex-direction:column; align-items:center; gap:6px; color:#94a3b8;">
+                                <span style="font-size:2rem;">🖼️</span>
+                                <span style="font-size:0.75rem; text-align:center;">คลิกเพื่ออัปโหลดรูป</span>
+                            </div>
+                        </div>
+                        <div style="flex:1; min-width:180px;">
+                            <input type="file" id="promoImgInput" accept="image/*" style="display:none;" onchange="handlePromoImgUpload(event)">
+                            <button onclick="document.getElementById('promoImgInput').click()" style="width:100%; background:#f8fafc; border:1px solid #e2e8f0; padding:10px; border-radius:10px; cursor:pointer; font-size:0.85rem; color:#374151; font-weight:600; margin-bottom:10px;">📂 เลือกไฟล์รูปภาพ</button>
+                            <div style="font-size:0.75rem; color:#94a3b8; line-height:1.6;">
+                                • รองรับ JPG, PNG, GIF, WebP<br>
+                                • แนะนำ: กว้าง 700px ขึ้นไป<br>
+                                • ขนาดสูงสุด: 5MB
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Promo Title -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#374151; display:block; margin-bottom:8px;">✏️ ชื่อโปรโมชั่น (หัวข้อ)</label>
+                    <input type="text" id="promoTitle" placeholder="เช่น ซื้อชิ้นที่ 2 เพียง 1 บาท!" maxlength="100"
+                        style="width:100%; padding:12px 16px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.95rem; outline:none; transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <!-- Promo Sub-description -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#374151; display:block; margin-bottom:8px;">📝 รายละเอียดย่อ (ใต้ชื่อโปรโมชั่น)</label>
+                    <input type="text" id="promoSubDesc" placeholder="เช่น ซื้อ หูฟัง 1 ชุด แถม 1 ชุดในราคาเพียง 1 บาท" maxlength="150"
+                        style="width:100%; padding:12px 16px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.95rem; outline:none; transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <!-- Promo Full Description -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#374151; display:block; margin-bottom:8px;">📄 คำอธิบายสินค้า (แสดงใต้รูป)</label>
+                    <textarea id="promoDesc" rows="3" placeholder="เช่น Anidary High Fidelity Sound Earphone&#10;หูฟังคุณภาพสูง เสียงคมชัด เบสแน่น (Bluetooth 5.3)"
+                        style="width:100%; padding:12px 16px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.95rem; resize:vertical; outline:none; transition:border-color 0.2s; font-family:inherit;"
+                        onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+                </div>
+
+                <!-- Packages Section -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:18px;">
+                    <div style="font-size:0.9rem; font-weight:700; color:#374151; margin-bottom:14px;">📦 แพ็กเกจสินค้า (Package Cards)</div>
+                    <!-- Package 1 -->
+                    <div style="margin-bottom:14px;">
+                        <div style="font-size:0.8rem; font-weight:600; color:#64748b; margin-bottom:8px;">แพ็กเกจ 1 (มาตรฐาน)</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <input type="text" id="pkg1Name" placeholder="ชื่อแพ็กเกจ เช่น 1 ชุด (มาตรฐาน)"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                            <input type="text" id="pkg1Price" placeholder="ราคา เช่น ฿699"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                        </div>
+                    </div>
+                    <!-- Package 2 -->
+                    <div>
+                        <div style="font-size:0.8rem; font-weight:600; color:#64748b; margin-bottom:8px;">แพ็กเกจ 2 (โปรโมชั่น)</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;">
+                            <input type="text" id="pkg2Name" placeholder="ชื่อแพ็กเกจ เช่น 2 ชุด (Combo Set)"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                            <input type="text" id="pkg2Price" placeholder="ราคา เช่น ฿700"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <input type="text" id="pkg2OldPrice" placeholder="ราคาเดิม (ขีดทับ) เช่น ฿1,398"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                            <input type="text" id="pkg2Badge" placeholder="ป้าย เช่น คุ้มที่สุด! ชิ้นที่ 2 เพียง 1 บาท"
+                                style="padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.85rem; outline:none;"
+                                onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Link / CTA -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:#374151; display:block; margin-bottom:8px;">🔗 ลิงก์ปุ่ม "ซื้อเลย" (ถ้าไม่กรอก ใช้ LINE เดิม)</label>
+                    <input type="url" id="promoCTALink" placeholder="https://line.me/R/ti/p/@pao789"
+                        style="width:100%; padding:12px 16px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.95rem; outline:none; transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <!-- Active Toggle -->
+                <div style="display:flex; align-items:center; gap:14px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:14px 18px;">
+                    <div style="flex:1;">
+                        <div style="font-weight:700; color:#166534; font-size:0.9rem;">แสดงโปรโมชั่นบนเว็บไซต์</div>
+                        <div style="font-size:0.78rem; color:#4ade80; margin-top:2px;">เปิด/ปิดการแสดงโปรโมชั่นบนหน้า promotions.html</div>
+                    </div>
+                    <label style="position:relative; display:inline-block; width:50px; height:26px; cursor:pointer;">
+                        <input type="checkbox" id="promoActive" checked style="opacity:0; width:0; height:0;">
+                        <span onclick="document.getElementById('promoActive').click()" style="position:absolute; inset:0; background:#ccc; border-radius:13px; transition:0.3s;" id="promoToggleTrack"></span>
+                        <span id="promoToggleThumb" style="position:absolute; left:3px; top:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:0.3s; box-shadow:0 2px 4px rgba(0,0,0,0.2);"></span>
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="padding:18px 28px; border-top:1px solid #f1f5f9; display:flex; gap:12px; align-items:center; background:#fafafa;">
+                <button id="promoDeleteBtn" onclick="deletePromotion(null)" style="display:none; padding:10px 18px; background:#fff1f0; color:#dc2626; border:1.5px solid #fca5a5; border-radius:10px; font-size:0.85rem; cursor:pointer; font-weight:600; margin-right:auto;">🗑️ ลบโปรโมชั่นนี้</button>
+                <button onclick="closePromoEditor()" style="padding:11px 22px; border:1.5px solid #e2e8f0; background:#fff; border-radius:10px; font-size:0.9rem; cursor:pointer; font-weight:600; color:#64748b;">ยกเลิก</button>
+                <button onclick="savePromotion()" id="promoSaveBtn" style="padding:11px 28px; background:linear-gradient(135deg,#ee4d2d,#ff7a28); color:#fff; border:none; border-radius:10px; font-size:0.9rem; font-weight:700; cursor:pointer;">
+                    💾 บันทึก &amp; อัปเดต
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+        <div style="background: #fff; width: 400px; max-width: 90%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #333;">รายละเอียดการจัดส่ง</h3>
+                <button onclick="closeOrderDetails()" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #888;">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ชื่อลูกค้า</div>
+                    <div id="modalCustomerName" style="font-size: 1rem; color: #222; font-weight: 500;">-</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">เบอร์โทรศัพท์</div>
+                    <div id="modalCustomerPhone" style="font-size: 1rem; color: #222;">-</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ที่อยู่สำหรับจัดส่ง</div>
+                    <div id="modalCustomerAddress" style="font-size: 0.95rem; color: #444; line-height: 1.5;">-</div>
+                </div>
+            </div>
+            <div style="padding: 16px 20px; border-top: 1px solid #eee; text-align: right; background: #fafafa;">
+                <button onclick="closeOrderDetails()" style="background: #ee4d2d; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-family: inherit;">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="firestore-status" style="position: fixed; bottom: 20px; right: 20px; background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px; font-size: 0.8rem; z-index: 1000; border: 1px solid #eee;">
+        &bull; Firestore: กำลังเชื่อมต่อ...
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+
+        // --- NEW: Global Persistence for Dashboard ---
+        try {
+            db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+                if (err.code == 'failed-precondition') console.warn("Persistence failed: multiple tabs.");
+                else if (err.code == 'unimplemented') console.warn("Persistence unsupported.");
+            });
+        } catch(e) {}
+    </script>
+    <script src="seller-presence.js"></script>
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
+        <div class="mobile-sidebar" onclick="event.stopPropagation()">
+            <div class="mobile-sidebar-header">
+                <a href="seller-centre.html" class="logo">
+                    <img src="logo.png" alt="Paomobile">
+                    <span>Seller Centre</span>
+                </a>
+                <div class="mobile-sidebar-close" onclick="toggleSellerMobileMenu(false)">&times;</div>
+            </div>
+            <div class="mobile-sidebar-content">
+                <nav class="sidebar-menu">
+                    <div class="menu-section">
+                        <a href="index.html" class="menu-item-home"><span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า</a>
+                        <a href="seller-centre.html" class="menu-item active"><span class="menu-icon">📊</span> แผงควบคุม</a>
+                        <a href="seller-chat.html" class="menu-item"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
+                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> โค้ดส่วนลด</a>
+                        <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                        <a href="#promotion-card" class="menu-item" onclick="toggleSellerMobileMenu(false); document.getElementById('promotion-card').scrollIntoView({behavior:'smooth'}); return false;"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">คำสั่งซื้อ</p>
+                        <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">สินค้า</p>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSellerMobileMenu(open) {
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (open) overlay.classList.add('active');
+            else overlay.classList.remove('active');
+        }
+    </script>
+    <script src="seller-centre.js?v=1.2.10"></script>
+<div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
+            aria-label="Close Search">&#x2715;</button>
+        <div class="search-modal-container">
+            <div class="search-hero-input"><span class="search-hero-icon">&#x1F50D;</span><input type="text"
+                    id="searchInput" placeholder="ค้นหา เครื่องมือ 1, เครื่องมือ 2, รุ่นมือถือ..."
+                    autocomplete="off"><button class="search-clear-btn" id="searchClear"
+                    aria-label="Clear">&#x2715;</button></div>
+            <div class="search-results-area" id="searchResults"></div>
+        </div>
+    </div>
+    <script src="pao-search.js"></script><script src="premium-alerts.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+

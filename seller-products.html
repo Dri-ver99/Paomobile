@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สินค้าของฉัน — Seller Centre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="seller-centre.css">
+    <style>
+        /* Product Specific Styles */
+        .products-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        .search-box svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+        .btn-add-product {
+            background: #ee4d2d;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-add-product:hover { background: #d73211; }
+
+        .tabs-nav {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid #e8e8e8;
+            margin-bottom: 0px;
+        }
+        .tab-btn {
+            padding: 16px 24px;
+            font-size: 0.95rem;
+            color: #555;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-family: inherit;
+        }
+        .tab-btn:hover { color: #ee4d2d; }
+        .tab-btn.active {
+            color: #ee4d2d;
+            border-bottom-color: #ee4d2d;
+            font-weight: 600;
+        }
+
+        .product-table { width: 100%; border-collapse: collapse; }
+        .product-table th, .product-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .product-table th { color: #888; font-weight: 500; font-size: 0.85rem; }
+        .product-img-cell { width: 70px; text-align: center !important; }
+        .product-img-mini {
+            width: 48px;
+            height: 48px;
+            background: #f5f5f7;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-size: 1.5rem;
+            object-fit: cover;
+        }
+        .product-name-info { display: flex; flex-direction: column; gap: 3px; }
+        .product-name-txt { font-weight: 600; color: #333; font-size: 0.95rem; }
+        .product-sku-txt { font-size: 0.75rem; color: #999; }
+        
+        .price-txt { font-weight: 700; color: #333; }
+        .category-tag {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        .tag-new { background: #e6f7ff; color: #1890ff; }
+        .tag-used { background: #fff7e6; color: #fa8c16; }
+        .tag-accessory { background: #f6ffed; color: #52c41a; }
+        .tag-parts { background: #f0f5ff; color: #2f54eb; }
+
+        .actions-cell { text-align: right !important; }
+        .btn-edit { color: #1890ff; background: none; border: none; cursor: pointer; font-family: inherit; margin-right: 15px; }
+        .btn-delete { color: #ff4d4f; background: none; border: none; cursor: pointer; font-family: inherit; }
+
+        .migration-banner {
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #856404;
+        }
+
+        /* Responsive Fixes */
+        @media (max-width: 768px) {
+            .tabs-nav {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                justify-content: flex-start;
+                scrollbar-width: none; /* Firefox */
+            }
+            .tabs-nav::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+            
+            .tab-btn {
+                flex: 0 0 calc(100% / 4);
+                min-width: 85px;
+                padding: 12px 10px;
+                font-size: 0.85rem;
+                text-align: center;
+                white-space: nowrap;
+            }
+
+            /* Table to Card Transformation */
+            .product-table, .product-table thead, .product-table tbody, .product-table th, .product-table td, .product-table tr {
+                display: block;
+            }
+            .product-table thead { display: none; } /* Hide headers on mobile */
+            
+            .product-table tr {
+                padding: 15px;
+                border-bottom: 8px solid #f5f5f5;
+                position: relative;
+                display: grid;
+                grid-template-columns: 70px 1fr;
+                grid-template-rows: auto auto;
+                gap: 12px;
+                background: #fff;
+            }
+            
+            .product-img-cell {
+                grid-row: 1 / span 2;
+                width: 70px !important;
+                padding: 0 !important;
+                border: none !important;
+            }
+            
+            .product-table td {
+                padding: 0 !important;
+                border: none !important;
+            }
+            
+            .product-name-info { padding-right: 0px; }
+            .product-name-txt { font-size: 1rem; margin-bottom: 4px; }
+            
+            .category-tag {
+                margin: 5px 0 10px 0;
+            }
+            
+            .price-txt {
+                font-size: 1.1rem;
+                color: #ee4d2d;
+                margin-bottom: 10px;
+            }
+            
+            .actions-cell {
+                grid-column: 1 / span 2;
+                text-align: left !important;
+                border-top: 1px solid #f0f0f0 !important;
+                padding-top: 12px !important;
+                display: flex !important;
+                gap: 20px;
+                justify-content: flex-start !important;
+            }
+            .btn-edit, .btn-delete {
+                font-size: 0.9rem;
+                font-weight: 600;
+                padding: 5px 0;
+            }
+
+            .mobile-hide-on-card {
+                display: none !important;
+            }
+            .mobile-card-details {
+                display: block !important;
+                margin-bottom: 8px;
+            }
+            .mobile-card-details .category-tag {
+                margin: 0 0 5px 0;
+            }
+
+            /* Modal Responsive Fixes */
+            #productModal > div {
+                max-height: 95vh !important;
+                display: flex !important;
+                flex-direction: column !important;
+                margin: 10px !important;
+            }
+            #productForm {
+                overflow-y: auto !important;
+                flex: 1 !important;
+                padding: 15px !important;
+            }
+            #productForm > div {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+                margin-bottom: 10px !important;
+            }
+            #partsFields {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        /* Drag & Drop Visuals */
+        .img-drag-item {
+            cursor: move;
+            transition: transform 0.2s, opacity 0.2s;
+            user-select: none;
+        }
+        .img-drag-item.dragging {
+            opacity: 0.4;
+            transform: scale(0.95);
+        }
+        .img-drag-item.drag-over {
+            border-color: #ee4d2d !important;
+            transform: scale(1.05);
+        }
+
+        /* ── Multi-Select & Bulk Edit ─────────────────────── */
+        .product-checkbox-cell {
+            width: 40px;
+            text-align: center !important;
+            vertical-align: middle;
+        }
+        .product-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #ee4d2d;
+            border-radius: 4px;
+        }
+        .product-table tr.selected-row {
+            background: #fff7f5 !important;
+        }
+        .product-table tr.selected-row:hover {
+            background: #ffeeea !important;
+        }
+
+        /* Floating Bulk Action Bar */
+        .bulk-action-bar {
+            position: fixed;
+            bottom: -80px;
+            left: 250px;
+            right: 0;
+            height: 64px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 900;
+            transition: bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bulk-action-bar.visible {
+            bottom: 0;
+        }
+        .bulk-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .bulk-bar-left .select-all-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bulk-bar-left .select-all-wrap input {
+            width: 18px;
+            height: 18px;
+            accent-color: #ee4d2d;
+            cursor: pointer;
+        }
+        .bulk-bar-left .select-all-wrap label {
+            color: #ccc;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .bulk-bar-count {
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bulk-bar-count .count-badge {
+            background: #ee4d2d;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        .bulk-bar-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .bulk-btn {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .bulk-btn-price {
+            background: #faad14;
+            color: #fff;
+        }
+        .bulk-btn-price:hover { background: #d48806; }
+        .bulk-btn-brand {
+            background: #1890ff;
+            color: #fff;
+        }
+        .bulk-btn-brand:hover { background: #096dd9; }
+        .bulk-btn-category {
+            background: #52c41a;
+            color: #fff;
+        }
+        .bulk-btn-category:hover { background: #389e0d; }
+        .bulk-btn-delete {
+            background: rgba(255,77,79,0.15);
+            color: #ff4d4f;
+            border: 1px solid rgba(255,77,79,0.3);
+        }
+        .bulk-btn-delete:hover { background: #ff4d4f; color: #fff; }
+        .bulk-btn-cancel {
+            background: rgba(255,255,255,0.1);
+            color: #aaa;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .bulk-btn-cancel:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+        /* Bulk Edit Modal */
+        .bulk-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .bulk-modal-overlay.active {
+            display: flex;
+        }
+        .bulk-modal {
+            background: #fff;
+            width: 460px;
+            max-width: 95%;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: bulkModalIn 0.3s ease;
+        }
+        @keyframes bulkModalIn {
+            from { transform: scale(0.9) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .bulk-modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fafafa;
+        }
+        .bulk-modal-header h3 {
+            margin: 0;
+            font-size: 1.05rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bulk-modal-header .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #888;
+        }
+        .bulk-modal-body {
+            padding: 24px;
+        }
+        .bulk-modal-body label {
+            display: block;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .bulk-modal-body input,
+        .bulk-modal-body select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .bulk-modal-body input:focus,
+        .bulk-modal-body select:focus {
+            outline: none;
+            border-color: #ee4d2d;
+        }
+        .bulk-modal-info {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: #f6ffed;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        .bulk-modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .bulk-modal-footer button {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .bulk-modal-footer .btn-cancel-modal {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #666;
+        }
+        .bulk-modal-footer .btn-apply {
+            background: #ee4d2d;
+            border: none;
+            color: #fff;
+        }
+        .bulk-modal-footer .btn-apply:hover {
+            background: #d73211;
+        }
+
+        @media (max-width: 768px) {
+            .bulk-action-bar {
+                left: 0;
+                padding: 0 12px;
+                height: auto;
+                min-height: 58px;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 8px 12px;
+            }
+            .bulk-bar-actions {
+                flex-wrap: wrap;
+            }
+            .bulk-btn {
+                font-size: 0.75rem;
+                padding: 6px 10px;
+            }
+            .product-checkbox-cell {
+                width: 30px;
+            }
+            .product-table tr {
+                grid-template-columns: 30px 60px 1fr !important;
+            }
+            .product-img-cell {
+                width: 60px !important;
+            }
+        }
+
+        /* ── Inline Price Edit ────────────────────── */
+        .price-editable {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 6px;
+            border-radius: 6px;
+            transition: all 0.15s;
+            position: relative;
+        }
+        .price-editable:hover {
+            background: #fff7f5;
+        }
+        .price-editable .edit-icon {
+            opacity: 0;
+            color: #ee4d2d;
+            font-size: 0.8rem;
+            transition: opacity 0.15s;
+        }
+        .price-editable:hover .edit-icon {
+            opacity: 1;
+        }
+
+        /* Inline Price Edit Modal */
+        .inline-price-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+        .inline-price-overlay.active {
+            display: flex;
+        }
+        .inline-price-box {
+            background: #fff;
+            width: 420px;
+            max-width: 92%;
+            border-radius: 14px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+            overflow: hidden;
+            animation: inlinePriceIn 0.25s ease;
+        }
+        @keyframes inlinePriceIn {
+            from { transform: scale(0.92) translateY(15px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .inline-price-header {
+            padding: 20px 24px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .inline-price-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #333;
+            font-weight: 700;
+        }
+        .inline-price-header .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: #aaa;
+            line-height: 1;
+        }
+        .inline-price-header .close-btn:hover { color: #333; }
+        .inline-price-body {
+            padding: 14px 24px 20px;
+        }
+        .inline-price-body .product-name-label {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 14px;
+            line-height: 1.4;
+        }
+        .inline-price-body .price-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .inline-price-body .price-input-row label {
+            font-size: 0.9rem;
+            color: #555;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .inline-price-body .price-input-wrap {
+            flex: 1;
+            position: relative;
+        }
+        .inline-price-body .price-input-wrap .baht-symbol {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            color: #999;
+            font-size: 1rem;
+        }
+        .inline-price-body .price-input-wrap input {
+            width: 100%;
+            padding: 12px 14px 12px 32px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #333;
+            transition: border-color 0.2s;
+        }
+        .inline-price-body .price-input-wrap input:focus {
+            outline: none;
+            border-color: #ee4d2d;
+        }
+        .inline-price-footer {
+            padding: 14px 24px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .inline-price-footer button {
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .inline-price-footer .btn-ip-cancel {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #666;
+        }
+        .inline-price-footer .btn-ip-cancel:hover { background: #eee; }
+        .inline-price-footer .btn-ip-save {
+            background: #ee4d2d;
+            border: none;
+            color: #fff;
+        }
+        .inline-price-footer .btn-ip-save:hover { background: #d73211; }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="seller-centre.html" class="sidebar-logo">
+                <img src="logo.png" alt="Paomobile">
+                <span>Seller Centre</span>
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                    <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                </a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">เมนูหลัก</p>
+                <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
+                <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">คำสั่งซื้อ</p>
+                <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">สินค้า</p>
+                <a href="seller-products.html" class="menu-item active"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="javascript:void(0)" onclick="openAddModal()" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="javascript:void(0)" onclick="openCategoryModal()" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Top Navigation -->
+    <header class="top-nav">
+        <div class="nav-left">
+            <button class="hamburger-menu" id="mobileMenuBtn" onclick="toggleSellerMobileMenu(true)">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h2>สินค้าของฉัน</h2>
+        </div>
+        <div class="nav-right" id="firestore-status-ui" style="display: flex; align-items: center; gap: 15px; font-size: 0.8rem;">
+            <div id="statusIndicator" style="width: 10px; height: 10px; border-radius: 50%; background: #ccc;"></div>
+            <div style="text-align: right;">
+                <div id="statusText" style="font-weight: 600; color: #555;">Firestore: กำลังเชื่อมต่อ...</div>
+                <div id="productCountStatus" style="color: #888;">สินค้าทั้งหมด: -</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-wrapper">
+        <div id="migrationBanner" class="migration-banner" style="display: none;">
+            <div>
+                <strong>⚠️ ข้อมูลยังเป็นระบบเก่า</strong> ตรวจพบว่ายังไม่มีสินค้าในระบบฐานข้อมูล Cloud คุณต้องการนำเข้าข้อมูลสินค้าเดิมหรือไม่?
+            </div>
+            <button onclick="runMigration()" style="background: #ee4d2d; color: #fff; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-weight: 600;">นำเข้าสินค้าทันที</button>
+        </div>
+
+        <div class="products-toolbar">
+            <div class="search-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="productSearch" placeholder="ค้นหาชื่อสินค้า, แบรนด์, หมวดหมู่..." oninput="filterProducts()">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-add-product" style="background: #52c41a;" onclick="openCategoryModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-8m0 0V4m0 8h8m-8 0H4"></path></svg>
+                    จัดการหมวดหมู่
+                </button>
+                <button class="btn-add-product" style="background: #fadb14; color: #856404;" onclick="restoreLostProducts()">
+                    <span>🔄</span> กู้คืนสินค้า
+                </button>
+                <button class="btn-add-product" onclick="openAddModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    เพิ่มสินค้าใหม่
+                </button>
+                <button class="btn-delete" style="background: #fff1f0; border: 1px solid #ffa39e; padding: 10px 15px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;" onclick="deleteAllProducts()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    ลบสินค้าทั้งหมด
+                </button>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="tabs-nav" id="categoryTabs">
+                <button class="tab-btn active" data-cat="all">ทั้งหมด</button>
+                <button class="tab-btn" data-cat="new">มือ 1</button>
+                <button class="tab-btn" data-cat="used">มือ 2</button>
+                <button class="tab-btn" data-cat="accessory">Accessory</button>
+                <button class="tab-btn" data-cat="parts">อะไหล่</button>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th class="product-checkbox-cell"><input type="checkbox" class="product-checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" title="เลือกทั้งหมด"></th>
+                            <th class="product-img-cell">รูป</th>
+                            <th>ข้อมูลสินค้า</th>
+                            <th>หมวดหมู่</th>
+                            <th>ราคา</th>
+                            <th class="actions-cell">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="product-list-body">
+                        <!-- Products will be injected here -->
+                        <tr><td colspan="6" style="text-align: center; padding: 40px; color: #999;">กำลังโหลดสินค้า...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Modal -->
+    <div id="productModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto; padding: 20px;">
+        <div style="background: #fff; width: 750px; max-width: 100%; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
+            <div style="padding: 18px 24px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                <h3 id="modalTitle" style="margin: 0; font-size: 1.1rem; color: #333;">เพิ่มสินค้าใหม่</h3>
+                <button onclick="closeModal()" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #888;">&times;</button>
+            </div>
+            <form id="productForm" onsubmit="handleFormSubmit(event)" style="padding: 24px; overflow-y: auto; flex: 1;">
+                <input type="hidden" id="formProductId">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">ชื่อสินค้า</label>
+                        <input type="text" id="formName" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">แบรนด์</label>
+                        <input type="text" id="formBrand" required list="brandsList" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                        <datalist id="brandsList"></datalist>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">ราคา (฿) <span id="priceAutoHint" style="color:#52c41a; font-weight:400; display:none;">(คำนวณจากตัวเลือกอัตโนมัติ)</span></label>
+                        <input type="number" id="formPrice" placeholder="ถ้ามีตัวเลือกจะคำนวณอัตโนมัติ" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">หมวดหมู่</label>
+                        <select id="formCategory" onchange="togglePartsFields()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                            <option value="new">มือ 1</option>
+                            <option value="used">มือ 2</option>
+                            <option value="accessory">Accessory</option>
+                            <option value="parts">อะไหล่มือถือ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px; background: #fffbe6; padding: 12px; border-radius: 8px; border: 1px solid #ffe58f;">
+                    <label style="display: block; font-size: 0.85rem; color: #856404; margin-bottom: 5px; font-weight: 700;">🏬 สถานะสต๊อกสินค้าหลัก</label>
+                    <select id="formStockStatus" style="width: 100%; padding: 10px; border: 1px solid #ffcc00; border-radius: 6px; font-family: inherit; font-weight: 600; color: #333;">
+                        <option value="in_stock">✅ มีสินค้า (In Stock)</option>
+                        <option value="out_of_stock">❌ สินค้าหมด (Sold Out)</option>
+                    </select>
+                    <p style="font-size: 0.75rem; color: #b08900; margin: 4px 0 0 0;">* หากเลือก 'สินค้าหมด' สินค้านี้จะขึ้นป้าย Sold Out และลูกค้าจะกดซื้อไม่ได้ทันที</p>
+                </div>
+
+                <!-- Spare Parts Specific Fields -->
+                <div id="partsFields" style="display: none; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #eee;">
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">รุ่นโทรศัพท์ (หมวดหลัก)</label>
+                        <select id="formPartModel" onchange="updatePartTypeDropdown()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                            <!-- Dynamic models -->
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">ประเภทอะไหล่ (หมวดย่อย)</label>
+                        <select id="formPartType" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                            <!-- Dynamic types -->
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">คำอธิบาย</label>
+                    <textarea id="formDescription" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; resize: none;"></textarea>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">ข้อมูลเพิ่มเติม/สเปก <span style="color:#aaa;font-weight:400;">(ถ้าไม่ใส่จะขึ้น "แตะเพื่อดูรูปภาพเพิ่มเติม") — พิมพ์หลายบรรทัดได้</span></label>
+                    <textarea id="formSpecs" rows="4" placeholder="เช่น แตะเพื่อดูรูปภาพเพิ่มเติม&#10;หน้าจอ 6.1 นิ้ว OLED&#10;แบตเตอรี่ 3279 mAh ..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; resize: vertical; line-height: 1.6;"></textarea>
+                </div>
+
+                <!-- Image Upload Zone -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 8px;">📷 รูปภาพสินค้า <span style="color:#aaa;font-weight:400;">(รูปแรก = หน้าหลัก, กดเพิ่มได้หลายรูป)</span></label>
+                    
+                    <!-- Thumbnail preview row -->
+                    <div id="imgPreviewRow" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"></div>
+
+                    <!-- Upload trigger button -->
+                    <label for="imgFileInput" id="imgUploadBtn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:#f5f5f7;border:2px dashed #ccc;border-radius:8px;cursor:pointer;font-family:inherit;font-size:0.85rem;color:#555;transition:all 0.2s;">
+                        <span style="font-size:1.2rem;">📂</span> เลือกรูปภาพ
+                    </label>
+                    <input type="file" id="imgFileInput" accept="image/*" multiple style="display:none;" onchange="handleImgUpload(event)">
+
+                    <!-- Hidden inputs used by JS to track data -->
+                    <input type="hidden" id="formImg">
+                    <input type="hidden" id="formImagesJSON">
+                </div>
+
+                <!-- Variations System -->
+                <div style="margin-bottom: 25px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0; display: flex; align-items: center; gap: 8px; color: #856404;">
+                            <span style="font-size: 1.2rem;">✨</span> ตัวเลือกสินค้า (Variations)
+                        </h4>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="addVariationRow()" style="background: #52c41a; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+                                + เพิ่มทีละอัน
+                            </button>
+                        </div>
+                    </div>
+
+
+                    
+                    <div id="variationContainer" style="display: flex; flex-direction: column; gap: 15px; padding: 10px 0;">
+                        <!-- Variations will be injected here -->
+                    </div>
+                    
+                    <div id="noVariationHint" style="text-align: center; padding: 15px; color: #999; font-size: 0.85rem; border: 1px dashed #ddd; border-radius: 8px;">
+                        ยังไม่มีตัวเลือกสินค้า (จะใช้ราคาและรูปภาพหลักแทน)
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">อีโมจิ (ถ้าไม่มีรูป)</label>
+                        <input type="text" id="formEmoji" placeholder="📱" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px;">ป้ายกำกับ (เช่น ใหม่, ขายดี)</label>
+                        <input type="text" id="formBadge" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit;">
+                    </div>
+                </div>
+
+                <div style="padding-top: 10px; text-align: right; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="closeModal()" style="background: #f5f5f5; border: 1px solid #ddd; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit;">ยกเลิก</button>
+                    <button type="submit" id="btnSubmitForm" style="background: #ee4d2d; color: #fff; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 600;">บันทึกสินค้า</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Management Modal -->
+    <div id="categoryModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: #fff; width: 600px; max-width: 95%; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column; max-height: 85vh;">
+            <div style="padding: 18px 24px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa; flex-shrink: 0;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #333;">จัดการหมวดหมู่อะไหล่</h3>
+                <button onclick="closeCategoryModal()" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #888;">&times;</button>
+            </div>
+            
+            <div style="padding: 24px; overflow-y: auto; flex: 1;">
+                <!-- Main Models Section -->
+                <div style="margin-bottom: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0; color: #ee4d2d;">📱 รุ่นโทรศัพท์ (หมวดหมู่หลัก)</h4>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="newModelInput" placeholder="เพิ่มรุ่นใหม่..." style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem;">
+                            <button onclick="addConfigItem('models')" style="background: #ee4d2d; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600;">+ เพิ่ม</button>
+                        </div>
+                    </div>
+                    <div id="modelsList" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <!-- Dynamic items -->
+                        <div style="color: #999; font-size: 0.9rem;">กำลังโหลด...</div>
+                    </div>
+                </div>
+
+                <div style="height: 1px; background: #eee; margin-bottom: 30px;"></div>
+
+                <!-- Sub Categories Section -->
+                <div>
+                    <h4 style="margin: 0 0 15px 0; color: #A68A64;">🔧 ประเภทอะไหล่ (หมวดหมู่ย่อย)</h4>
+                    
+                    <div style="background: #fdfaf5; border: 1px solid #f5dab1; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                        <label style="display: block; font-size: 0.8rem; color: #856404; margin-bottom: 8px; font-weight: 600;">1. พิมพ์ชื่อประเภทอะไหล่:</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                            <input type="text" id="newPartTypeInput" placeholder="เช่น หน้าจอ, แบตเตอรี่..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem;">
+                        </div>
+                        
+                        <label style="display: block; font-size: 0.8rem; color: #856404; margin-bottom: 8px; font-weight: 600;">2. เลือกรุ่นที่ต้องการให้แสดง (เลือกได้มากกว่า 1):</label>
+                        <div id="targetModelsCheckboxes" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; max-height: 120px; overflow-y: auto; padding: 5px; border: 1px solid #eee; border-radius: 6px; background: #fff;">
+                            <!-- Checkboxes will be injected here: iPhone, Samsung... -->
+                            <div style="font-size: 0.8rem; color: #999;">กรุณาเพิ่มรุ่นโทรศัพท์ด้านบนก่อน...</div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <button id="partTypeSubmitBtn" onclick="addConfigItem('partTypes')" style="flex: 1; background: #A68A64; color: #fff; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background 0.2s;">+ เพิ่มประเภทอะไหล่พร้อมจับคู่รุ่น</button>
+                            <button id="cancelPartTypeEditBtn" onclick="resetPartTypeMode()" style="display: none; background: #f5f5f5; color: #666; border: 1px solid #ddd; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500;">ยกเลิก</button>
+                        </div>
+                    </div>
+
+                    <label style="display: block; font-size: 0.8rem; color: #666; margin-bottom: 10px; font-weight: 600;">📦 รายการประเภทอะไหล่ที่ตั้งค่าไว้:</label>
+                    <div id="partTypesList" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Dynamic items with association tags -->
+                        <div style="color: #999; font-size: 0.9rem;">กำลังโหลด...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 16px 24px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fcfcfc; flex-shrink: 0;">
+                <button onclick="restoreDefaultSparePartsConfig()" style="background: #fff; border: 1px solid #ddd; color: #666; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">🔄 คืนค่าหมวดหมู่เริ่มแรก</button>
+                <button onclick="closeCategoryModal()" style="background: #ee4d2d; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">เสร็จสิ้น</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Image Viewer Modal (Lightbox) -->
+    <div id="imageViewerModal" class="image-viewer-modal" onclick="closeImageViewer()">
+        <div class="iv-container" onclick="event.stopPropagation()">
+            <button class="iv-close" onclick="closeImageViewer()">&times;</button>
+            <img id="fullSizeImg" src="" class="iv-img" alt="Zoomed view">
+            <div id="ivCaption" class="iv-caption">รูปภาพที่ 1</div>
+        </div>
+    </div>
+
+    <!-- Inline Price Edit Modal -->
+    <div class="inline-price-overlay" id="inlinePriceOverlay" onclick="closeInlinePrice()">
+        <div class="inline-price-box" onclick="event.stopPropagation()">
+            <div class="inline-price-header">
+                <h3>ตั้งราคาสินค้า</h3>
+                <button class="close-btn" onclick="closeInlinePrice()">&times;</button>
+            </div>
+            <div class="inline-price-body">
+                <div class="product-name-label" id="inlinePriceProductName">-</div>
+                <div class="price-input-row">
+                    <label>ราคา</label>
+                    <div class="price-input-wrap">
+                        <span class="baht-symbol">฿</span>
+                        <input type="number" id="inlinePriceValue" min="0" placeholder="0" onkeydown="if(event.key==='Enter'){saveInlinePrice(); event.preventDefault();}">
+                    </div>
+                </div>
+            </div>
+            <div class="inline-price-footer">
+                <button class="btn-ip-cancel" onclick="closeInlinePrice()">ยกเลิก</button>
+                <button class="btn-ip-save" onclick="saveInlinePrice()">อัปเดตราคาสินค้า</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Bulk Action Bar -->
+    <div class="bulk-action-bar" id="bulkActionBar">
+        <div class="bulk-bar-left">
+            <div class="select-all-wrap">
+                <input type="checkbox" id="bulkSelectAll" onchange="toggleSelectAll()">
+                <label for="bulkSelectAll">เลือกทั้งหมด</label>
+            </div>
+            <div class="bulk-bar-count">
+                เลือกแล้ว <span class="count-badge" id="bulkCount">0</span> รายการ
+            </div>
+        </div>
+        <div class="bulk-bar-actions">
+            <button class="bulk-btn bulk-btn-price" onclick="openBulkPriceModal()">💰 แก้ราคา</button>
+            <button class="bulk-btn bulk-btn-brand" onclick="openBulkBrandModal()">🏷️ แก้แบรนด์</button>
+            <button class="bulk-btn bulk-btn-category" onclick="openBulkCategoryModal()">📂 แก้หมวดหมู่</button>
+            <button class="bulk-btn" onclick="openBulkSpecsModal()" style="background:#fff3e0; color:#e65100; border:1px solid #ffcc80;">📝 แก้ข้อมูลเพิ่มเติม</button>
+            <button class="bulk-btn bulk-btn-merge" onclick="mergeSelectedProducts(false)" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff;" title="สินค้าแต่ละรายการจะกลายเป็น 1 ตัวเลือกย่อย">🔗 รวมแยกชุด</button>
+            <button class="bulk-btn bulk-btn-merge" onclick="mergeSelectedProducts(true)" style="background: linear-gradient(135deg, #3494e6 0%, #ec6ead 100%); color: #fff;" title="นำตัวเลือกย่อยจากทุกรายการที่เลือกมารวมกัน">🖇️ รวมต่อตัวเลือก</button>
+            <button class="bulk-btn" onclick="splitSelectedProducts()" style="background: #fff; color: #475569; border: 1px solid #e2e8f0; font-weight: 600;" title="แยกสินค้าที่มีตัวเลือกย่อยออกเป็นรายการเดี่ยว">✂️ แยกรายการ</button>
+            <button class="bulk-btn bulk-btn-delete" onclick="bulkDeleteSelected()">🗑️ ลบที่เลือก</button>
+            <button class="bulk-btn bulk-btn-cancel" onclick="clearSelection()">✕ ยกเลิก</button>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Price Modal -->
+    <div class="bulk-modal-overlay" id="bulkPriceModal">
+        <div class="bulk-modal">
+            <div class="bulk-modal-header">
+                <h3>💰 แก้ราคาสินค้าพร้อมกัน</h3>
+                <button class="close-btn" onclick="closeBulkModal('bulkPriceModal')">&times;</button>
+            </div>
+            <div class="bulk-modal-body">
+                <label>ราคาใหม่ (฿) — จะใช้กับสินค้าที่เลือกทั้งหมด</label>
+                <input type="number" id="bulkPriceInput" placeholder="เช่น 3500" min="0">
+                <div class="bulk-modal-info" id="bulkPriceInfo">✅ จะอัปเดตราคาให้ <strong>0</strong> รายการ</div>
+            </div>
+            <div class="bulk-modal-footer">
+                <button class="btn-cancel-modal" onclick="closeBulkModal('bulkPriceModal')">ยกเลิก</button>
+                <button class="btn-apply" onclick="applyBulkPrice()">✅ บันทึกราคาใหม่</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Brand Modal -->
+    <div class="bulk-modal-overlay" id="bulkBrandModal">
+        <div class="bulk-modal">
+            <div class="bulk-modal-header">
+                <h3>🏷️ แก้แบรนด์สินค้าพร้อมกัน</h3>
+                <button class="close-btn" onclick="closeBulkModal('bulkBrandModal')">&times;</button>
+            </div>
+            <div class="bulk-modal-body">
+                <label>แบรนด์ใหม่ — จะใช้กับสินค้าที่เลือกทั้งหมด</label>
+                <input type="text" id="bulkBrandInput" placeholder="เช่น Samsung, Apple..." list="brandsList">
+                <div class="bulk-modal-info" id="bulkBrandInfo">✅ จะอัปเดตแบรนด์ให้ <strong>0</strong> รายการ</div>
+            </div>
+            <div class="bulk-modal-footer">
+                <button class="btn-cancel-modal" onclick="closeBulkModal('bulkBrandModal')">ยกเลิก</button>
+                <button class="btn-apply" onclick="applyBulkBrand()">✅ บันทึกแบรนด์ใหม่</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Category Modal -->
+    <div class="bulk-modal-overlay" id="bulkCategoryModal">
+        <div class="bulk-modal">
+            <div class="bulk-modal-header">
+                <h3>📂 แก้หมวดหมู่สินค้าพร้อมกัน</h3>
+                <button class="close-btn" onclick="closeBulkModal('bulkCategoryModal')">&times;</button>
+            </div>
+            <div class="bulk-modal-body">
+                <label>เลือกหมวดหมู่ใหม่ (ทีละ 1 หมวด)</label>
+                <select id="bulkCategoryInput" onchange="onBulkCategoryChange()">
+                    <option value="new">📱 มือ 1</option>
+                    <option value="used">♻️ มือ 2</option>
+                    <option value="accessory">🎧 Accessory</option>
+                    <option value="parts">🔧 อะไหล่มือถือ</option>
+                </select>
+
+                <!-- Parts Sub-Options (shown only when "parts" selected) -->
+                <div id="bulkPartsSubOptions" style="display:none; margin-top:16px; background:#f9f7f3; border:1px solid #e8dcc8; border-radius:12px; padding:16px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                        <span style="font-size:1.1rem;">🔧</span>
+                        <span style="font-weight:700; color:#A68A64; font-size:0.9rem;">ตั้งค่าอะไหล่เพิ่มเติม</span>
+                    </div>
+
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:0.8rem; color:#856404; font-weight:600;">รุ่นโทรศัพท์ (หมวดหลัก)</label>
+                        <select id="bulkPartModelInput" onchange="onBulkPartModelChange()" style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-family:inherit; font-size:0.9rem; margin-top:4px;">
+                            <option value="">-- ไม่เปลี่ยนรุ่น --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem; color:#856404; font-weight:600;">ประเภทอะไหล่ (หมวดย่อย)</label>
+                        <select id="bulkPartTypeInput" style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-family:inherit; font-size:0.9rem; margin-top:4px;">
+                            <option value="">-- ไม่เปลี่ยนประเภท --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bulk-modal-info" id="bulkCategoryInfo">✅ จะอัปเดตหมวดหมู่ให้ <strong>0</strong> รายการ</div>
+            </div>
+            <div class="bulk-modal-footer">
+                <button class="btn-cancel-modal" onclick="closeBulkModal('bulkCategoryModal')">ยกเลิก</button>
+                <button class="btn-apply" onclick="applyBulkCategory()">✅ บันทึกหมวดหมู่ใหม่</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Edit Specs Modal -->
+    <div class="bulk-modal-overlay" id="bulkSpecsModal">
+        <div class="bulk-modal" style="width:520px;">
+            <div class="bulk-modal-header">
+                <h3>📝 แก้ข้อมูลเพิ่มเติม/สเปก พร้อมกัน</h3>
+                <button class="close-btn" onclick="closeBulkModal('bulkSpecsModal')">&times;</button>
+            </div>
+            <div class="bulk-modal-body">
+                <label>ข้อมูลเพิ่มเติม/สเปกใหม่ — จะใช้กับสินค้าที่เลือกทั้งหมด</label>
+                <textarea id="bulkSpecsInput" rows="5" placeholder="เช่น แตะเพื่อดูรูปภาพเพิ่มเติม&#10;หน้าจอ 6.1 นิ้ว OLED&#10;แบตเตอรี่ 3279 mAh" style="width:100%; padding:12px 14px; border:2px solid #e0e0e0; border-radius:10px; font-family:inherit; font-size:1rem; resize:vertical; line-height:1.6; transition:border-color 0.2s;" onfocus="this.style.borderColor='#ee4d2d'" onblur="this.style.borderColor='#e0e0e0'"></textarea>
+                <div style="margin-top:8px; font-size:0.78rem; color:#888;">💡 ใส่ข้อความหลายบรรทัดได้ — แต่ละบรรทัดจะแสดงแยกกัน</div>
+                <div class="bulk-modal-info" id="bulkSpecsInfo">✅ จะอัปเดตข้อมูลเพิ่มเติมให้ <strong>0</strong> รายการ</div>
+            </div>
+            <div class="bulk-modal-footer">
+                <button class="btn-cancel-modal" onclick="closeBulkModal('bulkSpecsModal')">ยกเลิก</button>
+                <button class="btn-apply" onclick="applyBulkSpecs()">✅ บันทึกข้อมูลเพิ่มเติม</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+    </script>
+    <script src="seller-presence.js"></script>
+    <script src="seller-config.js?v=1.0.4"></script>
+    <script src="fallback-data.js"></script>
+    <script src="seller-products.js?v=1.0.2"></script>
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
+        <div class="mobile-sidebar" onclick="event.stopPropagation()">
+            <div class="mobile-sidebar-header">
+                <a href="seller-centre.html" class="logo">
+                    <img src="logo.png" alt="Paomobile">
+                    <span>Seller Centre</span>
+                </a>
+                <div class="mobile-sidebar-close" onclick="toggleSellerMobileMenu(false)">&times;</div>
+            </div>
+            <div class="mobile-sidebar-content">
+                <nav class="sidebar-menu">
+                    <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                        <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                            <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                        </a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">เมนูหลัก</p>
+                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                        <a href="seller-chat.html" class="menu-item"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
+                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                        <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">คำสั่งซื้อ</p>
+                        <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-products.html" class="menu-item active"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSellerMobileMenu(open) {
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (open) overlay.classList.add('active');
+            else overlay.classList.remove('active');
+        }
+    </script>
+<div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
+            aria-label="Close Search">&#x2715;</button>
+        <div class="search-modal-container">
+            <div class="search-hero-input"><span class="search-hero-icon">&#x1F50D;</span><input type="text"
+                    id="searchInput" placeholder="ค้นหา เครื่องมือ 1, เครื่องมือ 2, รุ่นมือถือ..."
+                    autocomplete="off"><button class="search-clear-btn" id="searchClear"
+                    aria-label="Clear">&#x2715;</button></div>
+            <div class="search-results-area" id="searchResults"></div>
+        </div>
+    </div>
+    <script src="pao-search.js"></script>
+    <script src="premium-alerts.js"></script>
+    <script src="restore-products.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+

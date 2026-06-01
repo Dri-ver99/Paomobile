@@ -1,0 +1,458 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คำสั่งซื้อของฉัน — Seller Centre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="seller-centre.css">
+    <style>
+        .tabs-nav {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid #e8e8e8;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 16px 24px;
+            font-size: 0.95rem;
+            color: #555;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-family: inherit;
+        }
+        .tab-btn:hover { color: #ee4d2d; }
+        .tab-btn.active {
+            color: #ee4d2d;
+            border-bottom-color: #ee4d2d;
+            font-weight: 500;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { padding: 16px 10px; border-bottom: 1px solid #eee; text-align: left; }
+        th { color: #888; font-weight: 500; }
+        td { color: #333; }
+        
+        .btn-ship {
+            background:#ee4d2d; color:#fff; border:none; padding:6px 12px; border-radius:4px; font-size:0.8rem; cursor:pointer; font-family: inherit; margin-right: 6px;
+        }
+        .btn-ship:hover { background: #d73211; }
+        .btn-detail {
+            background:#fff; color:#4080ff; border:1px solid #4080ff; padding:5px 12px; border-radius:4px; font-size:0.8rem; cursor:pointer; font-family: inherit;
+        }
+        .btn-detail:hover { background: #f0f5ff; }
+
+        .tab-btn { position: relative; padding: 12px 20px; border: none; background: none; cursor: pointer; color: #555; }
+        .tab-btn.active { color: #ee4d2d; border-bottom: 2px solid #ee4d2d; }
+        .tab-badge {
+            position: absolute;
+            top: 2px;
+            right: 0px;
+            background: #ee4d2d;
+            color: white;
+            font-size: 0.7rem;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(238, 77, 45, 0.3);
+            border: 1px solid white;
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            .main-wrapper {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 10px !important;
+                margin-top: 60px !important;
+            }
+            .card {
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                border-left: none !important;
+                border-right: none !important;
+            }
+            .tabs-nav {
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+                background: #fff;
+                padding: 0 5px;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            .tabs-nav::-webkit-scrollbar { display: none; }
+            .tab-btn {
+                flex: 0 0 25% !important;
+                min-width: 25% !important;
+                padding: 12px 5px !important;
+                font-size: 0.8rem !important;
+                text-align: center !important;
+            }
+            .dashboard-header h1 {
+                font-size: 1.25rem !important;
+                padding-left: 10px;
+            }
+            .top-nav h2 { font-size: 1rem !important; }
+            #diag-ui { gap: 10px !important; }
+            #statusText { font-size: 0.7rem !important; }
+            #orderCountStatus { display: none !important; }
+            #diag-ui button { padding: 4px 8px !important; font-size: 0.7rem !important; }
+
+            /* Order List Table to Cards */
+            #full-orders-list table thead { display: none !important; }
+            #full-orders-list table, #full-orders-list tbody, #full-orders-list tr, #full-orders-list td {
+                display: block !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            #full-orders-list tr {
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 12px;
+                margin-bottom: 20px;
+                padding: 15px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            }
+            #full-orders-list td {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 10px 0 !important;
+                border-bottom: 1px dashed #f5f5f5 !important;
+                text-align: right;
+            }
+            #full-orders-list td:first-child { border-top: none; }
+            #full-orders-list td:last-child {
+                border-bottom: none !important;
+                flex-direction: row !important;
+                flex-wrap: wrap;
+                justify-content: flex-end !important;
+                gap: 8px !important;
+                padding-top: 15px !important;
+            }
+            #full-orders-list td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: #555;
+                font-size: 0.8rem;
+                text-align: left;
+                flex-shrink: 0;
+            }
+            .status-tag { margin: 0 !important; }
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="seller-centre.html" class="sidebar-logo">
+                <img src="logo.png" alt="Paomobile">
+                <span>Seller Centre</span>
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                    <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                </a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">เมนูหลัก</p>
+                <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
+                <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">คำสั่งซื้อ</p>
+                <a href="seller-orders.html" class="menu-item active"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">สินค้า</p>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Top Navigation -->
+    <header class="top-nav">
+        <div class="nav-left">
+            <button class="hamburger-menu" id="mobileMenuBtn" onclick="toggleSellerMobileMenu(true)">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h2>คำสั่งซื้อของฉัน</h2>
+        </div>
+        <div class="nav-right" id="diag-ui" style="display: flex; align-items: center; gap: 15px; font-size: 0.8rem;">
+            <div id="statusIndicator" style="width: 10px; height: 10px; border-radius: 50%; background: #ccc;"></div>
+            <div style="text-align: right;">
+                <div id="statusText" style="font-weight: 600; color: #555;">Firestore: กำลังเชื่อมต่อ...</div>
+                <div id="orderCountStatus" style="color: #888;">ออเดอร์ในระบบ: -</div>
+            </div>
+            <button onclick="forceManualSync()" style="background: #f0f0f0; border: 1px solid #ddd; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; color: #555;">🔄 รีเฟรชข้อมูล</button>
+            <div id="lastUpdateStatus" style="color: #bbb; display: none;"></div>
+            <button id="adminLoginBtn" onclick="firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())" style="display: none; background: #ee4d2d; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">ล็อกอิน Admin</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-wrapper">
+        <div class="dashboard-header">
+            <h1 style="font-size: 1.5rem; color: #333;">จัดการคำสั่งซื้อ</h1>
+        </div>
+
+        <!-- Auth Warning Banner -->
+        <div id="auth-cloud-warning" style="display:none; background: #fff7ed; border: 1px solid #ffedd5; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.5rem;">🔒</span>
+                <div>
+                    <div style="font-weight: 700; color: #9a3412;">คุณกำลังใช้โหมดข้ามสิทธิ์ (Local Bypass)</div>
+                    <div style="font-size: 0.85rem; color: #c2410c;">โปรดล็อกอินด้วย Google เพื่อดูออเดอร์ใหม่จาก Cloud คับ</div>
+                </div>
+            </div>
+            <button onclick="sellerLogin()" style="background: #ea580c; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">ล็อกอินเลย 🚀</button>
+        </div>
+
+        <div class="card" style="padding: 0;">
+            <div class="tabs-nav" id="orderTabs">
+                <button class="tab-btn active" data-tab="all">ทั้งหมด</button>
+                <button class="tab-btn" data-tab="unpaid">ที่ต้องชำระ <span class="tab-badge" id="badge-unpaid">0</span></button>
+                <button class="tab-btn" data-tab="toship">ที่ต้องจัดส่ง <span class="tab-badge" id="badge-toship">0</span></button>
+                <button class="tab-btn" data-tab="processed">เตรียมจัดส่งแล้ว <span class="tab-badge" id="badge-processed">0</span></button>
+                <button class="tab-btn" data-tab="completed">สำเร็จแล้ว</button>
+                <button class="tab-btn" data-tab="cancelled">ขอยกเลิก/คืนเงิน/คืนสินค้า</button>
+            </div>
+            
+            <div style="padding: 0 20px 20px 20px;">
+                <div id="full-orders-list">
+                    <!-- Orders will be injected here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: #fff; width: 600px; max-width: 95%; max-height: 90vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden;">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fafafa; flex-shrink: 0;">
+            <h3 id="modalTitle" style="margin: 0; font-size: 1.1rem; color: #333;">รายละเอียดการจัดส่ง</h3>
+                <button onclick="closeOrderDetails()" style="background: transparent; border: none; font-size: 1.3rem; cursor: pointer; color: #888;">&times;</button>
+            </div>
+            <div style="padding: 20px; overflow-y: auto; flex: 1;">
+                <div id="detailInfoSection">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">ชื่อลูกค้า</div>
+                        <div id="modalCustomerName" style="font-size: 1.05rem; color: #111; font-weight: 600;">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">ชื่อเล่น (ในระบบ)</div>
+                        <div id="modalCustomerProfile" style="font-size: 1.05rem; color: #ee4d2d; font-weight: 600; cursor: pointer; text-decoration: underline;">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">เบอร์โทรศัพท์</div>
+                        <div id="modalCustomerPhone" style="font-size: 1.05rem; color: #111; font-weight: 500;">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">รูปแบบการรับสินค้า</div>
+                        <div id="modalShippingMethod" style="font-size: 1.05rem; color: #111; font-weight: 500;">-</div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">ที่อยู่สำหรับจัดส่ง</div>
+                    <div id="modalCustomerAddress" style="font-size: 1.1rem; color: #111; font-weight: 600; line-height: 1.5; background: #fffbe6; padding: 12px; border: 1px dashed #faad14; border-radius: 6px; white-space: pre-wrap;">-</div>
+                </div>
+
+                <!-- Payment, Slip, Voucher, Summary (Hidden in Dispatch mode) -->
+                <div id="paymentAndSummarySection">
+                <!-- Payment Info Section -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 16px; border-top: 1px dashed #eee; padding-top: 14px;">
+                    <div>
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">การชำระเงิน</div>
+                        <div id="modalPaymentFull" style="font-size: 1.05rem; color: #111; font-weight: 600; background: #f9f9f9; padding: 10px; border-radius: 6px; border: 1px solid #f0f0f0;">-</div>
+                    </div>
+                    <div id="slipInfoGroup" style="display: none; text-align: left;">
+                        <div style="font-size: 0.85rem; color: #555; font-weight: 600; margin-bottom: 4px;">หลักฐานการโอน (สลิป)</div>
+                        <a id="modalSlipLink" href="javascript:void(0)" style="display: inline-block; position: relative;">
+                            <img id="modalSlipThumb" src="" style="max-height: 100px; border-radius: 6px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                            <div style="font-size: 0.70rem; color: #fff; background: rgba(0,0,0,0.6); position: absolute; bottom: 0; width: 100%; padding: 4px 0; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; font-weight: 500; text-align: center;">คลิกดูรูปใหญ่</div>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Return Reason Section (NEW) -->
+                <div id="returnReasonGroup" style="margin-bottom: 16px; display: none; background: #fff1f0; padding: 12px; border: 1px solid #ffa39e; border-radius: 8px;">
+                    <div style="font-size: 0.85rem; color: #cf1322; margin-bottom: 4px; font-weight: 600;">⚠️ เหตุผลการคืนสินค้า</div>
+                    <div id="modalReturnReason" style="font-size: 1rem; color: #f5222d; font-weight: 700; line-height: 1.4;">-</div>
+                </div>
+                
+                <!-- Voucher Info Section (v1.5.0) -->
+                <div id="voucherInfoGroup" style="margin-bottom: 16px; display: none; background: #fff7e6; padding: 12px; border: 1px solid #ffd591; border-radius: 8px;">
+                    <div style="font-size: 0.85rem; color: #874d00; margin-bottom: 8px; font-weight: 600;">🎫 คูปองและโค้ดส่วนลดที่ใช้</div>
+                    
+                    <div id="modalVoucherDiscountRow" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-size: 0.95rem; color: #d46b08;">ส่วนลด: <span id="modalVoucherCode" style="font-weight: 700; font-family: monospace;">-</span></span>
+                        <span id="modalDiscountAmount" style="font-size: 1.05rem; color: #cf1322; font-weight: 700;">-฿0</span>
+                    </div>
+
+                    <div id="modalVoucherShipRow" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.95rem; color: #0891b2;">โค้ดส่งฟรี: <span id="modalShipCode" style="font-weight: 700; font-family: monospace;">-</span></span>
+                        <span id="modalShipDiscountAmount" style="font-size: 1.05rem; color: #0891b2; font-weight: 700;">ส่งฟรี (-฿50)</span>
+                    </div>
+                </div>
+
+                <!-- Order Summary Section (v1.6.0) -->
+                <div id="orderSummaryGroup" style="background: #fdfdfd; padding: 14px; border: 1px solid #eee; border-radius: 8px;">
+                    <div style="font-size: 0.85rem; color: #555; margin-bottom: 8px; font-weight: 600; border-bottom: 2px solid #f0f0f0; padding-bottom: 6px;">สรุปยอดรายการ</div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 1rem;">
+                        <span style="color: #666; font-weight: 500;">ราคาที่ยังไม่ใช้ส่วนลด</span>
+                        <span id="modalSubtotal" style="color: #111; font-weight: 600;">฿0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 1rem;">
+                        <span style="color: #666; font-weight: 500;">ค่าจัดส่ง</span>
+                        <span id="modalShippingFee" style="color: #111; font-weight: 600;">+฿0</span>
+                    </div>
+                    <div id="summaryDiscountsContainer">
+                        <!-- Dynamic discount rows will be injected here -->
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 2px dashed #eee;">
+                        <span style="font-weight: 700; color: #111; font-size: 1.1rem;">ยอดรวมสุทธิ</span>
+                        <span id="modalNetTotal" style="font-size: 1.25rem; color: #ee4d2d; font-weight: 800;">฿0</span>
+                    </div>
+                </div>
+
+                </div> <!-- end paymentAndSummarySection -->
+                </div> <!-- end detailInfoSection -->
+
+                <!-- Shipping Input Section -->
+                <div id="shipInputSection" style="display: none; border-top: 1px dashed #eee; padding-top: 15px; margin-top: 10px;">
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">เลขพัสดุ</div>
+                        <input type="text" id="modalTrackingNum" placeholder="กรอกเลขพัสดุที่นี่" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.9rem;">
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 0.8rem; color: #757575; margin-bottom: 4px;">ลิงก์เช็คพัสดุ (ถ้ามี)</div>
+                        <input type="text" id="modalTrackingLink" placeholder="เช่น https://track.thailandpost.co.th/" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 0.9rem;">
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 16px 20px; border-top: 1px solid #eee; text-align: right; background: #fafafa; flex-shrink: 0;">
+                <button id="btnShipConfirm" onclick="handleModalShip()" style="display: none; background: #ee4d2d; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 500;">แจ้งส่งพัสดุ</button>
+                <button id="btnSaveTracking" onclick="handleSaveTrackingEdit()" style="display: none; background: #2f54eb; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 500;">บันทึกการแก้ไข</button>
+                <button onclick="closeOrderDetails()" style="background: #fff; color: #555; border: 1px solid #ddd; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit;">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Slip Lightbox Overlay -->
+    <div id="slipLightbox" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 99999; justify-content: center; align-items: center; cursor: zoom-out; transition: opacity 0.3s ease; opacity: 0;" onclick="closeSlipLightbox()">
+        <div style="position: relative; max-width: 90%; max-height: 90%; background: #fff; padding: 10px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: default;" onclick="event.stopPropagation()">
+            <div style="position: absolute; top: -15px; right: -15px; width: 35px; height: 35px; background: #ee4d2d; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.3); border: 2px solid #fff; z-index: 100;" onclick="closeSlipLightbox()">&times;</div>
+            <img id="lightboxImg" src="" style="display: block; max-width: 100%; max-height: calc(90vh - 40px); border-radius: 8px;">
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+
+        // --- NEW: Global Persistence for Orders ---
+        try {
+            db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+                if (err.code == 'failed-precondition') console.warn("Persistence failed: multiple tabs.");
+                else if (err.code == 'unimplemented') console.warn("Persistence unsupported.");
+            });
+        } catch(e) {}
+    </script>
+    <script src="seller-presence.js"></script>
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
+        <div class="mobile-sidebar" onclick="event.stopPropagation()">
+            <div class="mobile-sidebar-header">
+                <a href="seller-centre.html" class="logo">
+                    <img src="logo.png" alt="Paomobile">
+                    <span>Seller Centre</span>
+                </a>
+                <div class="mobile-sidebar-close" onclick="toggleSellerMobileMenu(false)">&times;</div>
+            </div>
+            <div class="mobile-sidebar-content">
+                <nav class="sidebar-menu">
+                    <div class="menu-section">
+                        <a href="index.html" class="menu-item-home"><span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า</a>
+                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม</a>
+                        <a href="seller-chat.html" class="menu-item"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
+                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> โค้ดส่วนลด</a>
+                        <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                        <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">คำสั่งซื้อ</p>
+                        <a href="seller-orders.html" class="menu-item active"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">สินค้า</p>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSellerMobileMenu(open) {
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (open) overlay.classList.add('active');
+            else overlay.classList.remove('active');
+        }
+    </script>
+    <script src="seller-orders.js?v=1.2.10"></script>
+<div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
+            aria-label="Close Search">&#x2715;</button>
+        <div class="search-modal-container">
+            <div class="search-hero-input"><span class="search-hero-icon">&#x1F50D;</span><input type="text"
+                    id="searchInput" placeholder="ค้นหา เครื่องมือ 1, เครื่องมือ 2, รุ่นมือถือ..."
+                    autocomplete="off"><button class="search-clear-btn" id="searchClear"
+                    aria-label="Clear">&#x2715;</button></div>
+            <div class="search-results-area" id="searchResults"></div>
+        </div>
+    </div>
+    <script src="pao-search.js"></script><script src="premium-alerts.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+

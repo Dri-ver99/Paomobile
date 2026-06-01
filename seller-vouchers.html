@@ -1,0 +1,752 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการโค้ดส่วนลด — Seller Centre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="seller-centre.css">
+    <style>
+        body { font-family: 'Outfit', 'Noto Sans Thai', sans-serif; }
+        
+        .voucher-container {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: #ee4d2d;
+            outline: none;
+        }
+
+        .btn-submit {
+            background: #ee4d2d;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #d73211;
+        }
+
+        /* Voucher Table */
+        .v-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .v-table th {
+            text-align: left;
+            padding: 12px;
+            background: #fafafa;
+            border-bottom: 1px solid #eee;
+            color: #757575;
+            font-weight: 600;
+        }
+
+        .v-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .v-type-tag {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tag-discount { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+        .tag-ship { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #ff4d4f;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-delete:hover { opacity: 0.7; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        @media (max-width: 1024px) {
+            .voucher-container { grid-template-columns: 1fr; }
+        }
+
+        /* Toggle Switch Styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #27ae60;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #27ae60;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* QR Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+
+        .qr-modal {
+            background: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            animation: modalPop 0.3s ease-out;
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .qr-close {
+            position: absolute;
+            top: 15px; right: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .qr-img {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            display: block;
+            border: 8px solid #f9f9f9;
+            border-radius: 12px;
+        }
+
+        .qr-link-box {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 15px;
+            word-break: break-all;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-copy {
+            background: #ee4d2d;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .btn-gen-qr {
+            background: #2D9CDB;
+            color: #fff;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn-gen-qr:hover { background: #1a7bb9; }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            .main-wrapper {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 15px !important;
+                margin-top: 60px !important;
+            }
+            .voucher-container {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+            /* Stack form grids */
+            .card form div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+            /* Stack domain settings */
+            .card div[style*="display: flex; gap: 10px;"] {
+                flex-direction: column !important;
+            }
+            .card div[style*="display: flex; gap: 10px;"] button {
+                padding: 10px !important;
+                width: 100% !important;
+            }
+            .dashboard-header h1 {
+                font-size: 1.25rem !important;
+            }
+            .v-table {
+                font-size: 0.85rem !important;
+                display: block !important;
+                width: 100% !important;
+            }
+            .v-table thead {
+                display: none !important;
+            }
+            .v-table tbody, .v-table tr, .v-table td {
+                display: block !important;
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            .v-table tr {
+                background: #fff;
+                border: 1px solid #eee;
+                border-radius: 12px;
+                margin-bottom: 15px;
+                padding: 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            }
+            .v-table td {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 8px 0 !important;
+                border-bottom: 1px dashed #f5f5f5 !important;
+                text-align: right;
+            }
+            .v-table td:last-child {
+                border-bottom: none !important;
+                padding-top: 12px !important;
+            }
+            .v-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: #666;
+                font-size: 0.75rem;
+                text-align: left;
+                flex-shrink: 0;
+            }
+            .v-table td div {
+                display: inline-block;
+            }
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="seller-centre.html" class="sidebar-logo">
+                <img src="logo.png" alt="Paomobile">
+                <span>Seller Centre</span>
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                    <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                </a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">เมนูหลัก</p>
+                <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
+                <a href="seller-vouchers.html" class="menu-item active"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">คำสั่งซื้อ</p>
+                <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">สินค้า</p>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
+            </div>
+        </nav>
+    </aside>
+
+    <header class="top-nav">
+        <div class="nav-left">
+            <button class="hamburger-menu" id="mobileMenuBtn" onclick="toggleSellerMobileMenu(true)">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h2>จัดการโปรโมชั่นและโค้ดส่วนลด</h2>
+        </div>
+        <div class="nav-right" style="display: flex; align-items: center; gap: 15px;">
+            <div id="admin-status-bar" style="font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                <span id="authIndicator" style="width: 10px; height: 10px; border-radius: 50%; background: #ccc;"></span>
+                <span id="authEmail">กำลังตรวจสอบสิทธิ์...</span>
+            </div>
+            <button id="adminLoginBtn" onclick="sellerLogin()" style="display:none; background: #ee4d2d; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">🔐 ล็อกอิน Admin</button>
+            <button id="adminLogoutBtn" onclick="sellerLogout()" style="display:none; background: none; border: 1px solid #ddd; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">ออกจากระบบ</button>
+        </div>
+    </header>
+
+    <main class="main-wrapper">
+        <div class="dashboard-header">
+            <h1 style="font-size: 1.5rem; color: #333;">บัตรส่วนลดของร้านค้า</h1>
+            <p style="color: #666; font-size: 0.9rem; margin-top: 5px;">สร้างและรักษายอดขายด้วยคูปองส่วนลดที่น่าสนใจ</p>
+        </div>
+
+        <!-- Auth Cloud Warning Banner (New v2026) -->
+        <div id="auth-cloud-warning" style="display:none; background: linear-gradient(135deg, #fff2f0 0%, #fff7e6 100%); border: 1px solid #ffccc7; border-radius: 12px; padding: 15px 20px; margin-bottom: 25px; align-items: center; gap: 15px; box-shadow: 0 4px 12px rgba(255,77,79,0.08);">
+            <div style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">🛡️</div>
+            <div style="flex-grow: 1;">
+                <div style="font-weight: 700; color: #cf1322; font-size: 0.95rem; margin-bottom: 2px;">สิทธิ์การเข้าถึงจำกัด (Cloud Access Limited)</div>
+                <div style="color: #856404; font-size: 0.85rem; line-height: 1.4;">คุณกำลังใช้โหมด **จำสิทธิ์ (Local Bypass)** ข้อมูลจะถูกดึงจากหน่วยความจำเครื่องเท่านั้น<br>กรุณาล็อกอินด้วย Google เพื่อจัดการคูปองบนระบบ Cloud ครับ</div>
+            </div>
+            <button onclick="sellerLogin()" style="background: #ee4d2d; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; white-space: nowrap; transition: all 0.2s;">🔐 ล็อกอินเดี๋ยวนี้</button>
+        </div>
+
+        <div class="voucher-container">
+            <!-- Settings Card -->
+            <div class="card" style="margin-bottom: 20px; border: 1px solid #e0e0e0; background: #fffaf0;">
+                <div class="card-title" style="color: #d35400;">🌐 ตั้งค่าโดเมนเว็บไซต์</div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <p style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">ระบุ URL เว็บไซต์ของคุณเพื่อให้สแกน QR ผ่านมือถือได้ (เช่น <code>https://paomobile-85e39.web.app</code>)</p>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="setting-base-url" placeholder="https://..." style="flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button onclick="saveSettings()" style="background: #27ae60; color: white; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-weight: 600;">บันทึก</button>
+                    </div>
+                </div>
+                
+                <hr style="border: none; border-top: 1px dashed #e0e0e0; margin: 15px 0;">
+            </div>
+
+
+            <!-- Create Voucher Form -->
+            <div class="card">
+                <div class="card-title">✨ สร้างคูปองใหม่</div>
+                <form id="voucherForm">
+                    <div class="form-group">
+                        <label>รหัสโค้ด (Voucher Code)</label>
+                        <input type="text" id="v-code" placeholder="เช่น SALE99 (ภาษาอังกฤษเท่านั้น)" required maxlength="15">
+                    </div>
+                    <div class="form-group">
+                        <label>ชื่อคูปอง</label>
+                        <input type="text" id="v-title" placeholder="เช่น ส่วนลดพิเศษวันแม่" required>
+                    </div>
+                    <div class="form-group">
+                        <label>รายละเอียด</label>
+                        <textarea id="v-desc" rows="2" placeholder="เช่น สั่งซื้อครบ 500 บาท ลดทันที 50 บาท"></textarea>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>ประเภทส่วนลด</label>
+                            <select id="v-type" required>
+                                <option value="discount">หักราคาสินค้า (บาท)</option>
+                                <option value="ship">ส่วนลดค่าจัดส่ง (ส่งฟรี)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>มูลค่า (ส่วนลด)</label>
+                            <input type="number" id="v-value" placeholder="ระบุจำนวนเงิน" required min="0">
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f0f7ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #d0e4ff;">
+                        <p style="font-size: 0.85rem; font-weight: 700; color: #0056b3; margin-bottom: 10px;">📍 การแสดงผลคูปอง</p>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.9rem;">
+                                <input type="checkbox" id="v-showOnHomepage" style="width: 18px; height: 18px; cursor: pointer;">
+                                <span>แสดงแถบคูปองแนะนำหน้าหลัก 🏠</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>เก็บได้กี่ครั้งต่อคน</label>
+                            <input type="number" id="v-redemptionLimit" placeholder="ปกติคือ 1" value="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>ใช้ได้กี่รอบต่อคน</label>
+                            <input type="number" id="v-usageLimit" placeholder="ปกติคือ 1" value="1" min="1">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;" class="v-grid-row">
+                        <div class="form-group">
+                            <label>ยอดซื้อขั้นต่ำ (฿)</label>
+                            <input type="number" id="v-minPurchase" placeholder="0 ถ้าไม่มีขั้นต่ำ" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <div class="expiry-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="margin:0; font-size: 0.9rem; font-weight: 500; color: #555;">วันหมดอายุ</label>
+                                <label class="permanent-toggle" style="font-size: 0.8rem; color: #ee4d2d; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; background: #fff5f2; padding: 2px 8px; border-radius: 4px; border: 1px solid #ffccc7;">
+                                    <input type="checkbox" id="v-isPermanent" onchange="toggleExpiry(this.checked)" style="width:15px; height:15px; margin:0;"> 
+                                    <span>ไม่มีหมดอายุ ♾️</span>
+                                </label>
+                            </div>
+                            <input type="date" id="v-expiry" required>
+                            <script>
+                                function toggleExpiry(isPermanent) {
+                                    const expiryInput = document.getElementById('v-expiry');
+                                    if (isPermanent) {
+                                        expiryInput.disabled = true;
+                                        expiryInput.value = '';
+                                        expiryInput.required = false;
+                                        expiryInput.style.opacity = '0.3';
+                                        expiryInput.style.pointerEvents = 'none';
+                                    } else {
+                                        expiryInput.disabled = false;
+                                        expiryInput.required = true;
+                                        expiryInput.style.opacity = '1';
+                                        expiryInput.style.pointerEvents = 'auto';
+                                    }
+                                }
+                            </script>
+                        </div>
+                    </div>
+
+                    <style>
+                        @media (max-width: 480px) {
+                            .expiry-header {
+                                flex-direction: column !important;
+                                align-items: flex-start !important;
+                                gap: 8px !important;
+                            }
+                            .permanent-toggle {
+                                width: 100%;
+                                justify-content: center;
+                                padding: 8px !important;
+                                box-sizing: border-box;
+                            }
+                        }
+                    </style>
+                    <button type="submit" class="btn-submit" id="btnSaveVoucher">💾 บันทึกและเปิดใช้งาน</button>
+                </form>
+            </div>
+
+            </div>
+        </div>
+
+        <!-- Voucher List (Full Width) -->
+        <div class="card" style="margin-top: 25px;">
+            <div class="card-title">📜 รายการคูปองทั้งหมด</div>
+            <div style="overflow-x: auto;">
+                <table class="v-table">
+                    <thead>
+                        <tr>
+                            <th>รหัส / ชื่อ</th>
+                            <th>ประเภท</th>
+                            <th>ส่วนลด</th>
+                            <th style="text-align: center;">หน้าแรก</th>
+                            <th>ขั้นต่ำ</th>
+                            <th>หมดอายุ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="voucherListBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 30px; color: #666;">
+                                <div style="display: inline-block; width: 24px; height: 24px; border: 3px solid #f3f3f3; border-top: 3px solid #ee4d2d; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                <div style="margin-top: 10px; font-weight: 500;">กำลังโหลดข้อมูลคูปอง...</div>
+                                <style>
+                                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                                </style>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div id="v-empty" class="empty-state" style="display: none;">ยังไม่มีการสร้างคูปอง</div>
+            </div>
+        </div>
+
+        <!-- Edit Voucher Modal -->
+        <div id="vEditModal" class="modal-overlay">
+            <div class="qr-modal" style="max-width: 450px; text-align: left;">
+                <span class="qr-close" onclick="closeEditModal()">&times;</span>
+                <h3 style="margin-top:0; color:#333; margin-bottom: 20px;">⚙️ ตั้งค่าการแสดงผลคูปอง</h3>
+                
+                <div id="vEditLoader" style="text-align: center; padding: 20px; display: none;">🕒 กำลังโหลด...</div>
+                
+                <div id="vEditContent">
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
+                        <div id="editVHeader" style="font-weight: 700; color: #1e293b; font-size: 1.1rem;">-</div>
+                        <div id="editVSub" style="color: #64748b; font-size: 0.85rem;">-</div>
+                    </div>
+
+                    <div class="edit-toggle-row">
+                        <div class="toggle-info">
+                            <strong>แสดงแถบคูปองแนะนำหน้าหลัก</strong>
+                            <small>แสดงคูปองนี้ใน Strip ด้านบนของหน้าหลัก</small>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="edit-showHome" onchange="updateVField('showOnHomepage', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Detailed Settings (New Section) -->
+                    <div id="vEditDetails" style="display: none; margin-top: 15px; border-top: 1px dashed #eee; padding-top: 15px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size: 0.8rem;">มูลค่าส่วนลด (฿)</label>
+                                <input type="number" id="edit-value" onchange="updateVField('value', parseInt(this.value))" style="padding: 8px; font-size: 0.9rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size: 0.8rem;">ขั้นต่ำที่ซื้อ (฿)</label>
+                                <input type="number" id="edit-minPurchase" onchange="updateVField('minPurchase', parseInt(this.value))" style="padding: 8px; font-size: 0.9rem;">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size: 0.8rem;">วันหมดอายุ</label>
+                                <input type="date" id="edit-expiry" onchange="updateVField('expiry', this.value)" style="padding: 8px; font-size: 0.9rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size: 0.8rem;">จำกัดครั้ง/คน</label>
+                                <input type="number" id="edit-usageLimit" onchange="updateVField('usageLimit', parseInt(this.value))" style="padding: 8px; font-size: 0.9rem;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr style="border:none; border-top: 1px solid #eee; margin: 15px 0;">
+                    
+                    <button id="btnShowDetails" class="btn-submit" onclick="toggleEditDetails()" style="background: #fff; color: #ee4d2d; border: 1px solid #ee4d2d; margin-bottom: 8px; font-size: 0.85rem;">🛠️ แก้ไขข้อมูลเชิงลึก (ราคา/วันหมดอายุ)</button>
+                    <button class="btn-submit" onclick="closeEditModal()" style="background: #333;">เสร็จสิ้น</button>
+                    <button class="btn-submit" onclick="goToFullEdit()" style="background: #f9f9f9; color: #999; border: 1px solid #ddd; margin-top: 8px; font-size: 0.8rem;">แก้ไขข้อมูลทั้งหมด ✨</button>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .edit-toggle-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: #fff;
+                padding: 12px;
+                border-radius: 10px;
+                border: 1px solid #eee;
+            }
+            .toggle-info strong { display: block; font-size: 0.9rem; margin-bottom: 2px; }
+            .toggle-info small { color: #888; font-size: 0.75rem; }
+        </style>
+
+        <!-- Secure QR Modal -->
+        <div id="qrModalOverlay" class="modal-overlay">
+            <div class="qr-modal">
+                <span class="qr-close" onclick="closeQRModal()">&times;</span>
+                <h3 style="margin-top:0; color:#333;">🎫 Secure QR Ticket</h3>
+                
+                <!-- Duration Config (Shown first) -->
+                <div id="qrConfigArea">
+                    <p style="font-size: 0.9rem; color:#666; margin-bottom: 20px;">เลือกกําหนดระยะเวลาสําหรับ QR Code นี้ครับ</p>
+                    <div class="form-group" style="text-align: left;">
+                        <label>ระยะเวลาที่ใช้งานได้</label>
+                        <select id="qrSelDuration" style="margin-bottom: 15px;">
+                            <option value="5">5 นาที</option>
+                            <option value="10">10 นาที</option>
+                            <option value="15">15 นาที</option>
+                            <option value="30">30 นาที</option>
+                            <option value="60" selected>1 ชั่วโมง (แนะนํา)</option>
+                            <option value="720">12 ชั่วโมง</option>
+                            <option value="1440">24 ชั่วโมง</option>
+                            <option value="permanent">ถาวร (จนกว่าคูปองจะหมดอายุ)</option>
+                        </select>
+                    </div>
+                    <button id="btnFinalGen" class="btn-submit" onclick="generateSecureQR()">สร้าง QR Code ทันที ✨</button>
+                </div>
+
+                <!-- QR Result (Hidden initially) -->
+                <div id="qrResultArea" style="display: none;">
+                    <p style="font-size: 0.85rem; color:#888;">สแกนเพื่อรับคูปอง (ใช้ได้เฉพาะลิงก์ด้านล่าง)</p>
+                    <img id="qrImage" class="qr-img" src="" alt="Voucher QR">
+                    <div id="qrTimer" style="font-weight:600; color:#ee4d2d; font-size:1.1rem; margin-bottom:10px;">01:00:00</div>
+                    <div class="qr-link-box">
+                        <span id="qrLinkText" style="flex-grow:1; text-align:left; overflow:hidden; text-overflow:ellipsis;">https://...</span>
+                        <button class="btn-copy" onclick="copyQRLink()">คัดลอก</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="firestore-status" style="position: fixed; bottom: 20px; right: 20px; background: white; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 8px; font-size: 0.8rem; z-index: 1000; border: 1px solid #eee;">
+        &bull; Firestore: กำลังเชื่อมต่อ...
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
+        <div class="mobile-sidebar" onclick="event.stopPropagation()">
+            <div class="mobile-sidebar-header">
+                <a href="seller-centre.html" class="logo">
+                    <img src="logo.png" alt="Paomobile">
+                    <span>Seller Centre</span>
+                </a>
+                <div class="mobile-sidebar-close" onclick="toggleSellerMobileMenu(false)">&times;</div>
+            </div>
+            <div class="mobile-sidebar-content">
+                <nav class="sidebar-menu">
+                    <div class="menu-section">
+                        <a href="index.html" class="menu-item-home"><span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า</a>
+                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม</a>
+                        <a href="seller-chat.html" class="menu-item"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
+                        <a href="seller-vouchers.html" class="menu-item active"><span class="menu-icon">🎫</span> โค้ดส่วนลด</a>
+                        <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                        <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">คำสั่งซื้อ</p>
+                        <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">สินค้า</p>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSellerMobileMenu(open) {
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (open) overlay.classList.add('active');
+            else overlay.classList.remove('active');
+        }
+    </script>
+    <!-- Firebase SDKs -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+        
+        // Enable offline persistence for faster loading
+        db.enablePersistence({ synchronizeTabs: true })
+            .catch(function(err) {
+                console.warn("Firestore Persistence error:", err.code);
+            });
+    </script>
+    <script src="seller-presence.js"></script>
+    <script src="seller-vouchers.js"></script>
+<div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
+            aria-label="Close Search">&#x2715;</button>
+        <div class="search-modal-container">
+            <div class="search-hero-input"><span class="search-hero-icon">&#x1F50D;</span><input type="text"
+                    id="searchInput" placeholder="ค้นหา เครื่องมือ 1, เครื่องมือ 2, รุ่นมือถือ..."
+                    autocomplete="off"><button class="search-clear-btn" id="searchClear"
+                    aria-label="Clear">&#x2715;</button></div>
+            <div class="search-results-area" id="searchResults"></div>
+        </div>
+    </div>
+    <script src="pao-search.js"></script><script src="premium-alerts.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+

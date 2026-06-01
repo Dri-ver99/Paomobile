@@ -1,0 +1,113 @@
+﻿-- 1. สร้างตารางใหม่ที่ยังไม่มีในระบบ (status และ vouchers_redemptions)
+CREATE TABLE IF NOT EXISTS status (
+    id TEXT PRIMARY KEY,
+    "lastSeen" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    "isOnline" BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    "email" TEXT
+);
+
+CREATE TABLE IF NOT EXISTS vouchers_redemptions (
+    id TEXT PRIMARY KEY,
+    code TEXT,
+    email TEXT,
+    at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    "fromQR" BOOLEAN
+);
+
+-- 2. เพิ่มคอลัมน์ให้กับตารางเดิมเพื่อให้รองรับข้อมูลครบถ้วน
+
+-- ตารางออเดอร์ (orders)
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "orderDate" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "orderPage" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "method" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "paymentMethod" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "paymentBank" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "appliedShipCode" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "appliedDiscountCode" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "discountAmount" NUMERIC DEFAULT 0;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "orderSource" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "customer" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "customerEmail" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "customerProfileName" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "shippingMethod" TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP WITH TIME ZONE;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS "appliedVoucherCode" TEXT;
+
+-- ตารางคูปอง (vouchers)
+ALTER TABLE vouchers ADD COLUMN IF NOT EXISTS title TEXT;
+ALTER TABLE vouchers ADD COLUMN IF NOT EXISTS "desc" TEXT;
+ALTER TABLE vouchers ADD COLUMN IF NOT EXISTS type TEXT;
+ALTER TABLE vouchers ADD COLUMN IF NOT EXISTS value NUMERIC DEFAULT 0;
+ALTER TABLE vouchers ADD COLUMN IF NOT EXISTS "redemptionLimit" INTEGER DEFAULT 1;
+ALTER TABLE vouchers ADD COLUMN IF NOT EXISTS "usageLimit" INTEGER DEFAULT 1;
+ALTER TABLE vouchers ADD COLUMN IF NOT EXISTS "minPurchase" NUMERIC DEFAULT 0;
+ALTER TABLE vouchers ADD COLUMN IF NOT EXISTS "isPermanent" BOOLEAN DEFAULT false;
+ALTER TABLE vouchers ADD COLUMN IF NOT EXISTS "showOnHomepage" BOOLEAN DEFAULT false;
+ALTER TABLE vouchers ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP WITH TIME ZONE;
+ALTER TABLE vouchers ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP WITH TIME ZONE;
+
+-- ตารางคิวอาร์คูปอง (voucher_qrs)
+ALTER TABLE voucher_qrs ADD COLUMN IF NOT EXISTS "voucherCode" TEXT;
+ALTER TABLE voucher_qrs ADD COLUMN IF NOT EXISTS "expiresAt" TIMESTAMP WITH TIME ZONE;
+ALTER TABLE voucher_qrs ADD COLUMN IF NOT EXISTS "usedBy" TEXT;
+ALTER TABLE voucher_qrs ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP WITH TIME ZONE;
+ALTER TABLE voucher_qrs ADD COLUMN IF NOT EXISTS "redeemedAt" TIMESTAMP WITH TIME ZONE;
+
+-- ตารางห้องแชท (chats)
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS "userName" TEXT;
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS "userAvatar" TEXT;
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS "lastMessage" TEXT;
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS "lastTimestamp" TIMESTAMP WITH TIME ZONE;
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS "lastMessageTime" TIMESTAMP WITH TIME ZONE;
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS "unreadCount" INTEGER DEFAULT 0;
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS "presence" JSONB;
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS "lastSeen" TIMESTAMP WITH TIME ZONE;
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS "userEmail" TEXT;
+
+-- ตารางข้อความแชท (chat_messages)
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS "timestamp" TIMESTAMP WITH TIME ZONE;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS "type" TEXT DEFAULT 'text';
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS "fileUrl" TEXT;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS "fileName" TEXT;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS "sender" TEXT;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS "cardData" JSONB;
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS "chatId" TEXT;
+
+-- ตารางสินค้า (products)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS "description" TEXT;
+
+-- ตารางสมาชิกผู้ใช้งาน (users)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP WITH TIME ZONE;
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS "role" TEXT DEFAULT 'user';
+
+-- 3. ปิดการใช้งาน RLS สำหรับตารางใหม่เพื่อให้โค้ดหน้าเว็บเชื่อมต่อได้สะดวก
+ALTER TABLE status DISABLE ROW LEVEL SECURITY;
+ALTER TABLE vouchers_redemptions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE products DISABLE ROW LEVEL SECURITY;
+ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
+ALTER TABLE vouchers DISABLE ROW LEVEL SECURITY;
+ALTER TABLE voucher_qrs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE chats DISABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_messages DISABLE ROW LEVEL SECURITY;
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+
+-- ���ҧ�С����Թ��� (carts)
+CREATE TABLE IF NOT EXISTS carts (
+    id TEXT PRIMARY KEY,
+    cart JSONB,
+    "cartUpdatedAt" TEXT
+);
+ALTER TABLE carts DISABLE ROW LEVEL SECURITY;
+
+
+-- ตารางสำหรับการตั้งค่าต่างๆ (เช่น หมวดหมู่อะไหล่)
+CREATE TABLE IF NOT EXISTS settings (
+    id TEXT PRIMARY KEY,
+    models JSONB,
+    "partTypes" JSONB,
+    mappings JSONB
+);
+ALTER TABLE settings DISABLE ROW LEVEL SECURITY;
