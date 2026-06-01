@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -209,6 +209,13 @@
                 // Success! Update local storage so the user is treated as logged in and verified.
                 if (data && data.session && data.session.user) {
                     const user = data.session.user;
+                    
+                    window.supabase.from('users').upsert({
+                        uid: user.id,
+                        id: user.id,
+                        isVerified: true
+                    }).then(() => console.log("Supabase updated to verified"));
+
                     const isGoogle = (user.app_metadata?.providers || []).includes('google');
                     
                     const finalUser = {
