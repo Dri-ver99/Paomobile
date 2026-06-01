@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -1271,8 +1271,17 @@
                 } catch (err) { console.error("[Strip] Error:", err); }
             }
             // Listen in real-time — no showOnHomepage filter, all active vouchers shown
-            db.collection('vouchers').onSnapshot(renderVoucherStrip, err => {
-                console.error("[Strip] Snapshot error:", err);
+            // Login anonymously to bypass Firebase Security Rules for unregistered users
+            firebase.auth().signInAnonymously().then(() => {
+                db.collection('vouchers').onSnapshot(renderVoucherStrip, err => {
+                    console.error("[Strip] Snapshot error:", err);
+                });
+            }).catch(err => {
+                console.error("[Auth] Anon login failed:", err);
+                // Fallback attempt anyway
+                db.collection('vouchers').onSnapshot(renderVoucherStrip, err => {
+                    console.error("[Strip] Snapshot fallback error:", err);
+                });
             });
         })();
     </script>
