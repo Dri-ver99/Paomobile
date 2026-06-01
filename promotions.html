@@ -537,12 +537,36 @@ target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</
                     return;
                 }
                 if (data && data.length > 0) {
-                    const promos = data
-                        .filter(p => p.active !== false)
-                        .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-                    if (promos.length > 0) renderSlider(promos);
+                    const promos = data.map(row => {
+                        try {
+                            const parsed = JSON.parse(row.description || '{}');
+                            return { ...parsed, id: row.id, title: row.title, imageBase64: row.img || parsed.imageBase64 };
+                        } catch {
+                            return { id: row.id, title: row.title, desc: row.description, imageBase64: row.img, active: true };
+                        }
+                    })
+                    .filter(p => p.active !== false && (p.title || p.imageBase64))
+                    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+                    
+                    if (promos.length > 0) {
+                        localStorage.setItem('pao_cache_promotions', JSON.stringify(promos));
+                        renderSlider(promos);
+                    } else {
+                        renderSlider(defaultPromo);
+                    }
+                } else {
+                    renderSlider(defaultPromo);
                 }
             };
+            
+            // ZeroFlash: Load from cache instantly
+            const cached = localStorage.getItem('pao_cache_promotions');
+            if (cached) {
+                try {
+                    const cachedPromos = JSON.parse(cached);
+                    if (cachedPromos && cachedPromos.length > 0) renderSlider(cachedPromos);
+                } catch(e) { console.warn('[Promo] Cache parse error', e); }
+            }
             
             fetchPromotions();
             

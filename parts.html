@@ -528,8 +528,18 @@
             // ── Step 2: onSnapshot ── ทุก update ทั้ง local และ server ──
             window.db.collection('settings').doc('spare_parts').onSnapshot(doc => {
                 if (!doc.exists) return;
-                const d = doc.data();
-                render(d.models, d.mappings, d.partTypes);  // ส่ง partTypes เพื่อจัดเรียงตาม Seller
+                const row = doc.data();
+                const d = row.value || row;
+                
+                let models = d.models;
+                let mappings = d.mappings;
+                let partTypes = d.partTypes;
+                
+                try { if (typeof models === 'string') models = JSON.parse(models); } catch(e){}
+                try { if (typeof mappings === 'string') mappings = JSON.parse(mappings); } catch(e){}
+                try { if (typeof partTypes === 'string') partTypes = JSON.parse(partTypes); } catch(e){}
+
+                render(models || [], mappings || {}, partTypes || []);
             }, err => console.warn('[sidebar]', err));
 
             // ── Step 3: Removed REST API fetch — we rely purely on Supabase onSnapshot
