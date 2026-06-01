@@ -343,9 +343,9 @@ function startSync() {
     }
     filterProducts();
 
-    // INSTANT LOCAL PREVIEW FIX for Seller
-    if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
-        console.log("[Seller Sync] INSTANT LOCAL PREVIEW.");
+    // INSTANT FALLBACK PREVIEW for Seller
+    if (typeof window !== 'undefined') {
+        console.log("[Seller Sync] INSTANT FALLBACK PREVIEW.");
         if (statusDot) statusDot.style.background = '#52c41a';
         if (statusTxt) statusTxt.textContent = "เชื่อมต่อสำเร็จ (Local Preview) ✅";
         
@@ -398,16 +398,10 @@ function restartFirestoreListener() {
     if (statusText) statusText.textContent = "กำลังซิงค์ Cloud...";
     if (statusDot) statusDot.style.background = '#ffc107'; // yellow/loading
 
-    let query = db.collection('products');
-    
-    // Seller Centre loads ALL products once for instant tab switching
-    // No server-side category filter here.
-    
-    // Add a limit for safety (same as customer side)
-    query = query.limit(2000); 
+    let query = db.collection('products').limit(2000);
     
     productUnsubscribe = query.onSnapshot(snapshot => {
-        console.log(`[Seller Sync] Success: Received ${snapshot.size} items from Cloud for ${currentCategory}`);
+        console.log(`[Seller Sync] Success: Received ${snapshot.size} items from Cloud`);
         
         const firestoreProducts = snapshot.docs.map(doc => {
             const data = doc.data();
@@ -441,11 +435,21 @@ function restartFirestoreListener() {
         
         // 1. First, populate with all non-deleted baseline items
         MOCK_PRODUCTS_BASELINE.forEach(p => {
-             const isOriginalPart = p.id.endsWith('-orig');
+             const isOriginalPart = p.id && p.id.endsWith('-orig');
              if (isOriginalPart || !deletedMockIds.includes(p.id)) {
                  mergedMap.set(p.id, p);
              }
         });
+
+        // 1.5. Merge Fallback Live Data (800+ products)
+        if (window.FALLBACK_LIVE_DATA) {
+            const fallbackData = Array.isArray(window.FALLBACK_LIVE_DATA) ? window.FALLBACK_LIVE_DATA : (window.FALLBACK_LIVE_DATA.value || []);
+            fallbackData.forEach(p => {
+                if (!deletedMockIds.includes(p.id)) {
+                    mergedMap.set(p.id, p);
+                }
+            });
+        }
         
         // 2. Overwrite or add with Cloud data
         firestoreProducts.forEach(p => mergedMap.set(p.id, p));
