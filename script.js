@@ -832,7 +832,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
                                     <div class="chat-card-title" style="font-weight:600; color:#1e293b;">${msg.cardData.title}</div>
                                     <div class="chat-card-price" style="color:#ee4d2d; font-weight:700;">${msg.cardData.price}</div>
                                 </div>
-                                <div class="chat-card-btn" style="display:block; text-align:center; padding:8px; background:#f8fafc; color:#64748b; text-decoration:none; font-size:0.85rem; border-top:1px solid #f1f5f9;">ดูรายละเอียด</div>
+                                <div class="chat-card-btn" style="display:block; text-align:center; padding:8px; background:#f8fafc; color:#64748b; text-decoration:none; font-size:0.85rem; border-top:1px solid #f1f5f9;">ดูสินค้า</div>
                             </div>
                             ${timeHtml}
                         </div>
@@ -1180,9 +1180,57 @@ badge.textContent = '⚫ ปิดให้บริการ';
         syncSellerStatus();
         startCustomerHeartbeat();
     }, 500);
-    window.handleChatCardClick = (productId, category, link) => {
-        // ALWAYS navigate to ensure we follow the "Go to Page" requirement.
-        // ProductSync in the destination page will handle auto-opening the modal.
+    window.handleChatCardClick = async (productId, category, link) => {
+        if (window.ProductDetail) {
+            let found = null;
+            if (window.ProductSync && window.ProductSync.allProducts) {
+                found = window.ProductSync.allProducts.find(p => p.id === productId);
+            }
+            if (!found) {
+                const cacheKeys = ['pao_cache_parts', 'pao_cache_accessory', 'pao_cache_new', 'pao_cache_used'];
+                for (const key of cacheKeys) {
+                    try {
+                        const cache = localStorage.getItem(key);
+                        if (cache) {
+                            const items = JSON.parse(cache);
+                            found = items.find(i => i.id === productId);
+                            if (found) break;
+                        }
+                    } catch(e) {}
+                }
+            }
+            
+            if (found) {
+                if (typeof found.variations === 'string') {
+                    try { found.variations = JSON.parse(found.variations); } catch(e) {}
+                }
+                if (typeof found.images === 'string') {
+                    try { found.images = JSON.parse(found.images); } catch(e) {}
+                }
+                window.ProductDetail.open(found);
+                return;
+            }
+            
+            if (window.db) {
+                try {
+                    const doc = await window.db.collection('products').doc(productId).get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        if (typeof data.variations === 'string') {
+                            try { data.variations = JSON.parse(data.variations); } catch(e) {}
+                        }
+                        if (typeof data.images === 'string') {
+                            try { data.images = JSON.parse(data.images); } catch(e) {}
+                        }
+                        window.ProductDetail.open({ id: doc.id, ...data });
+                        return;
+                    }
+                } catch(e) {
+                    console.error("Error fetching product for chat click", e);
+                }
+            }
+        }
+        
         window.location.href = link;
     };
 })();

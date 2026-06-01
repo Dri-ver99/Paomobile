@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -287,101 +287,67 @@
             const body = document.getElementById('customer-list-body');
             const totalCount = document.getElementById('total-count');
 
-            // Initial check for local bypass
-            const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
+            if (!window.supabase) {
+                statusDot.style.background = '#ef4444';
+                statusText.textContent = 'Supabase ไม่พร้อมทำงาน';
+                return;
+            }
 
-            firebase.auth().onAuthStateChanged(user => {
-                // Clear previous listener if exists
-                if (customersUnsubscribe) {
-                    customersUnsubscribe();
-                    customersUnsubscribe = null;
-                }
+            statusDot.style.background = '#22c55e';
+            statusText.textContent = 'Admin Connected (Supabase)';
 
-                if (user || localAdminActive) {
-                    const email = user ? (user.email || "Admin") : (SELLER_EMAIL + " (จำสิทธิ์ 🔒)");
-                    statusDot.style.background = '#22c55e';
-                    statusText.textContent = 'Admin Connected: ' + email;
-                    
-                    // Real-time listener (onSnapshot is faster and handles caching)
-                    customersUnsubscribe = db.collection('users').onSnapshot(snapshot => {
-                        // If we get an empty snapshot but have cache, don't clear UI immediately 
-                        // unless it's confirmed empty from server
-                        if (snapshot.empty && allCustomers.length > 0 && snapshot.metadata.fromCache) {
-                            console.log("Empty cache snapshot ignored");
-                            return;
-                        }
+            const fetchCustomers = async () => {
+                try {
+                    const { data, error } = await window.supabase.from('users').select('*');
+                    if (error) throw error;
 
-                        const customerMap = new Map();
+                    const customerMap = new Map();
 
-                        // 1. Add explicitly registered users
-                        snapshot.docs.forEach(doc => {
-                            const data = doc.data();
-                            const emailKey = (data.email || doc.id).toLowerCase();
+                    // 1. Add Supabase users
+                    if (data) {
+                        data.forEach(doc => {
+                            const emailKey = (doc.email || doc.id).toLowerCase();
                             customerMap.set(emailKey, {
                                 id: doc.id,
-                                ...data
+                                ...doc
                             });
                         });
+                    }
 
-                        // 2. Enrich with past buyers from Order Cache (No extra DB reads!)
-                        try {
-                            const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-                            globalOrders.forEach(order => {
-                                if (!order.customerEmail) return;
-                                const emailKey = order.customerEmail.toLowerCase();
-                                
-                                if (!customerMap.has(emailKey)) {
-                                    // Create a phantom profile for buyers who didn't register properly
-                                    customerMap.set(emailKey, {
-                                        id: order.customer || emailKey,
-                                        email: order.customerEmail,
-                                        name: order.customerName || order.customerProfileName || order.customerEmail.split('@')[0],
-                                        phone: order.customerPhone || null,
-                                        createdAt: order.createdAt || null,
-                                        avatar: null // No avatar for guests
-                                    });
-                                } else {
-                                    // Enrich existing profile if data is missing
-                                    const existing = customerMap.get(emailKey);
-                                    if (!existing.phone && order.customerPhone) existing.phone = order.customerPhone;
-                                    if ((!existing.name || existing.name.includes('@')) && order.customerName) existing.name = order.customerName;
-                                }
-                            });
-                        } catch (e) {
-                            console.warn("Could not enrich customer list with orders cache", e);
-                        }
+                    allCustomers = Array.from(customerMap.values());
 
-                        allCustomers = Array.from(customerMap.values());
-
-                        // Sort client-side by updatedAt to avoid missing index errors
-                        allCustomers.sort((a, b) => {
-                            const getMillis = (item) => {
-                                if (item.updatedAt) {
-                                    if (item.updatedAt.toMillis) return item.updatedAt.toMillis();
-                                    if (item.updatedAt.seconds) return item.updatedAt.seconds * 1000;
-                                    return new Date(item.updatedAt).getTime() || 0;
-                                }
-                                if (item.createdAt) {
-                                    if (item.createdAt.toMillis) return item.createdAt.toMillis();
-                                    return new Date(item.createdAt).getTime() || 0;
-                                }
-                                return 0;
-                            };
-                            return getMillis(b) - getMillis(a);
-                        });
-
-                        // Cache for next time
-                        localStorage.setItem('pao_customers_cache', JSON.stringify(allCustomers));
-                        localStorage.setItem('pao_total_customers_count', allCustomers.length);
-
-                        renderCustomers(allCustomers);
-                        totalCount.textContent = `ลูกค้าทั้งหมด: ${allCustomers.length} ท่าน`;
-                    }, err => {
-                        console.error("Firestore sync error:", err);
-                        body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:50px; color:#ef4444;">❌ เกิดข้อผิดพลาด: ${err.message}<br><small>กรุณาลองรีเฟรชหน้าเว็บ หรือตรวจสอบ Quota ของ Firebase ครับ</small></td></tr>`;
+                    // Sort client-side by updatedAt (newest first)
+                    allCustomers.sort((a, b) => {
+                        const getMillis = (item) => {
+                            if (item.updatedAt) return new Date(item.updatedAt).getTime() || 0;
+                            if (item.createdAt) return new Date(item.createdAt).getTime() || 0;
+                            return 0;
+                        };
+                        return getMillis(b) - getMillis(a);
                     });
 
-                    // Global Unread Badge Listener
+                    localStorage.setItem('pao_customers_cache', JSON.stringify(allCustomers));
+                    localStorage.setItem('pao_total_customers_count', allCustomers.length);
+
+                    renderCustomers(allCustomers);
+                    totalCount.textContent = `ลูกค้าทั้งหมด: ${allCustomers.length} ท่าน`;
+                } catch (err) {
+                    console.error("Supabase sync error:", err);
+                    body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:50px; color:#ef4444;">❌ เกิดข้อผิดพลาด: ${err.message}</td></tr>`;
+                }
+            };
+
+            fetchCustomers();
+
+            window.supabase.channel('public:users:admin_customers')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+                    fetchCustomers();
+                })
+                .subscribe();
+
+            // Chat Badge Listener (Using db.js compatibility layer for chats)
+            try {
+                if (typeof db !== 'undefined' && db.collection) {
                     db.collection('chats').onSnapshot(snapshot => {
                         let totalUnread = 0;
                         snapshot.forEach(doc => {
@@ -393,12 +359,8 @@
                             badge.style.display = totalUnread > 0 ? 'block' : 'none';
                         }
                     }, err => console.warn("Unread badge sync failed:", err));
-                } else {
-                    statusDot.style.background = '#ef4444';
-                    statusText.textContent = 'กรุณาล็อกอิน Admin';
-                    body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:50px;">🔒 กรุณาล็อกอิน Admin เพื่อดูข้อมูลลูกค้า</td></tr>';
                 }
-            });
+            } catch(e) {}
         }
 
         function renderCustomers(customers) {

@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="quick-qr-item">
                 <div class="quick-qr-code">${v.code}</div>
                 <div class="quick-qr-title">${v.title}</div>
-                <button class="btn-gen-qr-small" onclick="generateSecureQR('${v.code}')">🎫 สร้าง QR</button>
+                <button class="btn-gen-qr-small" onclick="generateSecureQR('${v.code}', event)">🎫 สร้าง QR</button>
             </div>
         `).join('');
     }
@@ -287,9 +287,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Secure QR Logic (Reused from seller-vouchers.js)
     let timerInterval = null;
 
-    window.generateSecureQR = async (code) => {
+    window.generateSecureQR = async (code, e) => {
         try {
-            const btn = event.target;
+            const btn = e ? e.target : window.event.target;
             const originalText = btn.textContent;
             btn.disabled = true;
             btn.textContent = '🕒';
@@ -569,14 +569,14 @@ function renderRecentOrders(orders) {
     `;
 }
 
-function deleteOrder(orderId) {
-    if (!confirm('🚨 ยืนยันการลบออเดอร์ ' + orderId + ' ใช่ไหมคับ? (ลบแล้วกู้ไม่ได้นะค๊าบ)')) return;
+async function deleteOrder(orderId) {
+    if (!(await sellerConfirm('🚨 ยืนยันการลบออเดอร์ ' + orderId + ' ใช่ไหมคับ? (ลบแล้วกู้ไม่ได้นะค๊าบ)', 'delete'))) return;
     
     if (window.supabase) {
         window.supabase.from('orders').delete().eq('id', orderId)
             .then(({error}) => {
-                if(error) alert("ลบไม่สำเร็จ (Error): " + error.message);
-                else alert("ลบทิ้งเรียบร้อยแล้วคับ!");
+                if(error) sellerAlert("ลบไม่สำเร็จ (Error): " + error.message, 'error');
+                else sellerAlert("ลบทิ้งเรียบร้อยแล้วคับ!", 'success');
             });
     } else {
         // Fallback local delete
@@ -584,7 +584,7 @@ function deleteOrder(orderId) {
         const filtered = gOrders.filter(o => o.id !== orderId);
         localStorage.setItem('pao_global_orders', JSON.stringify(filtered));
         updateDashboard();
-        alert("ลบในเครื่องเรียบร้อย (ไม่ได้ซิงค์ Cloud)");
+        sellerAlert("ลบในเครื่องเรียบร้อย (ไม่ได้ซิงค์ Cloud)", 'success');
     }
 }
 
@@ -768,15 +768,7 @@ let _currentPromoImgBase64 = null;
 function loadPromoList() {
     if (!window.supabase) return;
 
-    const fetchPromos = async () => {
-        const { data: docs, error } = await window.supabase.from('promotions').select('*');
-        if (error) {
-            console.error('[Promo] List error:', error);
-            const area = document.getElementById('promo-list-area');
-            if (area) area.innerHTML = `<div style="color:#dc2626;padding:16px;font-size:0.85rem;">❌ โหลดไม่ได้: ${error.message}</div>`;
-            return;
-        }
-
+    const renderDocs = (docs) => {
         const area  = document.getElementById('promo-list-area');
         const count = document.getElementById('promo-count');
         if (count) count.textContent = docs ? docs.length : 0;
@@ -787,14 +779,13 @@ function loadPromoList() {
                 <div style="font-size:2.5rem;margin-bottom:10px;">🎁</div>
                 <div style="font-weight:600;margin-bottom:6px;">ยังไม่มีโปรโมชั่นบนคลาวด์</div>
                 <div style="font-size:0.85rem;margin-bottom:15px;">คุณสามารถใช้เทมเพลตเริ่มต้น หรือกดเพิ่มใหม่ได้คับ</div>
-                <button onclick="seedDefaultPromos()" style="background:#f8fafc; border:1.5px solid #e2e8f0; padding:8px 16px; border-radius:10px; font-size:0.8rem; font-weight:700; cursor:pointer; color:#475569;">
+                <button onclick="seedDefaultPromos(this)" style="background:#f8fafc; border:1.5px solid #e2e8f0; padding:8px 16px; border-radius:10px; font-size:0.8rem; font-weight:700; cursor:pointer; color:#475569;">
                     ✨ ใช้โปรโมชั่นเริ่มต้น (2 รายการ)
                 </button>
             </div>`;
             return;
         }
 
-        // Sort client-side by order field
         docs.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 
         area.innerHTML = docs.map((p, idx) => {
@@ -818,6 +809,36 @@ function loadPromoList() {
             </div>`;
         }).join('');
     };
+
+    const fetchPromos = async () => {
+        const { data: rawDocs, error } = await window.supabase.from('promotions').select('*');
+        if (error) {
+            console.error('[Promo] List error:', error);
+            const area = document.getElementById('promo-list-area');
+            if (area) area.innerHTML = `<div style="color:#dc2626;padding:16px;font-size:0.85rem;">❌ โหลดไม่ได้: ${error.message}</div>`;
+            return;
+        }
+        
+        const docs = (rawDocs || []).map(row => {
+            try {
+                const parsed = JSON.parse(row.description || '{}');
+                return { ...parsed, id: row.id, title: row.title, imageBase64: row.img || parsed.imageBase64, createdAt: row.created_at };
+            } catch {
+                return { id: row.id, title: row.title, desc: row.description, imageBase64: row.img, createdAt: row.created_at, active: true };
+            }
+        });
+
+        localStorage.setItem('pao_admin_cache_promotions', JSON.stringify(docs));
+        renderDocs(docs);
+    };
+
+    // ZeroFlash: Load from cache instantly
+    const cached = localStorage.getItem('pao_admin_cache_promotions');
+    if (cached) {
+        try {
+            renderDocs(JSON.parse(cached));
+        } catch(e) {}
+    }
 
     fetchPromos();
     
@@ -921,19 +942,30 @@ window.savePromotion = async function() {
         if (!window.supabase) throw new Error('Supabase SDK ยังไม่พร้อม');
         
         payload.updatedAt = new Date().toISOString();
+        const sbRow = {
+            title: payload.title || '',
+            description: JSON.stringify(payload),
+            img: payload.imageBase64 || '',
+            discount: 0
+        };
 
         if (_currentPromoId) {
-            const { error } = await window.supabase.from('promotions').update(payload).eq('id', _currentPromoId);
+            const { error } = await window.supabase.from('promotions').update(sbRow).eq('id', _currentPromoId);
             if (error) throw error;
         } else {
             const { data: snap, error: snapErr } = await window.supabase.from('promotions').select('id');
             if (snapErr) throw snapErr;
             payload.order = snap ? snap.length : 0;
             payload.createdAt = new Date().toISOString();
-            const { error: insErr } = await window.supabase.from('promotions').insert([payload]);
+            
+            sbRow.id = 'promo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+            sbRow.description = JSON.stringify(payload); // re-stringify with order and createdAt
+            
+            const { error: insErr } = await window.supabase.from('promotions').insert([sbRow]);
             if (insErr) throw insErr;
         }
         btn.textContent = '✅ บันทึกแล้ว!';
+        loadPromoList();
         setTimeout(() => { btn.disabled = false; btn.textContent = '💾 บันทึก & อัปเดต'; closePromoEditor(); }, 1000);
     } catch(e) {
         console.error('[Promo] Save error:', e);
@@ -950,35 +982,52 @@ window.deletePromotion = async function(docId) {
         const { error } = await window.supabase.from('promotions').delete().eq('id', id);
         if (error) throw error;
         if (_currentPromoId === id) closePromoEditor();
+        loadPromoList();
     } catch(e) { alert('❌ ลบไม่สำเร็จ: ' + e.message); }
 };
 
 /* ── Seed default promotions ── */
-window.seedDefaultPromos = async function() {
+window.seedDefaultPromos = async function(btn) {
     if (!confirm('ต้องการเพิ่มโปรโมชั่นเริ่มต้น 2 รายการ (ผ่อนซ่อม & Accessory) ลงในระบบคลาวด์ใช่ไหมคับ?')) return;
     
-    try {
-        const btn = event.target;
-        const originalText = btn.textContent;
+    const originalText = btn ? btn.textContent : '';
+    if (btn) {
         btn.disabled = true;
         btn.textContent = '⏳ กำลังส่งข้อมูล...';
+    }
+    
+    try {
 
         for (const p of DEFAULT_PROMOS) {
             const nowIso = new Date().toISOString();
-            const { error } = await window.supabase.from('promotions').insert([{
+            const payload = {
                 ...p,
                 createdAt: nowIso,
                 updatedAt: nowIso
-            }]);
-            if (error) console.error(error);
+            };
+            const sbRow = {
+                id: 'promo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                title: payload.title || '',
+                description: JSON.stringify(payload),
+                img: payload.imageBase64 || '',
+                discount: 0
+            };
+            const { error } = await window.supabase.from('promotions').insert([sbRow]);
+            if (error) throw new Error(error.message || JSON.stringify(error));
         }
         alert('✅ เพิ่มโปรโมชั่นเริ่มต้นสำเร็จแล้วคับ!');
-        btn.textContent = originalText;
-        btn.disabled = false;
+        loadPromoList();
+        if (btn) {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
     } catch (e) {
         console.error(e);
-        alert('❌ เพิ่มไม่สำเร็จ: ' + e.message + '\n(โปรดตรวจสอบว่าคุณล็อกอิน Admin หรือยัง)');
-        btn.disabled = false;
+        alert('❌ เพิ่มไม่สำเร็จ: ' + e.message);
+        if (btn) {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
     }
 };
 

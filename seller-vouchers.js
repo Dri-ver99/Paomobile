@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.deleteVoucher = async (id, code, btnEl) => {
-        if (!confirm(`คุณต้องการลบคูปอง "${code}" ใช่หรือไม่?`)) return;
+        if (!(await sellerConfirm(`🚨 ยืนยันการลบคูปอง "${code}" ใช่หรือไม่?`, 'delete'))) return;
         
         let originalIcon = '🗑️';
         let targetBtn = btnEl;
@@ -326,14 +326,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const { error: delErr } = await window.supabase.from('vouchers').delete().eq('id', id);
             if (delErr) throw delErr;
             console.log("Voucher deleted:", code);
-            // No alert needed, onSnapshot will clear the row
+            
+            // Force refresh UI immediately instead of waiting for realtime event
+            fetchVouchersAdmin();
+            sellerAlert("ลบคูปองเรียบร้อยแล้ว!", 'success');
         } catch (err) {
             console.error("Delete Error:", err);
             if (targetBtn) {
                 targetBtn.innerHTML = originalIcon;
                 targetBtn.disabled = false;
             }
-            alert("ลบไม่สำเร็จ: " + err.message);
+            sellerAlert("ลบไม่สำเร็จ: " + err.message, 'error');
         }
     };
 
@@ -354,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let v = null;
             if (window.cachedVouchers) {
                 const cachedDoc = window.cachedVouchers.find(d => d.id === id);
-                if (cachedDoc) v = cachedDoc.data();
+                if (cachedDoc) v = cachedDoc;
             }
             
             if (!v) {

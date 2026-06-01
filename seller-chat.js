@@ -413,7 +413,7 @@
                                     <div class="chat-card-title">${msg.cardData.title}</div>
                                     <div class="chat-card-price">${msg.cardData.price}</div>
                                 </div>
-                                <div class="chat-card-btn">ดูรายละเอียด</div>
+                                <div class="chat-card-btn">ดูสินค้า</div>
                             </div>
                         </div>
                     `;
@@ -705,26 +705,38 @@
         const modal = document.getElementById('productPickerModal');
         modal.style.display = 'flex';
         
-        // Always refresh or load first time
-        const grid = document.getElementById('pickerGrid');
+        const mergedMap = new Map();
+        MOCK_PRODUCTS_BASELINE.forEach(p => mergedMap.set(p.id, p));
         
+        // 1. Try to load from local caches first for instant display
+        const cacheKeys = ['pao_cache_parts', 'pao_cache_accessory', 'pao_cache_new', 'pao_cache_used'];
+        cacheKeys.forEach(key => {
+            try {
+                const cached = localStorage.getItem(key);
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach(p => mergedMap.set(p.id, p));
+                    }
+                }
+            } catch(e) {}
+        });
+        
+        allProducts = Array.from(mergedMap.values());
+        filterPicker(); // Initial fast render
+        
+        // 2. Fetch fresh data in background
         try {
-            const { data: snapshot, error } = await window.supabase.from('products').select('*');
+            // Use limit(2000) to match seller-products.js and avoid large fetch timeouts
+            const { data: snapshot, error } = await window.supabase.from('products').select('*').limit(2000);
             if (error) throw error;
             const firestoreProducts = snapshot || [];
             
-            // Merge logic (matches seller-products.js)
-            const mergedMap = new Map();
-            MOCK_PRODUCTS_BASELINE.forEach(p => mergedMap.set(p.id, p));
             firestoreProducts.forEach(p => mergedMap.set(p.id, p));
-            
             allProducts = Array.from(mergedMap.values());
-            renderPickerUI(allProducts);
+            filterPicker(); // Re-render with fresh data
         } catch (err) {
             console.error("[Picker] Load Error:", err);
-            // Fallback to mock data if Firestore fails
-            allProducts = [...MOCK_PRODUCTS_BASELINE];
-            renderPickerUI(allProducts);
         }
     };
 
@@ -737,8 +749,17 @@
         const catFilter = document.getElementById('pickerCatSelect').value;
         
         const filtered = allProducts.filter(p => {
-            const matchesSearch = p.name.toLowerCase().includes(searchQuery);
-            const matchesCat = catFilter === 'all' || p.category === catFilter;
+            const pCat = (p.category || "").toLowerCase().trim();
+            const matchesSearch = p.name.toLowerCase().includes(searchQuery) || (p.brand && p.brand.toLowerCase().includes(searchQuery));
+            
+            let matchesCat = false;
+            if (catFilter === 'all') matchesCat = true;
+            else if (catFilter === 'new') matchesCat = (pCat === 'new' || pCat === 'มือ 1' || pCat === 'มือหนึ่ง');
+            else if (catFilter === 'used') matchesCat = (pCat === 'used' || pCat === 'มือ 2' || pCat === 'มือสอง');
+            else if (catFilter === 'accessory') matchesCat = (pCat === 'accessory' || pCat === 'อุปกรณ์' || pCat === 'อุปกรณ์เสริม');
+            else if (catFilter === 'parts') matchesCat = (pCat === 'parts' || pCat === 'อะไหล่');
+            else matchesCat = (pCat === catFilter);
+            
             return matchesSearch && matchesCat;
         });
         
