@@ -1,15 +1,6 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
-<script>
-window.onerror = function(msg, url, line, col, error) {
-    alert("Error: " + msg + "\nLine: " + line + "\nCol: " + col);
-    return false;
-};
-window.addEventListener('unhandledrejection', function(event) {
-    alert("Unhandled Promise Rejection: " + event.reason);
-});
-</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Management — Paomobile</title>
@@ -20,36 +11,10 @@ window.addEventListener('unhandledrejection', function(event) {
     <style>
         :root {
             --shopee-orange: #ee4d2d;
-            --shopee-orange-hover: #d73211;
             --shopee-bg: #f8f9fa;
             --seller-bubble: #ee4d2d;
             --user-bubble: #ffffff;
             --sidebar-active: #f1f1f1;
-            --sidebar-width: 260px;
-            --header-height: 70px;
-            --border-color: #e2e8f0;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-        }
-
-        /* Ensure main sidebar matches other pages exactly */
-        .sidebar {
-            width: var(--sidebar-width) !important;
-            background-color: #fff;
-            border-right: 1px solid var(--border-color);
-            position: fixed;
-            height: 100vh;
-            z-index: 100;
-        }
-        .menu-item {
-            font-size: 0.95rem !important;
-            padding: 12px 20px !important;
-            color: var(--text-main) !important;
-        }
-        .menu-title {
-            font-size: 0.8rem !important;
-            padding: 0 20px !important;
-            margin-bottom: 10px !important;
         }
         body { font-family: 'Outfit', 'Noto Sans Thai', sans-serif; background: var(--shopee-bg); height: 100vh; overflow: hidden; margin:0; }
         
@@ -402,9 +367,7 @@ window.addEventListener('unhandledrejection', function(event) {
         #auth-cloud-warning .warning-btn:hover { background: #d73211; }
 
     </style>
-    <link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="db.js"></script>
+    <link rel="stylesheet" href="style.css?v=202">
 </head>
 <body>
     <aside class="sidebar">
@@ -426,7 +389,8 @@ window.addEventListener('unhandledrejection', function(event) {
                 <a href="seller-chat.html" class="menu-item active" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
                 <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
                 <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
-                <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+                <a href="seller-repairs.html" class="menu-item"><span class="menu-icon">🔧</span> จัดการงานซ่อม</a>
+                <a href="seller-centre.html#promotion-card" class="menu-item" ><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
@@ -438,8 +402,8 @@ window.addEventListener('unhandledrejection', function(event) {
             <div class="menu-section">
                 <p class="menu-title">สินค้า</p>
                 <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
-                <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
-                <a href="seller-products.html" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
+                <a href="seller-products.html?action=add" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-products.html?action=manage_cat" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
             </div>
         </nav>
     </aside>
@@ -519,34 +483,15 @@ window.addEventListener('unhandledrejection', function(event) {
 
 
 
+    
+    
+    
+    
     <script src="product-modal.js"></script>
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
-            authDomain: "paomobile-85e39.firebaseapp.com",
-            projectId: "paomobile-85e39",
-            storageBucket: "paomobile-85e39.firebasestorage.app",
-            messagingSenderId: "844151679424",
-            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
-            measurementId: "G-BZYNZ9B9LQ"
-        };
-        firebase.initializeApp(firebaseConfig);
-        var db = firebase.firestore();
-        window.db = db; // Explicitly set on window for IIFE access
-        
-        // v1.2.16 - Enable Persistence (non-blocking)
-        try {
-            db.enablePersistence({ synchronizeTabs: true }).catch(err => {
-                if (err.code == 'failed-precondition') console.warn("Persistence failed: multiple tabs.");
-                else if (err.code == 'unimplemented') console.warn("Persistence unsupported.");
-                else console.warn("Persistence error:", err.code);
-            });
-        } catch(e) { console.warn("Persistence setup error:", e); }
-        
-        console.log("[SellerChat HTML] Firebase initialized, db =", !!db, "window.db =", !!window.db);
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
     <script src="seller-presence.js"></script>
-    <!-- Mobile Sidebar Overlay -->
+        <!-- Mobile Sidebar Overlay -->
     <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
         <div class="mobile-sidebar" onclick="event.stopPropagation()">
             <div class="mobile-sidebar-header">
@@ -563,8 +508,9 @@ window.addEventListener('unhandledrejection', function(event) {
                         <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม</a>
                         <a href="seller-chat.html" class="menu-item active"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
                         <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> โค้ดส่วนลด</a>
+                        <a href="seller-repairs.html" class="menu-item"><span class="menu-icon">🔧</span> จัดการงานซ่อม</a>
                         <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
-                        <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+                        <a href="seller-centre.html#promotion-card" class="menu-item" ><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
                     </div>
                     <div class="menu-section">
                         <p class="menu-title">คำสั่งซื้อ</p>
@@ -574,13 +520,13 @@ window.addEventListener('unhandledrejection', function(event) {
                     <div class="menu-section">
                         <p class="menu-title">สินค้า</p>
                         <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
-                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                        <a href="seller-products.html?action=add" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                        <a href="seller-products.html?action=manage_cat" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
                     </div>
                 </nav>
             </div>
         </div>
     </div>
-
     <script>
         function toggleSellerMobileMenu(open) {
             const overlay = document.getElementById('mobileSidebarOverlay');
@@ -588,46 +534,7 @@ window.addEventListener('unhandledrejection', function(event) {
             else overlay.classList.remove('active');
         }
     </script>
-    <script src="seller-chat.js?v=2.0.1"></script>
-    <script>
-        // FALLBACK: If seller-chat.js fails for any reason, force-load chats after 2 seconds
-        setTimeout(function() {
-            var chatList = document.getElementById('chatList');
-            if (chatList && chatList.innerHTML.indexOf('กำลังโหลดรายการแชท') !== -1) {
-                console.warn("[FALLBACK] Chat list still showing initial text after 2s. Force-loading...");
-                if (window.loadChatList) {
-                    window.loadChatList();
-                } else if (window.db || typeof db !== 'undefined') {
-                    // Direct fallback if loadChatList not exposed
-                    var _db = window.db || db;
-                    _db.collection('chats').get().then(function(snapshot) {
-                        var html = '';
-                        if (snapshot.empty) {
-                            chatList.innerHTML = '<div style="text-align:center; padding:60px 40px; color:#666;">🔔 ยังไม่มีบทสนทนาในขณะนี้</div>';
-                            return;
-                        }
-                        snapshot.forEach(function(doc) {
-                            var chat = doc.data();
-                            var name = chat.userName || doc.id;
-                            var initial = name.charAt(0).toUpperCase();
-                            var snippet = chat.lastMessage || 'เริ่มการสนทนา';
-                            html += '<div class="chat-item" onclick="openChat(\'' + doc.id + '\')">' +
-                                '<div class="chat-item-avatar"><span>' + initial + '</span></div>' +
-                                '<div class="chat-item-content">' +
-                                '<div class="chat-item-header"><div class="chat-item-name">' + name + '</div></div>' +
-                                '<div class="chat-item-snippet">' + snippet + '</div>' +
-                                '</div></div>';
-                        });
-                        chatList.innerHTML = html;
-                        console.log("[FALLBACK] Loaded", snapshot.size, "chats via fallback");
-                    }).catch(function(err) {
-                        console.error("[FALLBACK] Error:", err);
-                        chatList.innerHTML = '<div style="padding:40px; text-align:center; color:#ef4444;">❌ ' + err.message + '</div>';
-                    });
-                }
-            }
-        }, 2000);
-    </script>
+    <script src="seller-chat.js"></script>
 <div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
             aria-label="Close Search">&#x2715;</button>
         <div class="search-modal-container">
@@ -638,16 +545,6 @@ window.addEventListener('unhandledrejection', function(event) {
             <div class="search-results-area" id="searchResults"></div>
         </div>
     </div>
-    <script src="pao-search.js"></script><script src="premium-alerts.js"></script>
+    <script src="search.js"></script><script src="premium-alerts.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-

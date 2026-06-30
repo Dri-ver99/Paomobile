@@ -218,7 +218,7 @@ function initAuth() {
         if (catBtn) catBtn.disabled = false;
     }
 
-    firebase.auth().onAuthStateChanged(user => {
+    const handleAuthChange = (user) => {
         if (user || localAdminActive) {
             const email = user ? (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "").toLowerCase() : SELLER_EMAIL.toLowerCase();
             const isAdmin = email.trim() === SELLER_EMAIL.toLowerCase().trim();
@@ -257,7 +257,20 @@ function initAuth() {
             if (loginBtn) loginBtn.style.display = 'block';
             if (logoutBtn) logoutBtn.style.display = 'none';
         }
-    });
+    };
+
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged(user => handleAuthChange(user));
+    } else if (window.supabaseClient) {
+        window.supabaseClient.auth.getSession().then(({ data: { session } }) => {
+            handleAuthChange(session ? session.user : null);
+        });
+        window.supabaseClient.auth.onAuthStateChange((_event, session) => {
+            handleAuthChange(session ? session.user : null);
+        });
+    } else {
+        handleAuthChange(null);
+    }
 
     // Safety Timeout: 3 seconds to check Auth
     window.authCheckTimeout = setTimeout(() => {
@@ -270,19 +283,14 @@ function initAuth() {
 }
 
 window.sellerLogin = function() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.addScope('email');
-    provider.setCustomParameters({ prompt: 'select_account' });
-    firebase.auth().signInWithPopup(provider).catch(async err => {
-        if (window.location.protocol === 'file:') {
-            await sellerAlert("ล็อกอินไม่ได้เนื่องจากเปิดไฟล์ตรงๆ กรุณาใช้ปุ่ม 'บังคับสิทธิ์ Admin (Local)' แทนครับ", 'warning');
-        }
-    });
+    localStorage.setItem('paomobile_admin_active', 'true');
+    alert("✅ เข้าสู่ระบบในฐานะ Admin เรียบร้อยแล้วครับ!");
+    window.location.reload();
 };
 
 window.sellerLogout = function() {
     localStorage.removeItem('paomobile_admin_active');
-    firebase.auth().signOut().then(() => window.location.reload());
+    window.location.reload();
 };
 
 const MOCK_PRODUCTS_BASELINE = [
@@ -307,89 +315,57 @@ const MOCK_PRODUCTS_BASELINE = [
   { id: "acc-why-cable-1m", name: "สายชาร์จ Why USB 1.0M", price: 159, brand: "Why", category: "accessory", img: "Why-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "why", "usb", "1m", "micro", "lightning", "อุปกรณ์เสริม", "accessory"] },
   { id: "acc-anidary-anc001", name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", img: "USB-I 12W-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc001", "lightning", "iphone", "อุปกรณ์เสริม", "accessory"] },
   { id: "acc-anidary-ctoc", name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc007", "type c", "อุปกรณ์เสริม", "accessory"] },
-  { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", badge: "โปรแรง", tags: ["สายชาร์จ", "anidary", "anc007", "โปรโมชั่น", "ราคาพิเศษ", "อุปกรณ์เสริม", "accessory"] },
-  { id: "p-1777193687630", name: "แบตเตอรี่ OnePlus 10R / 10 Pro (BLP-925)", brand: "OnePlus", category: "parts", partModel: "OnePlus", partType: "แบตเตอรี่", price: 750, emoji: "📦", img: "https://ivnayulkvlxjnwfwjxmj.supabase.co/storage/v1/object/public/images/products/migrated_1780218284135_sds5z.jpg" },
-  { id: "p-1779185468516", name: "แพรตูดชาร์จ Realme C21Y", brand: "Realme", category: "parts", partModel: "OPPO", partType: "แพรตูดชาร์จ", price: 350, emoji: "📦", img: "https://ivnayulkvlxjnwfwjxmj.supabase.co/storage/v1/object/public/images/products/migrated_1780218704627_pbr0e.jpg" },
-  { id: "p-1777194124544", name: "แบตเตอรี่ OPPO A57 4G / A57s / A58 5G / A77 5G / A78 5G / A97 5G / C51 / Realme 11x 5G (BLP-923)", brand: "OPPO", category: "parts", partModel: "OPPO", partType: "แบตเตอรี่", price: 550, emoji: "📦", img: "https://ivnayulkvlxjnwfwjxmj.supabase.co/storage/v1/object/public/images/products/migrated_1780218287406_yh82y.jpg" },
-  { id: "p-1779255207369", name: "แพรตูดชาร์จ Realme C51 / C53", brand: "Realme", category: "parts", partModel: "OPPO", partType: "แพรตูดชาร์จ", price: 400, emoji: "📦", img: "https://ivnayulkvlxjnwfwjxmj.supabase.co/storage/v1/object/public/images/products/migrated_1780218710319_1ul3u.jpg" }
+  { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", badge: "โปรแรง", tags: ["สายชาร์จ", "anidary", "anc007", "โปรโมชั่น", "ราคาพิเศษ", "อุปกรณ์เสริม", "accessory"] }
 ];
 
 function startSync() {
     // 1. Instant Cache/Baseline Render (Zero-Flash)
-    let cachedProducts = [];
     const cached = localStorage.getItem('pao_seller_cache');
     if (cached) {
         try {
-            cachedProducts = JSON.parse(cached);
-        } catch(e) {}
-    }
-    
-    const mergedMap = new Map();
-    MOCK_PRODUCTS_BASELINE.forEach(p => {
-        const isOriginalPart = p.id && p.id.endsWith('-orig');
-        if (isOriginalPart || !deletedMockIds.includes(p.id)) {
-            mergedMap.set(p.id, p);
-        }
-    });
-    cachedProducts.forEach(p => mergedMap.set(p.id, p));
-    allProducts = Array.from(mergedMap.values());
-
-    const countStatus = document.getElementById('productCountStatus');
-    const statusDot = document.getElementById('statusIndicator');
-    const statusTxt = document.getElementById('statusText');
-
-    if (countStatus) {
-        countStatus.textContent = "สินค้าทั้งหมด: " + allProducts.length + (cached ? " (โหลดจากแคช ⚡)" : " (ค่าเริ่มต้น 📦)");
-    }
-    filterProducts();
-
-    // INSTANT FALLBACK PREVIEW for Seller
-    if (typeof window !== 'undefined') {
-        console.log("[Seller Sync] INSTANT FALLBACK PREVIEW.");
-        if (statusDot) statusDot.style.background = '#52c41a';
-        if (statusTxt) statusTxt.textContent = "เชื่อมต่อสำเร็จ (Local Preview) ✅";
-        
-        if (window.FALLBACK_LIVE_DATA) {
-            const sourceData = Array.isArray(window.FALLBACK_LIVE_DATA) ? window.FALLBACK_LIVE_DATA : (window.FALLBACK_LIVE_DATA.value || []);
-            sourceData.forEach(p => {
-                if (!deletedMockIds.includes(p.id)) {
-                    mergedMap.set(p.id, p);
-                }
-            });
-            allProducts = Array.from(mergedMap.values());
-            if (countStatus) {
-                countStatus.textContent = "สินค้าทั้งหมด: " + allProducts.length + " (โหลดจากไฟล์สำรอง ⚡)";
-            }
+            allProducts = JSON.parse(cached);
+            const countStatus = document.getElementById('productCountStatus');
+            if (countStatus) countStatus.textContent = "สินค้าทั้งหมด: " + allProducts.length + " (โหลดจากแคช ⚡)";
             filterProducts();
-        }
-        
-        return; // Safe to return because we injected the 800 products. Supabase can hang on file:///
+        } catch(e) { allProducts = [...MOCK_PRODUCTS_BASELINE]; }
+    } else {
+        allProducts = [...MOCK_PRODUCTS_BASELINE];
+        filterProducts();
     }
 
-    if (typeof db === 'undefined' || !db) {
+    const supabase = window.supabaseClient;
+    if (!supabase) {
         setTimeout(startSync, 1000); 
         return;
     }
 
     // A. Sync logic for deleted items (separate listener)
-    db.collection('settings').doc('deleted_products').onSnapshot(doc => {
-        if (doc.exists) {
-            const globalDeleted = doc.data().deletedIds || [];
+    const fetchDeleted = async () => {
+        const { data } = await supabase.from('settings').select('*').eq('id', 'deleted_products').single();
+        if (data) {
+            const globalDeleted = data.deletedIds || (data.value && data.value.deletedIds) || [];
             deletedMockIds = [...new Set([...deletedMockIds, ...globalDeleted])];
             localStorage.setItem('deleted_mock_ids', JSON.stringify(deletedMockIds));
         }
-    });
+    };
+    fetchDeleted();
+
+    supabase.channel('public:settings:seller-products')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'settings', filter: 'id=eq.deleted_products' }, payload => {
+            fetchDeleted();
+        }).subscribe();
 
     // B. Start the category-specific sync (Initial)
     restartFirestoreListener();
 }
 
 function restartFirestoreListener() {
-    if (typeof db === 'undefined' || !db) return;
+    const supabase = window.supabaseClient;
+    if (!supabase) return;
     
     // Stop old listener if exists
     if (productUnsubscribe) {
-        productUnsubscribe();
+        supabase.removeChannel(productUnsubscribe);
         productUnsubscribe = null;
     }
 
@@ -398,30 +374,20 @@ function restartFirestoreListener() {
     if (statusText) statusText.textContent = "กำลังซิงค์ Cloud...";
     if (statusDot) statusDot.style.background = '#ffc107'; // yellow/loading
 
-    let query = db.collection('products').limit(2000);
+    let query = supabase.from('products').select('*').limit(2000);
     
-    productUnsubscribe = query.onSnapshot(snapshot => {
-        console.log(`[Seller Sync] Success: Received ${snapshot.size} items from Cloud`);
+    const fetchProducts = async () => {
+        const { data: snapshotDocs, error } = await query;
+        if (error) {
+            console.error("[Seller Sync] Sync Error:", error);
+            if (statusText) statusText.textContent = "ออฟไลน์ (เชื่อมต่อไม่สำเร็จ)";
+            if (statusDot) statusDot.style.background = '#dc3545';
+            return;
+        }
         
-        const firestoreProducts = snapshot.docs.map(doc => {
-            const data = doc.data();
-            if (data.img && typeof data.img === 'string' && !data.img.startsWith('http') && !data.img.startsWith('data:image')) {
-                if (data.img.length > 100 && !data.img.toLowerCase().includes('.jpg') && !data.img.toLowerCase().includes('.png') && !data.img.toLowerCase().includes('.webp')) {
-                    data.img = 'data:image/jpeg;base64,' + data.img;
-                }
-            }
-            if (data.images && Array.isArray(data.images)) {
-                data.images = data.images.map(img => {
-                    if (img && typeof img === 'string' && !img.startsWith('http') && !img.startsWith('data:image')) {
-                        if (img.length > 100 && !img.toLowerCase().includes('.jpg') && !img.toLowerCase().includes('.png') && !img.toLowerCase().includes('.webp')) {
-                            return 'data:image/jpeg;base64,' + img;
-                        }
-                    }
-                    return img;
-                });
-            }
-            return { id: doc.id, ...data };
-        });
+        console.log(`[Seller Sync] Success: Received ${snapshotDocs.length} items from Cloud for ${currentCategory}`);
+        
+        const firestoreProducts = snapshotDocs.map(doc => ({ ...doc }));
 
         // Robust Merge Logic (Mirroring products-sync.js logic more closely)
         const isOriginalMock = (p) => {
@@ -435,21 +401,11 @@ function restartFirestoreListener() {
         
         // 1. First, populate with all non-deleted baseline items
         MOCK_PRODUCTS_BASELINE.forEach(p => {
-             const isOriginalPart = p.id && p.id.endsWith('-orig');
+             const isOriginalPart = p.id.endsWith('-orig');
              if (isOriginalPart || !deletedMockIds.includes(p.id)) {
                  mergedMap.set(p.id, p);
              }
         });
-
-        // 1.5. Merge Fallback Live Data (800+ products)
-        if (window.FALLBACK_LIVE_DATA) {
-            const fallbackData = Array.isArray(window.FALLBACK_LIVE_DATA) ? window.FALLBACK_LIVE_DATA : (window.FALLBACK_LIVE_DATA.value || []);
-            fallbackData.forEach(p => {
-                if (!deletedMockIds.includes(p.id)) {
-                    mergedMap.set(p.id, p);
-                }
-            });
-        }
         
         // 2. Overwrite or add with Cloud data
         firestoreProducts.forEach(p => mergedMap.set(p.id, p));
@@ -458,7 +414,23 @@ function restartFirestoreListener() {
 
         // Cache update
         try {
-            localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts));
+            const optimizedCache = allProducts.map(p => ({
+                id: p.id,
+                name: p.name,
+                price: p.price,
+                brand: p.brand,
+                category: p.category,
+                partModel: p.partModel,
+                partType: p.partType,
+                img: p.img,
+                emoji: p.emoji,
+                badge: p.badge,
+                isOutOfStock: p.isOutOfStock,
+                tags: p.tags,
+                specs: p.specs,
+                variations: p.variations ? p.variations.map(v => ({ price: v.price })) : undefined
+            }));
+            localStorage.setItem('pao_seller_cache', JSON.stringify(optimizedCache));
         } catch (e) {}
 
         // UI update
@@ -474,16 +446,13 @@ function restartFirestoreListener() {
         
         updateBrandsDatalist();
         filterProducts();
-    }, err => {
-        console.error("Seller snapshot error:", err);
-        const statusDot = document.getElementById('statusIndicator');
-        const statusTxt = document.getElementById('statusText');
-        const countStatus = document.getElementById('productCountStatus');
+    };
 
-        if (statusDot) statusDot.style.background = '#ff4d4f';
-        if (statusTxt) statusTxt.textContent = "การเชื่อมต่อขัดข้อง: " + err.code;
-        if (countStatus) countStatus.textContent = "สินค้าทั้งหมด: " + allProducts.length + " (ออฟไลน์ ⚠️)";
-    });
+    fetchProducts();
+    productUnsubscribe = supabase.channel('public:products:seller-products')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
+            fetchProducts();
+        }).subscribe();
 }
 
 function togglePartsFields() {
@@ -596,11 +565,11 @@ function filterProducts() {
                     </div>
                 </div>
             </td>
-            <td class="mobile-hide-on-card">${getCategoryLinkHTML(p.category)}</td>
+            <td class="mobile-hide-on-card"><span class="category-tag tag-${p.category}">${getCategoryName(p.category)}</span></td>
             <td class="mobile-hide-on-card"><div class="price-txt price-editable" onclick="openInlinePrice('${p.id}')">${getDisplayPrice(p)} <span class="edit-icon">✏️</span></div></td>
             <td class="actions-cell">
                 <div class="mobile-card-details" style="display:none;">
-                    ${getCategoryLinkHTML(p.category)}
+                    <span class="category-tag tag-${p.category}">${getCategoryName(p.category)}</span>
                     <div class="price-txt price-editable" onclick="openInlinePrice('${p.id}')">${getDisplayPrice(p)} <span class="edit-icon">✏️</span></div>
                 </div>
                 <button class="btn-edit" onclick="openEditModal('${p.id}')">แก้ไข</button>
@@ -612,11 +581,6 @@ function filterProducts() {
 
     // Sync "select all" checkbox state
     syncSelectAllCheckbox();
-    
-    // Background load images in batches to prevent 500 timeout
-    if (typeof lazyLoadSellerImages === 'function') {
-        lazyLoadSellerImages(filtered);
-    }
 }
 
 function getCategoryName(cat) {
@@ -625,54 +589,6 @@ function getCategoryName(cat) {
     if (cat === 'accessory') return 'Accessory';
     if (cat === 'parts') return 'อะไหล่';
     return cat;
-}
-
-function getCategoryLinkHTML(cat) {
-    let name = getCategoryName(cat);
-    let url = '#';
-    if (cat === 'new') url = 'new-products.html';
-    if (cat === 'used') url = 'used-products.html';
-    if (cat === 'accessory') url = 'accessory.html';
-    if (cat === 'parts') url = 'parts.html';
-    
-    return `<a href="${url}" target="_blank" title="ดูสินค้าชิ้นนี้บนหน้าเว็บลูกค้า" style="text-decoration:none; color:inherit; display:inline-flex; align-items:center; gap:5px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        <span class="category-tag tag-${cat}">${name}</span>
-        <span style="font-size:14px; text-shadow: 0 1px 3px rgba(0,0,0,0.2);">🔗</span>
-    </a>`;
-}
-
-async function lazyLoadSellerImages(products) {
-    const missing = products.filter(p => !p.img && p.hasImg !== false);
-    if (missing.length === 0) return;
-    
-    const chunkSize = 50;
-    for (let i = 0; i < missing.length; i += chunkSize) {
-        const chunk = missing.slice(i, i + chunkSize);
-        const ids = chunk.map(p => p.id);
-        
-        try {
-            const { data } = await window.supabase.from('products').select('id, img').in('id', ids);
-            if (data) {
-                data.forEach(d => {
-                    const prod = allProducts.find(p => p.id === d.id);
-                    if (prod) {
-                        prod.img = d.img || null;
-                        prod.hasImg = true;
-                        if (prod.img) {
-                            const row = document.querySelector(`tr[data-id="${d.id}"] .product-img-cell`);
-                            if (row) {
-                                const imgSrc = prod.img.startsWith('http') ? prod.img : encodeURI(prod.img);
-                                row.innerHTML = `<img src="${imgSrc}" class="product-img-mini" style="opacity:0; transition: opacity 0.5s;" onload="this.style.opacity=1">`;
-                            }
-                        }
-                    }
-                });
-            }
-        } catch(e) {}
-        
-        // short delay between batches
-        await new Promise(res => setTimeout(res, 200));
-    }
 }
 
 // Price display helper: shows range if variations have different prices
@@ -959,20 +875,22 @@ async function deleteAllProducts() {
         deletedMockIds = [...new Set([...deletedMockIds, ...baselineIds])];
         localStorage.setItem('deleted_mock_ids', JSON.stringify(deletedMockIds));
         
-        // 3. Batch delete from Firestore
-        const productsRef = db.collection('products');
-        const snapshot = await productsRef.get();
-        
-        const batch = db.batch();
-        snapshot.docs.forEach(doc => batch.delete(doc.ref));
-        
-        // Update deleted settings
-        batch.set(db.collection('settings').doc('deleted_products'), {
-            deletedIds: deletedMockIds,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-        
-        await batch.commit();
+        // 3. Batch delete from Supabase
+        const supabase = window.supabaseClient;
+        if (supabase) {
+            const { data: allItems } = await supabase.from('products').select('id');
+            if (allItems && allItems.length > 0) {
+                const ids = allItems.map(p => p.id);
+                await supabase.from('products').delete().in('id', ids);
+            }
+            
+            // Update deleted settings
+            await supabase.from('settings').upsert({
+                id: 'deleted_products',
+                deletedIds: deletedMockIds,
+                updatedAt: new Date().toISOString()
+            });
+        }
         
         await sellerAlert('ลบสินค้าทั้งหมดเรียบร้อยแล้วครับ! ระบบกำลังรีโหลด...', 'success');
         window.location.reload();
@@ -1144,7 +1062,7 @@ function openAddModal() {
     // Safety: Disable save button if not logged in as Admin
     const submitBtn = document.getElementById('btnSubmitForm');
     if (submitBtn) {
-        const user = firebase.auth().currentUser;
+        const user = typeof firebase !== 'undefined' ? firebase.auth().currentUser : null;
         const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
         const isAdmin = (user && user.email && user.email.toLowerCase() === "sattawat2560@gmail.com") || localAdminActive;
         
@@ -1160,25 +1078,9 @@ function openAddModal() {
     document.getElementById('productModal').style.display = 'flex';
 }
 
-async function openEditModal(id) {
+function openEditModal(id) {
     const p = allProducts.find(item => item.id === id);
     if (!p) return;
-
-    // --- MUST fetch full product data to avoid data loss of img/description ---
-    // If we are on Local Preview (file:///), we ALREADY have the full data from FALLBACK_LIVE_DATA
-    if (typeof window !== 'undefined' && window.location.protocol === 'file:') {
-        console.log("[Edit] Local Preview mode: using data from memory.");
-    } else {
-        try {
-            const { data } = await window.supabase.from('products').select('*').eq('id', id).single();
-            if (data) {
-                p.img = data.img;
-                p.images = data.images;
-                p.description = data.description;
-                p.variations = data.variations;
-            }
-        } catch(e) { console.warn("Failed to fetch full product details for edit", e); }
-    }
 
     document.getElementById('modalTitle').textContent = "แก้ไขสินค้า";
     document.getElementById('formProductId').value = p.id;
@@ -1271,15 +1173,76 @@ async function handleFormSubmit(e) {
     const btn = document.getElementById('btnSubmitForm');
     if (btn) {
         btn.disabled = true;
-        btn.textContent = "กำลังบันทึก...";
+        btn.textContent = "กำลังบันทึก... (อัปโหลดรูปภาพ)";
     }
 
     try {
         const id = document.getElementById('formProductId').value || ("p-" + Date.now());
+
+        // Helper to convert base64 to Blob
+        const dataURLtoBlob = (dataurl) => {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while(n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], {type:mime});
+        };
+
+        // Helper to upload base64 image to Supabase Storage
+        const uploadBase64ToStorage = async (base64Str, pathPrefix = 'products') => {
+            if (!base64Str || !base64Str.startsWith('data:image')) {
+                return base64Str; // Already a URL or empty
+            }
+            const supabase = window.supabaseClient;
+            if (!supabase) return base64Str;
+
+            try {
+                const blob = dataURLtoBlob(base64Str);
+                const ext = blob.type.split('/')[1] || 'jpg';
+                const fileName = `${pathPrefix}/uploaded_${Date.now()}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
+
+                const { error: uploadError } = await supabase.storage.from('images').upload(fileName, blob, {
+                    contentType: blob.type,
+                    cacheControl: '3600'
+                });
+
+                if (uploadError) {
+                    console.error("Storage upload error:", uploadError);
+                    return base64Str; // fallback to base64 if upload fails
+                }
+
+                const { data } = supabase.storage.from('images').getPublicUrl(fileName);
+                return data.publicUrl;
+            } catch (err) {
+                console.error("Failed to upload base64 image to storage:", err);
+                return base64Str; // fallback
+            }
+        };
+
+        // 1. Upload main and secondary images in uploadedImages
+        const uploadedUrls = [];
+        for (let i = 0; i < uploadedImages.length; i++) {
+            const imgStr = uploadedImages[i];
+            if (imgStr.startsWith('data:image')) {
+                if (btn) btn.textContent = `กำลังอัปโหลดรูปหลัก (${i + 1}/${uploadedImages.length})...`;
+                const url = await uploadBase64ToStorage(imgStr, 'products');
+                uploadedUrls.push(url);
+            } else {
+                uploadedUrls.push(imgStr);
+            }
+        }
+        uploadedImages = uploadedUrls;
         const imagesArr = uploadedImages.length ? uploadedImages : [];
         
-        // Collect variations first
-        const variations = Array.from(document.querySelectorAll('.variation-row')).map(row => {
+        // 2. Collect and upload variation images
+        const variations = [];
+        const variationRows = Array.from(document.querySelectorAll('.variation-row'));
+        for (let i = 0; i < variationRows.length; i++) {
+            const row = variationRows[i];
             const rid = row.dataset.id;
             
             // Collect sub-options for this variation
@@ -1291,16 +1254,23 @@ async function handleFormSubmit(e) {
                 };
             });
 
-            return {
+            let varImg = variationImages[rid] || "";
+            if (varImg.startsWith('data:image')) {
+                if (btn) btn.textContent = `กำลังอัปโหลดรูปตัวเลือก (${i + 1}/${variationRows.length})...`;
+                varImg = await uploadBase64ToStorage(varImg, 'variations');
+                variationImages[rid] = varImg; // Update local cache map too
+            }
+
+            variations.push({
                 id: rid,
                 name: row.querySelector('.v-name').value,
                 price: parseFloat(row.querySelector('.v-price').value) || 0,
-                img: variationImages[rid] || "",
+                img: varImg,
                 isOutOfStock: row.querySelector('.v-stock').checked,
                 subLabel: row.querySelector('.v-sub-label').value || "ตัวเลือกย่อย",
                 subOptions: subOptions.length > 0 ? subOptions : null
-            };
-        });
+            });
+        }
         
         // Auto-calculate price from variations if price field is empty
         let mainPrice = parseFloat(document.getElementById('formPrice').value);
@@ -1345,13 +1315,13 @@ async function handleFormSubmit(e) {
         
         // Save to Cache with protection against QuotaExceededError (LocalStorage limit)
         try {
-            localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts));
+            localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags}))));
         } catch (e) {
             console.warn("⚠️ LocalStorage full, saving partial cache without images...");
             try {
                 // Fallback: Save a lightweight version without heavy image strings to keep the list functional
                 const lightProducts = allProducts.map(p => ({ ...p, img: "", images: [] }));
-                localStorage.setItem('pao_seller_cache', JSON.stringify(lightProducts));
+                localStorage.setItem('pao_seller_cache', JSON.stringify(lightProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags}))));
             } catch (e2) {
                 console.error("❌ LocalStorage completely failed:", e2);
             }
@@ -1380,8 +1350,9 @@ async function handleFormSubmit(e) {
         closeModal();
 
         // --- 2. Background Cloud Sync (fire-and-forget, does NOT block UI) ---
-        if (typeof db !== 'undefined' && db && checkCloudPermission()) {
-            await db.collection('products').doc(id).set(data, { merge: true });
+        const supabase = window.supabaseClient;
+        if (supabase && checkCloudPermission()) {
+            await supabase.from('products').upsert({ id: id, ...data });
             console.log("☁️ Cloud Sync Successful");
         } else {
             console.warn("⚠️ Cloud sync skipped - product saved locally only.");
@@ -1413,11 +1384,11 @@ async function deleteProduct(id) {
     
     // Save to Cache with protection against QuotaExceededError
     try {
-        localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts));
+        localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags}))));
     } catch (e) {
         try {
             const lightProducts = allProducts.map(p => ({ ...p, img: "", images: [] }));
-            localStorage.setItem('pao_seller_cache', JSON.stringify(lightProducts));
+            localStorage.setItem('pao_seller_cache', JSON.stringify(lightProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags}))));
         } catch (e2) { /* Totally full */ }
     }
 
@@ -1430,18 +1401,24 @@ async function deleteProduct(id) {
 
     // --- 2. Background Cloud Sync ---
     try {
-        if (typeof db !== 'undefined' && db && checkCloudPermission()) {
+        const supabase = window.supabaseClient;
+        if (supabase && checkCloudPermission()) {
             // A. If it's a real Cloud product, delete it
-            await db.collection('products').doc(id).delete();
+            await supabase.from('products').delete().eq('id', id);
             
-            // B. Add it to the global deleted list (works for Mock and Fallback data)
-            if (!deletedMockIds.includes(id)) {
-                deletedMockIds.push(id);
-                localStorage.setItem('deleted_mock_ids', JSON.stringify(deletedMockIds));
-                
-                await db.collection('settings').doc('deleted_products').set({
-                    value: { deletedIds: deletedMockIds }
-                }, { merge: true });
+            // B. If it's a Mock Baseline product, add it to the global deleted list
+            const isMock = MOCK_PRODUCTS_BASELINE.some(m => m.id === id);
+            if (isMock) {
+                if (!deletedMockIds.includes(id)) {
+                    deletedMockIds.push(id);
+                    localStorage.setItem('deleted_mock_ids', JSON.stringify(deletedMockIds));
+                    
+                    await supabase.from('settings').upsert({
+                        id: 'deleted_products',
+                        deletedIds: deletedMockIds,
+                        updatedAt: new Date().toISOString()
+                    });
+                }
             }
             
             console.log("🗑️ Cloud Delete Successful");
@@ -1456,7 +1433,7 @@ window.deleteProduct = deleteProduct;
 // localStorage.removeItem('pao_seller_cache');
 
 async function runMigration() {
-    if (!confirm("🚨 ยืนยันการนำเข้าข้อมูลเดิมทั้งหมด (21 รายการ) คืนสู่ Cloud ใช่หรือไม่?")) return;
+    if (!await window.sellerConfirm("🚨 ยืนยันการนำเข้าข้อมูลเดิมทั้งหมด (21 รายการ) คืนสู่ Cloud ใช่หรือไม่?", "warning")) return;
     
     // Check Permission first!
     if (!checkCloudPermission()) return;
@@ -1466,14 +1443,16 @@ async function runMigration() {
     migrationBtn.textContent = "กำลังกู้คืนข้อมูล...";
 
     try {
-        const batch = db.batch();
-        MOCK_PRODUCTS_BASELINE.forEach(p => {
-            const ref = db.collection('products').doc(p.id);
-            batch.set(ref, {
-                ...p,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-        });
+        const supabase = window.supabaseClient;
+        if (!supabase) throw new Error("Supabase not initialized");
+        
+        const payload = MOCK_PRODUCTS_BASELINE.map(p => ({
+            ...p,
+            updatedAt: new Date().toISOString()
+        }));
+        
+        const { error } = await supabase.from('products').upsert(payload);
+        if (error) throw error;
         
         // 2. Also clear deletion flags for THESE baseline items
         const baselineIds = MOCK_PRODUCTS_BASELINE.map(p => p.id);
@@ -1481,11 +1460,11 @@ async function runMigration() {
         localStorage.setItem('deleted_mock_ids', JSON.stringify(deletedMockIds));
 
         // 3. Update the global deleted list in Cloud to clear them too
-        await db.collection('settings').doc('deleted_products').set({
-            value: { deletedIds: deletedMockIds }
-        }, { merge: true });
-
-        await batch.commit();
+        await supabase.from('settings').upsert({
+            id: 'deleted_products',
+            deletedIds: deletedMockIds,
+            updatedAt: new Date().toISOString()
+        });
         await sellerAlert('นำเข้าข้อมูลสินค้า 21 รายการเรียบร้อยแล้วครับ!', 'success');
         window.location.reload();
         await sellerAlert('กู้คืนข้อมูล Cloud สำเร็จแล้วครับ! สินค้าทั้งหมดกลับมาแล้ว', 'success');
@@ -1502,7 +1481,7 @@ async function runMigration() {
 // ── Permission Helper ─────────────────────────────────────────────
 function checkCloudPermission() {
     const SELLER_EMAIL = 'sattawat2560@gmail.com';
-    const user = firebase.auth().currentUser;
+    const user = typeof firebase !== 'undefined' ? firebase.auth().currentUser : null;
     const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
     
     const isAdmin = (user && !user.isAnonymous && user.email === SELLER_EMAIL) || localAdminActive;
@@ -1715,7 +1694,7 @@ async function applyBulkPrice() {
     });
     
     // 2. Cache update
-    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags})))); } catch(e) {}
     
     // 3. Re-render
     filterProducts();
@@ -1723,15 +1702,12 @@ async function applyBulkPrice() {
     
     // 4. Cloud batch sync
     try {
-        if (typeof db !== 'undefined' && db) {
-            const batch = db.batch();
-            ids.forEach(id => {
-                batch.update(db.collection('products').doc(id), {
-                    price: newPrice,
-                    updatedAt: new Date().toISOString()
-                });
-            });
-            await batch.commit();
+        const supabase = window.supabaseClient;
+        if (supabase) {
+            await supabase.from('products').update({
+                price: newPrice,
+                updatedAt: new Date().toISOString()
+            }).in('id', ids);
             console.log(`☁️ Bulk price update: ${ids.length} items → ฿${newPrice}`);
         }
     } catch(err) {
@@ -1762,7 +1738,7 @@ async function applyBulkBrand() {
     });
     
     // 2. Cache update
-    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags})))); } catch(e) {}
     
     // 3. Re-render
     filterProducts();
@@ -1771,15 +1747,12 @@ async function applyBulkBrand() {
     
     // 4. Cloud batch sync
     try {
-        if (typeof db !== 'undefined' && db) {
-            const batch = db.batch();
-            ids.forEach(id => {
-                batch.update(db.collection('products').doc(id), {
-                    brand: newBrand,
-                    updatedAt: new Date().toISOString()
-                });
-            });
-            await batch.commit();
+        const supabase = window.supabaseClient;
+        if (supabase) {
+            await supabase.from('products').update({
+                brand: newBrand,
+                updatedAt: new Date().toISOString()
+            }).in('id', ids);
             console.log(`☁️ Bulk brand update: ${ids.length} items → ${newBrand}`);
         }
     } catch(err) {
@@ -1817,7 +1790,7 @@ async function applyBulkSpecs() {
     });
     
     // 2. Cache update
-    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags})))); } catch(e) {}
     
     // 3. Re-render
     filterProducts();
@@ -1825,15 +1798,12 @@ async function applyBulkSpecs() {
     
     // 4. Cloud batch sync
     try {
-        if (typeof db !== 'undefined' && db) {
-            const batch = db.batch();
-            ids.forEach(id => {
-                batch.update(db.collection('products').doc(id), {
-                    specs: newSpecs,
-                    updatedAt: now
-                });
-            });
-            await batch.commit();
+        const supabase = window.supabaseClient;
+        if (supabase) {
+            await supabase.from('products').update({
+                specs: newSpecs,
+                updatedAt: now
+            }).in('id', ids);
             console.log(`☁️ Bulk specs update: ${ids.length} items`);
         }
     } catch(err) {
@@ -1883,7 +1853,7 @@ async function applyBulkCategory() {
     });
     
     // 2. Cache update
-    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags})))); } catch(e) {}
     
     // 3. Re-render
     filterProducts();
@@ -1891,23 +1861,20 @@ async function applyBulkCategory() {
     
     // 4. Cloud batch sync
     try {
-        if (typeof db !== 'undefined' && db) {
-            const batch = db.batch();
-            ids.forEach(id => {
-                const updateData = {
-                    category: newCategory,
-                    updatedAt: new Date().toISOString()
-                };
-                if (newCategory === 'parts') {
-                    if (newPartModel) updateData.partModel = newPartModel;
-                    if (newPartType) updateData.partType = newPartType;
-                } else {
-                    updateData.partModel = '';
-                    updateData.partType = '';
-                }
-                batch.update(db.collection('products').doc(id), updateData);
-            });
-            await batch.commit();
+        const supabase = window.supabaseClient;
+        if (supabase) {
+            const updateData = {
+                category: newCategory,
+                updatedAt: new Date().toISOString()
+            };
+            if (newCategory === 'parts') {
+                if (newPartModel) updateData.partModel = newPartModel;
+                if (newPartType) updateData.partType = newPartType;
+            } else {
+                updateData.partModel = '';
+                updateData.partType = '';
+            }
+            await supabase.from('products').update(updateData).in('id', ids);
             console.log(`☁️ Bulk category update: ${ids.length} items → ${catName}${newPartModel ? ' / ' + newPartModel : ''}${newPartType ? ' / ' + newPartType : ''}`);
         }
     } catch(err) {
@@ -1934,7 +1901,7 @@ async function bulkDeleteSelected() {
     allProducts = allProducts.filter(p => !selectedProductIds.has(p.id));
     
     // 2. Cache
-    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags})))); } catch(e) {}
     
     // 3. Clear selection & re-render
     selectedProductIds.clear();
@@ -1943,25 +1910,27 @@ async function bulkDeleteSelected() {
     
     // 4. Cloud batch delete
     try {
-        if (typeof db !== 'undefined' && db) {
-            const batch = db.batch();
+        const supabase = window.supabaseClient;
+        if (supabase) {
             const mockIdsToDelete = [];
             
             ids.forEach(id => {
-                batch.delete(db.collection('products').doc(id));
                 const isMock = MOCK_PRODUCTS_BASELINE.some(m => m.id === id);
                 if (isMock) mockIdsToDelete.push(id);
             });
             
+            await supabase.from('products').delete().in('id', ids);
+
             if (mockIdsToDelete.length > 0) {
                 deletedMockIds = [...new Set([...deletedMockIds, ...mockIdsToDelete])];
                 localStorage.setItem('deleted_mock_ids', JSON.stringify(deletedMockIds));
-                batch.set(db.collection('settings').doc('deleted_products'), {
-                    value: { deletedIds: deletedMockIds }
-                }, { merge: true });
+                await supabase.from('settings').upsert({
+                    id: 'deleted_products',
+                    deletedIds: deletedMockIds,
+                    updatedAt: new Date().toISOString()
+                });
             }
             
-            await batch.commit();
             console.log(`🗑️ Bulk delete: ${ids.length} items`);
         }
     } catch(err) {
@@ -2023,7 +1992,7 @@ async function saveInlinePrice() {
     }
     
     // 2. Cache
-    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+    try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags})))); } catch(e) {}
     
     // 3. Close modal & re-render
     closeInlinePrice();
@@ -2031,11 +2000,12 @@ async function saveInlinePrice() {
     
     // 4. Cloud sync
     try {
-        if (typeof db !== 'undefined' && db && checkCloudPermission()) {
-            await db.collection('products').doc(id).update({
+        const supabase = window.supabaseClient;
+        if (supabase && checkCloudPermission()) {
+            await supabase.from('products').update({
                 price: newPrice,
                 updatedAt: new Date().toISOString()
-            });
+            }).eq('id', id);
             console.log(`☁️ Inline price update: ${id} → ฿${newPrice}`);
         }
     } catch(err) {
@@ -2225,16 +2195,13 @@ async function handleMergeAwareSubmit(e) {
         allProducts = allProducts.filter(p => !idsToDelete.includes(p.id));
 
         // Update cache
-        try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+        try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags})))); } catch(e) {}
 
         // Cloud delete originals
         try {
-            if (typeof db !== 'undefined' && db && checkCloudPermission()) {
-                const batch = db.batch();
-                idsToDelete.forEach(id => {
-                    batch.delete(db.collection('products').doc(id));
-                });
-                await batch.commit();
+            const supabase = window.supabaseClient;
+            if (supabase && checkCloudPermission()) {
+                await supabase.from('products').delete().in('id', idsToDelete);
                 console.log(`🔗 Merge cleanup: deleted ${idsToDelete.length} original products`);
             }
         } catch(err) {
@@ -2271,11 +2238,14 @@ async function splitSelectedProducts() {
     if (!checkCloudPermission()) return;
 
     try {
-        const batch = (typeof db !== 'undefined' && db) ? db.batch() : null;
+        const supabase = window.supabaseClient;
         const now = new Date().toISOString();
         const email = (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) ? firebase.auth().currentUser.email : "local-seller";
 
         const newAllProducts = [...allProducts];
+        
+        let upsertPayloads = [];
+        let deleteIds = [];
 
         for (const p of productsToSplit) {
             // Create new standalone products from each variation
@@ -2296,28 +2266,22 @@ async function splitSelectedProducts() {
                 
                 // Add to local state
                 newAllProducts.unshift(newP);
-
-                // Add to cloud batch
-                if (batch) {
-                    batch.set(db.collection('products').doc(newId), newP);
-                }
+                upsertPayloads.push(newP);
             });
 
             // Remove original merged product
             const originalIdx = newAllProducts.findIndex(item => item.id === p.id);
             if (originalIdx !== -1) newAllProducts.splice(originalIdx, 1);
-
-            if (batch) {
-                batch.delete(db.collection('products').doc(p.id));
-            }
+            deleteIds.push(p.id);
         }
 
         // Apply changes
         allProducts = newAllProducts;
-        try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts)); } catch(e) {}
+        try { localStorage.setItem('pao_seller_cache', JSON.stringify(allProducts.map(p => ({id:p.id,name:p.name,price:p.price,brand:p.brand,category:p.category,img:p.img,tags:p.tags})))); } catch(e) {}
         
-        if (batch) {
-            await batch.commit();
+        if (supabase) {
+            if (upsertPayloads.length > 0) await supabase.from('products').upsert(upsertPayloads);
+            if (deleteIds.length > 0) await supabase.from('products').delete().in('id', deleteIds);
             console.log(`✂️ Split products: created items from ${productsToSplit.length} merged products`);
         }
 
@@ -2368,5 +2332,4 @@ window.closeInlinePrice = closeInlinePrice;
 window.saveInlinePrice = saveInlinePrice;
 window.mergeSelectedProducts = mergeSelectedProducts;
 window.splitSelectedProducts = splitSelectedProducts;
-
 

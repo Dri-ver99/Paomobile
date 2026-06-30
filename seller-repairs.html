@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการงานซ่อม — Seller Centre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="seller-centre.css">
+    <style>
+        body { font-family: 'Outfit', 'Noto Sans Thai', sans-serif; }
+        
+        .repair-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .btn-primary {
+            background: #ee4d2d;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-primary:hover { background: #d73d20; }
+
+        .search-container {
+            margin-bottom: 25px;
+            display: flex;
+            gap: 15px;
+        }
+        .search-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: inherit;
+            outline: none;
+        }
+        .search-input:focus { border-color: #ee4d2d; }
+
+        .repair-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .repair-table th, .repair-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .repair-table th { background: #f8fafc; color: #64748b; font-weight: 500; font-size: 0.85rem; }
+        .repair-table tr:hover { background: #fdfdfd; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-received { background: #fff7ed; color: #c2410c; }
+        .status-repairing { background: #eff6ff; color: #1d4ed8; }
+        .status-completed { background: #f0fdf4; color: #15803d; }
+
+        /* Status Transition UI */
+        .status-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        .btn-status {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: #475569;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-status:hover {
+            border-color: #ee4d2d;
+            color: #ee4d2d;
+        }
+        .status-arrow {
+            color: #cbd5e1;
+            margin-left: 20px;
+            font-size: 1.2rem;
+            line-height: 0.5;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none;
+            justify-content: center; align-items: center; z-index: 1000;
+            backdrop-filter: blur(3px);
+        }
+        .modal-card {
+            background: #fff; padding: 30px; border-radius: 12px;
+            width: 90%; max-width: 500px;
+        }
+        .modal-card h3 { margin-top: 0; margin-bottom: 20px; color: #1e293b; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; color: #475569; font-size: 0.9rem; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;
+            font-family: inherit; outline: none; box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: #ee4d2d; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
+        .btn-cancel { background: #f1f5f9; color: #475569; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 500; }
+        .btn-cancel:hover { background: #e2e8f0; }
+
+        .empty-state { text-align: center; padding: 50px; color: #94a3b8; }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+</head>
+<body class="bg-repair">
+
+        <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="seller-centre.html" class="sidebar-logo">
+                <img src="logo.png" alt="Paomobile">
+                <span>Seller Centre</span>
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                    <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                </a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">เมนูหลัก</p>
+                <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
+                <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-repairs.html" class="menu-item active"><span class="menu-icon">🔧</span> จัดการงานซ่อม</a>
+                <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                <a href="seller-centre.html#promotion-card" class="menu-item" ><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">คำสั่งซื้อ</p>
+                <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">สินค้า</p>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="seller-products.html?action=add" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-products.html?action=manage_cat" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Top Navigation -->
+    <header class="top-nav">
+        <div class="nav-left">
+            <button class="hamburger-menu" id="mobileMenuBtn" onclick="toggleSellerMobileMenu(true)">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h2>จัดการงานซ่อม</h2>
+        </div>
+        <div class="nav-right">
+            <!-- User profile removed -->
+        </div>
+    </header>
+
+    <main class="main-wrapper">
+        <div class="repair-header">
+            <h1 style="margin:0; color:#1e293b;">จัดการงานซ่อม</h1>
+            <button class="btn-primary" onclick="openAddModal()">+ เพิ่มงานซ่อมใหม่</button>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="ค้นหา ชื่อ, รุ่น, เบอร์, หรือ รหัสงานซ่อม..." oninput="filterJobs()">
+        </div>
+
+        <table class="repair-table">
+            <thead>
+                <tr>
+                    <th>รหัสงาน</th>
+                    <th>ข้อมูลลูกค้า & รุ่น</th>
+                    <th>อาการเสีย</th>
+                    <th>สถานะ</th>
+                    <th>จัดการ</th>
+                </tr>
+            </thead>
+            <tbody id="repairList">
+                <tr><td colspan="5" class="empty-state">กำลังโหลดข้อมูล...</td></tr>
+            </tbody>
+        </table>
+    </main>
+
+    <!-- Add Modal -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-card">
+            <h3>เพิ่มงานซ่อมใหม่</h3>
+            <form id="addForm" onsubmit="saveJob(event)">
+                <div class="form-group">
+                    <label>ชื่อลูกค้า</label>
+                    <input type="text" id="addName" required placeholder="เช่น คุณสมชาย">
+                </div>
+                <div class="form-group">
+                    <label>สาขาที่ส่งซ่อม</label>
+                    <select id="addBranch" required style="width: 100%; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 10px; font-family: inherit; font-size: 0.95rem; color: #1e293b; outline: none; transition: border-color 0.2s; background-color: #fff;">
+                        <option value="" disabled selected>-- เลือกสาขา --</option>
+                        <option value="สาขาตึกคอม">สาขาตึกคอม</option>
+                        <option value="สาขานาเกลือ">สาขานาเกลือ</option>
+                        <option value="สาขาซอยสยาม">สาขาซอยสยาม</option>
+                        <option value="สาขาตลาดมหาชล">สาขาตลาดมหาชล</option>
+                        <option value="สาขาแหลมฉบัง">สาขาแหลมฉบัง</option>
+                        <option value="สาขาพรประภานิมิตร">สาขาพรประภานิมิตร</option>
+                        <option value="อื่นๆ">อื่นๆ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>รุ่นโทรศัพท์</label>
+                    <input type="text" id="addModel" required placeholder="เช่น iPhone 13 Pro Max">
+                </div>
+                <div class="form-group">
+                    <label>อาการเสีย</label>
+                    <textarea id="addIssue" required rows="3" placeholder="เช่น จอแตก, ชาร์จไม่เข้า"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>วันที่รับเครื่อง</label>
+                    <input type="datetime-local" id="addReceivedAt" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeAddModal()">ยกเลิก</button>
+                    <button type="submit" class="btn-primary" id="saveBtn">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="seller-repairs.js"></script>
+    <script src="seller-presence.js"></script>
+
+        <!-- Mobile Sidebar Overlay -->
+    <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
+        <div class="mobile-sidebar" onclick="event.stopPropagation()">
+            <div class="mobile-sidebar-header">
+                <a href="seller-centre.html" class="logo">
+                    <img src="logo.png" alt="Paomobile">
+                    <span>Seller Centre</span>
+                </a>
+                <div class="mobile-sidebar-close" onclick="toggleSellerMobileMenu(false)">&times;</div>
+            </div>
+            <div class="mobile-sidebar-content">
+                <nav class="sidebar-menu">
+                    <div class="menu-section">
+                        <a href="index.html" class="menu-item-home"><span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า</a>
+                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม</a>
+                        <a href="seller-chat.html" class="menu-item"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
+                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> โค้ดส่วนลด</a>
+                        <a href="seller-repairs.html" class="menu-item active"><span class="menu-icon">🔧</span> จัดการงานซ่อม</a>
+                        <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                        <a href="seller-centre.html#promotion-card" class="menu-item" ><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">คำสั่งซื้อ</p>
+                        <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">สินค้า</p>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                        <a href="seller-products.html?action=add" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                        <a href="seller-products.html?action=manage_cat" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleSellerMobileMenu(open) {
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (open) overlay.classList.add('active');
+            else overlay.classList.remove('active');
+        }
+    </script>
+<script src="premium-alerts.js"></script>
+</body>
+</html>

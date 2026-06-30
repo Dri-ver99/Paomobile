@@ -90,69 +90,80 @@
     // Call it after initialization (Replaced by consolidated logic in seller-config.js)
 
     // 1. Load Chat List (Real-time)
-    function loadChatList() {
-        console.log("[SellerChat] loadChatList() called");
+    async function loadChatList() {
+        console.log("[SellerChat] loadChatList() called (Supabase)");
         
-        // Prevent duplicate listeners
+        const supabase = window.supabaseClient;
+        if (!supabase) {
+            console.error("[SellerChat] No supabase available in loadChatList!");
+            const listArea = document.getElementById('chatList');
+            if (listArea) listArea.innerHTML = '<div style="padding:40px; text-align:center; color:#ef4444;">❌ Supabase ยังไม่พร้อม กรุณารีเฟรชหน้าเว็บครับ</div>';
+            return;
+        }
+
         if (chatListUnsubscribe) {
-            window.supabase.removeChannel(chatListUnsubscribe);
+            supabase.removeChannel(chatListUnsubscribe);
             chatListUnsubscribe = null;
         }
 
-        var chatListArea = document.getElementById('chatList');
+        const chatListArea = document.getElementById('chatList');
         
-        // --- INSTANT LOAD: Try loading from Local Cache first ---
         try {
-            var cached = localStorage.getItem('paomobile_chat_cache');
+            const cached = localStorage.getItem('paomobile_chat_cache');
             if (cached) {
                 allChats = JSON.parse(cached);
                 if (allChats && allChats.length > 0) {
-                    console.log("[SellerChat] Instant render from cache:", allChats.length);
                     renderChatList();
                 }
             }
-        } catch(e) { console.warn("Cache load failed", e); }
+        } catch(e) {}
 
-        // Initial Skeletons ONLY if cache is empty
         if (chatListArea && allChats.length === 0) {
-            chatListArea.innerHTML = Array(6).fill(0).map(function() { return '<div class="chat-skeleton"><div class="skeleton-avatar skeleton-animate"></div><div class="skeleton-info"><div class="skeleton-line skeleton-animate"></div><div class="skeleton-line short skeleton-animate"></div></div></div>'; }).join('');
+            chatListArea.innerHTML = Array(6).fill(0).map(() => '<div class="chat-skeleton"><div class="skeleton-avatar skeleton-animate"></div><div class="skeleton-info"><div class="skeleton-line skeleton-animate"></div><div class="skeleton-line short skeleton-animate"></div></div></div>').join('');
         }
 
-        const fetchChatList = async () => {
-            const { data: snapshot, error } = await window.supabase.from('chats').select('*');
+        const fetchChats = async () => {
+            const { data, error } = await supabase.from('chats').select('*');
             if (error) {
-                console.error("Supabase error fetching chats:", error);
-                alert("เกิดข้อผิดพลาดในการโหลดแชท: " + error.message);
+                console.error("[SellerChat] Load Error:", error.message);
+                if (chatListArea) {
+                    chatListArea.innerHTML = '<div style="padding:40px; text-align:center;"><div style="color:#ef4444; font-weight:600; font-size:1.1rem; margin-bottom:10px;">⚠️ ไม่มีสิทธิ์เข้าถึงข้อมูล</div></div>';
+                }
                 return;
             }
-            allChats = snapshot;
-            allChats.sort(function(a, b) {
-                var getT = function(x) { 
-                    if (x.hasOwnProperty('lastTimestamp') && x.lastTimestamp === null) return Date.now();
-                    if (x.lastTimestamp) return new Date(x.lastTimestamp).getTime();
-                    return 0; 
-                };
-                var ta = getT(a), tb = getT(b);
-                var unreadA = a.unreadCount || 0;
-                var unreadB = b.unreadCount || 0;
-                if (unreadA > 0 && unreadB === 0) return -1;
-                if (unreadB > 0 && unreadA === 0) return 1;
-                return tb - ta;
-            });
-            renderChatList(allChats);
+            if (data) {
+                allChats = data.map(chat => ({...chat, id: chat.id}));
+                sortAndRenderChats();
+            }
         };
-        window.fetchChatList = fetchChatList;
-        fetchChatList();
-        
-        if (window.chatListInterval) clearInterval(window.chatListInterval);
-        window.chatListInterval = setInterval(fetchChatList, 5000);
 
-        chatListUnsubscribe = window.supabase.channel('public:chats')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, fetchChatList)
+        const sortAndRenderChats = () => {
+            allChats.sort((a, b) => {
+                const getT = x => (x.lastTimestamp ? new Date(x.lastTimestamp).getTime() : 0);
+                const unreadA = (a.unreadCount || 0) > 0 ? 1 : 0;
+                const unreadB = (b.unreadCount || 0) > 0 ? 1 : 0;
+                if (unreadA !== unreadB) return unreadB - unreadA;
+                return getT(b) - getT(a);
+            });
+            try { localStorage.setItem('paomobile_chat_cache', JSON.stringify(allChats)); } catch(e) {}
+            renderChatList();
+        };
+
+        await fetchChats();
+
+        chatListUnsubscribe = supabase.channel('chats-list-sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, payload => {
+                if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                    const idx = allChats.findIndex(c => c.id === payload.new.id);
+                    if (idx >= 0) allChats[idx] = { ...allChats[idx], ...payload.new };
+                    else allChats.push({ ...payload.new, id: payload.new.id });
+                } else if (payload.eventType === 'DELETE') {
+                    allChats = allChats.filter(c => c.id !== payload.old.id);
+                }
+                sortAndRenderChats();
+            })
             .subscribe();
-
     }
-    // Expose to window for HTML fallback
     window.loadChatList = loadChatList;
 
     // New: Unified rendering with search and filter
@@ -160,8 +171,11 @@
         const chatListArea = document.getElementById('chatList');
         if (!chatListArea) return;
 
-        const searchQuery = document.getElementById('chatSearchInput')?.value.toLowerCase() || "";
-        const filterStatus = document.getElementById('chatFilterSelect')?.value || "all";
+        const searchInputEl = document.getElementById('chatSearchInput');
+        const searchQuery = (searchInputEl && searchInputEl.value) ? searchInputEl.value.toLowerCase() : "";
+        
+        const filterSelectEl = document.getElementById('chatFilterSelect');
+        const filterStatus = (filterSelectEl && filterSelectEl.value) ? filterSelectEl.value : "all";
 
         if (allChats.length === 0) {
             chatListArea.innerHTML = '<div style="text-align: center; padding: 60px 40px; color: #666; font-size: 1rem; font-weight: 500;">🔔 ยังไม่มีบทสนทนาในขณะนี้</div>';
@@ -169,7 +183,8 @@
         }
 
         const filtered = allChats.filter(chat => {
-            const matchesSearch = (chat.userName || "").toLowerCase().includes(searchQuery);
+            if (!chat) return false;
+            const matchesSearch = String(chat.userName || "").toLowerCase().includes(searchQuery);
             const matchesFilter = filterStatus === 'all' || (filterStatus === 'unread' && chat.unreadCount > 0);
             return matchesSearch && matchesFilter;
         });
@@ -179,49 +194,63 @@
             return;
         }
 
+        const safeToDate = (ts) => {
+            try {
+                if (!ts) return new Date(0);
+                if (ts.toDate) return ts.toDate();
+                if (ts.seconds) return new Date(ts.seconds * 1000);
+                const d = new Date(ts);
+                return isNaN(d.getTime()) ? new Date(0) : d;
+            } catch(e) { return new Date(0); }
+        };
+
         let html = '';
         filtered.forEach(chat => {
-            const isActive = chat.id === activeChatId;
-            const lastTime = chat.lastTimestamp ? new Date(chat.lastTimestamp) : new Date(0);
-            
-            // Check Online Status (within 2 mins)
-            const lastSeen = chat.lastSeen ? new Date(chat.lastSeen) : lastTime;
-            const now = new Date();
-            const isOnline = (now - lastSeen) < 120000; // 2 minutes window
+            try {
+                const isActive = chat.id === activeChatId;
+                const lastTime = safeToDate(chat.lastTimestamp);
+                
+                // Check Online Status (within 2 mins)
+                const lastSeen = chat.lastSeen ? safeToDate(chat.lastSeen) : lastTime;
+                const now = new Date();
+                const isOnline = (now - lastSeen) < 120000; // 2 minutes window
 
-            const isClosed = (new Date() - lastTime) > 86400000;
-            const time = chat.lastTimestamp ? formatChatTime(lastTime) : '';
-            const initial = chat.userName ? chat.userName.charAt(0).toUpperCase() : '?';
-            const avatarHtml = chat.userAvatar 
-                ? `<img src="${chat.userAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` 
-                : `<span>${initial}</span>`;
-            
-            // Check Presence info for "Currently viewing" status
-            const presence = chat.presence;
-            const currentPage = (presence && presence.lastSeen && (new Date() - new Date(presence.lastSeen)) < 60000) ? presence.page : '';
-            
-            html += `
-                <div class="chat-item ${isActive ? 'active' : ''}" onclick="openChat('${chat.id}')">
-                    <div class="chat-item-avatar">
-                        ${avatarHtml}
-                        <div class="online-dot ${isOnline ? '' : 'offline'}"></div>
+                const isClosed = (new Date() - lastTime) > 86400000;
+                const time = chat.lastTimestamp ? formatChatTime(lastTime) : '';
+                const initial = chat.userName ? String(chat.userName).charAt(0).toUpperCase() : '?';
+                const avatarHtml = chat.userAvatar 
+                    ? `<img src="${chat.userAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">` 
+                    : `<span>${initial}</span>`;
+                
+                // Presence UI (v1.8.5)
+                const presence = chat.presence;
+                const currentPage = (presence && presence.lastSeen && (new Date() - safeToDate(presence.lastSeen)) < 60000) ? presence.page : '';
+                
+                html += `
+                    <div class="chat-item ${isActive ? 'active' : ''}" onclick="openChat('${chat.id}')">
+                        <div class="chat-item-avatar">
+                            ${avatarHtml}
+                            <div class="online-dot ${isOnline ? '' : 'offline'}"></div>
+                        </div>
+                        <div class="chat-item-content">
+                            <div class="chat-item-header">
+                                <div class="chat-item-name">${(chat.userName && chat.userName !== 'ลูกค้าใหม่') ? chat.userName : chat.id}</div>
+                                <div class="chat-item-time">${time}</div>
+                            </div>
+                            <div class="chat-item-snippet">
+                                ${currentPage ? `<span style="color:#ee4d2d; font-weight:700;">[ดูหน้า: ${currentPage}]</span> ` : ''}
+                                ${chat.lastMessage || 'ส่งรูปภาพ/การ์ด'}
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+                                ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : '<div></div>'}
+                                ${isClosed ? '<div class="status-badge closed">ปิด</div>' : '<div class="status-badge">วันนี้</div>'}
+                            </div>
+                        </div>
                     </div>
-                    <div class="chat-item-content">
-                        <div class="chat-item-header">
-                            <div class="chat-item-name">${(chat.userName && chat.userName !== 'ลูกค้าใหม่') ? chat.userName : chat.id}</div>
-                            <div class="chat-item-time">${time}</div>
-                        </div>
-                        <div class="chat-item-snippet">
-                            ${currentPage ? `<span style="color:#ee4d2d; font-weight:700;">[ดูหน้า: ${currentPage}]</span> ` : ''}
-                            ${chat.lastMessage || 'ส่งรูปภาพ/การ์ด'}
-                        </div>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
-                            ${chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : '<div></div>'}
-                            ${isClosed ? '<div class="status-badge closed">ปิด</div>' : '<div class="status-badge">วันนี้</div>'}
-                        </div>
-                    </div>
-                </div>
-            `;
+                `;
+            } catch (err) {
+                console.error("[SellerChat] Error rendering individual chat:", chat, err);
+            }
         });
         chatListArea.innerHTML = html;
     }
@@ -245,41 +274,34 @@
 
     // 2. Open Specific Chat
     window.openChat = async (chatId) => {
-        try {
-            if (!chatId) return;
-            
-            // Normalize chatId (email should be lowercase)
-            chatId = String(chatId).trim().toLowerCase();
-            
-            activeChatId = chatId;
-            
-            // --- INSTANT UI: Use cached data from allChats if available ---
-            var cachedChat = allChats.find(function(c) { return c.id === chatId; });
-            var chatData = cachedChat || { userName: chatId, userAvatar: "" };
-            
-            // Render the UI structure immediately
-            renderChatLayout(chatId, chatData);
-            
-            // Fetch full data in background if needed
-            if (!cachedChat) {
-                window.supabase.from('chats').select('*').eq('id', chatId).single().then(function({data: doc}) {
-                    if (doc) {
-                        var name = doc.userName || doc.userEmail || "ไม่ทราบชื่อ";
-                        document.getElementById('activeChatName').textContent = name;
-                        if (doc.userAvatar) document.getElementById('activeChatAvatar').src = doc.userAvatar;
-                        else document.getElementById('activeChatAvatar').src = "logo.png";
-                    }
-                }).catch(function(e) { console.warn("Background fetch error:", e); });
+        if (!chatId) return;
+        
+        // Normalize chatId (email should be lowercase)
+        chatId = chatId.trim().toLowerCase();
+        
+        activeChatId = chatId;
+        
+        // --- INSTANT UI: Use cached data from allChats if available ---
+        var cachedChat = allChats.find(function(c) { return c.id === chatId; });
+        var chatData = cachedChat || { userName: chatId, userAvatar: "" };
+        
+        // Render the UI structure immediately
+        renderChatLayout(chatId, chatData);
+        
+        // Fetch full data in background if needed
+        if (!cachedChat) {
+            const supabase = window.supabaseClient;
+            if (supabase) {
+                supabase.from('chats').select('*').eq('id', chatId).single().then(({data}) => {
+                    if (data) updateChatHeader(data);
+                });
             }
-        } catch (e) {
-            alert("Error in openChat: " + e.message + "\n" + e.stack);
         }
     };
 
     // Helper to render the main chat area layout
     function renderChatLayout(chatId, chatData) {
-        var safeName = String(chatData.userName || chatId || '?');
-        var initial = safeName.charAt(0).toUpperCase();
+        var initial = chatData.userName ? String(chatData.userName).charAt(0).toUpperCase() : String(chatId).charAt(0).toUpperCase();
         var avatarHtml = chatData.userAvatar 
             ? `<img src="${chatData.userAvatar}" style="width:100%; height:100%; object-fit:cover;">` 
             : `<span style="color:white;">${initial}</span>`;
@@ -346,7 +368,10 @@
         startMessagesListener(chatId);
 
         // Mark as Read
-        window.supabase.from('chats').update({ unreadCount: 0 }).eq('id', chatId).then();
+        const supabase = window.supabaseClient;
+        if (supabase) {
+            supabase.from('chats').update({ unreadCount: 0 }).eq('id', chatId).then();
+        }
     };
 
     function updateChatHeader(data) {
@@ -362,10 +387,7 @@
     }
 
     function startMessagesListener(chatId) {
-        if (messagesUnsubscribe) {
-            window.supabase.removeChannel(messagesUnsubscribe);
-            messagesUnsubscribe = null;
-        }
+        if (messagesUnsubscribe) messagesUnsubscribe();
         
         var msgsArea = document.getElementById('chatMessages');
 
@@ -387,9 +409,8 @@
                     const d = new Date(msg.timestamp_ms);
                     msgDate = d.toLocaleDateString();
                     timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                } else if (msg.timestamp) {
-                    const d = new Date(msg.timestamp);
-                    const hours = d.getHours().toString().padStart(2, '0');
+                } else if (msg.timestamp && msg.timestamp.toDate) {
+                    const d = new Date(msg.timestamp.toDate());
                     msgDate = d.toLocaleDateString();
                     timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 }
@@ -413,7 +434,7 @@
                                     <div class="chat-card-title">${msg.cardData.title}</div>
                                     <div class="chat-card-price">${msg.cardData.price}</div>
                                 </div>
-                                <div class="chat-card-btn">ดูสินค้า</div>
+                                <div class="chat-card-btn">ดูรายละเอียด</div>
                             </div>
                         </div>
                     `;
@@ -500,45 +521,45 @@
             }
         } catch(e) {}
 
+        const supabase = window.supabaseClient;
+        if (!supabase) return;
+
         const fetchMessages = async () => {
-            const { data } = await window.supabase.from('chat_messages').select('*').eq('chatId', chatId).order('timestamp', { ascending: true });
+            const { data, error } = await supabase.from('chat_messages')
+                .select('*').eq('chatId', chatId).order('timestamp_ms', { ascending: true });
+            
+            if (error) {
+                msgsArea.innerHTML = `<div style="text-align:center; padding:40px; color:#ef4444; font-size:0.9rem;">🚨 ข้อผิดพลาด: ${error.message}</div>`;
+                return;
+            }
+
             if (data) {
-                const lastMsg = data[data.length - 1];
-                let lastTime = new Date();
-                if (lastMsg && lastMsg.timestamp) {
-                    lastTime = new Date(lastMsg.timestamp);
+                let isClosed = false;
+                if (data.length > 0) {
+                    const lastMsg = data[data.length - 1];
+                    const lastTime = lastMsg.timestamp_ms ? lastMsg.timestamp_ms : Date.now();
+                    isClosed = (Date.now() - lastTime) > 86400000;
                 }
-                const isRecentlyClosed = (new Date() - lastTime) > 86400000;
+                renderSellerMessages(data, isClosed);
+                try { localStorage.setItem('paomobile_seller_msgs_' + chatId, JSON.stringify(data)); } catch(e) {}
 
-                const docsArray = data.map(msg => {
-                    msg.timestamp_ms = new Date(msg.timestamp).getTime();
-                    return msg;
-                });
-
-                renderSellerMessages(docsArray, isRecentlyClosed);
-
-                try {
-                    localStorage.setItem('paomobile_seller_msgs_' + chatId, JSON.stringify(docsArray));
-                } catch(e) {}
-
-                const unreadIds = docsArray.filter(msg => msg.sender === 'customer' && !msg.isRead).map(msg => msg.id);
+                const unreadIds = data.filter(m => m.sender !== 'seller' && !m.isRead).map(m => m.id);
                 if (unreadIds.length > 0) {
-                    window.supabase.from('chat_messages').update({ isRead: true }).in('id', unreadIds).then();
-                    window.supabase.from('chats').update({ unreadCount: 0 }).eq('id', chatId).then();
+                    supabase.from('chat_messages').update({ isRead: true }).in('id', unreadIds).then();
+                    supabase.from('chats').update({ unreadCount: 0 }).eq('id', chatId).then();
                 }
             }
         };
 
-        if (messagesUnsubscribe) window.supabase.removeChannel(messagesUnsubscribe);
-        window.fetchMessages = fetchMessages;
         fetchMessages();
-        
-        if (window.chatMessagesInterval) clearInterval(window.chatMessagesInterval);
-        window.chatMessagesInterval = setInterval(fetchMessages, 3000);
 
-        messagesUnsubscribe = window.supabase.channel('public:chat_messages_' + chatId)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages', filter: 'chatId=eq.' + chatId }, fetchMessages)
+        const channel = supabase.channel('messages-sync-' + chatId)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages', filter: 'chatId=eq.' + chatId }, () => {
+                fetchMessages();
+            })
             .subscribe();
+            
+        messagesUnsubscribe = () => { supabase.removeChannel(channel); };
     };
 
     window.handleKeyPress = (e) => {
@@ -583,81 +604,61 @@
         removeChatPreview();
 
         try {
-            const timestamp = new Date().toISOString();
+            const timestampIso = new Date().toISOString();
+            const timestampMs = Date.now();
             const normalizedEmail = activeChatId.trim().toLowerCase();
+            const supabase = window.supabaseClient;
+            if (!supabase) throw new Error("Supabase not initialized");
 
-            // 1. Handle File/Image Send (Base64 Reliable Mode)
+            // 1. Handle File/Image Send
             if (fileToSend) {
                 let finalUrl = "";
                 let finalName = fileToSend.name;
                 if (typeToSend === 'image') {
                     finalUrl = await compressImage(fileToSend);
                 } else {
-                    // Non-image files use Supabase storage
-                    const fileExt = fileToSend.name.split('.').pop();
-                    const filePath = `chat_uploads/${normalizedEmail}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-                    
-                    const { data, error } = await window.supabase.storage
-                        .from('images') // Assuming the bucket name is 'images' based on db.js
-                        .upload(filePath, fileToSend);
-                        
+                    const filePath = `chat_uploads/${normalizedEmail}/${Date.now()}_${fileToSend.name}`;
+                    const { error } = await supabase.storage.from('chat_uploads').upload(filePath, fileToSend);
                     if (error) throw error;
-                    
-                    const { data: publicUrlData } = window.supabase.storage
-                        .from('images')
-                        .getPublicUrl(filePath);
-                        
-                    finalUrl = publicUrlData.publicUrl;
+                    const { data: { publicUrl } } = supabase.storage.from('chat_uploads').getPublicUrl(filePath);
+                    finalUrl = publicUrl;
                 }
 
-                await window.supabase.from('chat_messages').insert({ id: crypto.randomUUID(), chatId: normalizedEmail,
+                await supabase.from('chat_messages').insert({
+                    id: crypto.randomUUID(),
+                    chatId: normalizedEmail,
                     type: typeToSend,
                     fileUrl: finalUrl,
                     fileName: finalName,
                     sender: 'seller',
-                    timestamp: timestamp,
+                    timestamp_ms: timestampMs,
                     isRead: false
-                 });
+                });
 
-                await window.supabase.from('chats').upsert({ id: normalizedEmail,
+                await supabase.from('chats').update({
                     lastMessage: typeToSend === 'image' ? "📷 ส่งรูปภาพ" : "📁 ส่งไฟล์: " + finalName,
-                    lastTimestamp: timestamp,
+                    lastTimestamp: timestampIso,
                     unreadCount: 0
-                 });
-                 
-                 if (window.fetchMessages) window.fetchMessages();
-                 if (window.fetchChatList) window.fetchChatList();
+                }).eq('id', normalizedEmail);
             }
 
             // 2. Handle Text if exists
             if (originalText) {
-                const msgsArea = document.getElementById('chatMessages');
-                if (msgsArea) {
-                    const tempHtml = `
-                        <div class="msg-row seller" style="opacity: 0.7;">
-                            <div class="msg-bubble">${originalText.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-                        </div>
-                    `;
-                    msgsArea.insertAdjacentHTML('beforeend', tempHtml);
-                    msgsArea.scrollTop = msgsArea.scrollHeight;
-                }
-
-                await window.supabase.from('chat_messages').insert({ id: crypto.randomUUID(), chatId: normalizedEmail,
+                await supabase.from('chat_messages').insert({
+                    id: crypto.randomUUID(),
+                    chatId: normalizedEmail,
                     text: originalText,
                     sender: 'seller',
-                    timestamp: timestamp,
+                    timestamp_ms: timestampMs,
                     type: 'text',
                     isRead: false
-                 });
+                });
 
-                await window.supabase.from('chats').upsert({ id: normalizedEmail,
+                await supabase.from('chats').update({
                     lastMessage: originalText,
-                    lastTimestamp: timestamp,
+                    lastTimestamp: timestampIso,
                     unreadCount: 0
-                 });
-                 
-                 if (window.fetchMessages) window.fetchMessages();
-                 if (window.fetchChatList) window.fetchChatList();
+                }).eq('id', normalizedEmail);
             }
 
             // Ensure focus is kept
@@ -705,38 +706,28 @@
         const modal = document.getElementById('productPickerModal');
         modal.style.display = 'flex';
         
-        const mergedMap = new Map();
-        MOCK_PRODUCTS_BASELINE.forEach(p => mergedMap.set(p.id, p));
+        // Always refresh or load first time
+        const grid = document.getElementById('pickerGrid');
         
-        // 1. Try to load from local caches first for instant display
-        const cacheKeys = ['pao_cache_parts', 'pao_cache_accessory', 'pao_cache_new', 'pao_cache_used'];
-        cacheKeys.forEach(key => {
-            try {
-                const cached = localStorage.getItem(key);
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    if (Array.isArray(parsed)) {
-                        parsed.forEach(p => mergedMap.set(p.id, p));
-                    }
-                }
-            } catch(e) {}
-        });
-        
-        allProducts = Array.from(mergedMap.values());
-        filterPicker(); // Initial fast render
-        
-        // 2. Fetch fresh data in background
         try {
-            // Use limit(2000) to match seller-products.js and avoid large fetch timeouts
-            const { data: snapshot, error } = await window.supabase.from('products').select('*').limit(2000);
+            const supabase = window.supabaseClient;
+            if (!supabase) throw new Error("Supabase not initialized");
+            const { data, error } = await supabase.from('products').select('*');
             if (error) throw error;
-            const firestoreProducts = snapshot || [];
+            const firestoreProducts = data || [];
             
+            // Merge logic (matches seller-products.js)
+            const mergedMap = new Map();
+            MOCK_PRODUCTS_BASELINE.forEach(p => mergedMap.set(p.id, p));
             firestoreProducts.forEach(p => mergedMap.set(p.id, p));
+            
             allProducts = Array.from(mergedMap.values());
-            filterPicker(); // Re-render with fresh data
+            renderPickerUI(allProducts);
         } catch (err) {
             console.error("[Picker] Load Error:", err);
+            // Fallback to mock data if Firestore fails
+            allProducts = [...MOCK_PRODUCTS_BASELINE];
+            renderPickerUI(allProducts);
         }
     };
 
@@ -749,17 +740,8 @@
         const catFilter = document.getElementById('pickerCatSelect').value;
         
         const filtered = allProducts.filter(p => {
-            const pCat = (p.category || "").toLowerCase().trim();
-            const matchesSearch = p.name.toLowerCase().includes(searchQuery) || (p.brand && p.brand.toLowerCase().includes(searchQuery));
-            
-            let matchesCat = false;
-            if (catFilter === 'all') matchesCat = true;
-            else if (catFilter === 'new') matchesCat = (pCat === 'new' || pCat === 'มือ 1' || pCat === 'มือหนึ่ง');
-            else if (catFilter === 'used') matchesCat = (pCat === 'used' || pCat === 'มือ 2' || pCat === 'มือสอง');
-            else if (catFilter === 'accessory') matchesCat = (pCat === 'accessory' || pCat === 'อุปกรณ์' || pCat === 'อุปกรณ์เสริม');
-            else if (catFilter === 'parts') matchesCat = (pCat === 'parts' || pCat === 'อะไหล่');
-            else matchesCat = (pCat === catFilter);
-            
+            const matchesSearch = p.name.toLowerCase().includes(searchQuery);
+            const matchesCat = catFilter === 'all' || p.category === catFilter;
             return matchesSearch && matchesCat;
         });
         
@@ -806,24 +788,27 @@
         };
 
         try {
-            const timestamp = new Date().toISOString();
-            await window.supabase.from('chat_messages').insert({ id: crypto.randomUUID(), chatId: activeChatId,
+            const timestampIso = new Date().toISOString();
+            const timestampMs = Date.now();
+            const supabase = window.supabaseClient;
+            if (!supabase) throw new Error("Supabase not initialized");
+
+            await supabase.from('chat_messages').insert({
+                id: crypto.randomUUID(),
+                chatId: activeChatId,
                 text: "แนะนำสินค้าชิ้นนี้ครับ!",
                 sender: 'seller',
-                timestamp: timestamp,
+                timestamp_ms: timestampMs,
                 type: 'card',
                 cardData: cardData,
                 isRead: false
-             });
+            });
 
-            await window.supabase.from('chats').update({
+            await supabase.from('chats').update({
                 lastMessage: "ส่งข้อมูลสินค้า: " + p.name,
-                lastTimestamp: timestamp,
+                lastTimestamp: timestampIso,
                 unreadCount: 0
             }).eq('id', activeChatId);
-            
-            if (window.fetchMessages) window.fetchMessages();
-            if (window.fetchChatList) window.fetchChatList();
         } catch (err) {
             console.error("[SellerChat] Error sending card:", err);
             alert("ส่งไม่สำเร็จ: " + err.message);
@@ -865,17 +850,21 @@
     }
     window.handleUrlDeepLink = handleUrlDeepLink;
 
-    window.sellerLogin = () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider).catch(err => {
-            console.error("Login Error:", err);
-            alert("Login Error: " + err.message);
-        });
+    window.sellerLogin = async () => {
+        const supabase = window.supabaseClient;
+        if (!supabase) return;
+        const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+        if (error) {
+            console.error("Login Error:", error);
+            alert("Login Error: " + error.message);
+        }
     };
 
-    window.sellerLogout = () => {
+    window.sellerLogout = async () => {
         localStorage.removeItem('paomobile_admin_active');
-        firebase.auth().signOut().then(() => window.location.reload());
+        const supabase = window.supabaseClient;
+        if (supabase) await supabase.auth.signOut();
+        window.location.reload();
     };
 
     window.handleFileUpload = async (input, type) => {
@@ -932,10 +921,13 @@
                 }
 
                 // 2. Fallback: Fetch directly from Supabase for full data
-                const { data: doc, error } = await window.supabase.from('products').select('*').eq('id', productId).single();
-                if (doc) {
-                    window.ProductDetail.open(doc);
-                    return;
+                const supabase = window.supabaseClient;
+                if (supabase) {
+                    const { data, error } = await supabase.from('products').select('*').eq('id', productId).single();
+                    if (data && !error) {
+                        window.ProductDetail.open({ id: data.id, ...data });
+                        return;
+                    }
                 }
             } catch (err) {
                 console.warn("[ChatCard] Modal open failed, navigating:", err);
@@ -1012,23 +1004,26 @@
         toggleEmojiPicker(); // Close picker
 
         try {
-            const timestamp = new Date().toISOString();
-            await window.supabase.from('chat_messages').insert({ id: crypto.randomUUID(), chatId: activeChatId,
+            const timestampIso = new Date().toISOString();
+            const timestampMs = Date.now();
+            const supabase = window.supabaseClient;
+            if (!supabase) throw new Error("Supabase not initialized");
+
+            await supabase.from('chat_messages').insert({
+                id: crypto.randomUUID(),
+                chatId: activeChatId,
                 type: 'sticker',
                 fileUrl: `${index}.png`,
                 sender: 'seller',
-                timestamp: timestamp,
+                timestamp_ms: timestampMs,
                 isRead: false
-             });
+            });
 
-            await window.supabase.from('chats').update({
+            await supabase.from('chats').update({
                 lastMessage: "✨ ส่งสติ๊กเกอร์",
-                lastTimestamp: timestamp,
+                lastTimestamp: timestampIso,
                 unreadCount: 0
             }).eq('id', activeChatId);
-            
-            if (window.fetchMessages) window.fetchMessages();
-            if (window.fetchChatList) window.fetchChatList();
         } catch (err) {
             console.error("[SellerChat] Sticker Send Error:", err);
             alert("❌ ส่งสติ๊กเกอร์ไม่สำเร็จครับ");
@@ -1036,20 +1031,10 @@
     };
 
     // Initialize — try immediately, the script loads after Firebase init in HTML
-    const startApp = () => {
-        try {
-            console.log("[SellerChat] starting initSellerChat()");
-            initSellerChat();
-        } catch(initErr) {
-            console.error("[SellerChat] CRITICAL: initSellerChat failed:", initErr);
-        }
-    };
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', startApp);
-    } else {
-        startApp();
+    try {
+        console.log("[SellerChat] IIFE end reached, calling initSellerChat()");
+        initSellerChat();
+    } catch(initErr) {
+        console.error("[SellerChat] CRITICAL: initSellerChat failed:", initErr);
     }
 })();
-
-
-

@@ -42,105 +42,71 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial render from local orders cache
     updateDashboard();
 
-    // --- v1.2.1 Auth & Firestore Initialization ---
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-        // v1.2.14 Update status immediately if db exists
-        if (typeof db !== 'undefined') {
-            const statusToast = document.getElementById('firestore-status');
-            if (statusToast) statusToast.innerHTML = '&bull; Firestore: กำลังซิงค์ข้อมูล... ⏳';
-        }
-
-        firebase.auth().onAuthStateChanged(user => {
-            const authEmail = document.getElementById('authEmail');
-            const authIndicator = document.getElementById('authIndicator');
-            const loginBtn = document.getElementById('adminLoginBtn');
-            const logoutBtn = document.getElementById('adminLogoutBtn');
-            
-            const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
-            const SELLER_EMAIL = "sattawat2560@gmail.com";
-            
-            if (user || localAdminActive) {
-                const email = user ? (user.email || (user.providerData && user.providerData[0] && user.providerData[0].email) || "").toLowerCase() : SELLER_EMAIL.toLowerCase();
-                const isAdmin = email.trim() === SELLER_EMAIL.toLowerCase().trim();
-                
-                if (authEmail) authEmail.textContent = email + (user ? "" : " (จำสิทธิ์ 🔒)");
-                if (authIndicator) {
-                    authIndicator.classList.remove('online', 'warning', 'offline');
-                    authIndicator.classList.add(isAdmin ? 'online' : 'warning');
-                }
-
-                if (isAdmin) {
-                    if (loginBtn) loginBtn.style.display = 'none';
-                    if (logoutBtn) logoutBtn.style.display = 'block';
-                    
-                    // v1.2.12 - Warn if only local bypass is active
-                    const authWarn = document.getElementById('auth-cloud-warning');
-                    if (authWarn) {
-                        authWarn.style.display = (!user) ? 'block' : 'none';
-                    }
-
-                    if (typeof db !== 'undefined') startFirestoreSync();
-                    localStorage.setItem('paomobile_admin_active', 'true');
-                } else {
-                    if (loginBtn) loginBtn.style.display = 'block';
-                    if (logoutBtn) logoutBtn.style.display = 'block';
-                }
-            } else {
-                const isFileProtocol = window.location.protocol === 'file:';
-                if (authEmail) authEmail.textContent = isFileProtocol ? "โบนัสโหมด (Guest)" : "กรุณาล็อกอิน Admin";
-                if (authIndicator) authIndicator.className = 'admin-status-dot offline';
-                if (loginBtn) loginBtn.style.display = 'block';
-                if (logoutBtn) logoutBtn.style.display = 'none';
-                
-                const authWarn = document.getElementById('auth-cloud-warning');
-                if (authWarn) authWarn.style.display = 'none';
-                
-                updateDashboard();
+    // --- v1.2.1 Auth & Firestore Initialization (Migrated to Supabase/Local Bypass) ---
+    const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
+    const SELLER_EMAIL = "sattawat2560@gmail.com";
+    
+    // Auto-update UI based on admin status
+    const runAuthStateInit = () => {
+        const authEmail = document.getElementById('authEmail');
+        const authIndicator = document.getElementById('authIndicator');
+        const loginBtn = document.getElementById('adminLoginBtn');
+        const logoutBtn = document.getElementById('adminLogoutBtn');
+        
+        if (localAdminActive) {
+            const email = SELLER_EMAIL.toLowerCase();
+            if (authEmail) authEmail.textContent = email + " (ผู้ดูแลระบบ 🔒)";
+            if (authIndicator) {
+                authIndicator.classList.remove('online', 'warning', 'offline');
+                authIndicator.classList.add('online');
             }
-        });
-    } else {
-        updateDashboard();
-    }
 
-    window.sellerLogin = async () => {
-        if (window.location.protocol === 'file:') {
-            localStorage.setItem('paomobile_admin_active', 'true');
-            alert("⚠️ ใช้งานโหมดนักพัฒนา (Local File Protocol) ข้ามการล็อกอินผ่าน Google และให้สิทธิ์ Admin ทันที");
-            window.location.reload();
-            return;
-        }
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (logoutBtn) logoutBtn.style.display = 'block';
+            
+            // v1.2.12 - Warn if only local bypass is active (not warning in Supabase context)
+            const authWarn = document.getElementById('auth-cloud-warning');
+            if (authWarn) authWarn.style.display = 'none';
 
-        try {
-            const { data, error } = await window.supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    queryParams: { prompt: 'select_account' },
-                    redirectTo: window.location.href
-                }
-            });
-            if (error) throw error;
-        } catch (err) {
-            alert("Login Error: " + err.message);
+            startSupabaseSync();
+        } else {
+            const isFileProtocol = window.location.protocol === 'file:';
+            if (authEmail) authEmail.textContent = isFileProtocol ? "โบนัสโหมด (Guest)" : "กรุณาล็อกอิน Admin";
+            if (authIndicator) authIndicator.className = 'admin-status-dot offline';
+            if (loginBtn) loginBtn.style.display = 'block';
+            if (logoutBtn) logoutBtn.style.display = 'none';
+            
+            const authWarn = document.getElementById('auth-cloud-warning');
+            if (authWarn) authWarn.style.display = 'none';
+            
+            updateDashboard();
         }
     };
+    
+    runAuthStateInit();
 
-    window.sellerLogout = async () => {
-        localStorage.removeItem('paomobile_admin_active');
-        if (window.supabase) {
-            await window.supabase.auth.signOut();
-        }
+    window.sellerLogin = () => {
+        localStorage.setItem('paomobile_admin_active', 'true');
+        alert("✅ เข้าสู่ระบบในฐานะ Admin เรียบร้อยแล้วครับ!");
         window.location.reload();
     };
 
-    function startFirestoreSync() {
-        console.log("[v2.0.0] Starting real-time sync (Supabase)...");
-        
-        if (!window.supabase) return;
+    window.sellerLogout = () => {
+        localStorage.removeItem('paomobile_admin_active');
+        window.location.reload();
+    };
 
-        const fetchAndMerge = async () => {
-            const { data: cloudOrders, error } = await window.supabase.from('orders').select('*');
+    function startSupabaseSync() {
+        console.log("[v1.2.1] Starting real-time sync with Supabase...");
+        
+        const supabase = window.supabaseClient;
+        if (!supabase) return;
+
+        // --- 1. Orders Sync ---
+        const fetchOrders = async () => {
+            const { data, error } = await supabase.from('orders').select('*');
             if (error) {
-                console.error("[v2.0.0] Sync Error:", error);
+                console.error("[v1.2.10] Sync Error:", error);
                 const statusToast = document.getElementById('firestore-status');
                 if (statusToast) {
                     let msg = 'ออฟไลน์ ⚠️';
@@ -151,17 +117,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateDashboard();
                 return;
             }
-
-            let fetchedOrders = cloudOrders || [];
+            
+            let fetchedOrders = data.map(doc => ({ ...doc }));
+            
             fetchedOrders.sort((a, b) => {
-                const dateA = new Date(a.orderDate || a.createdAt || 0);
-                const dateB = new Date(b.orderDate || b.createdAt || 0);
+                const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+                const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
                 return dateB - dateA;
             });
             
             ordersData = processExpirations(fetchedOrders);
             
-            localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
+            localStorage.setItem('pao_global_orders', JSON.stringify(ordersData.map(o => ({...o, items: o.items ? o.items.map(i => ({id:i.id, name:i.name, price:i.price, quantity:i.quantity, img:i.img})) : []}))));
             const statusToast = document.getElementById('firestore-status');
             if (statusToast) {
                 statusToast.innerHTML = '<span style="color:#52c41a;">&bull;</span> Cloud: เชื่อมต่อสำเร็จ ✅';
@@ -170,26 +137,39 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             updateDashboard();
         };
-
-        fetchAndMerge();
-
-        // Realtime Subscription
-        window.supabase.channel('public:orders_admin_centre')
+        fetchOrders();
+        supabase.channel('public:orders:seller-centre')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
-                fetchAndMerge();
-            })
-            .subscribe();
+                if (payload.eventType === 'INSERT') {
+                    try {
+                        // Play a simple notification sound
+                        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                        audio.play().catch(e => console.log(e));
+                    } catch(e) {}
+                    if (window.sellerAlert) {
+                        window.sellerAlert('มีลูกค้าสั่งของเข้ามาใหม่ครับ!', 'success');
+                    } else {
+                        alert('มีลูกค้าสั่งของเข้ามาใหม่ครับ!');
+                    }
+                }
+                fetchOrders();
+            }).subscribe();
 
-        // Products Sync (for stats)
-        db.collection('products').onSnapshot(snapshot => {
+        // --- 2. Products Sync ---
+        const fetchProducts = async () => {
+            const { data, error } = await supabase.from('products').select('*');
+            if (error) {
+                console.warn("[v1.2.11] Product sync failed:", error);
+                return;
+            }
+            
             let outOfStockCount = 0;
-            snapshot.docs.forEach(doc => {
-                const data = doc.data();
+            data.forEach(data => {
                 if (data.stock === 0 || data.stock === "0") {
                     outOfStockCount++;
                 }
             });
-            const count = snapshot.size;
+            const count = data.length;
             const totalProductsCount = count > 0 ? count : 17; 
             
             localStorage.setItem('pao_total_products_count', totalProductsCount);
@@ -199,36 +179,46 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elTotalProducts) elTotalProducts.textContent = totalProductsCount;
             const elOutstock = document.getElementById('stat-outstock');
             if (elOutstock) elOutstock.textContent = outOfStockCount;
-        }, err => {
-            console.warn("[v1.2.11] Product sync failed:", err);
-        });
+        };
+        fetchProducts();
+        supabase.channel('public:products:seller-centre')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
+                fetchProducts();
+            }).subscribe();
 
-        // Chat Unread Sync is now handled globally by seller-presence.js
-
-        // Customers Sync
-        db.collection('users').onSnapshot(snapshot => {
-            const count = snapshot.size;
-            localStorage.setItem('pao_total_customers_count', count);
-            const el = document.getElementById('insight-customers');
-            if (el) el.textContent = count;
-        }, err => {
-            console.warn("Customer sync failed:", err);
-        });
-
-        // Promotion List Sync
+        // --- 3. Customers Sync ---
+        const fetchCustomers = async () => {
+            // Check if profiles table exists, else fallback
+            const { count, error } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+            if (!error) {
+                localStorage.setItem('pao_total_customers_count', count || 0);
+                const el = document.getElementById('insight-customers');
+                if (el) el.textContent = count || 0;
+            }
+        };
+        fetchCustomers();
+        
+        // --- 4. Promotion List Sync ---
         loadPromoList();
     }
 
-    // v1.2.15 - Public Syncs (Run even if admin sync hangs/blocked)
-    if (typeof db !== 'undefined') {
+    // Public Syncs
+    if (window.supabaseClient) {
         loadPromoList();
         
-        // Voucher Sync (Public Read) - Client-side sort to avoid index issues
-        db.collection('vouchers').onSnapshot(snapshot => {
+        const fetchVouchers = async () => {
+            const supabase = window.supabaseClient;
+            const { data, error } = await supabase.from('vouchers').select('*');
+            if (error) {
+                console.error("Voucher sync error:", error);
+                const list = document.getElementById('quick-qr-list');
+                if (list) list.innerHTML = `<div style="grid-column: 1/-1; padding: 20px; text-align: center; color: #ef4444; font-size: 0.8rem;">⚠️ โหลดคูปองไม่ได้: ${error.message}</div>`;
+                return;
+            }
+            
             const now = new Date().toISOString().split('T')[0];
             const activeDocs = [];
-            snapshot.forEach(doc => {
-                const v = doc.data();
+            data.forEach(v => {
                 if (v.isPermanent || !v.expiry || v.expiry >= now) {
                     activeDocs.push(v);
                 }
@@ -238,27 +228,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elVouchers) elVouchers.textContent = activeDocs.length;
             localStorage.setItem('pao_total_vouchers_count', activeDocs.length);
             
-            // Client-side sort by createdAt desc
             activeDocs.sort((a, b) => {
-                const getMillis = (data) => {
-                    try {
-                        if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-                            return data.createdAt.toDate().getTime();
-                        }
-                        if (data.createdAt === null) return Date.now();
-                        if (data.createdAt && data.createdAt.seconds) return data.createdAt.seconds * 1000;
-                        if (data.createdAt) return new Date(data.createdAt).getTime() || 0;
-                    } catch(e) {}
-                    return 0;
-                };
-                return getMillis(b) - getMillis(a);
+                const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return dateB - dateA;
             });
             renderQuickVouchers(activeDocs);
-        }, err => {
-            console.error("Voucher sync error:", err);
-            const list = document.getElementById('quick-qr-list');
-            if (list) list.innerHTML = `<div style="grid-column: 1/-1; padding: 20px; text-align: center; color: #ef4444; font-size: 0.8rem;">⚠️ โหลดคูปองไม่ได้: ${err.message}</div>`;
-        });
+        };
+        fetchVouchers();
+        window.supabaseClient.channel('public:vouchers:seller-centre')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'vouchers' }, payload => {
+                fetchVouchers();
+            }).subscribe();
     }
     
     // v1.2.13 - Ensure promo list runs even if sync hangs (public read allowed)
@@ -279,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="quick-qr-item">
                 <div class="quick-qr-code">${v.code}</div>
                 <div class="quick-qr-title">${v.title}</div>
-                <button class="btn-gen-qr-small" onclick="generateSecureQR('${v.code}', event)">🎫 สร้าง QR</button>
+                <button class="btn-gen-qr-small" onclick="generateSecureQR('${v.code}')">🎫 สร้าง QR</button>
             </div>
         `).join('');
     }
@@ -287,24 +268,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Secure QR Logic (Reused from seller-vouchers.js)
     let timerInterval = null;
 
-    window.generateSecureQR = async (code, e) => {
+    window.generateSecureQR = async (code) => {
         try {
-            const btn = e ? e.target : window.event.target;
+            const btn = event.target;
             const originalText = btn.textContent;
             btn.disabled = true;
             btn.textContent = '🕒';
 
             const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 Hour
-            const qrRef = await db.collection('voucher_qrs').add({
+            const qrId = crypto.randomUUID();
+            await window.supabaseClient.from('voucher_qrs').insert({
+                id: qrId,
                 voucherCode: code,
-                expiresAt: firebase.firestore.Timestamp.fromDate(expiresAt),
+                expiresAt: expiresAt.toISOString(),
                 usedBy: null,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: new Date().toISOString()
             });
 
             // Construct Link
             const baseUrl = window.location.href.split('seller-centre.html')[0];
-            const redeemUrl = `${baseUrl}redeem.html?id=${qrRef.id}`;
+            const redeemUrl = `${baseUrl}redeem.html?id=${qrId}`;
             document.getElementById('qrLinkText').textContent = redeemUrl;
 
             // Generate QR via API
@@ -382,9 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     const elapsed = Date.now() - timeVal;
                     if (elapsed > 30 * 60 * 1000) {
                         o.status = 'ยกเลิกแล้ว';
-                        if (window.supabase) {
-                            window.supabase.from('orders').update({ status: 'ยกเลิกแล้ว' }).eq('id', o.id)
-                                .then(({error}) => { if(error) console.warn("Admin background expiry sync failed for", o.id, error) });
+                        // Sync to Cloud automatically
+                        if (window.supabaseClient) {
+                            window.supabaseClient.from('orders').update({ status: 'ยกเลิกแล้ว' }).eq('id', o.id)
+                                .catch(err => console.warn("Admin background expiry sync failed for", o.id, err));
                         }
                     }
                 }
@@ -570,21 +554,19 @@ function renderRecentOrders(orders) {
 }
 
 async function deleteOrder(orderId) {
-    if (!(await sellerConfirm('🚨 ยืนยันการลบออเดอร์ ' + orderId + ' ใช่ไหมคับ? (ลบแล้วกู้ไม่ได้นะค๊าบ)', 'delete'))) return;
+    if (!await window.sellerConfirm('🚨 ยืนยันการลบออเดอร์ ' + orderId + ' ใช่ไหมคับ? (ลบแล้วกู้ไม่ได้นะค๊าบ)', 'delete')) return;
     
-    if (window.supabase) {
-        window.supabase.from('orders').delete().eq('id', orderId)
-            .then(({error}) => {
-                if(error) sellerAlert("ลบไม่สำเร็จ (Error): " + error.message, 'error');
-                else sellerAlert("ลบทิ้งเรียบร้อยแล้วคับ!", 'success');
-            });
+    if (window.supabaseClient) {
+        window.supabaseClient.from('orders').delete().eq('id', orderId)
+            .then(() => alert("ลบทิ้งเรียบร้อยแล้วคับ!"))
+            .catch(err => alert("ลบไม่สำเร็จ (Error): " + err.message));
     } else {
         // Fallback local delete
         const gOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
         const filtered = gOrders.filter(o => o.id !== orderId);
         localStorage.setItem('pao_global_orders', JSON.stringify(filtered));
         updateDashboard();
-        sellerAlert("ลบในเครื่องเรียบร้อย (ไม่ได้ซิงค์ Cloud)", 'success');
+        alert("ลบในเครื่องเรียบร้อย (ไม่ได้ซิงค์ Cloud)");
     }
 }
 
@@ -599,21 +581,20 @@ function getStatusStyle(status) {
 }
 
 // Order Management Actions
-function shipOrder(orderId) {
-    if(!confirm('ยืนยันแจ้งเลขพัสดุ หมายเลข ' + orderId + ' ?\nสถานะจะเปลี่ยนเป็น "ที่ต้องได้รับ" คับ')) return;
+async function shipOrder(orderId) {
+    if(!await window.sellerConfirm('ยืนยันแจ้งเลขพัสดุ หมายเลข ' + orderId + ' ?\nสถานะจะเปลี่ยนเป็น "ที่ต้องได้รับ" คับ')) return;
     
-    if (window.supabase) {
-        window.supabase.from('orders').update({ status: 'ที่ต้องได้รับ' }).eq('id', orderId)
-            .then(({error}) => {
-                if (error) {
-                    console.error("Supabase update failed:", error);
-                    alert("Error: " + error.message);
-                } else {
-                    alert('อัปเดตสถานะ "ที่ต้องได้รับ" สำเร็จแล้วคับ!');
-                }
+    if (window.supabaseClient) {
+        window.supabaseClient.from('orders').update({ status: 'ที่ต้องได้รับ' }).eq('id', orderId)
+            .then(() => {
+                alert('อัปเดตสถานะ "ที่ต้องได้รับ" สำเร็จแล้วคับ!');
+            })
+            .catch(err => {
+                console.error("Supabase update failed:", err);
+                alert("Error: " + err.message);
             });
     } else {
-        alert('ไม่ได้เชื่อมต่อ Firestore คับ');
+        alert('ไม่ได้เชื่อมต่อ Supabase คับ');
     }
 }
 
@@ -766,85 +747,61 @@ let _currentPromoImgBase64 = null;
 
 /* ── Render promotion list in dashboard card ── */
 function loadPromoList() {
-    if (!window.supabase) return;
-
-    const renderDocs = (docs) => {
-        const area  = document.getElementById('promo-list-area');
-        const count = document.getElementById('promo-count');
-        if (count) count.textContent = docs ? docs.length : 0;
-        if (!area) return;
-
-        if (!docs || docs.length === 0) {
-            area.innerHTML = `<div style="text-align:center;padding:30px 20px;color:#94a3b8;">
-                <div style="font-size:2.5rem;margin-bottom:10px;">🎁</div>
-                <div style="font-weight:600;margin-bottom:6px;">ยังไม่มีโปรโมชั่นบนคลาวด์</div>
-                <div style="font-size:0.85rem;margin-bottom:15px;">คุณสามารถใช้เทมเพลตเริ่มต้น หรือกดเพิ่มใหม่ได้คับ</div>
-                <button onclick="seedDefaultPromos(this)" style="background:#f8fafc; border:1.5px solid #e2e8f0; padding:8px 16px; border-radius:10px; font-size:0.8rem; font-weight:700; cursor:pointer; color:#475569;">
-                    ✨ ใช้โปรโมชั่นเริ่มต้น (2 รายการ)
-                </button>
-            </div>`;
-            return;
-        }
-
-        docs.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-
-        area.innerHTML = docs.map((p, idx) => {
-            const imgSrc   = p.imageBase64 || p.imageUrl || '';
-            const isActive = p.active !== false;
-            const sc = isActive ? {bg:'#f0fdf4',c:'#16a34a',b:'#bbf7d0',t:'✅ แสดง'} : {bg:'#fff1f0',c:'#dc2626',b:'#fca5a5',t:'⛔ ซ่อน'};
-            return `<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #f1f5f9;border-radius:12px;margin-bottom:8px;background:#fafafa;"
-                         onmouseenter="this.style.borderColor='#e2e8f0'" onmouseleave="this.style.borderColor='#f1f5f9'">
-                <div style="width:72px;height:48px;border-radius:8px;overflow:hidden;background:#e2e8f0;flex-shrink:0;">
-                    ${imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖼️</div>'}
-                </div>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-weight:700;color:#0f172a;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.title || '(ไม่มีชื่อ)'}</div>
-                    <span style="font-size:0.7rem;background:${sc.bg};color:${sc.c};border:1px solid ${sc.b};padding:1px 8px;border-radius:20px;font-weight:600;">${sc.t}</span>
-                </div>
-                <span style="font-size:0.72rem;color:#94a3b8;flex-shrink:0;">สไลด์ ${idx+1}</span>
-                <div style="display:flex;gap:6px;flex-shrink:0;">
-                    <button onclick="openPromoEditor('${p.id}')" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;padding:5px 10px;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;">✏️ แก้ไข</button>
-                    <button onclick="deletePromotion('${p.id}')" style="background:#fff1f0;color:#dc2626;border:1px solid #fca5a5;padding:5px 10px;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;">🗑️</button>
-                </div>
-            </div>`;
-        }).join('');
-    };
+    const supabase = window.supabaseClient;
+    if (!supabase) return;
 
     const fetchPromos = async () => {
-        const { data: rawDocs, error } = await window.supabase.from('promotions').select('*');
-        if (error) {
-            console.error('[Promo] List error:', error);
-            const area = document.getElementById('promo-list-area');
-            if (area) area.innerHTML = `<div style="color:#dc2626;padding:16px;font-size:0.85rem;">❌ โหลดไม่ได้: ${error.message}</div>`;
-            return;
-        }
-        
-        const docs = (rawDocs || []).map(row => {
-            try {
-                const parsed = JSON.parse(row.description || '{}');
-                return { ...parsed, id: row.id, title: row.title, imageBase64: row.img || parsed.imageBase64, createdAt: row.created_at };
-            } catch {
-                return { id: row.id, title: row.title, desc: row.description, imageBase64: row.img, createdAt: row.created_at, active: true };
-            }
-        });
-
-        localStorage.setItem('pao_admin_cache_promotions', JSON.stringify(docs));
-        renderDocs(docs);
-    };
-
-    // ZeroFlash: Load from cache instantly
-    const cached = localStorage.getItem('pao_admin_cache_promotions');
-    if (cached) {
         try {
-            renderDocs(JSON.parse(cached));
-        } catch(e) {}
-    }
+            const { data: docs, error } = await supabase.from('promotions').select('*');
+            if (error) throw error;
 
+            const area  = document.getElementById('promo-list-area');
+            const count = document.getElementById('promo-count');
+            if (count) count.textContent = docs.length;
+            if (!area) return;
+
+            if (docs.length === 0) {
+                area.innerHTML = `<div style="text-align:center;padding:30px 20px;color:#94a3b8;">
+                    <div style="font-size:2.5rem;margin-bottom:10px;">🎁</div>
+                    <div style="font-weight:600;margin-bottom:6px;">ยังไม่มีโปรโมชั่นบนคลาวด์</div>
+                    <div style="font-size:0.85rem;margin-bottom:15px;">คุณสามารถใช้เทมเพลตเริ่มต้น หรือกดเพิ่มใหม่ได้คับ</div>
+                    <button onclick="seedDefaultPromos()" style="background:#f8fafc; border:1.5px solid #e2e8f0; padding:8px 16px; border-radius:10px; font-size:0.8rem; font-weight:700; cursor:pointer; color:#475569;">
+                        ✨ ใช้โปรโมชั่นเริ่มต้น (2 รายการ)
+                    </button>
+                </div>`;
+                return;
+            }
+
+            // Sort client-side by order field
+            docs.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+            area.innerHTML = docs.map((p, idx) => {
+                const imgSrc   = p.imageBase64 || p.imageUrl || p.img || p.image || '';
+                const isActive = p.active !== false;
+                const sc = isActive ? {bg:'#f0fdf4',c:'#16a34a',b:'#bbf7d0',t:'✅ แสดง'} : {bg:'#fff1f0',c:'#dc2626',b:'#fca5a5',t:'⛔ ซ่อน'};
+                return `<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #f1f5f9;border-radius:12px;margin-bottom:8px;background:#fafafa;"
+                             onmouseenter="this.style.borderColor='#e2e8f0'" onmouseleave="this.style.borderColor='#f1f5f9'">
+                    <div style="width:72px;height:48px;border-radius:8px;overflow:hidden;background:#e2e8f0;flex-shrink:0;">
+                        ${imgSrc ? `<img src="${imgSrc}" style="width:100%;height:100%;object-fit:cover;">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖼️</div>'}
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:700;color:#0f172a;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.title || '(ไม่มีชื่อ)'}</div>
+                        <span style="font-size:0.7rem;background:${sc.bg};color:${sc.c};border:1px solid ${sc.b};padding:1px 8px;border-radius:20px;font-weight:600;">${sc.t}</span>
+                    </div>
+                    <span style="font-size:0.72rem;color:#94a3b8;flex-shrink:0;">สไลด์ ${idx+1}</span>
+                    <div style="display:flex;gap:6px;flex-shrink:0;">
+                        <button onclick="openPromoEditor('${p.id}')" style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;padding:5px 10px;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;">✏️ แก้ไข</button>
+                        <button onclick="deletePromotion('${p.id}')" style="background:#fff1f0;color:#dc2626;border:1px solid #fca5a5;padding:5px 10px;border-radius:7px;font-size:0.75rem;font-weight:600;cursor:pointer;">🗑️</button>
+                    </div>
+                </div>`;
+            }).join('');
+        } catch (err) {
+            console.error('[Promo] List error:', err);
+            const area = document.getElementById('promo-list-area');
+            if (area) area.innerHTML = `<div style="color:#dc2626;padding:16px;font-size:0.85rem;">❌ โหลดไม่ได้: ${err.message}</div>`;
+        }
+    };
     fetchPromos();
-    
-    window.supabase.channel('public:promotions_admin')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'promotions' }, () => fetchPromos())
-        .subscribe();
 }
 
 /* ── Open editor modal ── */
@@ -870,16 +827,21 @@ window.openPromoEditor = async function(docId) {
 
     if (docId) {
         try {
-            const { data: doc, error } = await window.supabase.from('promotions').select('*').eq('id', docId).single();
-            const d = (!error && doc) ? doc : {};
-            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-            set('promoTitle', d.title); set('promoSubDesc', d.subDesc);
-            set('promoDesc', d.desc);   set('promoCTALink', d.ctaLink);
-            set('pkg1Name', d.pkg1Name); set('pkg1Price', d.pkg1Price);
-            set('pkg2Name', d.pkg2Name); set('pkg2Price', d.pkg2Price);
-            set('pkg2OldPrice', d.pkg2OldPrice); set('pkg2Badge', d.pkg2Badge);
-            if (activeChk) { activeChk.checked = (d.active !== false); syncToggleUI(activeChk.checked); }
-            if (d.imageBase64 || d.imageUrl) showModalImgPreview(d.imageBase64 || d.imageUrl);
+            const supabase = window.supabaseClient;
+            if (supabase) {
+                const { data: d, error } = await supabase.from('promotions').select('*').eq('id', docId).single();
+                if (!error && d) {
+                    const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+                    set('promoTitle', d.title); set('promoSubDesc', d.subDesc);
+                    set('promoDesc', d.desc);   set('promoCTALink', d.ctaLink);
+                    set('pkg1Name', d.pkg1Name); set('pkg1Price', d.pkg1Price);
+                    set('pkg2Name', d.pkg2Name); set('pkg2Price', d.pkg2Price);
+                    set('pkg2OldPrice', d.pkg2OldPrice); set('pkg2Badge', d.pkg2Badge);
+                    if (activeChk) { activeChk.checked = (d.active !== false); syncToggleUI(activeChk.checked); }
+                    const existingImg = d.imageBase64 || d.imageUrl || d.img || d.image;
+                    if (existingImg) showModalImgPreview(existingImg);
+                }
+            }
         } catch(e) { console.warn('[Promo] Load error:', e); }
     }
     if (activeChk) activeChk.onchange = () => syncToggleUI(activeChk.checked);
@@ -900,10 +862,39 @@ window.closePromoEditor = function() {
 window.handlePromoImgUpload = function(event) {
     const file = event.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('⚠️ รูปใหญ่เกิน 5MB'); return; }
+    
     const reader = new FileReader();
-    reader.onload = e => { _currentPromoImgBase64 = e.target.result; showModalImgPreview(_currentPromoImgBase64); };
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            let w = img.width;
+            let h = img.height;
+            const maxDimension = 1200;
+            
+            if (w > maxDimension || h > maxDimension) {
+                if (w > h) {
+                    h = Math.floor(h * (maxDimension / w));
+                    w = maxDimension;
+                } else {
+                    w = Math.floor(w * (maxDimension / h));
+                    h = maxDimension;
+                }
+            }
+            
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            
+            // Compress heavily to ensure it fits in Firestore (1MB limit)
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            _currentPromoImgBase64 = dataUrl;
+            showModalImgPreview(_currentPromoImgBase64);
+        };
+        img.src = e.target.result;
+    };
     reader.readAsDataURL(file);
+    event.target.value = ''; // Reset input
 };
 
 function showModalImgPreview(src) {
@@ -922,10 +913,7 @@ window.savePromotion = async function() {
     const btn = document.getElementById('promoSaveBtn');
     btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
 
-    // Safe server timestamp (works in both compat and modular)
-    const ts = (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue)
-        ? firebase.firestore.FieldValue.serverTimestamp()
-        : new Date();
+    const ts = new Date().toISOString();
 
     const g = id => document.getElementById(id)?.value.trim() || '';
     const payload = {
@@ -939,33 +927,18 @@ window.savePromotion = async function() {
     if (_currentPromoImgBase64) payload.imageBase64 = _currentPromoImgBase64;
 
     try {
-        if (!window.supabase) throw new Error('Supabase SDK ยังไม่พร้อม');
+        const supabase = window.supabaseClient;
+        if (!supabase) throw new Error('Supabase ยังไม่พร้อม');
         
-        payload.updatedAt = new Date().toISOString();
-        const sbRow = {
-            title: payload.title || '',
-            description: JSON.stringify(payload),
-            img: payload.imageBase64 || '',
-            discount: 0
-        };
-
         if (_currentPromoId) {
-            const { error } = await window.supabase.from('promotions').update(sbRow).eq('id', _currentPromoId);
-            if (error) throw error;
+            await supabase.from('promotions').update(payload).eq('id', _currentPromoId);
         } else {
-            const { data: snap, error: snapErr } = await window.supabase.from('promotions').select('id');
-            if (snapErr) throw snapErr;
-            payload.order = snap ? snap.length : 0;
-            payload.createdAt = new Date().toISOString();
-            
-            sbRow.id = 'promo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-            sbRow.description = JSON.stringify(payload); // re-stringify with order and createdAt
-            
-            const { error: insErr } = await window.supabase.from('promotions').insert([sbRow]);
-            if (insErr) throw insErr;
+            const { count } = await supabase.from('promotions').select('*', { count: 'exact', head: true });
+            payload.order = count || 0;
+            payload.createdAt = ts;
+            await supabase.from('promotions').insert(payload);
         }
         btn.textContent = '✅ บันทึกแล้ว!';
-        loadPromoList();
         setTimeout(() => { btn.disabled = false; btn.textContent = '💾 บันทึก & อัปเดต'; closePromoEditor(); }, 1000);
     } catch(e) {
         console.error('[Promo] Save error:', e);
@@ -977,60 +950,45 @@ window.savePromotion = async function() {
 /* ── Delete promotion ── */
 window.deletePromotion = async function(docId) {
     const id = docId || _currentPromoId;
-    if (!id || !confirm('🗑️ ลบโปรโมชั่นนี้ใช่ไหมคับ?')) return;
+    if (!id || !await window.sellerConfirm('🗑️ ลบโปรโมชั่นนี้ใช่ไหมคับ?', 'delete')) return;
     try {
-        const { error } = await window.supabase.from('promotions').delete().eq('id', id);
-        if (error) throw error;
+        const supabase = window.supabaseClient;
+        if (supabase) {
+            await supabase.from('promotions').delete().eq('id', id);
+        }
         if (_currentPromoId === id) closePromoEditor();
-        loadPromoList();
     } catch(e) { alert('❌ ลบไม่สำเร็จ: ' + e.message); }
 };
 
 /* ── Seed default promotions ── */
-window.seedDefaultPromos = async function(btn) {
-    if (!confirm('ต้องการเพิ่มโปรโมชั่นเริ่มต้น 2 รายการ (ผ่อนซ่อม & Accessory) ลงในระบบคลาวด์ใช่ไหมคับ?')) return;
-    
-    const originalText = btn ? btn.textContent : '';
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ กำลังส่งข้อมูล...';
-    }
+window.seedDefaultPromos = async function() {
+    if (!await window.sellerConfirm('ต้องการเพิ่มโปรโมชั่นเริ่มต้น 2 รายการ (ผ่อนซ่อม & Accessory) ลงในระบบคลาวด์ใช่ไหมคับ?')) return;
     
     try {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '⏳ กำลังส่งข้อมูล...';
+
+        const supabase = window.supabaseClient;
+        if (!supabase) return;
 
         for (const p of DEFAULT_PROMOS) {
-            const nowIso = new Date().toISOString();
-            const payload = {
+            await supabase.from('promotions').insert({
                 ...p,
-                createdAt: nowIso,
-                updatedAt: nowIso
-            };
-            const sbRow = {
-                id: 'promo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-                title: payload.title || '',
-                description: JSON.stringify(payload),
-                img: payload.imageBase64 || '',
-                discount: 0
-            };
-            const { error } = await window.supabase.from('promotions').insert([sbRow]);
-            if (error) throw new Error(error.message || JSON.stringify(error));
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
         }
         alert('✅ เพิ่มโปรโมชั่นเริ่มต้นสำเร็จแล้วคับ!');
-        loadPromoList();
-        if (btn) {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }
+        btn.textContent = originalText;
+        btn.disabled = false;
     } catch (e) {
         console.error(e);
-        alert('❌ เพิ่มไม่สำเร็จ: ' + e.message);
-        if (btn) {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        }
+        alert('❌ เพิ่มไม่สำเร็จ: ' + e.message + '\n(โปรดตรวจสอบว่าคุณล็อกอิน Admin หรือยัง)');
+        btn.disabled = false;
     }
 };
 
 // Auto-start list when Firestore is ready — called from startFirestoreSync above
 // (No DOMContentLoaded fallback needed: db is only ready after auth)
-

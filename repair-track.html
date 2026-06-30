@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เช็คสถานะงานซ่อม — Paomobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Thai:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=202">
+    <style>
+        body { background: var(--bg, #FFFBF5); font-family: 'Outfit', 'Noto Sans Thai', sans-serif; }
+        
+        .track-hero {
+            position: relative;
+            background: var(--bg);
+            padding: 160px 20px 120px;
+            text-align: center;
+            overflow: hidden;
+            margin-top: 0;
+        }
+        
+        .track-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at 50% 50%, rgba(234, 88, 12, 0.08) 0%, transparent 60%);
+            animation: pulseBg 10s infinite alternate;
+            pointer-events: none;
+        }
+        @keyframes pulseBg {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+
+        .track-hero h1 { 
+            font-size: 3.5rem; 
+            margin-bottom: 20px; 
+            background: linear-gradient(90deg, #f59e0b, #ea580c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            position: relative;
+            z-index: 2;
+            letter-spacing: -1px;
+        }
+        .track-hero p { 
+            color: rgba(255, 255, 255, 0.9) !important; 
+            font-size: 1.25rem; 
+            max-width: 650px; 
+            margin: 0 auto 50px; 
+            position: relative;
+            z-index: 2;
+            line-height: 1.7;
+        }
+
+        .search-box {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 12px;
+            border-radius: 100px;
+            max-width: 750px;
+            margin: -70px auto 60px;
+            box-shadow: 0 20px 40px rgba(234, 88, 12, 0.12), 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 12px;
+            position: relative;
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .search-box:focus-within {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(234, 88, 12, 0.18), 0 0 0 4px rgba(234, 88, 12, 0.1);
+            border-color: rgba(234, 88, 12, 0.2);
+        }
+
+        .search-box input {
+            flex-grow: 1;
+            padding: 16px 30px;
+            border: none;
+            background: transparent;
+            border-radius: 100px;
+            font-size: 1.15rem;
+            font-family: inherit;
+            outline: none;
+            color: #1c1917;
+        }
+        .search-box input::placeholder { color: #a8a29e; font-weight: 400; }
+        
+        .search-box button {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: #fff;
+            border: none;
+            padding: 0 45px;
+            border-radius: 100px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            box-shadow: 0 8px 20px rgba(234, 88, 12, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .search-box button:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 12px 25px rgba(234, 88, 12, 0.4);
+            background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+        }
+        .search-box button:active { transform: translateY(1px); }
+
+        .results-container {
+            max-width: 1100px;
+            margin: 0 auto 100px;
+            padding: 0 20px;
+        }
+
+        .job-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 25px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+            border: 1px solid rgba(0,0,0,0.02);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .job-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 20px 50px rgba(234, 88, 12, 0.1);
+            border-color: rgba(234, 88, 12, 0.15);
+        }
+        .job-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 6px; height: 100%;
+            background: linear-gradient(180deg, #f97316, #fb923c);
+            border-radius: 6px 0 0 6px;
+        }
+        
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .job-id { 
+            background: #fff7ed;
+            color: #ea580c; 
+            font-weight: 700; 
+            font-family: 'Outfit', monospace; 
+            font-size: 0.85rem; 
+            padding: 4px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+        .job-customer { font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0; }
+        .job-device { color: #64748b; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+        .job-issue { 
+            background: #fef2f2; 
+            color: #e11d48; 
+            padding: 8px 16px; 
+            border-radius: 12px; 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px; 
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 9px;
+            top: 15px;
+            bottom: 15px;
+            width: 3px;
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        .timeline-step {
+            position: relative;
+            margin-bottom: 45px;
+        }
+        .timeline-step:last-child { margin-bottom: 0; }
+        
+        .step-dot {
+            position: absolute;
+            left: -39px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            border: 4px solid #e2e8f0;
+            z-index: 2;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .step-content {
+            padding-left: 20px;
+        }
+        .step-title {
+            font-weight: 700;
+            color: #64748b;
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+            transition: color 0.3s;
+        }
+        .step-time {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Active / Completed States */
+        .timeline-step.active .step-dot { 
+            border-color: #ee4d2d; 
+            background: #fff; 
+            box-shadow: 0 0 0 6px rgba(238, 77, 45, 0.15); 
+        }
+        .timeline-step.active .step-dot::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 8px; height: 8px;
+            background: #ee4d2d;
+            border-radius: 50%;
+        }
+        .timeline-step.active .step-title { color: #ee4d2d; }
+        
+        .timeline-step.completed .step-dot { 
+            border-color: #10b981; 
+            background: #10b981; 
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.15); 
+        }
+        .timeline-step.completed .step-dot::after {
+            content: '✓';
+            position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+        }
+        .timeline-step.completed .step-title { color: #059669; }
+
+        /* Animation */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-up { animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        .empty-state { 
+            text-align: center; 
+            padding: 80px 20px; 
+            color: #94a3b8;
+        }
+        .empty-state h3 { 
+            color: var(--text-dark, #1C1710) !important; 
+            margin-bottom: 15px; 
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+
+        /* Customer Stats Premium */
+        .customer-stats {
+            display: flex; gap: 20px; max-width: 800px; margin: 30px auto 50px; padding: 0 20px;
+            position: relative; z-index: 5;
+        }
+        .customer-stat-box {
+            flex: 1; 
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px; 
+            padding: 25px 20px; 
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+        .customer-stat-box::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+        }
+        .stat-repairing::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .stat-completed::before { background: linear-gradient(90deg, #f97316, #fb923c); }
+        .stat-returned::before { background: linear-gradient(90deg, #10b981, #34d399); }
+        
+        .customer-stat-box:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 20px 40px rgba(234, 88, 12, 0.1); 
+            border-color: rgba(234, 88, 12, 0.15);
+        }
+        
+        .stat-icon {
+            display: inline-flex; justify-content: center; align-items: center;
+            width: 42px; height: 42px; border-radius: 12px; margin-bottom: 10px;
+        }
+        .stat-icon svg { width: 20px; height: 20px; }
+        .stat-repairing .stat-icon { background: #eff6ff; color: #3b82f6; }
+        .stat-completed .stat-icon { background: #fff7ed; color: #f97316; }
+        .stat-returned .stat-icon { background: #ecfdf5; color: #10b981; }
+
+        .stat-value { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 6px; font-family: 'Outfit', sans-serif; }
+        .stat-label { font-size: 0.9rem; color: #64748b; font-weight: 600; }
+        
+        /* Gradient Text */
+        .stat-repairing .stat-value { background: linear-gradient(90deg, #2563eb, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-completed .stat-value { background: linear-gradient(90deg, #ea580c, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-returned .stat-value { background: linear-gradient(90deg, #059669, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        @media (max-width: 600px) {
+            .customer-stats { flex-direction: row; flex-wrap: wrap; margin-top: 20px; gap: 15px; }
+            .customer-stat-box { padding: 18px 10px; min-width: 30%; }
+            .stat-value { font-size: 2rem; }
+            .stat-icon { width: 40px; height: 40px; border-radius: 12px; margin-bottom: 10px; }
+            .stat-icon svg { width: 20px; height: 20px; }
+            .stat-label { font-size: 0.85rem; }
+        }
+
+        /* Custom Navbar for this page to look premium */
+        .premium-nav {
+            background: var(--bg-dark, #1C1710) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: var(--text-on-dark, #F5EDE0) !important;
+            padding: 20px 40px !important;
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            transition: var(--transition, 0.3s);
+        }
+        .premium-nav .logo {
+            font-weight: 800; font-size: 1.6rem; cursor: pointer; letter-spacing: -0.5px;
+        }
+        .premium-nav .logo span:first-child { color: var(--text-on-dark, #F5EDE0); }
+        .premium-nav .logo span:last-child { color: var(--orange-500, #FF7A28); }
+        .premium-nav a.back-btn {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            background: rgba(255,255,255,0.05);
+            transition: var(--transition, 0.3s);
+        }
+        .premium-nav a.back-btn:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        @media (max-width: 600px) {
+            .track-hero h1 { font-size: 2.2rem; }
+            .search-box { flex-direction: column; padding: 20px; border-radius: 24px; }
+            .search-box button { padding: 18px; justify-content: center; }
+            .job-card { padding: 25px; }
+            .premium-nav { padding: 15px 20px !important; }
+        }
+    </style>
+</head>
+<body class="bg-repair">
+
+    <nav class="navbar" id="navbar">
+        <div class="container"><a href="25-years.html" class="logo"><img src="logo.png" alt="Paomobile"
+                    class="logo-img" />
+                Pao<span class="accent">mobile</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">หน้าหลัก</a></li>
+                <li class="has-mega-menu"><a href="index.html#services">บริการ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner">
+<div class="mega-column"><span class="mega-title">เลือกรุ่นโทรศัพท์</span><a href="iphone.html" class="mega-link">iPhone / iPad</a><a href="samsung.html" class="mega-link">Samsung</a><a href="xiaomi.html" class="mega-link">Xiaomi / POCO</a><a href="oppo.html" class="mega-link">OPPO</a><a href="vivo.html" class="mega-link">Vivo</a><a href="huawei.html" class="mega-link">Huawei</a><a href="realme.html" class="mega-link">Realme</a><a href="oneplus.html" class="mega-link">OnePlus</a><a href="nokia.html" class="mega-link">Nokia</a></div><div class="mega-column"><span class="mega-title">งานซ่อมมือถือ</span><a href="https://line.me/R/ti/p/@pao789" target="_blank" class="mega-link">สายแพร Z flip ,Fold</a><a href="select-green-line.html" class="mega-link">แก้หน้าจอเป็นเส้น</a><a href="select-glass-repair.html" class="mega-link">ลอกกระจกหน้าจอ</a><a href="select-board-repair.html" class="mega-link">ซ่อมบอร์ดดับ</a><a href="select-screen-repair.html" class="mega-link">เปลี่ยนหน้าจอ</a><a href="select-battery.html" class="mega-link">เปลี่ยนแบตเตอรี่</a><a href="select-charging.html" class="mega-link">อาการชาร์จไม่เข้า</a><a href="select-housing.html" class="mega-link">เปลี่ยนฝาหลัง บอดี้ชุด</a></div><div class="mega-column"><span class="mega-title">บริการเสริม</span><a href="select-glass-film.html" class="mega-link">ติดฟิล์มกระจก</a><a href="select-software.html" class="mega-link">ล้างเครื่อง / ลงโปรแกรม</a><a href="select-unlock.html" class="mega-link">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html" class="mega-link">เคส / อุปกรณ์เสริม</a></div>
+
+                        </div>
+                    </div>
+                </li>
+                <li><a href="repair-track.html">เช็คสถานะซ่อม</a></li>
+                <li><a href="index.html#why-us">ทำไมต้องเรา</a></li>
+                <li class="has-mega-menu"><a href="index.html#reviews">รีวิว</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 200px;">
+                            <div class="mega-column"><a href="index.html#reviews" class="mega-link">รีวิวลูกค้า</a><a
+                                    href="index.html#showcase" class="mega-link">รีวิวงานซ่อม</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="index.html#branches">สาขา</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner">
+                            <div class="mega-column"><a href="index.html?branch=0#branches"
+                                    class="mega-link nav-branch-link" data-branch="0">สาขาตึกคอม</a><a
+                                    href="index.html?branch=1#branches" class="mega-link nav-branch-link"
+                                    data-branch="1">สาขานาเกลือ</a><a href="index.html?branch=2#branches"
+                                    class="mega-link nav-branch-link" data-branch="2">สาขาซอยสยาม</a></div>
+                            <div class="mega-column"><a href="index.html?branch=3#branches"
+                                    class="mega-link nav-branch-link" data-branch="3">สาขาตลาดมหาชล</a><a
+                                    href="index.html?branch=4#branches" class="mega-link nav-branch-link"
+                                    data-branch="4">สาขาแหลมฉบัง</a><a href="index.html?branch=5#branches"
+                                    class="mega-link nav-branch-link" data-branch="5">สาขาพรประภานิมิตร</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="index.html#contact">ติดต่อ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 200px;">
+                            <div class="mega-column"><a href="https://www.facebook.com/profile.php?id=100063764974738"
+                                    target="_blank" class="mega-link">Facebook</a><a
+                                    href="https://line.me/R/ti/p/@pao789" target="_blank" class="mega-link">Line</a><a
+                                    href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                                    target="_blank" class="mega-link">Instagram</a><a
+                                    href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP"
+                                    target="_blank" class="mega-link">Tiktok</a></div>
+                        </div>
+                    </div>
+                </li>
+                <li class="has-mega-menu"><a href="#">🛒 สั่งของ</a>
+                    <div class="mega-menu">
+                        <div class="mega-menu-inner" style="min-width: 220px;">
+                            <div class="mega-column"><a href="new-products.html" class="mega-link">📱 สินค้ามือ 1</a><a
+                                    href="used-products.html" class="mega-link">🔁 สินค้ามือ 2</a><a href="parts.html"
+                                    class="mega-link">🔧 อะไหล่มือถือ</a><a href="accessory.html"
+                                    class="mega-link">&#x1F3A7; Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI"
+                                    target="_blank" class="mega-link">🛒
+                                    Shopee</a></div>
+                        </div>
+                    </div>
+                </li>
+            </ul><a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary nav-btn"
+                id="navCta"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    style="vertical-align: middle; margin-right: 4px;">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                สอบถามเพิ่มเติม
+            </a>
+            <div class="nav-icon-group" style="display:flex; align-items:center; gap: 30px;"><button
+                    class="search-icon-btn" id="searchBtn" aria-label="ค้นหา"><svg width="20" height="20"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg></button>
+                <div class="account-menu-wrapper"><a href="javascript:void(0)" class="account-icon-btn"
+                        aria-label="บัญชีผู้ใช้"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg></a>
+                    <div class="account-dropdown"><a href="login.html"
+                            class="dropdown-item bold">เข้าสู่ระบบ/สมัครสมาชิก</a>
+                        <div class="dropdown-divider"></div><a href="promotions.html" class="dropdown-item"
+                            style="padding-bottom: 8px;">รับสิทธิประโยชน์สุดพิเศษ <span class="arrow">›</span></a><a
+                            href="purchases.html" class="dropdown-item"
+                            style="color: var(--text) !important; font-size: 0.9em; padding-top: 6px;">การซื้อของฉัน</a>
+                    </div>
+                </div><button class="cart-icon-btn" id="cartBtn" aria-label="ตะกร้าสินค้า"><svg width="22" height="22"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <path d="M16 10a4 4 0 01-8 0" />
+                    </svg><span class="cart-badge" style="display:none">0</span></button>
+            </div><button class="menu-toggle" id="menuToggle"
+                aria-label="Menu"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+<div class="mobile-menu-overlay" id="mobileOverlay"></div>
+    <aside class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-panels" id="mobileMenuPanels">
+            <div class="mobile-panel" id="mainPanel">
+                <div class="mobile-menu-inner"><a href="index.html">หน้าหลัก</a>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">บริการ</div>
+                        <div class="mobile-sub-menu"><span style="font-size:12px; color:var(--text-muted); padding-left:0px; margin:8px 0 4px; display:block; font-weight:600;">เลือกรุ่นโทรศัพท์</span><a href="iphone.html">iPhone / iPad</a><a href="samsung.html">Samsung</a><a href="xiaomi.html">Xiaomi / POCO</a><a href="oppo.html">OPPO</a><a href="vivo.html">Vivo</a><a href="huawei.html">Huawei</a><a href="realme.html">Realme</a><a href="oneplus.html">OnePlus</a><a href="nokia.html">Nokia</a><div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">งานซ่อมมือถือ</span><a href="https://line.me/R/ti/p/@pao789" target="_blank">สายแพร Z flip ,Fold</a><a href="select-green-line.html">แก้หน้าจอเป็นเส้น</a><a href="select-glass-repair.html">ลอกกระจกหน้าจอ</a><a href="select-board-repair.html">ซ่อมบอร์ดดับ</a><a href="select-screen-repair.html">เปลี่ยนหน้าจอ</a><a href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a href="select-charging.html">อาการชาร์จไม่เข้า</a><a href="select-housing.html">เปลี่ยนฝาหลัง บอดี้ชุด</a><div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">บริการเสริม</span><a href="select-glass-film.html">ติดฟิล์มกระจก</a><a href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส / อุปกรณ์เสริม</a></div>
+
+                    </div><a href="repair-track.html">เช็คสถานะซ่อม</a><a href="index.html#why-us">ทำไมต้องเรา</a>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">รีวิว</div>
+                        <div class="mobile-sub-menu"><a href="index.html#reviews">รีวิวลูกค้า</a><a
+                                href="index.html#showcase">รีวิวงานซ่อม</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">สาขา</div>
+                        <div class="mobile-sub-menu"><a href="index.html?branch=0#branches">สาขาตึกคอม</a><a
+                                href="index.html?branch=1#branches">สาขานาเกลือ</a><a
+                                href="index.html?branch=2#branches">สาขาซอยสยาม</a><a
+                                href="index.html?branch=4#branches">สาขาตลาดมหาชล</a><a
+                                href="index.html?branch=5#branches">สาขาแหลมฉบัง</a><a
+                                href="index.html?branch=6#branches">สาขาพรประภานิมิตร</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">ติดต่อ</div>
+                        <div class="mobile-sub-menu"><a href="https://www.facebook.com/profile.php?id=100063764974738"
+                                target="_blank">Facebook</a><a href="https://line.me/R/ti/p/@pao789"
+                                target="_blank">Line</a><a
+                                href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                                target="_blank">Instagram</a><a
+                                href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP"
+                                target="_blank">Tiktok</a></div>
+                    </div>
+                    <div class="menu-item-wrapper">
+                        <div class="menu-item-parent">🛒 สั่งของ</div>
+                        <div class="mobile-sub-menu"><a href="new-products.html">📱 สินค้ามือ 1</a><a
+                                href="used-products.html">🔁 สินค้ามือ 2</a><a href="parts.html">🔧 อะไหล่มือถือ</a><a
+                                href="accessory.html">🎧 Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI"
+                                target="_blank">🛒 Shopee</a></div>
+
+                    </div><a href="https://line.me/R/ti/p/@pao789" target="_blank"
+                        class="btn btn-primary mobile-cta"><svg viewBox="0 0 24 24" width="20" height="20"
+                            stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"
+                            stroke-linejoin="round" style="margin-right: 10px; flex-shrink: 0;">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg><span>สอบถามเพิ่มเติม</span></a>
+                </div>
+            </div>
+            <div class="mobile-panel" id="subPanel">
+                <div class="mobile-panel-header"><button class="mobile-back-btn" id="mobileBackBtn"><svg
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg><span>กลับ</span></button><span class="mobile-panel-title" id="subMenuTitle"></span></div>
+                <div class="mobile-menu-inner" id="subMenuContent"></div>
+            </div>
+        </div>
+    </aside>
+<div class="cart-overlay" id="cartOverlay"></div>
+    <aside class="cart-sidebar" id="cartSidebar">
+        <div class="cart-sidebar-header">
+            <h3>🛒 ตะกร้าสินค้า</h3>
+            <div class="cart-header-meta">จำนวน: <strong id="cartCount">0 ชิ้น</strong></div><button
+                class="cart-close-btn" id="cartCloseBtn">✕</button>
+        </div>
+        <div class="cart-item-list" id="cartItemList">
+            <div class="cart-empty"><span>🛒</span>
+                <p>ตะกร้าว่างเปล่า</p>
+            </div>
+        </div>
+        <div class="cart-sidebar-footer">
+            <div class="cart-total-row"><span>ราคารวมทั้งหมด</span><strong id="cartTotal">฿0</strong></div><a
+                href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary"
+                style="width:100%;justify-content:center;margin-top:12px">
+                💬 สั่งซื้อผ่าน LINE @pao789
+            </a>
+        </div>
+    </aside>
+
+    <div class="track-hero premium-bg">
+        <h1>เช็คสถานะงานซ่อม</h1>
+        <p>ติดตามงานซ่อมมือถือของคุณได้ง่ายๆ แบบเรียลไทม์ พร้อมแจ้งเตือนสถานะเพื่อให้คุณอุ่นใจตลอดการบริการ</p>
+    </div>
+
+    <div class="search-box glass-panel" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+        <input type="text" id="repairSearchInput" placeholder="พิมพ์ชื่อ, รุ่นโทรศัพท์, หรือรหัสงานซ่อม..." onkeypress="if(event.key === 'Enter') searchJobs()">
+        <button onclick="searchJobs()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            ค้นหา
+        </button>
+    </div>
+
+    <div class="customer-stats" id="customerStats" style="display:none;">
+        <div class="customer-stat-box stat-repairing">
+            <div class="stat-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+            </div>
+            <div class="stat-value" id="cStatRepairing">0</div>
+            <div class="stat-label">กำลังซ่อม</div>
+        </div>
+        <div class="customer-stat-box stat-completed">
+            <div class="stat-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><path d="M9 12l2 2 4-4"></path></svg>
+            </div>
+            <div class="stat-value" id="cStatCompleted">0</div>
+            <div class="stat-label">ซ่อมเสร็จ</div>
+        </div>
+        <div class="customer-stat-box stat-returned">
+            <div class="stat-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+            </div>
+            <div class="stat-value" id="cStatReturned">0</div>
+            <div class="stat-label">คืนเครื่องแล้ว</div>
+        </div>
+    </div>
+
+    <div class="results-container" id="resultsContainer">
+        <!-- Results injected here -->
+        <div class="empty-state animate-up">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:25px; color:#cbd5e1;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <h3>ค้นหางานซ่อมของคุณ</h3>
+            <p>กรอกข้อมูลลงในช่องค้นหาด้านบน เพื่อตรวจสอบสถานะปัจจุบัน</p>
+        </div>
+    </div>
+
+    <!-- Repair Details Modal -->
+    <div class="modal-overlay" id="repairDetailsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center; backdrop-filter:blur(3px);">
+        <div class="modal-card" style="background:#fff; padding:30px; border-radius:12px; width:90%; max-width:500px; position:relative; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <h3 id="detailTitle" style="margin-top:0; margin-bottom:20px; color:#1e293b; font-size:1.3rem;">รายละเอียดงานซ่อม</h3>
+            <div id="detailContent" style="margin-bottom: 20px; font-size: 0.95rem; line-height: 1.6;">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="modal-actions" style="display:flex; justify-content:flex-end;">
+                <button onclick="closeRepairDetails()" style="background:#f1f5f9; color:#475569; border:none; padding:10px 24px; border-radius:8px; cursor:pointer; font-weight:600; font-family:inherit; transition:0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Wave Divider -->
+    <div class="footer-wave-divider" style="width: 100%; line-height: 0; position: relative; z-index: 1; background-color: var(--bg); margin-bottom: -10px;">
+        <img src="footer-waves.svg" alt="" style="width: 100%; display: block; transform: translateY(1px);">
+    </div>
+    <footer class="footer" style="position: relative; z-index: 2;">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <div class="logo"><img src="logo.png" alt="Paomobile" class="logo-img" />
+                        Pao<span class="accent">mobile</span></div>
+                    <p style="font-size: 0.85rem; max-width: 280px; color: #aaaaaa !important; margin-bottom: 20px; line-height: 1.6; display: block !important;">ร้านซ่อมมือถือครบวงจร รับซ่อมทุกยี่ห้อ ทุกอาการ ด้วยอะไหล่แท้ รับประกันงานซ่อมทุกชิ้น</p>
+                    <div class="footer-social"><a href="https://www.facebook.com/profile.php?id=100063764974738"
+                            target="_blank" aria-label="Facebook"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                            </svg></a><a
+                            href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                            target="_blank" aria-label="Instagram"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                            </svg></a><a href="https://line.me/R/ti/p/@pao789" target="_blank" aria-label="LINE"><svg
+                                width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M19.365 9.864c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-2.05v.744h2.05c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-3.426a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h3.426zm-4.91 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108h-1.272a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zm-2.594 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H10.59a.106.106 0 01-.086-.044l-1.99-2.696v2.632c0 .06-.048.108-.108.108H7.134a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272c.034 0 .066.016.086.044l1.99 2.694V9.972c0-.06.048-.108.108-.108h1.272zm-5.648 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H4.941a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zM24 10.62C24 5.076 18.614 .573 12 .573S0 5.076 0 10.62c0 4.962 4.402 9.122 10.348 9.908.403.087.952.266 1.09.61.126.314.082.804.04 1.12l-.164 1.022c-.054.314-.248 1.228 1.076.67 1.324-.56 7.146-4.208 9.752-7.204C23.464 15.254 24 13.046 24 10.62z" />
+                            </svg></a><a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP"
+                            target="_blank" aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+                            </svg></a><a href="https://s.shopee.co.th/qejQcQeWI" target="_blank"
+                            aria-label="Shopee"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 1a4 4 0 0 0-4 4h1.5a2.5 2.5 0 0 1 5 0H16a4 4 0 0 0-4-4z" />
+                                <path
+                                    d="M4.5 6A1.5 1.5 0 0 0 3 7.5v13A1.5 1.5 0 0 0 4.5 22h15a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 19.5 6h-15zm7.5 4.5c-1.5 0-2.7.5-3.4 1.3-.5.5-.6 1.1-.6 1.5 0 .7.4 1.2.9 1.5.5.3 1.1.4 1.7.5.6.1 1.2.2 1.6.4.4.2.5.4.5.7 0 .3-.1.5-.4.7-.3.2-.8.4-1.5.4-.8 0-1.4-.2-1.8-.5-.3-.2-.5-.5-.6-.9H7.4c.1.8.5 1.5 1.1 1.9.7.5 1.7.8 2.8.8 1.5 0 2.7-.4 3.4-1.2.5-.5.7-1.2.7-1.7 0-.7-.3-1.2-.9-1.6-.5-.3-1.1-.5-1.7-.6-.6-.1-1.2-.2-1.6-.4-.4-.2-.5-.4-.5-.6 0-.3.2-.5.5-.7.3-.2.8-.3 1.3-.3.7 0 1.2.2 1.5.4.2.2.4.4.5.7h1.5c-.1-.7-.4-1.3-1-1.7-.6-.5-1.5-.8-2.5-.8z" />
+                            </svg></a></div>
+                </div>
+                <div class="footer-col">
+                    <h4>บริการ</h4><a href="select-screen-repair.html">ซ่อมจอ / เปลี่ยนจอ</a><a
+                        href="select-battery.html">เปลี่ยนแบตเตอรี่</a><a
+                        href="select-board-repair.html">ซ่อมบอร์ด</a><a href="select-speaker-repair.html">ซ่อมลำโพง /
+                        ไมค์</a>
+                </div>
+                <div class="footer-col">
+                    <h4>บริการเสริม</h4><a href="select-glass-film.html">ติดฟิล์มกระจก</a><a
+                        href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a
+                        href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส /
+                        อุปกรณ์เสริม</a>
+                </div>
+                <div class="footer-col">
+                    <h4>ติดต่อเรา</h4><a href="index.html#branches">📍 6 สาขาทั่วชลบุรี</a><a
+                        href="https://line.me/R/ti/p/@pao789">💬 LINE: @pao789</a><a
+                        href="https://www.facebook.com/profile.php?id=100063764974738" target="_blank">📘 Facebook</a><a
+                        href="https://www.instagram.com/paomobile.service?igsh=MTAyZjBjdjN4NDdrOA%3D%3D&utm_source=qr"
+                        target="_blank">📷 Instagram</a><a href="accessory.html">&#x1F3A7; Accessory</a><a
+                        href="https://s.shopee.co.th/qejQcQeWI" target="_blank">🛒 Shopee</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Firebase / Supabase / Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+    <!-- Basic Navigation Injection (simulated since actual project might use include or JS) -->
+    <script src="ui-layout.js" onerror="console.warn('ui-layout missing, using static nav')"></script>
+    <script src="repair-track.js?v=2"></script>
+
+<script src="script.js?v=202"></script>
+<script src="cart.js"></script>
+    
+    <div class="site-search-overlay" id="searchOverlay">
+        <button class="search-close-btn" id="searchClose" aria-label="Close Search">&#x2715;</button>
+        <div class="search-modal-container">
+            <div class="search-hero-input">
+                <span class="search-hero-icon">&#x1F50D;</span>
+                <input type="text" id="searchInput" placeholder="ค้นหา โทรศัพท์มือ 1, มือถือ 2, รุ่นมือถือ..." autocomplete="off">
+                <button class="search-clear-btn" id="searchClear" aria-label="Clear">&#x2715;</button>
+            </div>
+            <div class="search-results-area" id="searchResults"></div>
+        </div>
+    </div>
+
+    <script src="pao-search.js"></script>
+    <script src="auth.js"></script>
+    <script src="product-modal.js"></script>
+    <script src="premium-alerts.js"></script>
+</body>
+</html>
+
+
+
+
+
+

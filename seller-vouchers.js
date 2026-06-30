@@ -28,138 +28,113 @@ document.addEventListener('DOMContentLoaded', () => {
     const voucherListBody = document.getElementById('voucherListBody');
     const emptyState = document.getElementById('v-empty');
 
-    // Unified DB Reference
-    const db = window.db || (typeof firebase !== 'undefined' ? firebase.firestore() : null);
-    if (!db) {
-        console.error("Firestore DB not initialized");
-        if (statusEl) statusEl.innerHTML = '<span style="color:red">&bull; Firestore Error: SDK Missing</span>';
-        return;
-    }
-
     const SELLER_EMAIL = 'sattawat2560@gmail.com';
+    const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
 
-    // ── Auth State: only controls UI/write permissions, NOT voucher loading ──
-    if (firebase.auth) {
-        firebase.auth().onAuthStateChanged(user => {
-            const authEmail = document.getElementById('authEmail');
-            const authIndicator = document.getElementById('statusIndicator');
-            const loginBtn = document.getElementById('adminLoginBtn');
-            const logoutBtn = document.getElementById('adminLogoutBtn');
-            const saveBtn = document.getElementById('btnSaveVoucher');
-            const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
+    const runAuthStateInit = () => {
+        const authEmail = document.getElementById('authEmail');
+        const authIndicator = document.getElementById('statusIndicator');
+        const loginBtn = document.getElementById('adminLoginBtn');
+        const logoutBtn = document.getElementById('adminLogoutBtn');
+        const saveBtn = document.getElementById('btnSaveVoucher');
 
-            if (user || localAdminActive) {
-                const email = user ? (user.email || '').toLowerCase() : SELLER_EMAIL.toLowerCase();
-                const isAdmin = email === SELLER_EMAIL.toLowerCase();
-                if (authEmail) authEmail.textContent = email + (user ? '' : ' (จำสิทธิ์ 🔒)');
-                if (authIndicator) authIndicator.className = 'admin-status-dot ' + (isAdmin ? 'online' : 'warning');
-                const authWarning = document.getElementById('auth-cloud-warning');
-                if (authWarning) authWarning.style.display = (isAdmin && user) ? 'none' : 'flex';
-                if (isAdmin) {
-                    if (loginBtn) loginBtn.style.display = 'none';
-                    if (logoutBtn) logoutBtn.style.display = 'block';
-                    if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = '1'; }
-                    localStorage.setItem('paomobile_admin_active', 'true');
-                } else {
-                    if (loginBtn) loginBtn.style.display = 'block';
-                    if (logoutBtn) logoutBtn.style.display = 'block';
-                    if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.5'; }
-                }
-            } else {
-                const isFile = window.location.protocol === 'file:';
-                if (authEmail) authEmail.textContent = isFile ? 'โหมด Local' : 'กรุณาล็อกอิน Admin';
-                if (authIndicator) authIndicator.className = 'admin-status-dot offline';
-                const authWarning = document.getElementById('auth-cloud-warning');
-                if (authWarning) authWarning.style.display = 'flex';
-                const loginBtn2 = document.getElementById('adminLoginBtn');
-                if (loginBtn2) { loginBtn2.style.display = 'block'; loginBtn2.onclick = window.sellerLogin; }
-                const logoutBtn2 = document.getElementById('adminLogoutBtn');
-                if (logoutBtn2) logoutBtn2.style.display = 'none';
-                const saveBtn2 = document.getElementById('btnSaveVoucher');
-                if (saveBtn2) { saveBtn2.disabled = true; saveBtn2.style.opacity = '0.5'; }
-            }
-        });
-    }
+        if (localAdminActive) {
+            const email = SELLER_EMAIL.toLowerCase();
+            if (authEmail) authEmail.textContent = email + " (จำสิทธิ์ 🔒)";
+            if (authIndicator) authIndicator.className = 'admin-status-dot online';
+            const authWarning = document.getElementById('auth-cloud-warning');
+            if (authWarning) authWarning.style.display = 'none';
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = '1'; }
+        } else {
+            const isFile = window.location.protocol === 'file:';
+            if (authEmail) authEmail.textContent = isFile ? 'โหมด Local' : 'กรุณาล็อกอิน Admin';
+            if (authIndicator) authIndicator.className = 'admin-status-dot offline';
+            const authWarning = document.getElementById('auth-cloud-warning');
+            if (authWarning) authWarning.style.display = 'flex';
+            if (loginBtn) { loginBtn.style.display = 'block'; loginBtn.onclick = window.sellerLogin; }
+            if (logoutBtn) logoutBtn.style.display = 'none';
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.5'; }
+        }
+    };
+
+    runAuthStateInit();
 
     // ── Start Voucher Sync IMMEDIATELY (reads are public, no auth needed) ──
     const now = new Date().toISOString().split('T')[0];
     
-    if (window.supabase) {
-        const fetchVouchersAdmin = async () => {
-            if (statusEl) statusEl.innerHTML = '<span style="color:#52c41a">&bull; Database: เชื่อมต่อแล้ว</span>';
-            const { data, error } = await window.supabase.from('vouchers').select('*');
-            if (error) {
-                console.error('Supabase fetch error:', error);
-                if (statusEl) statusEl.innerHTML = `<span style="color:red">&bull; Database Error: ${error.message}</span>`;
-                return;
-            }
+    const fetchVouchers = async () => {
+        const supabase = window.supabaseClient;
+        if (!supabase) return;
 
-            if (!data || data.length === 0) {
-                voucherListBody.innerHTML = '';
-                emptyState.style.display = 'block';
-                return;
-            }
+        const { data, error } = await supabase.from('vouchers').select('*');
+        if (error) {
+            console.error('Snapshot error:', error);
+            if (statusEl) statusEl.innerHTML = `<span style="color:red">&bull; Supabase Error: ${error.message}</span>`;
+            return;
+        }
 
-            // Admin sees ALL vouchers — no expiry filter (mark expired visually instead)
-            const today = new Date().toISOString().split('T')[0];
-            const allDocs = data;
+        if (statusEl) statusEl.innerHTML = '<span style="color:#52c41a">&bull; Supabase: เชื่อมต่อแล้ว</span>';
 
-            window.cachedVouchers = allDocs;
-            emptyState.style.display = 'none';
+        if (!data || data.length === 0) {
+            voucherListBody.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
 
-            allDocs.sort((a, b) => {
-                const getMillis = (v) => {
-                    if (v.createdAt) return new Date(v.createdAt).getTime();
-                    return 0;
-                };
-                return getMillis(b) - getMillis(a);
-            });
+        // Admin sees ALL vouchers — no expiry filter (mark expired visually instead)
+        const today = new Date().toISOString().split('T')[0];
+        let allDocs = [...data];
 
-            let html = '';
-            allDocs.forEach((v) => {
-                const id = v.id;
-                const isDiscount = v.type === 'discount';
-                const typeLabel = isDiscount ? 'ส่วนลดสินค้า' : 'ส่งพัสดุฟรี';
-                const typeClass = isDiscount ? 'tag-discount' : 'tag-ship';
-                const showHomeIcon = v.showOnHomepage ? '<span style="color:#27ae60">✅ เปิด</span>' : '<span style="color:#999">❌ ปิด</span>';
-                const isExpired = !v.isPermanent && v.expiry && v.expiry < today;
-                const expiryDisplay = v.isPermanent ? '♾️ ถาวร' : formatDate(v.expiry);
-                const expiryStyle = v.isPermanent ? 'color:#27ae60;font-weight:600;' : (isExpired ? 'color:#ff4d4f;text-decoration:line-through;' : '');
-                const expiredBadge = isExpired ? '<span style="background:#ff4d4f;color:#fff;font-size:0.65rem;padding:1px 5px;border-radius:8px;margin-left:4px;">หมดอายุ</span>' : '';
-                html += `
-                    <tr id="row-${id}" style="${isExpired ? 'opacity:0.6;' : ''}">
-                        <td data-label="รหัส / ชื่อ">
-                            <div style="font-weight:600;color:#222;">${v.code}${expiredBadge}</div>
-                            <div style="font-size:0.8rem;color:#888;">${v.title}</div>
-                        </td>
-                        <td data-label="ประเภท"><span class="v-type-tag ${typeClass}">${typeLabel}</span></td>
-                        <td data-label="ส่วนลด"><strong style="color:#ee4d2d;">฿${v.value}</strong></td>
-                        <td data-label="หน้าแรก" style="text-align:center;font-size:0.8rem;">${showHomeIcon}</td>
-                        <td data-label="ขั้นต่ำ">฿${v.minPurchase || 0}</td>
-                        <td data-label="หมดอายุ" style="${expiryStyle}">
-                            ${expiryDisplay}
-                        </td>
-                        <td data-label="จัดการ">
-                            <div style="display:flex;gap:5px;justify-content:flex-end;">
-                                <button class="btn-gen-qr" onclick="prepareQRModal('${v.code}','${v.expiry||''}')" title="สร้าง Secure QR">🎟 สแกน</button>
-                                <button class="btn-gen-qr" style="background:#f39c12" onclick="editVoucher('${id}')" title="แก้ไข">✏️</button>
-                                <button class="btn-delete" onclick="deleteVoucher('${id}','${v.code}',this)" title="ลบคูปอง">🗑️</button>
-                            </div>
-                        </td>
-                    </tr>`;
-            });
-            voucherListBody.innerHTML = html;
-        };
+        window.cachedVouchers = allDocs;
+        emptyState.style.display = 'none';
 
-        fetchVouchersAdmin();
+        allDocs.sort((a, b) => {
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return dateB - dateA;
+        });
 
-        window.supabase.channel('public:vouchers_admin')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'vouchers' }, () => {
-                fetchVouchersAdmin();
-            })
-            .subscribe();
-    } else {
-        if (statusEl) statusEl.innerHTML = '<span style="color:red">&bull; Error: Supabase SDK Missing</span>';
+        let html = '';
+        allDocs.forEach((v) => {
+            const id = v.id;
+            const isDiscount = v.type === 'discount';
+            const typeLabel = isDiscount ? 'ส่วนลดสินค้า' : 'ส่งพัสดุฟรี';
+            const typeClass = isDiscount ? 'tag-discount' : 'tag-ship';
+            const showHomeIcon = v.showOnHomepage ? '<span style="color:#27ae60">✅ เปิด</span>' : '<span style="color:#999">❌ ปิด</span>';
+            const isExpired = !v.isPermanent && v.expiry && v.expiry < today;
+            const expiryDisplay = v.isPermanent ? '♾️ ถาวร' : formatDate(v.expiry);
+            const expiryStyle = v.isPermanent ? 'color:#27ae60;font-weight:600;' : (isExpired ? 'color:#ff4d4f;text-decoration:line-through;' : '');
+            const expiredBadge = isExpired ? '<span style="background:#ff4d4f;color:#fff;font-size:0.65rem;padding:1px 5px;border-radius:8px;margin-left:4px;">หมดอายุ</span>' : '';
+            html += `
+                <tr id="row-${id}" style="${isExpired ? 'opacity:0.6;' : ''}">
+                    <td data-label="รหัส / ชื่อ">
+                        <div style="font-weight:600;color:#222;">${v.code}${expiredBadge}</div>
+                        <div style="font-size:0.8rem;color:#888;">${v.title}</div>
+                    </td>
+                    <td data-label="ประเภท"><span class="v-type-tag ${typeClass}">${typeLabel}</span></td>
+                    <td data-label="ส่วนลด"><strong style="color:#ee4d2d;">฿${v.value}</strong></td>
+                    <td data-label="หน้าแรก" style="text-align:center;font-size:0.8rem;">${showHomeIcon}</td>
+                    <td data-label="ขั้นต่ำ">฿${v.minPurchase || 0}</td>
+                    <td data-label="หมดอายุ" style="${expiryStyle}">
+                        ${expiryDisplay}
+                    </td>
+                    <td data-label="จัดการ">
+                        <div style="display:flex;gap:5px;justify-content:flex-end;">
+                            <button class="btn-gen-qr" onclick="prepareQRModal('${v.code}','${v.expiry||''}')" title="สร้าง Secure QR">🎟 สแกน</button>
+                            <button class="btn-gen-qr" style="background:#f39c12" onclick="editVoucher('${id}')" title="แก้ไข">✏️</button>
+                            <button class="btn-delete" onclick="deleteVoucher('${id}','${v.code}',this)" title="ลบคูปอง">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
+        });
+        voucherListBody.innerHTML = html;
+    };
+    fetchVouchers();
+    if (window.supabaseClient) {
+        window.supabaseClient.channel('public:vouchers:seller-vouchers')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'vouchers' }, payload => {
+                fetchVouchers();
+            }).subscribe();
     }
 
 
@@ -173,23 +148,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Authentication Functions (Exported to window) ---
     window.sellerLogin = function() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider)
-            .then(result => {
-                console.log("[Auth] Admin login success:", result.user.email);
-            })
-            .catch(error => {
-                console.error("[Auth] Login Failed:", error);
-                alert("ล็อกอินไม่สำเร็จ: " + error.message);
-            });
+        localStorage.setItem('paomobile_admin_active', 'true');
+        alert("✅ เข้าสู่ระบบในฐานะ Admin เรียบร้อยแล้วครับ!");
+        window.location.reload();
     };
 
-    window.sellerLogout = function() {
-        if (confirm("ต้องการออกจากระบบใช่หรือไม่?")) {
+    window.sellerLogout = async function() {
+        if (await window.sellerConfirm("ต้องการออกจากระบบใช่หรือไม่?")) {
             localStorage.removeItem('paomobile_admin_active');
-            firebase.auth().signOut().then(() => {
-                window.location.reload();
-            });
+            window.location.reload();
         }
     };
 
@@ -212,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const expiry = document.getElementById('v-expiry').value;
         const isPermanent = document.getElementById('v-isPermanent').checked;
         const showOnHomepage = document.getElementById('v-showOnHomepage').checked;
+        const isOneTimeOnly = document.getElementById('v-isOneTimeOnly') ? document.getElementById('v-isOneTimeOnly').checked : false;
 
         // --- Validation ---
         if (!code) {
@@ -239,6 +207,9 @@ document.addEventListener('DOMContentLoaded', () => {
             saveBtn.disabled = true;
             saveBtn.textContent = '⏳ กำลังบันทึก...';
 
+            const supabase = window.supabaseClient;
+            if (!supabase) throw new Error("Supabase ไม่พร้อมใช้งาน");
+
             const voucherData = {
                 code,
                 title,
@@ -251,19 +222,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 expiry: isPermanent ? '' : expiry,
                 isPermanent: !!isPermanent,
                 showOnHomepage,
+                isOneTimeOnly,
                 updatedAt: new Date().toISOString()
             };
 
             if (window.editingVoucherId) {
                 // Update
-                const { error: updateErr } = await window.supabase.from('vouchers').update(voucherData).eq('id', window.editingVoucherId);
-                if (updateErr) throw updateErr;
+                await supabase.from('vouchers').update(voucherData).eq('id', window.editingVoucherId);
                 alert("✅ อัปเดตคูปองเรียบร้อยแล้วครับ!");
             } else {
                 // Create New
                 // Check if code exists globally
-                const { data: existing, error: fetchErr } = await window.supabase.from('vouchers').select('id').eq('code', code);
-                if (fetchErr) throw fetchErr;
+                const { data: existing, error } = await supabase.from('vouchers').select('code').eq('code', code);
                 if (existing && existing.length > 0) {
                     alert("รหัสโค้ดนี้มีอยู่แล้วในระบบครับ กรุณาเปลี่ยนรหัสใหม่");
                     saveBtn.disabled = false;
@@ -271,8 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 voucherData.createdAt = new Date().toISOString();
-                const { error: insertErr } = await window.supabase.from('vouchers').insert([voucherData]);
-                if (insertErr) throw insertErr;
+                await supabase.from('vouchers').insert(voucherData);
                 alert("สร้างคูปองเรียบร้อยแล้วครับ! 🎉");
             }
 
@@ -307,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.deleteVoucher = async (id, code, btnEl) => {
-        if (!(await sellerConfirm(`🚨 ยืนยันการลบคูปอง "${code}" ใช่หรือไม่?`, 'delete'))) return;
+        if (!await window.sellerConfirm(`คุณต้องการลบคูปอง "${code}" ใช่หรือไม่?`, "delete")) return;
         
         let originalIcon = '🗑️';
         let targetBtn = btnEl;
@@ -323,20 +292,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetBtn.disabled = true;
             }
 
-            const { error: delErr } = await window.supabase.from('vouchers').delete().eq('id', id);
-            if (delErr) throw delErr;
+            if (window.supabaseClient) {
+                await window.supabaseClient.from('vouchers').delete().eq('id', id);
+            }
             console.log("Voucher deleted:", code);
-            
-            // Force refresh UI immediately instead of waiting for realtime event
-            fetchVouchersAdmin();
-            sellerAlert("ลบคูปองเรียบร้อยแล้ว!", 'success');
+            // No alert needed, onSnapshot will clear the row
         } catch (err) {
             console.error("Delete Error:", err);
             if (targetBtn) {
                 targetBtn.innerHTML = originalIcon;
                 targetBtn.disabled = false;
             }
-            sellerAlert("ลบไม่สำเร็จ: " + err.message, 'error');
+            alert("ลบไม่สำเร็จ: " + err.message);
         }
     };
 
@@ -362,12 +329,17 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (!v) {
                 // Fallback to network if not in cache for some reason
-                const { data: doc, error: docErr } = await window.supabase.from('vouchers').select('*').eq('id', id).single();
-                if (docErr || !doc) {
+                if (window.supabaseClient) {
+                    const { data, error } = await window.supabaseClient.from('vouchers').select('*').eq('id', id).single();
+                    if (error || !data) {
+                        closeEditModal();
+                        return;
+                    }
+                    v = data;
+                } else {
                     closeEditModal();
                     return;
                 }
-                v = doc;
             }
             
             window.lastVData = v;
@@ -375,6 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('editVHeader').textContent = v.code;
             document.getElementById('editVSub').textContent = v.title;
             document.getElementById('edit-showHome').checked = !!v.showOnHomepage;
+            if (document.getElementById('edit-isOneTime')) document.getElementById('edit-isOneTime').checked = !!v.isOneTimeOnly;
             
             // Populate detailed fields
             document.getElementById('edit-value').value = v.value || 0;
@@ -430,6 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof toggleExpiry === 'function') toggleExpiry(!!v.isPermanent);
         
         document.getElementById('v-showOnHomepage').checked = !!v.showOnHomepage;
+        if (document.getElementById('v-isOneTimeOnly')) document.getElementById('v-isOneTimeOnly').checked = !!v.isOneTimeOnly;
 
         const saveBtn = document.getElementById('btnSaveVoucher');
         saveBtn.textContent = '💾 อัปเดตข้อมูลคูปอง';
@@ -451,12 +425,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.updateVField = async (field, value) => {
         if (!window.editingVoucherId) return;
         try {
-            const { error: updErr } = await window.supabase.from('vouchers').update({
-                [field]: value,
-                updatedAt: new Date().toISOString()
-            }).eq('id', window.editingVoucherId);
-            if (updErr) throw updErr;
-            console.log(`[Firestore] Updated ${field} to ${value}`);
+            const supabase = window.supabaseClient;
+            if (supabase) {
+                await supabase.from('vouchers').update({
+                    [field]: value,
+                    updatedAt: new Date().toISOString()
+                }).eq('id', window.editingVoucherId);
+                console.log(`[Supabase] Updated ${field} to ${value}`);
+            }
         } catch (err) {
             alert("บันทึกไม่สำเร็จ: " + err.message);
         }
@@ -515,17 +491,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 expiresAt = new Date(Date.now() + mins * 60 * 1000);
             }
 
-            const qrRef = await db.collection('voucher_qrs').add({
-                voucherCode: activeQRVoucherCode,
-                expiresAt: firebase.firestore.Timestamp.fromDate(expiresAt),
-                usedBy: null,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            const qrId = crypto.randomUUID();
+            const supabase = window.supabaseClient;
+            if (supabase) {
+                await supabase.from('voucher_qrs').insert({
+                    id: qrId,
+                    voucherCode: activeQRVoucherCode,
+                    expiresAt: expiresAt.toISOString(),
+                    usedBy: null,
+                    createdAt: new Date().toISOString()
+                });
+            }
 
             // Construct Link
             const settingsDomain = document.getElementById('setting-base-url').value.trim();
             const baseUrl = settingsDomain || window.location.href.split('seller-vouchers.html')[0];
-            const redeemUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}redeem.html?id=${qrRef.id}`;
+            const redeemUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}redeem.html?id=${qrId}`;
             document.getElementById('qrLinkText').textContent = redeemUrl;
 
             // Generate QR via API
@@ -608,21 +589,23 @@ window.emergencyClearVouchers = async () => {
     if(!isConfirm) return;
     
     try {
-        const { data: snapshot, error: fetchErr } = await window.supabase.from('vouchers').select('id');
-        if (fetchErr) throw fetchErr;
+        const supabase = window.supabaseClient;
+        if (!supabase) return;
 
-        if (!snapshot || snapshot.length === 0) {
+        const { data, error } = await supabase.from('vouchers').select('id');
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
             alert("✅ ไม่มีคูปองค้างอยู่ในระบบแล้วครับ");
             return;
         }
         
-        let deletedCount = snapshot.length;
-        // In Supabase we can delete all using a condition that matches all, or just by ID array
-        const ids = snapshot.map(s => s.id);
-        const { error: bulkDelErr } = await window.supabase.from('vouchers').delete().in('id', ids);
-        if (bulkDelErr) throw bulkDelErr;
+        const idsToDelete = data.map(v => v.id);
+        const { error: deleteError } = await supabase.from('vouchers').delete().in('id', idsToDelete);
         
-        alert(`✅ ล้างคูปองสำเร็จแล้วจำนวน ${deletedCount} รายการครับ!`);
+        if (deleteError) throw deleteError;
+
+        alert(`✅ ล้างคูปองสำเร็จแล้วจำนวน ${idsToDelete.length} รายการครับ!`);
         window.location.reload();
     } catch (err) {
         console.error(err);

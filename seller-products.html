@@ -667,11 +667,9 @@
         }
         .inline-price-footer .btn-ip-save:hover { background: #d73211; }
     </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="db.js"></script>
 </head>
 <body>
-    <!-- Sidebar -->
+        <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <a href="seller-centre.html" class="sidebar-logo">
@@ -690,8 +688,9 @@
                 <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
                 <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
                 <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-repairs.html" class="menu-item"><span class="menu-icon">🔧</span> จัดการงานซ่อม</a>
                 <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
-                <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+                <a href="seller-centre.html#promotion-card" class="menu-item" ><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
@@ -703,8 +702,8 @@
             <div class="menu-section">
                 <p class="menu-title">สินค้า</p>
                 <a href="seller-products.html" class="menu-item active"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
-                <a href="javascript:void(0)" onclick="openAddModal()" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
-                <a href="javascript:void(0)" onclick="openCategoryModal()" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
+                <a href="seller-products.html?action=add" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-products.html?action=manage_cat" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
             </div>
         </nav>
     </aside>
@@ -746,9 +745,6 @@
                 <button class="btn-add-product" style="background: #52c41a;" onclick="openCategoryModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20v-8m0 0V4m0 8h8m-8 0H4"></path></svg>
                     จัดการหมวดหมู่
-                </button>
-                <button class="btn-add-product" style="background: #fadb14; color: #856404;" onclick="restoreLostProducts()">
-                    <span>🔄</span> กู้คืนสินค้า
                 </button>
                 <button class="btn-add-product" onclick="openAddModal()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -888,14 +884,10 @@
                         <h4 style="margin: 0; display: flex; align-items: center; gap: 8px; color: #856404;">
                             <span style="font-size: 1.2rem;">✨</span> ตัวเลือกสินค้า (Variations)
                         </h4>
-                        <div style="display: flex; gap: 8px;">
-                            <button type="button" onclick="addVariationRow()" style="background: #52c41a; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
-                                + เพิ่มทีละอัน
-                            </button>
-                        </div>
+                        <button type="button" onclick="addVariationRow()" style="background: #ee4d2d; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+                            + เพิ่มตัวเลือก
+                        </button>
                     </div>
-
-
                     
                     <div id="variationContainer" style="display: flex; flex-direction: column; gap: 15px; padding: 10px 0;">
                         <!-- Variations will be injected here -->
@@ -1037,9 +1029,7 @@
             <button class="bulk-btn bulk-btn-brand" onclick="openBulkBrandModal()">🏷️ แก้แบรนด์</button>
             <button class="bulk-btn bulk-btn-category" onclick="openBulkCategoryModal()">📂 แก้หมวดหมู่</button>
             <button class="bulk-btn" onclick="openBulkSpecsModal()" style="background:#fff3e0; color:#e65100; border:1px solid #ffcc80;">📝 แก้ข้อมูลเพิ่มเติม</button>
-            <button class="bulk-btn bulk-btn-merge" onclick="mergeSelectedProducts(false)" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff;" title="สินค้าแต่ละรายการจะกลายเป็น 1 ตัวเลือกย่อย">🔗 รวมแยกชุด</button>
-            <button class="bulk-btn bulk-btn-merge" onclick="mergeSelectedProducts(true)" style="background: linear-gradient(135deg, #3494e6 0%, #ec6ead 100%); color: #fff;" title="นำตัวเลือกย่อยจากทุกรายการที่เลือกมารวมกัน">🖇️ รวมต่อตัวเลือก</button>
-            <button class="bulk-btn" onclick="splitSelectedProducts()" style="background: #fff; color: #475569; border: 1px solid #e2e8f0; font-weight: 600;" title="แยกสินค้าที่มีตัวเลือกย่อยออกเป็นรายการเดี่ยว">✂️ แยกรายการ</button>
+            <button class="bulk-btn bulk-btn-merge" onclick="mergeSelectedProducts()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff;">🔗 รวมที่เลือก</button>
             <button class="bulk-btn bulk-btn-delete" onclick="bulkDeleteSelected()">🗑️ ลบที่เลือก</button>
             <button class="bulk-btn bulk-btn-cancel" onclick="clearSelection()">✕ ยกเลิก</button>
         </div>
@@ -1150,25 +1140,16 @@
         </div>
     </div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
-            authDomain: "paomobile-85e39.firebaseapp.com",
-            projectId: "paomobile-85e39",
-            storageBucket: "paomobile-85e39.firebasestorage.app",
-            messagingSenderId: "844151679424",
-            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
-            measurementId: "G-BZYNZ9B9LQ"
-        };
-        firebase.initializeApp(firebaseConfig);
-        var db = firebase.firestore();
-    </script>
-    <script src="seller-presence.js"></script>
-    <script src="seller-config.js?v=1.0.4"></script>
-    <script src="fallback-data.js"></script>
-    <script src="seller-products.js?v=1.0.2"></script>
     
-    <!-- Mobile Sidebar Overlay -->
+    
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="seller-presence.js"></script>
+    <script src="seller-config.js?v=1.0.7"></script>
+    <script src="seller-products.js?v=1.0.5"></script>
+    
+        <!-- Mobile Sidebar Overlay -->
     <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
         <div class="mobile-sidebar" onclick="event.stopPropagation()">
             <div class="mobile-sidebar-header">
@@ -1180,28 +1161,30 @@
             </div>
             <div class="mobile-sidebar-content">
                 <nav class="sidebar-menu">
-                    <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
-                        <a href="index.html" class="menu-item-home" style="margin-top: 0;">
-                            <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
-                        </a>
-                    </div>
                     <div class="menu-section">
-                        <p class="menu-title">เมนูหลัก</p>
-                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                        <a href="index.html" class="menu-item-home"><span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า</a>
+                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม</a>
                         <a href="seller-chat.html" class="menu-item"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
-                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> โค้ดส่วนลด</a>
+                        <a href="seller-repairs.html" class="menu-item"><span class="menu-icon">🔧</span> จัดการงานซ่อม</a>
                         <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                        <a href="seller-centre.html#promotion-card" class="menu-item" ><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
                     </div>
                     <div class="menu-section">
                         <p class="menu-title">คำสั่งซื้อ</p>
                         <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">สินค้า</p>
                         <a href="seller-products.html" class="menu-item active"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                        <a href="seller-products.html?action=add" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                        <a href="seller-products.html?action=manage_cat" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
                     </div>
                 </nav>
             </div>
         </div>
     </div>
-
     <script>
         function toggleSellerMobileMenu(open) {
             const overlay = document.getElementById('mobileSidebarOverlay');
@@ -1219,18 +1202,7 @@
             <div class="search-results-area" id="searchResults"></div>
         </div>
     </div>
-    <script src="pao-search.js"></script>
-    <script src="premium-alerts.js"></script>
-    <script src="restore-products.js"></script>
+    <script src="search.js"></script><script src="premium-alerts.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
 

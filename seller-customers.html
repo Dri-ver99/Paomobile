@@ -112,9 +112,11 @@
         }
     </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="fallback-data.js"></script>
     <script src="db.js"></script>
 </head>
-<body>
+<body class="bg-repair">
+    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <a href="seller-centre.html" class="sidebar-logo">
@@ -130,24 +132,25 @@
             </div>
             <div class="menu-section">
                 <p class="menu-title">เมนูหลัก</p>
-                <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
-                <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
-                <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-centre.html" class="menu-item "><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-chat.html" class="menu-item " style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
+                <a href="seller-vouchers.html" class="menu-item "><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-repairs.html" class="menu-item "><span class="menu-icon">🔧</span> จัดการงานซ่อม</a>
                 <a href="seller-customers.html" class="menu-item active"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
-                <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+                <a href="seller-centre.html#promotion-card" class="menu-item" ><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">คำสั่งซื้อ</p>
-                <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html" class="menu-item "><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
                 <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
                 <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
                 <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
             </div>
             <div class="menu-section">
                 <p class="menu-title">สินค้า</p>
-                <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
-                <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
-                <a href="seller-products.html" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
+                <a href="seller-products.html" class="menu-item "><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="seller-products.html?action=add" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-products.html?action=manage_cat" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
             </div>
         </nav>
     </aside>
@@ -201,7 +204,7 @@
                     <tbody id="customer-list-body">
                         <tr>
                             <td colspan="6" style="text-align: center; padding: 50px; color: #94a3b8;">
-                                🕒 กำลังดึงข้อมูลลูกค้าจาก Cloud...
+                                กำลังดึงข้อมูลลูกค้าจากระบบ...
                             </td>
                         </tr>
                     </tbody>
@@ -210,6 +213,7 @@
         </div>
     </main>
 
+    <!-- Mobile Sidebar Overlay -->
     <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
         <div class="mobile-sidebar" onclick="event.stopPropagation()">
             <div class="mobile-sidebar-header">
@@ -223,21 +227,23 @@
                 <nav class="sidebar-menu">
                     <div class="menu-section">
                         <a href="index.html" class="menu-item-home"><span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า</a>
-                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม</a>
-                        <a href="seller-chat.html" class="menu-item"><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
-                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> โค้ดส่วนลด</a>
+                        <a href="seller-centre.html" class="menu-item "><span class="menu-icon">📊</span> แผงควบคุม</a>
+                        <a href="seller-chat.html" class="menu-item "><span class="menu-icon">💬</span> แชทกับลูกค้า</a>
+                        <a href="seller-vouchers.html" class="menu-item "><span class="menu-icon">🎫</span> โค้ดส่วนลด</a>
+                        <a href="seller-repairs.html" class="menu-item "><span class="menu-icon">🔧</span> จัดการงานซ่อม</a>
                         <a href="seller-customers.html" class="menu-item active"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
-                        <a href="seller-centre.html#promotion-card" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+                        <a href="seller-centre.html#promotion-card" class="menu-item" onclick="toggleSellerMobileMenu(false); document.getElementById('promotion-card').scrollIntoView({behavior:'smooth'}); return false;"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
                     </div>
                     <div class="menu-section">
                         <p class="menu-title">คำสั่งซื้อ</p>
-                        <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-orders.html" class="menu-item "><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
                         <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
                     </div>
                     <div class="menu-section">
                         <p class="menu-title">สินค้า</p>
-                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
-                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                        <a href="seller-products.html" class="menu-item "><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                        <a href="seller-products.html?action=add" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                        <a href="seller-products.html?action=manage_cat" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
                     </div>
                 </nav>
             </div>
@@ -245,21 +251,11 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
-            authDomain: "paomobile-85e39.firebaseapp.com",
-            projectId: "paomobile-85e39",
-            storageBucket: "paomobile-85e39.firebasestorage.app",
-            messagingSenderId: "844151679424",
-            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
-            measurementId: "G-BZYNZ9B9LQ"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const _db = window.db;
         
         // v1.2.16 - Enable Persistence for Instant Loading
         try {
-            db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+            if (_db) _db.enablePersistence({ synchronizeTabs: true }).catch(err => {
                 if (err.code == 'failed-precondition') console.warn("Persistence failed: multiple tabs.");
                 else if (err.code == 'unimplemented') console.warn("Persistence unsupported.");
             });
@@ -287,68 +283,104 @@
             const body = document.getElementById('customer-list-body');
             const totalCount = document.getElementById('total-count');
 
-            if (!window.supabase) {
-                statusDot.style.background = '#ef4444';
-                statusText.textContent = 'Supabase ไม่พร้อมทำงาน';
-                return;
-            }
+            // Initial check for local bypass
+            const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
 
-            statusDot.style.background = '#22c55e';
-            statusText.textContent = 'Admin Connected (Supabase)';
+            if (!_db) return;
 
-            const fetchCustomers = async () => {
-                try {
-                    const { data, error } = await window.supabase.from('users').select('*');
-                    if (error) throw error;
+            firebase.auth().onAuthStateChanged(user => {
+                // Clear previous listener if exists
+                if (customersUnsubscribe) {
+                    customersUnsubscribe();
+                    customersUnsubscribe = null;
+                }
 
-                    const customerMap = new Map();
+                if (user || localAdminActive) {
+                    const email = user ? (user.email || "Admin") : (SELLER_EMAIL + " (ผู้ดูแลระบบ สำรอง)");
+                    statusDot.style.background = '#22c55e';
+                    statusText.textContent = 'Admin Connected: ' + email;
+                    
+                    // Real-time listener (onSnapshot is faster and handles caching)
+                    customersUnsubscribe = _db.collection('users').onSnapshot(snapshot => {
+                        // If we get an empty snapshot but have cache, don't clear UI immediately 
+                        // unless it's confirmed empty from server
+                        if (snapshot.empty && allCustomers.length > 0 && snapshot.metadata.fromCache) {
+                            console.log("Empty cache snapshot ignored");
+                            return;
+                        }
 
-                    // 1. Add Supabase users
-                    if (data) {
-                        data.forEach(doc => {
-                            const emailKey = (doc.email || doc.id).toLowerCase();
+                        const customerMap = new Map();
+
+                        // 1. Add explicitly registered users
+                        snapshot.docs.forEach(doc => {
+                            const data = doc.data();
+                            const emailKey = (data.email || doc.id).toLowerCase();
                             customerMap.set(emailKey, {
                                 id: doc.id,
-                                ...doc
+                                ...data
                             });
                         });
-                    }
 
-                    allCustomers = Array.from(customerMap.values());
+                        // 2. Enrich with past buyers from Order Cache (No extra DB reads!)
+                        try {
+                            const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+                            globalOrders.forEach(order => {
+                                if (!order.customerEmail) return;
+                                const emailKey = order.customerEmail.toLowerCase();
+                                
+                                if (!customerMap.has(emailKey)) {
+                                    // Create a phantom profile for buyers who didn't register properly
+                                    customerMap.set(emailKey, {
+                                        id: order.customer || emailKey,
+                                        email: order.customerEmail,
+                                        name: order.customerName || order.customerProfileName || order.customerEmail.split('@')[0],
+                                        phone: order.customerPhone || null,
+                                        createdAt: order.createdAt || null,
+                                        avatar: null // No avatar for guests
+                                    });
+                                } else {
+                                    // Enrich existing profile if data is missing
+                                    const existing = customerMap.get(emailKey);
+                                    if (!existing.phone && order.customerPhone) existing.phone = order.customerPhone;
+                                    if ((!existing.name || existing.name.includes('@')) && order.customerName) existing.name = order.customerName;
+                                }
+                            });
+                        } catch (e) {
+                            console.warn("Could not enrich customer list with orders cache", e);
+                        }
 
-                    // Sort client-side by updatedAt (newest first)
-                    allCustomers.sort((a, b) => {
-                        const getMillis = (item) => {
-                            if (item.updatedAt) return new Date(item.updatedAt).getTime() || 0;
-                            if (item.createdAt) return new Date(item.createdAt).getTime() || 0;
-                            return 0;
-                        };
-                        return getMillis(b) - getMillis(a);
+                        allCustomers = Array.from(customerMap.values());
+
+                        // Sort client-side by updatedAt to avoid missing index errors
+                        allCustomers.sort((a, b) => {
+                            const getMillis = (item) => {
+                                if (item.updatedAt) {
+                                    if (item.updatedAt.toMillis) return item.updatedAt.toMillis();
+                                    if (item.updatedAt.seconds) return item.updatedAt.seconds * 1000;
+                                    return new Date(item.updatedAt).getTime() || 0;
+                                }
+                                if (item.createdAt) {
+                                    if (item.createdAt.toMillis) return item.createdAt.toMillis();
+                                    return new Date(item.createdAt).getTime() || 0;
+                                }
+                                return 0;
+                            };
+                            return getMillis(b) - getMillis(a);
+                        });
+
+                        // Cache for next time
+                        localStorage.setItem('pao_customers_cache', JSON.stringify(allCustomers));
+                        localStorage.setItem('pao_total_customers_count', allCustomers.length);
+
+                        renderCustomers(allCustomers);
+                        totalCount.textContent = `ลูกค้าทั้งหมด: ${allCustomers.length} ท่าน`;
+                    }, err => {
+                        console.error("Firestore sync error:", err);
+                        body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:50px; color:#ef4444;">❌ เกิดข้อผิดพลาด: ${err.message}<br><small>กรุณาลองรีเฟรชหน้าเว็บ หรือตรวจสอบ Quota ของ Supabase ครับ</small></td></tr>`;
                     });
 
-                    localStorage.setItem('pao_customers_cache', JSON.stringify(allCustomers));
-                    localStorage.setItem('pao_total_customers_count', allCustomers.length);
-
-                    renderCustomers(allCustomers);
-                    totalCount.textContent = `ลูกค้าทั้งหมด: ${allCustomers.length} ท่าน`;
-                } catch (err) {
-                    console.error("Supabase sync error:", err);
-                    body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:50px; color:#ef4444;">❌ เกิดข้อผิดพลาด: ${err.message}</td></tr>`;
-                }
-            };
-
-            fetchCustomers();
-
-            window.supabase.channel('public:users:admin_customers')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
-                    fetchCustomers();
-                })
-                .subscribe();
-
-            // Chat Badge Listener (Using db.js compatibility layer for chats)
-            try {
-                if (typeof db !== 'undefined' && db.collection) {
-                    db.collection('chats').onSnapshot(snapshot => {
+                    // Global Unread Badge Listener
+                    _db.collection('chats').onSnapshot(snapshot => {
                         let totalUnread = 0;
                         snapshot.forEach(doc => {
                             totalUnread += (doc.data().unreadCount || 0);
@@ -359,8 +391,12 @@
                             badge.style.display = totalUnread > 0 ? 'block' : 'none';
                         }
                     }, err => console.warn("Unread badge sync failed:", err));
+                } else {
+                    statusDot.style.background = '#ef4444';
+                    statusText.textContent = 'กรุณาล็อกอิน Admin';
+                    body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:50px;">กรุณาล็อกอิน Admin เพื่อดูรายชื่อลูกค้า</td></tr>';
                 }
-            } catch(e) {}
+            });
         }
 
         function renderCustomers(customers) {
@@ -385,7 +421,7 @@
                             <div class="customer-avatar">${avatarContent}</div>
                         </td>
                         <td data-label="ชื่อ-นามสกุล">
-                            <div class="customer-name">${c.name || 'ไม่ได้ระบุชื่อ'}</div>
+                            <div class="customer-name">${c.name || 'ไม่ระบุชื่อ'}</div>
                         </td>
                         <td data-label="อีเมล">
                             <div class="customer-email">${c.email || '-'}</div>
@@ -432,12 +468,6 @@
             loadCustomers();
         });
     </script>
+<script src="premium-alerts.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-

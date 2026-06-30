@@ -37,63 +37,60 @@ document.addEventListener('DOMContentLoaded', () => {
     const lastUpdateStatus = document.getElementById('lastUpdateStatus');
 
     // --- v1.2 Auth & Firestore Initialization ---
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-        firebase.auth().onAuthStateChanged(user => {
-            const authEmail = document.getElementById('authEmail');
-            const authIndicator = document.getElementById('statusIndicator');
-            const loginBtn = document.getElementById('adminLoginBtn');
-            const logoutBtn = document.getElementById('adminLogoutBtn');
-            
-            const SELLER_EMAIL = 'sattawat2560@gmail.com';
-            const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
+    // --- v1.2 Auth & Firestore Initialization (Migrated to Supabase/Local Bypass) ---
+    const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
+    const SELLER_EMAIL = 'sattawat2560@gmail.com';
 
-            if (user || localAdminActive) {
-                const email = user ? (user.email || "").toLowerCase() : SELLER_EMAIL;
-                const isAdmin = email === SELLER_EMAIL;
-                
-                if (authEmail) authEmail.textContent = email + (user ? "" : " (จำสิทธิ์ 🔒)");
-                if (authIndicator) authIndicator.className = 'admin-status-dot ' + (isAdmin ? 'online' : 'warning');
-                
-                if (isAdmin) {
-                    if (loginBtn) loginBtn.style.display = 'none';
-                    if (logoutBtn) logoutBtn.style.display = 'block';
+    const runAuthStateInit = () => {
+        const authEmail = document.getElementById('authEmail');
+        const authIndicator = document.getElementById('statusIndicator');
+        const loginBtn = document.getElementById('adminLoginBtn');
+        const logoutBtn = document.getElementById('adminLogoutBtn');
 
-                    // v1.2.12 - Warn if only local bypass is active
-                    const authWarn = document.getElementById('auth-cloud-warning');
-                    if (authWarn) {
-                        authWarn.style.display = (!user) ? 'block' : 'none';
-                    }
+        if (localAdminActive) {
+            const email = SELLER_EMAIL.toLowerCase();
+            if (authEmail) authEmail.textContent = email + " (ผู้ดูแลระบบ 🔒)";
+            if (authIndicator) {
+                authIndicator.classList.remove('online', 'warning', 'offline');
+                authIndicator.classList.add('online');
+            }
 
-                    if (typeof db !== 'undefined') startFirestoreSync();
-                    localStorage.setItem('paomobile_admin_active', 'true');
-                } else {
-                    if (loginBtn) loginBtn.style.display = 'block';
-                    if (logoutBtn) logoutBtn.style.display = 'block';
-                }
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (logoutBtn) logoutBtn.style.display = 'block';
+
+            const authWarn = document.getElementById('auth-cloud-warning');
+            if (authWarn) authWarn.style.display = 'none';
+
+            if (window.supabaseClient) {
+                startSupabaseSync();
             } else {
-                const isFileProtocol = window.location.protocol === 'file:';
-                if (authEmail) authEmail.textContent = isFileProtocol ? "โบนัสโหมด (Guest)" : "กรุณาล็อกอิน Admin";
-                if (authIndicator) authIndicator.className = 'admin-status-dot offline';
-                if (loginBtn) loginBtn.style.display = 'block';
-                if (logoutBtn) logoutBtn.style.display = 'none';
-                
-                const authWarn = document.getElementById('auth-cloud-warning');
-                if (authWarn) authWarn.style.display = 'none';
-
                 loadLocalStorageFallback();
             }
-        });
-    } else {
-        loadLocalStorageFallback();
-    }
+        } else {
+            const isFileProtocol = window.location.protocol === 'file:';
+            if (authEmail) authEmail.textContent = isFileProtocol ? "โบนัสโหมด (Guest)" : "กรุณาล็อกอิน Admin";
+            if (authIndicator) authIndicator.className = 'admin-status-dot offline';
+            if (loginBtn) loginBtn.style.display = 'block';
+            if (logoutBtn) logoutBtn.style.display = 'none';
+
+            const authWarn = document.getElementById('auth-cloud-warning');
+            if (authWarn) authWarn.style.display = 'none';
+
+            loadLocalStorageFallback();
+        }
+    };
+
+    runAuthStateInit();
 
     window.sellerLogin = () => {
-        firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => sellerAlert("Login Error: " + err.message, 'error'));
+        localStorage.setItem('paomobile_admin_active', 'true');
+        alert("✅ เข้าสู่ระบบในฐานะ Admin เรียบร้อยแล้วครับ!");
+        window.location.reload();
     };
 
     window.sellerLogout = () => {
         localStorage.removeItem('paomobile_admin_active');
-        firebase.auth().signOut().then(() => window.location.reload());
+        window.location.reload();
     };
 
     // Helper to view slip in a simple lightbox
@@ -119,85 +116,104 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(overlay);
     };
 
-    async function startFirestoreSync() {
-        console.log("[v2.0.0] Starting real-time sync (Supabase)...");
-        
-        const localGlobal = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-        if (localGlobal.length > 0) {
-            ordersData = localGlobal;
-            renderOrders();
-            updateTabBadges();
-        }
+    function startSupabaseSync() {
+        const supabase = window.supabaseClient;
+        if (!supabase) return;
 
-        if (!window.supabase) return;
+        const fetchOrders = async () => {
+            try {
+                const { data: fetchedDocs, error } = await supabase.from('orders').select('*');
+                if (error) throw error;
 
-        const fetchAndMerge = async () => {
-            const { data: cloudOrders, error } = await window.supabase.from('orders').select('*');
-            if (error) {
-                console.error("[v2.0.0] Sync Error:", error);
+                let fetchedOrders = fetchedDocs.map(doc => ({ ...doc }));
+                fetchedOrders.sort((a, b) => {
+                    const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+                    const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+                    return dateB - dateA;
+                });
+                
+                const localGlobal = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+                const localMap = new Map();
+                localGlobal.forEach(o => localMap.set(o.id, o));
+                
+                fetchedOrders = fetchedOrders.map(o => {
+                    if (localMap.has(o.id)) {
+                        const localO = localMap.get(o.id);
+                        
+                        // Merge missing checkout details from local cache if Supabase schema is behind or returns null
+                        o.appliedShipCode = o.appliedShipCode || localO.appliedShipCode;
+                        o.appliedDiscountCode = o.appliedDiscountCode || localO.appliedDiscountCode;
+                        o.voucherCode = o.voucherCode || localO.voucherCode;
+                        o.discountAmount = o.discountAmount || localO.discountAmount || 0;
+                        o.baseShippingCost = o.baseShippingCost || localO.baseShippingCost || 50;
+                        o.subtotal = o.subtotal || localO.subtotal;
+                        o.total = localO.total || o.total; // Ensure total matches what the customer actually paid
+                        
+                        const statusPriority = {
+                            'ที่ต้องชำระ': 1,
+                            'ที่ต้องจัดส่ง': 2,
+                            'เตรียมจัดส่งแล้ว': 3,
+                            'Processed': 3,
+                            'ที่ต้องได้รับ': 4,
+                            'สำเร็จแล้ว': 5,
+                            'Completed': 5,
+                            'ยกเลิกแล้ว': 6,
+                            'คืนเงิน/คืนสินค้า': 6
+                        };
+
+                        const localWeight = statusPriority[localO.status] || 0;
+                        const cloudWeight = statusPriority[o.status] || 0;
+
+                        if (localWeight > cloudWeight) {
+                            return { 
+                                ...o, 
+                                status: localO.status,
+                                trackingNum: localO.trackingNum || o.trackingNum,
+                                trackingLink: localO.trackingLink || o.trackingLink,
+                                cancelReason: localO.cancelReason || o.cancelReason,
+                                returnReason: localO.returnReason || o.returnReason
+                            };
+                        }
+                    }
+                    return o;
+                });
+                
+                const fetchedIds = new Set(fetchedOrders.map(o => o.id));
+                // localGlobal is already declared above
+                localGlobal.forEach(o => {
+                    if (!fetchedIds.has(o.id)) {
+                        fetchedOrders.push(o);
+                    }
+                });
+                
+                ordersData = processExpirations(fetchedOrders);
+                
                 const statusToast = document.getElementById('statusText');
-                if (statusToast) statusToast.innerHTML = `Cloud: Sync Error ⚠️`;
+                if (statusToast) {
+                    statusToast.innerHTML = 'Cloud: เชื่อมต่อสำเร็จ ✅';
+                }
+                const statusInd = document.getElementById('statusIndicator');
+                if (statusInd) statusInd.style.background = '#52c41a';
+
+                localStorage.setItem('pao_global_orders', JSON.stringify(ordersData.map(o => ({...o, items: o.items ? o.items.map(i => ({id:i.id, name:i.name, price:i.price, quantity:i.quantity, img:i.img})) : []}))));
+                renderOrders();
+                updateTabBadges();
+            } catch (err) {
+                console.error("[v1.2.7] Sync Error:", err);
+                const statusToast = document.getElementById('statusText');
+                if (statusToast) {
+                    let msg = 'แชร์ไฟล์/ออฟไลน์ ⚠️';
+                    if (err.code === 'permission-denied') msg = 'จำกัดการเข้าถึง 🔒 (ต้องล็อกอิน)';
+                    statusToast.innerHTML = `Cloud: ${msg}`;
+                }
                 const statusInd = document.getElementById('statusIndicator');
                 if (statusInd) statusInd.style.background = '#ff4d4f';
+                
                 loadLocalStorageFallback();
-                return;
             }
-
-            let fetchedOrders = cloudOrders || [];
-            fetchedOrders.sort((a, b) => {
-                const dateA = new Date(a.orderDate || a.createdAt || 0);
-                const dateB = new Date(b.orderDate || b.createdAt || 0);
-                return dateB - dateA;
-            });
-            
-            const localMap = new Map();
-            localGlobal.forEach(o => localMap.set(o.id, o));
-            
-            fetchedOrders = fetchedOrders.map(o => {
-                if (localMap.has(o.id)) {
-                    const localO = localMap.get(o.id);
-                    const statusPriority = {
-                        'ที่ต้องชำระ': 1, 'ที่ต้องจัดส่ง': 2, 'เตรียมจัดส่งแล้ว': 3, 'Processed': 3,
-                        'ที่ต้องได้รับ': 4, 'สำเร็จแล้ว': 5, 'Completed': 5, 'ยกเลิกแล้ว': 6, 'คืนเงิน/คืนสินค้า': 6
-                    };
-
-                    const localWeight = statusPriority[localO.status] || 0;
-                    const cloudWeight = statusPriority[o.status] || 0;
-
-                    if (localWeight > cloudWeight) {
-                        return { 
-                            ...o, 
-                            status: localO.status,
-                            trackingNum: localO.trackingNum || o.trackingNum,
-                            trackingLink: localO.trackingLink || o.trackingLink,
-                            cancelReason: localO.cancelReason || o.cancelReason,
-                            returnReason: localO.returnReason || o.returnReason
-                        };
-                    }
-                }
-                return o;
-            });
-            
-            ordersData = processExpirations(fetchedOrders);
-            
-            const statusToast = document.getElementById('statusText');
-            if (statusToast) statusToast.innerHTML = 'Cloud: เชื่อมต่อสำเร็จ ✅';
-            const statusInd = document.getElementById('statusIndicator');
-            if (statusInd) statusInd.style.background = '#52c41a';
-
-            localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
-            renderOrders();
-            updateTabBadges();
         };
 
-        fetchAndMerge();
-
-        // Realtime Subscription
-        window.supabase.channel('public:orders_admin')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
-                fetchAndMerge();
-            })
-            .subscribe();
+        fetchOrders();
     }
 
     function loadLocalStorageFallback() {
@@ -225,20 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const elapsed = Date.now() - timeVal;
                     if (elapsed > 30 * 60 * 1000) {
                         o.status = 'ยกเลิกแล้ว';
-                        if (window.supabase) {
-                            window.supabase.from('orders').update({ status: 'ยกเลิกแล้ว' }).eq('id', o.id)
-                                .then(({error}) => { if (error) console.warn("Admin background expiry sync failed for", o.id, error) });
-                            
-                            // Restore vouchers
-                            const email = o.customerEmail;
-                            if (email) {
-                                const codes = [...new Set([o.appliedDiscountCode, o.appliedShipCode, o.voucherCode].filter(Boolean))];
-                                if (codes.length > 0) {
-                                    const inserts = codes.map(c => ({ id: 'red-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 5), email, code: c }));
-                                    window.supabase.from('vouchers_redemptions').insert(inserts).then(() => {});
-                                }
-                            }
-                        }
+                        window.supabaseClient.from('orders').update({ status: 'ยกเลิกแล้ว' }).eq('id', o.id)
+                            .catch(err => console.warn("Admin background expiry sync failed for", o.id, err));
                     }
                 }
             }
@@ -274,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 
                 if (found) {
-                    localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
+                    localStorage.setItem('pao_global_orders', JSON.stringify(ordersData.map(o => ({...o, items: o.items ? o.items.map(i => ({id:i.id, name:i.name, price:i.price, quantity:i.quantity, img:i.img})) : []}))));
                     renderOrders();
                     updateTabBadges();
                 }
@@ -285,23 +289,41 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initTabs() {
+    const tabContainer = document.getElementById('orderTabs');
     const btns = document.querySelectorAll('.tab-btn');
+    
+    // Set initial active state
     btns.forEach(btn => {
         if (btn.dataset.tab === currentTab) btn.classList.add('active');
         else btn.classList.remove('active');
-
-        btn.addEventListener('click', (e) => {
-            btns.forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            currentTab = e.target.dataset.tab;
-            const url = new URL(window.location);
-            url.searchParams.set('tab', currentTab);
-            window.history.pushState({}, '', url);
-            renderOrders();
-            updateTabBadges();
-            if (window.updateSidebarActiveState) window.updateSidebarActiveState();
-        });
     });
+
+    if (tabContainer) {
+        tabContainer.addEventListener('click', (e) => {
+            try {
+                const targetBtn = e.target.closest('.tab-btn');
+                if (!targetBtn) return;
+                
+                btns.forEach(b => b.classList.remove('active'));
+                targetBtn.classList.add('active');
+                currentTab = targetBtn.dataset.tab;
+                
+                const url = new URL(window.location);
+                url.searchParams.set('tab', currentTab);
+                try {
+                    window.history.pushState({}, '', url);
+                } catch (e) {
+                    console.warn('pushState not supported on file:// protocol', e);
+                }
+                
+                renderOrders();
+                updateTabBadges();
+                if (window.updateSidebarActiveState) window.updateSidebarActiveState();
+            } catch (err) {
+                alert("Tab Click Error: " + err.message + "\n" + err.stack);
+            }
+        });
+    }
 }
 
 function renderOrders() {
@@ -354,7 +376,7 @@ function renderOrders() {
                     const emptyItemStr = order.status === 'DEBUG-TEST' ? 'รายการทดสอบ (Debug)' : 'ไม่ระบุสินค้า';
                     const displayHtml = items.length > 0 ? itemsHtml : `<div style="font-weight: 500; font-size: 0.9rem;">${emptyItemStr}</div>`;
                     
-                    const sourceText = order.orderSource ? order.orderSource : 'ไม่ระบุ';
+                    const sourceText = order.orderSource ? String(order.orderSource) : 'ไม่ระบุ';
                     const sourcePills = sourceText.split(',').map(s => {
                         let label = s.trim();
                         let color = '#757575', bg = '#f5f5f5', border = '#ddd';
@@ -394,40 +416,17 @@ function renderOrders() {
 }
 
 async function deleteOrder(orderId) {
-    if (!(await sellerConfirm('🚨 ยืนยันการลบออเดอร์ ' + orderId + ' ใช่ไหมคับ?', 'delete'))) return;
-    if (window.supabase) {
-        window.supabase.from('orders').delete().eq('id', orderId)
-            .then(({error}) => {
-                if(error) sellerAlert("ลบไม่สำเร็จ (Error): " + error.message, 'error');
-                else {
-                    sellerAlert("ลบทิ้งเรียบร้อยแล้วคับ!", 'success');
-                    
-                    // Instant UI Update
-                    ordersData = ordersData.filter(o => o.id !== orderId);
-                    const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-                    const filtered = globalOrders.filter(o => o.id !== orderId);
-                    localStorage.setItem('pao_global_orders', JSON.stringify(filtered));
-                    renderOrders();
-                    if (typeof updateTabBadges === 'function') updateTabBadges();
-                    
-                    // Restore vouchers
-                    const o = ordersData.find(x => x.id === orderId) || filtered.find(x => x.id === orderId);
-                    if (o && o.customerEmail) {
-                        const email = o.customerEmail;
-                        const codes = [...new Set([o.appliedDiscountCode, o.appliedShipCode, o.voucherCode].filter(Boolean))];
-                        if (codes.length > 0) {
-                            const inserts = codes.map(c => ({ id: 'red-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 5), email, code: c }));
-                            window.supabase.from('vouchers_redemptions').insert(inserts).then(() => {});
-                        }
-                    }
-                }
-            });
+    if (!await window.sellerConfirm('🚨 ยืนยันการลบออเดอร์ ' + orderId + ' ใช่ไหมคับ?', 'delete')) return;
+    if (window.supabaseClient) {
+        window.supabaseClient.from('orders').delete().eq('id', orderId)
+            .then(() => alert("ลบทิ้งเรียบร้อยแล้วคับ!"))
+            .catch(err => alert("ลบไม่สำเร็จ (Error): " + err.message));
     } else {
         const gOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
         const filtered = gOrders.filter(o => o.id !== orderId);
-        localStorage.setItem('pao_global_orders', JSON.stringify(filtered));
+        localStorage.setItem('pao_global_orders', JSON.stringify(filtered.map(o => ({...o, items: o.items ? o.items.map(i => ({id:i.id, name:i.name, price:i.price, quantity:i.quantity, img:i.img})) : []}))));
         renderOrders();
-        sellerAlert("ลบเรียบร้อย", 'success');
+        alert("ลบเรียบร้อย");
     }
 }
 
@@ -442,12 +441,12 @@ function getStatusStyle(status) {
 }
 
 async function shipOrder(orderId) {
-    if(!(await sellerConfirm('ยืนยันการจัดส่ง หมายเลข ' + orderId + ' ?', 'info'))) return;
+    if(!await window.sellerConfirm('ยืนยันการจัดส่ง หมายเลข ' + orderId + ' ?')) return;
     updateOrderStatus(orderId, 'เตรียมจัดส่งแล้ว');
 }
 
 async function markAsCompleted(orderId) {
-    if(!(await sellerConfirm('ยืนยันออเดอร์สำเร็จแล้วใช่ไหม?', 'success'))) return;
+    if(!await window.sellerConfirm('ยืนยันออเดอร์สำเร็จแล้วใช่ไหม?')) return;
     updateOrderStatus(orderId, 'สำเร็จแล้ว');
 }
 
@@ -457,20 +456,18 @@ function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink 
         if (trackingNum) updateObj.trackingNum = trackingNum;
         if (trackingLink) updateObj.trackingLink = trackingLink;
 
-        if (window.supabase) {
+        if (window.supabaseClient) {
             const docId = orderId.trim();
-            window.supabase.from('orders').update(updateObj).eq('id', docId)
-                .then(({error}) => {
-                    if (error) console.error("Supabase update failed for", docId, error);
-                    else console.log("[Seller Sync] Supabase updated:", docId, newStatus);
-                });
+            window.supabaseClient.from('orders').update(updateObj).eq('id', docId)
+                .then(() => console.log("[Seller Sync] Supabase updated:", docId, newStatus))
+                .catch(err => console.error("Supabase update failed for", docId, err));
         }
 
         const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
         const idx = globalOrders.findIndex(o => o.id === orderId);
         if(idx > -1) {
             globalOrders[idx] = { ...globalOrders[idx], ...updateObj };
-            localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
+            localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders.map(o => ({...o, items: o.items ? o.items.map(i => ({id:i.id, name:i.name, price:i.price, quantity:i.quantity, img:i.img})) : []}))));
             
             // Broadcast the update so customer tabs update instantly
             try {
@@ -513,7 +510,7 @@ function viewOrderDetails(orderId, isDispatch = false) {
         if (contactId) {
             window.location.href = `seller-chat.html?id=${contactId.toLowerCase().trim()}`;
         } else {
-            sellerAlert("ไม่พบลิงก์ติดต่อกับลูกค้ารายนี้ครับ", 'warning');
+            alert("ไม่พบข้อมูลติดต่อสำหรับลูกค้ารายนี้คับ");
         }
     };
     document.getElementById('modalCustomerPhone').textContent = order.customerPhone || 'N/A';
@@ -559,83 +556,66 @@ function viewOrderDetails(orderId, isDispatch = false) {
 
     // Voucher Info & Summary Discount Row
     const vGroup = document.getElementById('voucherInfoGroup');
-    const summaryDiscountRow = document.getElementById('summaryDiscountRow');
-    const vDiscRow = document.getElementById('modalVoucherDiscountRow');
-    const vShipRow = document.getElementById('modalVoucherShipRow');
+    const summaryProductDiscountRow = document.getElementById('summaryProductDiscountRow');
+    const summaryShipDiscountRow = document.getElementById('summaryShipDiscountRow');
     
     // Check if either ship code or discount code was used
     if (order.appliedVoucherCode || order.appliedDiscountCode || order.appliedShipCode || order.discountAmount) {
-        vGroup.style.display = 'block';
-        
         const discCode = order.appliedDiscountCode || order.appliedVoucherCode;
-        if (discCode || order.discountAmount) {
-            if (vDiscRow) vDiscRow.style.display = 'flex';
-            document.getElementById('modalVoucherCode').textContent = discCode || 'คูปองทั่วไป';
-            document.getElementById('modalDiscountAmount').textContent = `-฿${(order.discountAmount || 0).toLocaleString()}`;
-        } else {
-            if (vDiscRow) vDiscRow.style.display = 'none';
-        }
         
-        if (order.appliedShipCode) {
-            if (vShipRow) vShipRow.style.display = 'flex';
-            document.getElementById('modalShipCode').textContent = order.appliedShipCode;
-            // Assuming default shipping is 50, otherwise we'd need to save actual shipping discount.
-            document.getElementById('modalShipDiscountAmount').textContent = `ส่งฟรี (-฿50)`;
+        // Show voucher block only if there's a product discount
+        if (discCode || order.discountAmount) {
+            if (vGroup) vGroup.style.display = 'block';
+            const mCode = document.getElementById('modalVoucherCode');
+            const mDisc = document.getElementById('modalDiscountAmount');
+            if (mCode) mCode.textContent = discCode || 'คูปองทั่วไป';
+            if (mDisc) mDisc.textContent = `-฿${(order.discountAmount || 0).toLocaleString()}`;
         } else {
-            if (vShipRow) vShipRow.style.display = 'none';
-        }
-
-        if (summaryDiscountRow) {
-            summaryDiscountRow.style.display = 'none'; // We hide this since we replaced it with summaryDiscountsContainer in html
+            if (vGroup) vGroup.style.display = 'none';
         }
     } else {
-        vGroup.style.display = 'none';
-        if (summaryDiscountRow) {
-            summaryDiscountRow.style.display = 'none';
-        }
-    }
-
-    const summaryDiscountsContainer = document.getElementById('summaryDiscountsContainer');
-    if (summaryDiscountsContainer) {
-        summaryDiscountsContainer.innerHTML = '';
-        if (order.appliedDiscountCode && order.discountAmount > 0) {
-            summaryDiscountsContainer.innerHTML += `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 1rem;">
-                    <span style="color: #666; font-weight: 500;">ส่วนลด (${order.appliedDiscountCode})</span>
-                    <span style="color: #cf1322; font-weight: 600;">-฿${order.discountAmount.toLocaleString()}</span>
-                </div>
-            `;
-        } else if (order.discountAmount > 0) {
-            summaryDiscountsContainer.innerHTML += `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 1rem;">
-                    <span style="color: #666; font-weight: 500;">ส่วนลด</span>
-                    <span style="color: #cf1322; font-weight: 600;">-฿${order.discountAmount.toLocaleString()}</span>
-                </div>
-            `;
-        }
-
-        if (order.appliedShipCode) {
-            summaryDiscountsContainer.innerHTML += `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 1rem;">
-                    <span style="color: #666; font-weight: 500;">โค้ดส่งฟรี (${order.appliedShipCode})</span>
-                    <span style="color: #0891b2; font-weight: 600;">-฿50</span>
-                </div>
-            `;
-        }
+        if (vGroup) vGroup.style.display = 'none';
     }
 
     const safeDiscount = order.discountAmount || 0;
     const safeTotal = order.total || 0;
-    const itemsSubtotal = (order.items || []).reduce((sum, item) => sum + (item.price * item.qty), 0);
     
-    let baseShippingFee = (safeTotal + safeDiscount) - itemsSubtotal;
-    if (order.appliedShipCode) {
-        baseShippingFee = 50; // Since appliedShipCode makes finalShipping = 0, we restore base to 50 to match the -50 discount display
+    const itemsTotal = (order.items || []).reduce((sum, item) => sum + ((item.price || 0) * (item.qty || item.quantity || 1)), 0);
+    const calcSubtotal = order.subtotal !== undefined ? order.subtotal : itemsTotal;
+    const calcBaseShipping = order.baseShippingCost !== undefined ? order.baseShippingCost : 50;
+    
+    document.getElementById('modalSubtotal').textContent = `฿${calcSubtotal.toLocaleString()}`;
+    
+    const hasFreeShip = order.appliedShipCode || (order.baseShippingCost === undefined && safeTotal <= (calcSubtotal - safeDiscount) && calcBaseShipping > 0);
+    const dispShipping = hasFreeShip ? 0 : calcBaseShipping;
+    const modalShippingEl = document.getElementById('modalShipping');
+    if (modalShippingEl) modalShippingEl.textContent = `฿${dispShipping.toLocaleString()}`;
+    
+    if (summaryProductDiscountRow) {
+        if (safeDiscount > 0) {
+            summaryProductDiscountRow.style.display = 'flex';
+            const dCode = order.appliedDiscountCode || order.appliedVoucherCode;
+            document.getElementById('modalProductDiscountLabel').textContent = `ส่วนลดจากโค้ด ${dCode ? `(${dCode})` : ''}`;
+            document.getElementById('modalProductDiscountAmount').textContent = `-฿${safeDiscount.toLocaleString()}`;
+        } else {
+            summaryProductDiscountRow.style.display = 'none';
+        }
     }
-    if (baseShippingFee < 0) baseShippingFee = 0;
-
-    document.getElementById('modalSubtotal').textContent = `฿${itemsSubtotal.toLocaleString()}`;
-    document.getElementById('modalShippingFee').textContent = baseShippingFee > 0 ? `+฿${baseShippingFee.toLocaleString()}` : `฿0`;
+    
+    if (summaryShipDiscountRow) {
+        if (order.appliedShipCode) {
+            summaryShipDiscountRow.style.display = 'flex';
+            document.getElementById('modalShipDiscountLabel').textContent = `ส่วนลดค่าจัดส่ง (${order.appliedShipCode})`;
+            document.getElementById('modalShipDiscountAmount').textContent = `-฿${calcBaseShipping.toLocaleString()}`;
+        } else if (hasFreeShip) {
+            summaryShipDiscountRow.style.display = 'flex';
+            document.getElementById('modalShipDiscountLabel').textContent = `ส่วนลดค่าจัดส่ง`;
+            document.getElementById('modalShipDiscountAmount').textContent = `-฿${calcBaseShipping.toLocaleString()}`;
+        } else {
+            summaryShipDiscountRow.style.display = 'none';
+        }
+    }
+    
     document.getElementById('modalNetTotal').textContent = `฿${safeTotal.toLocaleString()}`;
 
     // --- MODE: Dispatch (แจ้งเลขพัสดุ) ---
@@ -673,7 +653,7 @@ function viewOrderDetails(orderId, isDispatch = false) {
 function handleModalShip() {
     const num = document.getElementById('modalTrackingNum').value.trim();
     const link = document.getElementById('modalTrackingLink').value.trim();
-    if (!num || !link) { sellerAlert('กรุณากรอกทั้งเลขพัสดุและลิงค์เช็คพัสดุ', 'warning'); return; }
+    if (!num || !link) { alert('กรุณากรอกทั้งเลขพัสดุและลิงค์เช็คพัสดุ'); return; }
     updateOrderStatus(currentModalOrderId, 'ที่ต้องได้รับ', num, link);
     closeOrderDetails();
 }
@@ -681,9 +661,10 @@ function handleModalShip() {
 function handleSaveTrackingEdit() {
     const num = document.getElementById('modalTrackingNum').value.trim();
     const link = document.getElementById('modalTrackingLink').value.trim();
-    if (!num || !link) { sellerAlert('กรุณากรอกทั้งเลขพัสดุและลิงค์เช็คพัสดุ', 'warning'); return; }
-    const order = ordersData.find(o => o.id === currentModalOrderId);
-    updateOrderStatus(currentModalOrderId, order.status, num, link);
+    if (!num || !link) { alert('กรุณากรอกทั้งเลขพัสดุและลิงค์เช็คพัสดุ'); return; }
+    
+    // Always move to 'ที่ต้องได้รับ' when tracking is saved/edited
+    updateOrderStatus(currentModalOrderId, 'ที่ต้องได้รับ', num, link);
     closeOrderDetails();
 }
 
@@ -704,10 +685,9 @@ function closeSlipLightbox() {
 }
 
 function forceManualSync(fromBroadcast = false) {
-    if (window.supabase) {
-        window.supabase.from('orders').select('*').then(({data, error}) => {
-            if (error || !data) return;
-            let fetchedOrders = data;
+    if (window.supabaseClient) {
+        window.supabaseClient.from('orders').select('*').then(({data: snapshotDocs}) => {
+            let fetchedOrders = snapshotDocs.map(doc => ({ ...doc }));
             
             // Apply the same advanced merging logic to prevent overwriting local advanced states
             const localGlobal = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
@@ -717,6 +697,15 @@ function forceManualSync(fromBroadcast = false) {
             fetchedOrders = fetchedOrders.map(o => {
                 if (localMap.has(o.id)) {
                     const localO = localMap.get(o.id);
+                    // Merge missing checkout details from local cache if Supabase schema is behind or returns null
+                    o.appliedShipCode = o.appliedShipCode || localO.appliedShipCode;
+                    o.appliedDiscountCode = o.appliedDiscountCode || localO.appliedDiscountCode;
+                    o.voucherCode = o.voucherCode || localO.voucherCode;
+                    o.discountAmount = o.discountAmount || localO.discountAmount || 0;
+                    o.baseShippingCost = o.baseShippingCost || localO.baseShippingCost || 50;
+                    o.subtotal = o.subtotal || localO.subtotal;
+                    o.total = localO.total || o.total;
+
                     const statusPriority = {
                         'ที่ต้องชำระ': 1, 'ที่ต้องจัดส่ง': 2, 'เตรียมจัดส่งแล้ว': 3, 'Processed': 3,
                         'ที่ต้องได้รับ': 4, 'สำเร็จแล้ว': 5, 'Completed': 5, 'ยกเลิกแล้ว': 6, 'คืนเงิน/คืนสินค้า': 6
@@ -737,14 +726,17 @@ function forceManualSync(fromBroadcast = false) {
                 }
                 return o;
             });
+            
+            const fetchedIds2 = new Set(fetchedOrders.map(o => o.id));
+            localGlobal.forEach(o => {
+                if (!fetchedIds2.has(o.id)) {
+                    fetchedOrders.push(o);
+                }
+            });
 
             ordersData = fetchedOrders;
-            ordersData.sort((a,b) => {
-                const dateA = new Date(a.orderDate || a.createdAt || 0);
-                const dateB = new Date(b.orderDate || b.createdAt || 0);
-                return dateB - dateA;
-            });
-            localStorage.setItem('pao_global_orders', JSON.stringify(ordersData));
+            ordersData.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            localStorage.setItem('pao_global_orders', JSON.stringify(ordersData.map(o => ({...o, items: o.items ? o.items.map(i => ({id:i.id, name:i.name, price:i.price, quantity:i.quantity, img:i.img})) : []}))));
             renderOrders();
             updateTabBadges();
         });
@@ -766,6 +758,18 @@ function updateTabBadges() {
     if (badgeToship) {
         badgeToship.innerText = toship;
         badgeToship.style.display = toship > 0 ? 'flex' : 'none';
+    }
+    
+    // Sidebar badges
+    const sidebarBadgeToship = document.getElementById('sidebar-badge-toship');
+    if (sidebarBadgeToship) {
+        sidebarBadgeToship.innerText = toship;
+        sidebarBadgeToship.style.display = toship > 0 ? 'inline-block' : 'none';
+    }
+    const mobileSidebarBadgeToship = document.getElementById('mobile-sidebar-badge-toship');
+    if (mobileSidebarBadgeToship) {
+        mobileSidebarBadgeToship.innerText = toship;
+        mobileSidebarBadgeToship.style.display = toship > 0 ? 'inline-block' : 'none';
     }
     
     const badgeProcessed = document.getElementById('badge-processed');
