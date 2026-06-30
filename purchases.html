@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -12,7 +12,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=202" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="products.css" />
     <link rel="stylesheet" href="purchases.css" />
@@ -269,6 +269,7 @@
                         </div>
                     </div>
                 </li>
+                <li><a href="repair-track.html">เช็คสถานะซ่อม</a></li>
                 <li><a href="index.html#why-us">ทำไมต้องเรา</a></li>
                 <li class="has-mega-menu"><a href="index.html#reviews">รีวิว</a>
                     <div class="mega-menu">
@@ -398,7 +399,7 @@
                                 href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส /
                                 อุปกรณ์เสริม</a>
                         </div>
-                    </div><a href="index.html#why-us">ทำไมต้องเรา</a>
+                    </div><a href="repair-track.html">เช็คสถานะซ่อม</a><a href="index.html#why-us">ทำไมต้องเรา</a>
                     <div class="menu-item-wrapper">
                         <div class="menu-item-parent">รีวิว</div>
                         <div class="mobile-sub-menu"><a href="index.html#reviews">รีวิวลูกค้า</a><a
@@ -519,29 +520,28 @@
                 <div class="cancel-radio-group">
                     <label class="cancel-radio-label">
                         <input type="radio" name="cancelReason" value="ต้องการเปลี่ยนที่อยู่ในการจัดส่ง"
-                            onchange="toggleCancelOtherInput()">
+                            onchange="enableCancelConfirmBtn()">
                         ต้องการเปลี่ยนที่อยู่ในการจัดส่ง
                     </label>
                     <label class="cancel-radio-label">
                         <input type="radio" name="cancelReason" value="ต้องการเพิ่ม/เปลี่ยนโค้ดส่วนลด"
-                            onchange="toggleCancelOtherInput()">
+                            onchange="enableCancelConfirmBtn()">
                         ต้องการเพิ่ม/เปลี่ยนโค้ดส่วนลด
                     </label>
                     <label class="cancel-radio-label">
                         <input type="radio" name="cancelReason" value="ต้องการแก้ไขรายละเอียดคำสั่งซื้อ"
-                            onchange="toggleCancelOtherInput()">
+                            onchange="enableCancelConfirmBtn()">
                         ต้องการแก้ไขรายละเอียดคำสั่งซื้อ (เปลี่ยนขนาด, สี, จำนวน เป็นต้น)
                     </label>
                     <label class="cancel-radio-label">
                         <input type="radio" name="cancelReason" value="ไม่ต้องการซื้อสินค้านี้แล้ว"
-                            onchange="toggleCancelOtherInput()">
+                            onchange="enableCancelConfirmBtn()">
                         ไม่ต้องการซื้อสินค้านี้แล้ว
                     </label>
                     <label class="cancel-radio-label">
-                        <input type="radio" name="cancelReason" value="อื่น ๆ" onchange="toggleCancelOtherInput()">
+                        <input type="radio" name="cancelReason" value="อื่น ๆ" onchange="enableCancelConfirmBtn()">
                         อื่น ๆ
                     </label>
-                    <textarea id="cancelReasonOtherText" style="display:none; width: 100%; margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px solid #ddd; resize: none; font-family: inherit; font-size: 0.95rem; box-sizing: border-box;" rows="2" placeholder="โปรดระบุเหตุผลการยกเลิกคำสั่งซื้อ..."></textarea>
                 </div>
             </div>
             <div class="cancel-modal-footer">
@@ -613,7 +613,11 @@
         </div>
     </main>
 
-    <footer class="footer">
+    <!-- Footer Wave Divider -->
+    <div class="footer-wave-divider" style="width: 100%; line-height: 0; position: relative; z-index: 1; background-color: var(--bg); margin-bottom: -10px;">
+        <img src="footer-waves.svg" alt="" style="width: 100%; display: block; transform: translateY(1px);">
+    </div>
+    <footer class="footer" style="position: relative; z-index: 2;">
         <div class="container">
             <div class="footer-top">
                 <div class="footer-brand">
@@ -685,11 +689,15 @@
     </div>
 
     <!-- Firebase SDKs (Prioritized for Chat System) -->
+    
+    
+    
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="db.js"></script>
-    <script src="script.js"></script>
-    <script src="cart.js"></script>
-    <script src="pao-search.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="script.js?v=202"></script>
+    <script src="cart.js?v=3"></script>
+    <script src="search.js"></script>
     <script src="auth.js"></script>
     <script>
         (function () {
@@ -717,20 +725,13 @@
 
                             // Sync to Cloud
                             const userId = getActiveUserId();
-                            if (userId !== 'guest' && window.supabase) {
-                                window.supabase.from('orders').update({ status: 'ยกเลิกแล้ว' }).eq('id', o.id)
-                                    .then(({error}) => { if (error) console.warn("Background expiry sync failed for", o.id, error) });
-                                
-                                // Restore vouchers if auto-cancelled
-                                const email = o.customerEmail || (userId !== 'guest' ? JSON.parse(localStorage.getItem('paomobile_user'))?.email : null);
-                                if (email) {
-                                    const codes = [...new Set([o.appliedDiscountCode, o.appliedShipCode, o.voucherCode].filter(Boolean))];
-                                    if (codes.length > 0) {
-                                        const inserts = codes.map(c => ({ id: 'red-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 5), email, code: c }));
-                                        window.supabase.from('vouchers_redemptions').insert(inserts).then(({error}) => {
-                                            if (!error) localStorage.removeItem('pao_user_vouchers_' + email);
-                                        });
-                                    }
+                            if (userId !== 'guest') {
+                                if (window.supabaseClient) {
+                                    window.supabaseClient.from('orders').update({ status: 'ยกเลิกแล้ว' }).eq('id', o.id)
+                                        .catch(err => console.warn("Supabase Background expiry sync failed for", o.id, err));
+                                } else if (typeof db !== 'undefined' && db.collection) {
+                                    db.collection('orders').doc(o.id).update({ status: 'ยกเลิกแล้ว' })
+                                        .catch(err => console.warn("Firebase Background expiry sync failed for", o.id, err));
                                 }
                             }
                         }
@@ -756,16 +757,15 @@
             }
 
             // Firestore Sync (v1.2.10)
-            // Supabase Sync (v2.0.0)
             function startCloudSync() {
                 const userId = getActiveUserId();
                 if (userId === 'guest') {
-                    console.log("[v2.0.0] Guest mode: Cloud sync disabled.");
+                    console.log("[v1.2.10] Guest mode: Cloud sync disabled.");
                     loadLocalOnly();
                     return;
                 }
 
-                console.log("[v2.0.0] Starting Cloud Sync for user:", userId);
+                console.log("[v1.2.11] Starting Cloud Sync for user:", userId);
 
                 // Pre-render local data for instant visibility
                 const localOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
@@ -775,80 +775,105 @@
                     renderOrders(ordersData, activeTab);
                 }
 
-                if (!window.supabase) return;
-
-                const fetchAndMergeOrders = async () => {
-                    const { data: cloudOrders, error } = await window.supabase
-                        .from('orders')
-                        .select('*')
-                        .eq('customer', userId);
-
-                    if (error) {
-                        console.error("[v2.0.0] Sync Error:", error);
-                        loadLocalOnly();
-                        return;
-                    }
-
+                const handleCloudSync = (cloudOrders) => {
                     // Merge with local (local as priority for unsynced orders if any)
                     const localOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+
+                    // Deduplicate: Use Map with ID as key
                     const mergedMap = new Map();
 
                     // Pass 1: Local
                     localOrders.forEach(o => mergedMap.set(o.id, o));
 
                     // Pass 2: Cloud 
-                    if (cloudOrders) {
-                        cloudOrders.forEach(o => {
-                            if (mergedMap.has(o.id)) {
-                                const localO = mergedMap.get(o.id);
-                                
-                                const statusPriority = {
-                                    'ที่ต้องชำระ': 1,
-                                    'ที่ต้องจัดส่ง': 2,
-                                    'เตรียมจัดส่งแล้ว': 3,
-                                    'Processed': 3,
-                                    'ที่ต้องได้รับ': 4,
-                                    'สำเร็จแล้ว': 5,
-                                    'Completed': 5,
-                                    'ยกเลิกแล้ว': 6,
-                                    'คืนเงิน/คืนสินค้า': 6
-                                };
+                    cloudOrders.forEach(o => {
+                        if (mergedMap.has(o.id)) {
+                            const localO = mergedMap.get(o.id);
+                            
+                            // ✅ Advanced Merging Logic: Prevent "Stale" cloud status from overwriting "More Advanced" local status
+                            const statusPriority = {
+                                'ที่ต้องชำระ': 1,
+                                'ที่ต้องจัดส่ง': 2,
+                                'เตรียมจัดส่งแล้ว': 3,
+                                'Processed': 3,
+                                'ที่ต้องได้รับ': 4,
+                                'สำเร็จแล้ว': 5,
+                                'Completed': 5,
+                                'ยกเลิกแล้ว': 6,
+                                'คืนเงิน/คืนสินค้า': 6
+                            };
 
-                                const localWeight = statusPriority[localO.status] || 0;
-                                const cloudWeight = statusPriority[o.status] || 0;
+                            const localWeight = statusPriority[localO.status] || 0;
+                            const cloudWeight = statusPriority[o.status] || 0;
 
-                                if (localWeight > cloudWeight) {
-                                    return; // Don't overwrite with a less advanced status from cloud
-                                }
+                            if (localWeight > cloudWeight) {
+                                return; // Don't overwrite with a less advanced status from cloud
                             }
-                            mergedMap.set(o.id, o);
-                        });
-                    }
+                        }
+                        mergedMap.set(o.id, o);
+                    });
 
                     ordersData = Array.from(mergedMap.values()).sort((a, b) => {
-                        const dateA = new Date(a.orderDate || a.createdAt || 0);
-                        const dateB = new Date(b.orderDate || b.createdAt || 0);
+                        const dateA = new Date(a.orderDate || a.createdAt?.toDate?.() || 0);
+                        const dateB = new Date(b.orderDate || b.createdAt?.toDate?.() || 0);
                         return dateB - dateA; // Newest first
                     });
 
+                    // ✅ Centralized Expiration Check (Fixes cloud-only order expiry)
                     ordersData = processExpirations(ordersData);
+
+                    // ✅ Sync back to Local Storage to ensure priority logic works on next snapshot
                     localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
 
-                    console.log("[v2.0.0] Sync Success: Found", ordersData.length, "orders");
+                    console.log("[v1.2.12] Sync Success: Found", ordersData.length, "orders");
                     const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
                     renderOrders(ordersData, activeTab);
                 };
 
-                // Initial fetch
-                fetchAndMergeOrders();
-
-                // Realtime Subscription
-                window.supabase.channel('public:orders_customer_' + userId)
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `customer=eq.${userId}` }, payload => {
-                        console.log("[v2.0.0] Realtime Order Update:", payload);
-                        fetchAndMergeOrders();
-                    })
-                    .subscribe();
+                // Priority: Supabase Sync
+                if (window.supabaseClient) {
+                    const fetchOrders = async () => {
+                        try {
+                            const { data, error } = await window.supabaseClient.from('orders').select('*').eq('customer', userId);
+                            if (error) throw error;
+                            if (data) handleCloudSync(data);
+                        } catch (err) {
+                            console.error("[v1.2.10] Supabase Sync Error:", err);
+                        }
+                    };
+                    fetchOrders();
+                    
+                    try {
+                        const channel = window.supabaseClient.channel('custom-orders-channel')
+                        .on(
+                            'postgres_changes',
+                            { event: '*', schema: 'public', table: 'orders', filter: `customer=eq.${userId}` },
+                            (payload) => {
+                                console.log('Supabase real-time update received:', payload);
+                                fetchOrders();
+                            }
+                        )
+                        .subscribe();
+                    } catch(e) {
+                        console.error('Supabase real-time error:', e);
+                    }
+                } else if (typeof db !== 'undefined' && db.collection) {
+                    db.collection('orders')
+                        .where('customer', '==', userId)
+                        .onSnapshot(snapshot => {
+                        const cloudOrders = snapshot.docs.map(doc => ({
+                            ...doc.data(),
+                            id: doc.id
+                        }));
+                        handleCloudSync(cloudOrders);
+                    }, err => {
+                        console.error("[v1.2.10] Firebase Sync Error:", err);
+                        loadLocalOnly();
+                    });
+                } else {
+                    console.log("[Cloud] Database is undefined, falling back to local only");
+                    loadLocalOnly();
+                }
             }
 
             // Tab handler with URL param support
@@ -982,15 +1007,8 @@
                     container.innerHTML = filtered.map(order => {
                         const items = order.items || [];
                         const status = order.status || 'รอดำเนินการ';
-                        const safeDiscount = order.discountAmount || 0;
-                        const safeTotal = order.total || 0;
-                        const itemsSubtotal = items.reduce((sum, item) => sum + (item.price * item.qty), 0);
-                        let baseShippingFee = (safeTotal + safeDiscount) - itemsSubtotal;
-                        if (order.appliedShipCode) baseShippingFee = 50;
-                        if (baseShippingFee < 0) baseShippingFee = 0;
-                        
                         return `
-                    <div class="order-card" style="border: 1px solid #eee; margin-bottom: 20px; border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.03);">
+                    <div class="order-card" style="border: 1px solid #eee; margin-bottom: 20px; border-radius: 8px; overflow: visible; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.03);">
                         <div class="order-card-body" style="padding: 15px 20px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #f9f9f9; padding-bottom: 10px;">
                                 <div style="font-size: 0.85rem; color: #757575; font-family: monospace; display: flex; align-items: center;">
@@ -1011,55 +1029,51 @@
                                 </div>
                             `).join('')}
                         </div>
-                        <!-- Accordion Details (Hidden by default) -->
-                        <div id="details-${order.id}" style="display: none; padding: 15px 20px 5px 20px; background: #fafafa; border-top: 1px dashed #eee; font-size: 0.95rem;">
-                            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; gap: 30px;">
-                                <span style="color: #555;">รวมค่าสินค้า</span>
-                                <span style="color: #333; min-width: 80px; text-align: right;">฿${itemsSubtotal.toLocaleString()}</span>
-                            </div>
-                            ${baseShippingFee > 0 ? `
-                            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; gap: 30px;">
-                                <span style="color: #555;">ค่าจัดส่ง</span>
-                                <span style="color: #333; min-width: 80px; text-align: right;">฿${baseShippingFee.toLocaleString()}</span>
-                            </div>
-                            ` : ''}
-                            ${(order.discountAmount && order.discountAmount > 0) ? `
-                            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; gap: 30px;">
-                                <span style="color: #555;">ส่วนลดค่าสินค้า ${order.appliedDiscountCode || order.voucherCode ? `(${order.appliedDiscountCode || order.voucherCode})` : ''}</span>
-                                <span style="color: #cf1322; min-width: 80px; text-align: right;">-฿${order.discountAmount.toLocaleString()}</span>
-                            </div>
-                            ` : ''}
-                            ${order.appliedShipCode ? `
-                            <div style="display: flex; justify-content: flex-end; margin-bottom: 8px; gap: 30px;">
-                                <span style="color: #555;">โค้ดส่งฟรี (${order.appliedShipCode})</span>
-                                <span style="color: #0891b2; min-width: 80px; text-align: right;">-฿50</span>
-                            </div>
-                            ` : ''}
-                        </div>
-
-                        <div class="order-total-row" style="padding: 15px 20px; background: #fafafa; border-top: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin: 0; gap: 15px;">
-                            <div>
-                                ${order.trackingNum ? `
-                                <div style="display: flex; align-items: center; gap: 12px; min-width: 250px;">
-                                    <div style="background: #fff; border: 1.5px solid #ee4d2d; padding: 6px 15px; border-radius: 8px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 6px rgba(238, 77, 45, 0.1);">
-                                        <div style="font-size: 0.95rem; color: #555;">เลขพัสดุ: <strong onclick="window.copyTrackingNumber('${order.trackingNum}', this); event.stopPropagation();" title="คลิกเพื่อคัดลอก" style="font-family: monospace; color: #ee4d2d; font-size: 1.1rem; cursor: pointer; padding: 2px 5px; border-radius: 4px; transition: background 0.2s;">${order.trackingNum}</strong></div>
-                                        ${order.trackingLink ? `
-                                            <a href="${order.trackingLink}" target="_blank" style="background: #ee4d2d; color: #fff; text-decoration: none; padding: 6px 18px; border-radius: 6px; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; box-shadow: 0 2px 4px rgba(238, 77, 45, 0.2); display: inline-block; position: relative; z-index: 10;" onclick="event.stopPropagation()">เช็คพัสดุ</a>
-                                        ` : ''}
-                                    </div>
+                        <div class="order-total-row" style="padding: 15px 20px; background: #fafafa; border-top: 1px dashed #eee; display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin: 0; flex-wrap: wrap;">
+                            ${order.trackingNum ? `
+                            <div style="flex: 1; display: flex; align-items: center; gap: 12px; min-width: 250px;">
+                                <div style="background: #fff; border: 1.5px solid #ee4d2d; padding: 6px 15px; border-radius: 8px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 6px rgba(238, 77, 45, 0.1);">
+                                    <div style="font-size: 0.95rem; color: #555;">เลขพัสดุ: <strong onclick="window.copyTrackingNumber('${order.trackingNum}', this)" title="คลิกเพื่อคัดลอก" style="font-family: monospace; color: #ee4d2d; font-size: 1.1rem; cursor: pointer; padding: 2px 5px; border-radius: 4px; transition: background 0.2s;">${order.trackingNum}</strong></div>
+                                    ${order.trackingLink ? `
+                                        <a href="${order.trackingLink}" target="_blank" style="background: #ee4d2d; color: #fff; text-decoration: none; padding: 6px 18px; border-radius: 6px; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; box-shadow: 0 2px 4px rgba(238, 77, 45, 0.2); display: inline-block; position: relative; z-index: 10;">เช็คพัสดุ</a>
+                                    ` : ''}
                                 </div>
-                                ` : (status === 'ที่ต้องจัดส่ง' || status === 'เตรียมจัดส่งแล้ว' || status === 'ที่ต้องได้รับ' ? `
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="color: #faad14; font-size: 1.2rem;">●</div>
-                                    <div style="font-size: 0.95rem; color: #555;">
-                                        ${((order.status || '').trim() === 'ที่ต้องจัดส่ง') ? 'รอผู้ขายจัดส่งและแจ้งเลขพัสดุ...' : 'พัสดุกำลังเดินทางไปหาคุณ...'}
-                                    </div>
-                                </div>
-                                ` : '')}
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="const d = document.getElementById('details-${order.id}'); d.style.display = d.style.display === 'none' ? 'block' : 'none'; const i = document.getElementById('icon-${order.id}'); i.textContent = i.textContent === 'v' ? '^' : 'v';">
-                                <div class="total-label" style="font-size: 1rem; color: #333;">${status.includes('ชำระ') ? 'จำนวนเงินที่ต้องชำระ:' : 'รวมคำสั่งซื้อ:'}</div>
-                                <div class="total-price" style="font-weight: 600; color: #ee4d2d; font-size: ${status.includes('ชำระ') ? '1.4rem' : '1.3rem'};">฿${(order.total || 0).toLocaleString()} <span id="icon-${order.id}" style="color: #888; font-size: 1rem; margin-left: 6px; display: inline-block; transform: scaleY(0.8); font-weight: 400;">v</span></div>
+                            ` : (status === 'ที่ต้องจัดส่ง' || status === 'เตรียมจัดส่งแล้ว' || status === 'ที่ต้องได้รับ' ? `
+                            <div style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                                <div style="color: #faad14; font-size: 1.2rem;">●</div>
+                                <div style="font-size: 0.95rem; color: #555;">
+                                    ${((order.status || '').trim() === 'ที่ต้องจัดส่ง') ? 'รอผู้ขายจัดส่งและแจ้งเลขพัสดุ...' : 'พัสดุกำลังเดินทางไปหาคุณ...'}
+                                </div>
+                            </div>
+                            ` : '')}
+                            ${(() => {
+                                const calcSubtotal = order.subtotal !== undefined ? order.subtotal : items.reduce((sum, item) => sum + ((item.price||0) * (item.qty||1)), 0);
+                                const calcBaseShipping = order.baseShippingCost !== undefined ? order.baseShippingCost : 50;
+                                let html = `<div id="breakdown-${order.id}" style="display: none; width: 100%; flex-direction: column; align-items: flex-end; gap: 8px; margin-bottom: 12px; margin-top: 5px; font-size: 0.9rem; color: #555;">`;
+                                html += `<div style="display: flex; justify-content: flex-end; width: 100%; max-width: 380px;"><span style="flex:1; text-align:right; margin-right: 20px;">รวมการสั่งซื้อ</span><span style="min-width: 60px; text-align: right; color: #222; font-weight: 500;">฿${calcSubtotal.toLocaleString()}</span></div>`;
+                                
+                                const hasFreeShip = order.appliedShipCode || (order.baseShippingCost === undefined && order.total <= (calcSubtotal - (order.discountAmount||0)) && calcBaseShipping > 0);
+                                const dispShipping = hasFreeShip ? 0 : calcBaseShipping;
+                                
+                                html += `<div style="display: flex; justify-content: flex-end; width: 100%; max-width: 380px;"><span style="flex:1; text-align:right; margin-right: 20px;">การจัดส่ง</span><span style="min-width: 60px; text-align: right; color: #222; font-weight: 500;">฿${dispShipping.toLocaleString()}</span></div>`;
+                                
+                                if (order.discountAmount > 0) {
+                                    const dCode = order.appliedDiscountCode || order.voucherCode;
+                                    html += `<div style="display: flex; justify-content: flex-end; width: 100%; max-width: 380px;"><span style="flex:1; text-align:right; margin-right: 20px;">ส่วนลดจากโค้ด ${dCode ? `(${dCode})` : ''}</span><span style="min-width: 60px; text-align: right; color: #ee4d2d; font-weight: 500;">-฿${order.discountAmount.toLocaleString()}</span></div>`;
+                                }
+                                if (order.appliedShipCode) {
+                                    html += `<div style="display: flex; justify-content: flex-end; width: 100%; max-width: 380px;"><span style="flex:1; text-align:right; margin-right: 20px;">ส่วนลดค่าจัดส่ง (${order.appliedShipCode})</span><span style="min-width: 60px; text-align: right; color: #26aa99; font-weight: 500;">-฿${calcBaseShipping.toLocaleString()}</span></div>`;
+                                } else if (hasFreeShip) {
+                                    html += `<div style="display: flex; justify-content: flex-end; width: 100%; max-width: 380px;"><span style="flex:1; text-align:right; margin-right: 20px;">ส่วนลดค่าจัดส่ง</span><span style="min-width: 60px; text-align: right; color: #26aa99; font-weight: 500;">-฿${calcBaseShipping.toLocaleString()}</span></div>`;
+                                }
+                                html += `</div>`;
+                                return html;
+                            })()}
+                            <div onclick="const b = document.getElementById('breakdown-${order.id}'); const c = document.getElementById('chevron-${order.id}'); if(b){ const isNone = b.style.display === 'none'; b.style.display = isNone ? 'flex' : 'none'; if(c) c.style.transform = isNone ? 'rotate(180deg)' : 'rotate(0deg)'; }" style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
+                                <div class="total-label" style="font-size: 0.95rem; color: #555;">${status.includes('ชำระ') ? 'จำนวนเงินที่ต้องชำระ:' : 'รวมคำสั่งซื้อ:'}</div>
+                                <div class="total-price" style="font-weight: 600; color: #ee4d2d; font-size: ${status.includes('ชำระ') ? '1.4rem' : '1.3rem'};">฿${(order.total || 0).toLocaleString()}</div>
+                                <svg id="chevron-${order.id}" style="width: 16px; height: 16px; color: #888; transition: transform 0.3s ease; margin-left: 2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                         </div>
                         <div class="order-card-footer" style="padding: 15px 20px; border-top: 1px solid #f5f5f5; background: #fff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -1074,7 +1088,7 @@
                                             style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">ชำระเงินตอนนี้</button>
                                         <div style="position: relative; display: inline-block;">
                                             <button class="btn-purchase" onclick="toggleDropdown('${order.id}', event)" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">เพิ่มเติม ˅</button>
-                                            <div id="dropdown-${order.id}" class="more-dropdown" style="display: none; position: absolute; bottom: 100%; right: 0; background: #fff; border: 1px solid #ee4d2d; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 2px; padding: 8px 0; min-width: 190px; z-index: 100; margin-bottom: 5px;">
+                                            <div id="dropdown-${order.id}" class="more-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #ee4d2d; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 2px; padding: 8px 0; min-width: 190px; z-index: 100; margin-top: 5px;">
                                                 <div onclick="cancelOrderUser('${order.id}')" style="padding: 10px 16px; cursor: pointer; color: #555; font-size: 0.9rem;">ยกเลิกคำสั่งซื้อ</div>
                                                 <div onclick="changePaymentUser('${order.id}', '${order.paymentMethod || 'QR พร้อมเพย์'}')" style="padding: 10px 16px; cursor: pointer; color: #555; font-size: 0.9rem;">เปลี่ยนช่องทางการชำระเงิน</div>
                                             </div>
@@ -1159,50 +1173,47 @@
             // Listen for localStorage changes from seller dashboard (cross-tab)
             window.addEventListener('storage', function (e) {
                 if (e.key === getOrdersKey() || e.key === 'pao_global_orders') {
-                    // Pull from the correct source that triggered the event
-                    const sourceKey = e.key === 'pao_global_orders' ? 'pao_global_orders' : getOrdersKey();
-                    const freshOrders = JSON.parse(localStorage.getItem(sourceKey) || '[]');
+                    // Always read the key that triggered the event to get the fresh data
+                    const freshOrders = JSON.parse(localStorage.getItem(e.key) || '[]');
                     if (freshOrders.length > 0) {
                         let updated = false;
                         freshOrders.forEach(fo => {
                             const idx = ordersData.findIndex(o => o.id === fo.id);
                             if (idx > -1) {
-                                // Prevent overriding with stale data
-                                if (ordersData[idx].status !== fo.status || ordersData[idx].trackingNum !== fo.trackingNum || ordersData[idx].trackingLink !== fo.trackingLink) {
+                                // Only update if there are meaningful changes to prevent rendering loops
+                                if (ordersData[idx].status !== fo.status || ordersData[idx].trackingNum !== fo.trackingNum) {
                                     ordersData[idx] = { ...ordersData[idx], ...fo };
                                     updated = true;
                                 }
                             }
                         });
+                        
                         if (updated) {
-                            // Sync back to our local guest order storage
+                            // Sync the updated state back to local user storage
                             localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
                             const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
-                            updateTabCounts(ordersData);
                             renderOrders(ordersData, activeTab);
                         }
                     }
                 }
             });
 
-            // Listen for instant BroadcastChannel updates from Seller Centre
+            // Listen for direct broadcast updates from seller dashboard
             try {
-                const bc = new BroadcastChannel('pao_order_sync');
-                bc.addEventListener('message', function(event) {
+                const globalBc = new BroadcastChannel('pao_order_sync');
+                globalBc.onmessage = (event) => {
                     if (event.data && event.data.type === 'SELLER_ORDER_UPDATE' && event.data.updatedOrder) {
-                        const updated = event.data.updatedOrder;
-                        const idx = ordersData.findIndex(o => o.id === updated.id);
+                        const fo = event.data.updatedOrder;
+                        const idx = ordersData.findIndex(o => o.id === fo.id);
                         if (idx > -1) {
-                            ordersData[idx] = { ...ordersData[idx], ...updated };
+                            ordersData[idx] = { ...ordersData[idx], ...fo };
                             localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
-                            
                             const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
-                            updateTabCounts(ordersData);
                             renderOrders(ordersData, activeTab);
                         }
                     }
-                });
-            } catch (e) { }
+                };
+            } catch (e) {}
 
             setInterval(function () {
                 let changed = false;
@@ -1276,6 +1287,8 @@
                 }
             };
 
+            // Breakdown Toggle logic is now inline in HTML
+
             document.addEventListener('click', function (e) {
                 document.querySelectorAll('.more-dropdown').forEach(el => el.style.display = 'none');
             });
@@ -1301,24 +1314,6 @@
                 if (btnConfirm) btnConfirm.disabled = true;
 
                 document.querySelectorAll('input[name="cancelReason"]').forEach(el => el.checked = false);
-                const otherText = document.getElementById('cancelReasonOtherText');
-                if (otherText) {
-                    otherText.style.display = 'none';
-                    otherText.value = '';
-                }
-            };
-
-            window.toggleCancelOtherInput = function() {
-                const btnConfirm = document.getElementById('btnConfirmCancel');
-                if (btnConfirm) btnConfirm.disabled = false;
-                const otherText = document.getElementById('cancelReasonOtherText');
-                const isOtherSelected = document.querySelector('input[name="cancelReason"]:checked')?.value === 'อื่น ๆ';
-                if(isOtherSelected) {
-                    otherText.style.display = 'block';
-                    otherText.focus();
-                } else {
-                    otherText.style.display = 'none';
-                }
             };
 
             window.closeCancelModal = function () {
@@ -1337,37 +1332,10 @@
                 let order = currentOrders.find(o => o.id === currentCancelOrderId);
 
                 if (order) {
-                    let selectedReason = document.querySelector('input[name="cancelReason"]:checked')?.value || 'ไม่ระบุเหตุผล';
-                    if (selectedReason === 'อื่น ๆ') {
-                        const otherText = document.getElementById('cancelReasonOtherText')?.value.trim();
-                        selectedReason = 'อื่นๆ: ' + (otherText || 'ไม่ระบุเหตุผล');
-                    }
                     order.status = 'ยกเลิกแล้ว';
-                    order.cancelReason = selectedReason;
-                    order.cancelDate = new Date().toISOString();
-
-                    // 1. Supabase Sync
-                    if (window.supabase) {
-                        window.supabase.from('orders').update({
-                            status: 'ยกเลิกแล้ว',
-                            cancelReason: selectedReason,
-                            cancelDate: order.cancelDate
-                        }).eq('id', order.id).then(({error}) => {
-                            if (error) console.error("[Cloud Error] Cancel update failed:", error);
-                        });
-
-                        // Restore vouchers
-                        const email = order.customerEmail || (user ? user.email : null);
-                        if (email) {
-                            const codes = [...new Set([order.appliedDiscountCode, order.appliedShipCode, order.voucherCode].filter(Boolean))];
-                            if (codes.length > 0) {
-                                const inserts = codes.map(c => ({ id: 'red-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 5), email, code: c }));
-                                window.supabase.from('vouchers_redemptions').insert(inserts).then(({error}) => {
-                                    if (!error) localStorage.removeItem('pao_user_vouchers_' + email);
-                                });
-                            }
-                        }
-                    }
+                    // Optional: You could save the selected reason to the order object here:
+                    // const selectedReason = document.querySelector('input[name="cancelReason"]:checked')?.value;
+                    // order.cancelReason = selectedReason;
 
                     localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
                     // Global sync
@@ -1376,25 +1344,11 @@
                         let go = globalOrders.find(o => o.id === currentCancelOrderId);
                         if (go) {
                             go.status = 'ยกเลิกแล้ว';
-                            go.cancelReason = selectedReason;
                             localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
                         }
                     } catch (e) { }
-                    
-                    // Force switch to "Cancel" tab
-                    document.querySelectorAll('.order-tab').forEach(t => {
-                        if (t.dataset.filter === 'cancel') t.classList.add('active');
-                        else t.classList.remove('active');
-                    });
-                    
-                    updateTabCounts(currentOrders);
-                    renderOrders(currentOrders, 'cancel');
-                    
-                    // Notify other tabs
-                    try {
-                        const bc = new BroadcastChannel('pao_order_sync');
-                        bc.postMessage({ type: 'REFRESH_ORDERS', orderId: currentCancelOrderId });
-                    } catch (e) { }
+
+                    renderOrders(currentOrders, document.querySelector('.order-tab.active')?.dataset.filter || 'all');
                 }
 
                 closeCancelModal();
@@ -1432,13 +1386,15 @@
                 try {
                     const updateObj = { status: 'สำเร็จแล้ว' };
                     
-                    // 1. Supabase Sync
-                    if (window.supabase) {
-                        window.supabase.from('orders').update(updateObj).eq('id', orderId)
-                            .then(({error}) => {
-                                if (error) console.error("[Cloud Error] Failed to update status:", error);
-                                else console.log("[Cloud] Status updated to Completed:", orderId);
-                            });
+                    // 1. Cloud Sync (Priority Supabase)
+                    if (window.supabaseClient) {
+                        window.supabaseClient.from('orders').update(updateObj).eq('id', orderId)
+                            .then(() => console.log("[Cloud] Status updated to Completed via Supabase:", orderId))
+                            .catch(err => console.error("[Cloud Error] Supabase Failed to update status:", err));
+                    } else if (typeof db !== 'undefined' && db.collection) {
+                        db.collection('orders').doc(orderId).update(updateObj)
+                            .then(() => console.log("[Cloud] Status updated to Completed via Firebase:", orderId))
+                            .catch(err => console.error("[Cloud Error] Firebase Failed to update status:", err));
                     }
                     
                     // 2. Local Storage Sync (Primary User Orders)
@@ -1625,32 +1581,21 @@
                     // Ensure orderDate is preserved (counting from original creation)
                     // It is already preserved as we are not modifying it.
 
-                    let updateData = {
-                        paymentMethod: order.paymentMethod,
-                        paymentBank: order.paymentBank
-                    };
-                    
-                    if (order.status) {
-                        updateData.status = order.status;
-                    }
+                    localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
 
-                    if (window.supabase) {
-                        window.supabase.from('orders').update(updateData).eq('id', currentChangePaymentOrderId)
-                            .then(({error}) => {
-                                if (error) {
-                                    console.error("Failed to change payment method:", error);
-                                    alert("เปลี่ยนช่องทางชำระเงินไม่สำเร็จ กรุณาลองใหม่");
-                                } else {
-                                    // Local state update for immediate feedback
-                                    localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
-                                    renderOrders(currentOrders, document.querySelector('.order-tab.active')?.dataset.filter || 'all');
-                                }
-                            });
-                    } else {
-                        // Fallback
-                        localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
-                        renderOrders(currentOrders, document.querySelector('.order-tab.active')?.dataset.filter || 'all');
-                    }
+                    // Global sync
+                    try {
+                        let globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+                        let go = globalOrders.find(o => o.id === currentChangePaymentOrderId);
+                        if (go) {
+                            go.paymentMethod = order.paymentMethod;
+                            go.paymentBank = order.paymentBank;
+                            if (order.status) go.status = order.status;
+                            localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
+                        }
+                    } catch (e) { }
+
+                    renderOrders(currentOrders, document.querySelector('.order-tab.active')?.dataset.filter || 'all');
                 }
                 closePaymentModal();
             };
@@ -1717,10 +1662,13 @@
                         returnDate: new Date().toISOString()
                     };
                     
-                    // 1. Supabase Sync
-                    if (window.supabase) {
-                        window.supabase.from('orders').update(updateObj).eq('id', orderId)
-                            .then(({error}) => { if (error) console.error("[Cloud Error] Refund update failed:", error); });
+                    // 1. Cloud Sync (Priority Supabase)
+                    if (window.supabaseClient) {
+                        window.supabaseClient.from('orders').update(updateObj).eq('id', orderId)
+                            .catch(err => console.error("[Cloud Error] Supabase Refund update failed:", err));
+                    } else if (typeof db !== 'undefined' && db.collection) {
+                        db.collection('orders').doc(orderId).update(updateObj)
+                            .catch(err => console.error("[Cloud Error] Firebase Refund update failed:", err));
                     }
                     
                     // 2. Local Storage Sync
@@ -1826,46 +1774,16 @@
                 </div>
                 <div class="return-arrow">›</div>
             </div>
-            <div class="return-option" onclick="window.handleReturnOther(event)">
+            <div class="return-option" onclick="executeReturnOrder('อื่นๆ')">
                 <div class="return-icon">⚙️</div>
                 <div class="return-text">
-                    <div class="return-title">อื่นๆ <span id="returnOtherArrow" class="return-arrow" style="font-size: 1rem; margin-left: 5px; display: inline-block;">▼</span></div>
-                    <div id="returnOtherInputContainer" style="display: none; margin-top: 10px;" onclick="event.stopPropagation()">
-                        <textarea id="returnReasonOtherText" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; resize: none; font-family: inherit; font-size: 0.9rem; box-sizing: border-box;" rows="2" placeholder="โปรดระบุเหตุผลการคืนสินค้า..."></textarea>
-                        <button style="margin-top: 8px; width: 100%; border-radius: 6px; border: none; background: #ee4d2d; color: #fff; padding: 8px; font-weight: 500; cursor: pointer;" onclick="window.submitReturnOther(event)">ยืนยันการคืนสินค้า</button>
-                    </div>
+                    <div class="return-title">อื่นๆ</div>
                 </div>
+                <div class="return-arrow">›</div>
             </div>
         </div>
     </div>
-    
-    <script>
-        window.handleReturnOther = function(event) {
-            const container = document.getElementById('returnOtherInputContainer');
-            const arrow = document.getElementById('returnOtherArrow');
-            if(container.style.display === 'none') {
-                container.style.display = 'block';
-                arrow.style.transform = 'rotate(180deg)';
-                document.getElementById('returnReasonOtherText').focus();
-            } else {
-                container.style.display = 'none';
-                arrow.style.transform = 'rotate(0deg)';
-            }
-        };
-        window.submitReturnOther = function(event) {
-            event.stopPropagation();
-            const text = document.getElementById('returnReasonOtherText').value.trim();
-            executeReturnOrder('อื่นๆ: ' + (text || 'ไม่ระบุเหตุผล'));
-        };
-    </script>
 <script src="premium-alerts.js"></script>
 </body>
 
 </html>
-
-
-
-
-
-
-

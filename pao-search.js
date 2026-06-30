@@ -95,35 +95,49 @@ document.addEventListener('DOMContentLoaded', () => {
   let firestoreProducts = [];
   let allSearchableProducts = [...SEARCH_PRODUCTS];
 
-  if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-    const db = firebase.firestore();
+  if (window.supabaseClient) {
+    const supabase = window.supabaseClient;
     
     // 1. Sync Deleted IDs
-    db.collection('settings').doc('deleted_products').onSnapshot(doc => {
-      if (doc.exists) {
-        deletedIds = doc.data().deletedIds || [];
-        updateMergedProducts();
-      }
-    });
-
-    // 2. Sync All Products (Multi-category Search) with Safety Limit
-    db.collection('products').limit(1500).onSnapshot(snapshot => {
-      firestoreProducts = snapshot.docs.map(doc => {
-        const data = doc.data();
-        if (data.img && typeof data.img === 'string' && !data.img.startsWith('http') && !data.img.startsWith('data:image')) {
-            if (data.img.length > 100 && !data.img.toLowerCase().includes('.jpg') && !data.img.toLowerCase().includes('.png') && !data.img.toLowerCase().includes('.webp')) {
-                data.img = 'data:image/jpeg;base64,' + data.img;
-            }
+    const fetchDeleted = async () => {
+        const { data } = await supabase.from('settings').select('*').eq('id', 'deleted_products').single();
+        if (data) {
+            deletedIds = data.deletedIds || (data.value && data.value.deletedIds) || [];
+            updateMergedProducts();
         }
-        return { id: doc.id, ...data };
-      });
-      console.log(`[SearchSync] Synced ${firestoreProducts.length} global products`);
-      updateMergedProducts();
-      // Re-trigger search if input has value
-      if (searchInput && searchInput.value) {
-          renderResults(searchInput.value.trim().toLowerCase());
-      }
-    }, err => console.warn("[SearchSync] Product sync error:", err));
+    };
+    fetchDeleted();
+    
+    supabase.channel('public:settings:pao-search')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'settings', filter: 'id=eq.deleted_products' }, payload => {
+            fetchDeleted();
+        }).subscribe();
+
+    // 2. Sync All Products
+    const fetchProducts = async () => {
+        const { data: snapshotDocs } = await supabase.from('products').select('*').limit(1500);
+        if (!snapshotDocs) return;
+        firestoreProducts = snapshotDocs.map(doc => {
+            const data = doc;
+            if (data.img && typeof data.img === 'string' && !data.img.startsWith('http') && !data.img.startsWith('data:image')) {
+                if (data.img.length > 100 && !data.img.toLowerCase().includes('.jpg') && !data.img.toLowerCase().includes('.png') && !data.img.toLowerCase().includes('.webp')) {
+                    data.img = 'data:image/jpeg;base64,' + data.img;
+                }
+            }
+            return { ...data };
+        });
+        console.log(`[SearchSync] Synced ${firestoreProducts.length} global products`);
+        updateMergedProducts();
+        if (searchInput && searchInput.value) {
+            renderResults(searchInput.value.trim().toLowerCase());
+        }
+    };
+    fetchProducts();
+    
+    supabase.channel('public:products:pao-search')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
+            fetchProducts();
+        }).subscribe();
   }
 
   function updateMergedProducts() {

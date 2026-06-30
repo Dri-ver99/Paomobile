@@ -365,10 +365,11 @@ window.ProductDetail = {
         }
 
         // --- Background Fetch for Full Details ---
-        if (!product.description && window.db && product.id) {
-            window.db.collection('products').doc(product.id).get().then(doc => {
-                if (doc.exists) {
-                    const fullData = doc.data();
+        const supabase = window.supabaseClient;
+        if (!product.description && supabase && product.id) {
+            supabase.from('products').select('*').eq('id', product.id).single().then(({data}) => {
+                if (data) {
+                    const fullData = data;
                     // Only update if the user is still viewing THIS product
                     if (this.currentProduct && this.currentProduct.id === product.id) {
                         let needsUpdate = false;
@@ -720,6 +721,7 @@ window.ProductDetail = {
         }
 
         localStorage.setItem(cartKey, JSON.stringify(cart));
+        localStorage.setItem(cartKey + '_updated', Date.now().toString());
         if (window.CartUI) {
             CartUI.update();
             CartUI.open();
@@ -734,8 +736,62 @@ window.ProductDetail = {
             window.AuthAPI.redirectToLogin();
             return;
         }
-        this.addToCart();
-        window.location.href = 'cart.html';
+        
+        if (!this.currentProduct) return;
+        const p = this.currentProduct;
+        const v = this.currentVariation;
+        const sv = this.currentSubVariation;
+
+        // Check product stock
+        if (p.isOutOfStock) {
+            if (window.sellerAlert) await sellerAlert('สินค้านี้หมดแล้วค่ะ', 'error'); else alert('สินค้านี้หมดแล้วค่ะ');
+            return;
+        }
+        // If product has variations but none selected, prompt user
+        if (p.variations && p.variations.length > 0 && !v) {
+            if (window.sellerAlert) await sellerAlert('กรุณาเลือกตัวเลือกสินค้าก่อนสั่งซื้อค่ะ', 'warning'); else alert('กรุณาเลือกตัวเลือกสินค้าก่อนสั่งซื้อค่ะ');
+            return;
+        }
+        // Check variation stock
+        if (v && v.isOutOfStock) {
+            if (window.sellerAlert) await sellerAlert('ตัวเลือกนี้หมดแล้วค่ะ', 'error'); else alert('ตัวเลือกนี้หมดแล้วค่ะ');
+            return;
+        }
+
+        const productId = this.currentProduct.id + (v ? `-${v.id}` : '') + (sv ? `-${sv.id}` : '');
+        const itemName = v ? (`${v.name}${sv ? ' - ' + sv.name : ''}`) : this.currentProduct.name;
+        const price = sv ? (sv.price || v.price || p.price) : (v ? (v.price || p.price) : p.price);
+        let cartImg = (v && v.img) ? v.img : (this.currentProduct.img || (this.currentProduct.images && this.currentProduct.images[0]));
+
+        const getActiveUserId = () => { try { const u = JSON.parse(localStorage.getItem('paomobile_user')); return u ? (u.uid || u.phone || 'default') : 'guest'; } catch { return 'guest'; } };
+        const cartKey = 'pao_cart_' + getActiveUserId();
+        const cart = JSON.parse(localStorage.getItem(cartKey)) || [];
+        
+        // For "Buy Now", deselect all other items in the cart
+        cart.forEach(item => item.selected = false);
+
+        const idx = cart.findIndex(i => i.id === productId);
+        if (idx >= 0) {
+            cart[idx].qty += this.qty;
+            cart[idx].selected = true; // Select only this one
+        } else {
+            cart.push({
+                id: productId,
+                name: itemName,
+                price: price,
+                img: cartImg,
+                emoji: this.currentProduct.emoji,
+                qty: this.qty,
+                variationName: v ? (v.name + (sv ? ' - ' + sv.name : '')) : null,
+                selected: true
+            });
+        }
+
+        localStorage.setItem(cartKey, JSON.stringify(cart));
+        localStorage.setItem(cartKey + '_updated', Date.now().toString());
+        
+        // Redirect directly to checkout
+        window.location.href = 'checkout.html';
     }
 };
 

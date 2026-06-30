@@ -2,7 +2,6 @@
 <html lang="th">
 
 <head>
-<script>window.onerror = function(msg, url, lineNo, columnNo, error) { alert('ERROR: ' + msg + '\nLine: ' + lineNo); return false; }; window.addEventListener('unhandledrejection', function(event) { alert('PROMISE ERROR: ' + event.reason); });</script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>อะไหล่มือถือ — Paomobile</title>
@@ -16,7 +15,7 @@
     <link rel="stylesheet" href="products.css" />
     <style>
     </style>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=202" />
 </head>
 
 <body>
@@ -55,6 +54,7 @@
                         </div>
                     </div>
                 </li>
+                <li><a href="repair-track.html">เช็คสถานะซ่อม</a></li>
                 <li><a href="index.html#why-us">ทำไมต้องเรา</a></li>
                 <li class="has-mega-menu"><a href="index.html#reviews">รีวิว</a>
                     <div class="mega-menu">
@@ -157,7 +157,7 @@
                             <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">บริการเสริม</span><a href="select-glass-film.html">ติดฟิล์มกระจก</a><a href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส / อุปกรณ์เสริม</a>
                         </div>
 
-                    </div><a href="index.html#why-us">ทำไมต้องเรา</a>
+                    </div><a href="repair-track.html">เช็คสถานะซ่อม</a><a href="index.html#why-us">ทำไมต้องเรา</a>
                     <div class="menu-item-wrapper">
                         <div class="menu-item-parent">รีวิว</div>
                         <div class="mobile-sub-menu"><a href="index.html#reviews">รีวิวลูกค้า</a><a
@@ -208,13 +208,34 @@
         </div>
     </aside>
 
+    <div class="cart-overlay" id="cartOverlay"></div>
+    <aside class="cart-sidebar" id="cartSidebar">
+        <div class="cart-sidebar-header">
+            <h3>🛒 ตะกร้าสินค้า</h3>
+            <div class="cart-header-meta">จำนวน: <strong id="cartCount">0 ชิ้น</strong></div>
+            <button class="cart-close-btn" id="cartCloseBtn">✕</button>
+        </div>
+        <div class="cart-item-list" id="cartItemList">
+            <div class="cart-empty"><span>🛒</span>
+                <p>ตะกร้าว่างเปล่า</p>
+            </div>
+        </div>
+        <div class="cart-sidebar-footer">
+            <div class="cart-total-row"><span>ราคารวมทั้งหมด</span><strong id="cartTotal">฿0</strong></div><a
+                href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary"
+                style="width:100%;justify-content:center;margin-top:12px">
+                💬 สั่งซื้อผ่าน LINE @pao789
+            </a>
+        </div>
+    </aside>
+
     <section class="products-hero">
         <div class="container">
             <div class="products-hero-inner">
                 <div class="products-hero-text">
-                    <div class="badge"><span class="badge-dot"></span>อะไหล่คุณภาพ รับประกันงานซ่อม</div>
-                    <h1>🔧 อะไหล่<span class="accent">มือถือ</span></h1>
-                    <p>หน้าจอ, แบตเตอรี่ และอะไหล่มือถือเกรดพรีเมียม รับประกันจากร้าน Paomobile</p>
+                    <div class="badge"><span class="badge-dot"></span>อะไหล่มือถือคุณภาพดี หน้าจอ แบตเตอรี่ อะไหล่ภายใน และเครื่องมือช่าง</div>
+                    <h1>&#x1F6E0;&#xFE0F; อะไหล่มือถือ</h1>
+                    <p>อะไหล่มือถือ แบตเตอรี่ หน้าจอ สายแพร และเครื่องมือช่างคุณภาพดี จาก Paomobile<br>เลือกซื้อสินค้าที่ต้องการ สะดวกรวดเร็ว รับประกันจากร้าน Paomobile</p>
                 </div>
                 <div class="search-bar-wrap">
                     <div class="search-bar">
@@ -224,8 +245,8 @@
                             <line x1="21" y1="21" x2="16.65" y2="16.65" />
                         </svg>
                         <input type="text" id="productSearch"
-                            placeholder="ค้นหาอะไหล่ เช่น จอ iPhone 13, แบต Samsung..." autocomplete="off" />
-                        <button class="search-clear" id="searchClear" style="display:none">✕</button>
+                            placeholder="ค้นหาอะไหล่ เช่น หน้าจอ, แบตเตอรี่, สายแพร..." autocomplete="off" />
+                        <button class="search-clear" id="heroSearchClear" style="display:none">✕</button>
                     </div>
                 </div>
             </div>
@@ -244,106 +265,16 @@
         </aside>
 
         <div class="container">
-            <div id="noResults" style="display:block; width: 100%;">
-                <div class="products-grid">
-                    <!-- Skeleton Cards -->
-                    <script>
-                        for(let i=0; i<8; i++) {
-                            document.write(`
-                                <div class="product-card" style="pointer-events: none;">
-                                    <div class="product-img-skeleton" style="width: 100%; aspect-ratio: 1; background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; border-radius: 8px;"></div>
-                                    <div class="product-info" style="padding: 15px;">
-                                        <div style="height: 12px; width: 40%; background: #f0f0f0; margin-bottom: 8px; border-radius: 4px;"></div>
-                                        <div style="height: 16px; width: 80%; background: #f0f0f0; margin-bottom: 8px; border-radius: 4px;"></div>
-                                        <div style="height: 12px; width: 60%; background: #f0f0f0; margin-bottom: 12px; border-radius: 4px;"></div>
-                                        <div style="height: 18px; width: 50%; background: #f0f0f0; border-radius: 4px;"></div>
-                                    </div>
-                                </div>
-                            `);
-                        }
-                    </script>
+            <p id="noResults" style="display:none;text-align:center;color:var(--text-muted);padding:60px 0;font-size:1.1rem">
+                🔍 ไม่พบสินค้าที่ค้นหา</p>
+
+            <div class="products-grid">
+                <div class="loading-products" style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">
+                    กำลังโหลดสินค้าล่าสุด...
                 </div>
-            </div>
-            <div class="products-grid" id="productGrid" style="display:none;">
-                <!-- Zero-Flash Instant Render Script -->
-                <script>
-                    (function () {
-                        const cache = localStorage.getItem('pao_cache_parts');
-                        if (!cache) return;
-                        try {
-                            const products = JSON.parse(cache);
-                            if (!products || products.length === 0) return;
-
-                            // FILTER: Remove dummy/mock data (ids matching 123 or old parts)
-                            const dummyIds = ['123', 'part-screen-iph13', 'part-batt-iph11', 'part-screen-s23u', 'part-charging-iph12'];
-                            const validProducts = products.filter(p => !dummyIds.includes(p.id) && p.id !== '123');
-
-                            if (validProducts.length === 0) return;
-
-                            const grid = document.currentScript.parentElement;
-                            const noResults = document.getElementById('noResults');
-
-                            // Build cards identical to createCardHTML() in products-sync.js
-                            grid.innerHTML = validProducts.map(p => {
-                                const priceStr = p.price ? p.price.toLocaleString() : '0';
-                                const badgeClass = p.badge === 'ใหม่' ? 'new' : (p.badge === 'ขายดี' ? 'hot' : 'used');
-                                const badgeHTML = p.badge ? `<div class="product-badge ${badgeClass}">${p.badge}</div>` : '';
-                                const imgHTML = p.img
-                                    ? `<img src="${p.img}" alt="${p.name}">`
-                                    : `<div class="product-emoji-placeholder" style="font-size:3rem;height:100%;display:flex;align-items:center;justify-content:center;">${p.emoji || '📦'}</div>`;
-
-                                // Encode product data for onclick — queue if ProductDetail not ready yet
-                                const d = JSON.stringify({
-                                    id: p.id, name: p.name, price: p.price,
-                                    brand: p.brand || p.partModel || '',
-                                    img: p.img || '', images: p.images || (p.img ? [p.img] : []),
-                                    description: p.description || '',
-                                    emoji: p.emoji || '🔧', specs: p.specs || ''
-                                }).replace(/"/g, '&quot;');
-
-                                return `
-                                    <div class="product-card" onclick="if(window.ProductDetail){ProductDetail.open(${d})}else{window.__pendingOpen=${d}}">
-                                        <div class="product-img">${badgeHTML}${imgHTML}</div>
-                                        <div class="product-info">
-                                            <div class="product-brand">${p.brand || p.partModel || ''}</div>
-                                            <h3 class="product-name">${p.name}</h3>
-                                            <div class="product-specs">${p.specs || 'แตะเพื่อดูรูปภาพเพิ่มเติม'}</div>
-                                            <div class="product-price">฿${priceStr}</div>
-                                        </div>
-                                        <button class="btn-add-cart" onclick="event.stopPropagation()">+ เพิ่มลงตะกร้า</button>
-                                    </div>`;
-                            }).join('');
-
-                            // If we rendered something, show grid and hide loading message
-                            grid.style.display = 'grid';
-                            if (noResults) noResults.style.display = 'none';
-
-                        } catch (e) { console.warn('[ZeroFlash] Render failed', e); }
-                    })();
-                </script>
             </div>
         </div>
     </section>
-
-    <!-- Cart Sidebar -->
-    <div class="cart-overlay" id="cartOverlay"></div>
-    <aside class="cart-sidebar" id="cartSidebar">
-        <div class="cart-sidebar-header">
-            <h3>🛒 ตะกร้าสินค้า</h3>
-            <div class="cart-header-meta">จำนวน: <strong id="cartCount">0 ชิ้น</strong></div>
-            <button class="cart-close-btn" id="cartCloseBtn">✕</button>
-        </div>
-        <div class="cart-item-list" id="cartItemList">
-            <div class="cart-empty"><span>🛒</span>
-                <p>ตะกร้าว่างเปล่า</p>
-            </div>
-        </div>
-        <div class="cart-sidebar-footer">
-            <div class="cart-total-row"><span>ราคารวมทั้งหมด</span><strong id="cartTotal">฿0</strong></div>
-            <a href="https://line.me/R/ti/p/@pao789" target="_blank" class="btn btn-primary"
-                style="width:100%; justify-content:center; margin-top:12px;">💬 สั่งซื้อผ่าน LINE @pao789</a>
-        </div>
-    </aside>
 
     <!-- Product Detail Modal -->
     <div class="product-modal-overlay" id="productDetailModal">
@@ -362,11 +293,9 @@
                     </div>
                     <div class="pd-shipping">ค่าจัดส่งที่คำนวณในขั้นตอนการชำระเงิน</div>
 
-                    <div class="pd-selector-item">
+                    <div class="pd-selector-item" style="display:none">
                         <span class="pd-label">สี</span>
-                        <div class="pd-options">
-                            <!-- Colors added via JS -->
-                        </div>
+                        <div class="pd-options"></div>
                     </div>
 
                     <div class="pd-selector-item">
@@ -390,8 +319,11 @@
         </div>
     </div>
 
-    <!-- Search Modal -->
-    <footer class="footer">
+    <!-- Footer Wave Divider -->
+    <div class="footer-wave-divider" style="width: 100%; line-height: 0; position: relative; z-index: 1; background-color: var(--bg); margin-bottom: -10px;">
+        <img src="footer-waves.svg" alt="" style="width: 100%; display: block; transform: translateY(1px);">
+    </div>
+    <footer class="footer" style="position: relative; z-index: 2;">
         <div class="container">
             <div class="footer-top">
                 <div class="footer-brand">
@@ -449,16 +381,16 @@
         </div>
     </footer>
 
+    
+    
+    
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="db.js"></script>
-    <script src="premium-alerts.js"></script>
-    <script src="script.js?v=21"></script>
-    <script src="auth.js?v=21"></script>
-    <script src="cart.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="script.js?v=202"></script>
+    <script src="cart.js?v=4"></script>
     <script src="product-modal.js"></script>
-    <script src="products-cache.js"></script>
-    <script src="fallback-data.js"></script>
-    <script src="pao-products.js"></script>
+    <script src="products-sync.js?v=2026.04.23.v5"></script>
     <div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
             aria-label="Close Search">&#x2715;</button>
         <div class="search-modal-container">
@@ -469,31 +401,27 @@
             <div class="search-results-area" id="searchResults"></div>
         </div>
     </div>
-    <script src="pao-search.js"></script>
+    <script src="search.js"></script>
+    <script src="auth.js"></script>
     <script>
-        ProductSync.init('parts');
+        document.addEventListener('DOMContentLoaded', () => {
+            ProductSync.init('parts');
+        });
 
         // ── Dynamic Sidebar: แสดงหมวดหมู่ตาม Seller กำหนด ──────────────────
         (function initDynamicSidebar() {
             const accordion = document.getElementById('dynamicBrandAccordion');
             if (!accordion) return;
 
-            // รอ db พร้อม
-            if (!window.db) { setTimeout(initDynamicSidebar, 200); return; }
-
-            const cacheKey = 'pao_parts_sidebar_v3';
-
-            // ลบ cache เก่า (v1) ที่อาจมีข้อมูลผิด
+            const cacheKey = 'pao_parts_sidebar_v2';
             localStorage.removeItem('pao_parts_sidebar_cache');
 
-            // ── Render: สร้าง HTML จาก models array (เรียงตาม Seller) ──
             function render(models, mappings, partTypes) {
                 if (!models || !models.length) return;
                 const html = models.map(m => {
                     const name = m.trim();
                     const rawTypes = (mappings && Array.isArray(mappings[name])) ? mappings[name] : [];
 
-                    // เรียงลำดับ subcategories ตาม partTypes ที่ Seller กำหนด (ไม่ใช้ลำดับจาก mappings)
                     let types;
                     if (partTypes && partTypes.length > 0) {
                         types = partTypes.filter(pt => rawTypes.includes(pt));
@@ -501,48 +429,46 @@
                         types = rawTypes;
                     }
 
+                    if (!types.length) return '';
                     return `<li class="brand-item" id="brand-${name.replace(/\s+/g,'-')}" data-brand="${name}">
                         <div class="brand-header" onclick="toggleAccordion(this)">
                             <span>${name}</span>
                             <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                         <ul class="sub-cat-list">
-                            ${types.length > 0 ? types.map(t=>`<li><a href="javascript:void(0)" onclick="handleFilterClick('${name}','${t}')">${t}</a></li>`).join('') : '<li style="padding: 8px 12px; color: #999; font-size: 0.85rem; text-align: center;">ยังไม่มีหมวดหมู่ย่อย</li>'}
+                            ${types.map(t=>`<li><a href="javascript:void(0)" onclick="handleFilterClick('${name}','${t}')">${t}</a></li>`).join('')}
                         </ul>
                     </li>`;
                 }).join('');
                 if (html) {
                     accordion.innerHTML = html;
-                    // เก็บ cache พร้อมข้อมูล partTypes ไว้ด้วย เพื่อให้ระหว่าง session ถูกต้อง
                     localStorage.setItem(cacheKey, html);
                 }
             }
 
-            // ── Step 1: แสดง cache ทันที (Zero-Flash) ──
-            // เช็คว่า cache มีข้อมูลจริงก่อนแสดง (ไม่ใช่ข้อมูลเปล่า)
             const cached = localStorage.getItem(cacheKey);
             if (cached && cached.includes('<li class="brand-item"')) {
                 accordion.innerHTML = cached;
             }
 
-            // ── Step 2: onSnapshot ── ทุก update ทั้ง local และ server ──
-            window.db.collection('settings').doc('spare_parts').onSnapshot(doc => {
-                if (!doc.exists) return;
-                const row = doc.data();
-                const d = row.value || row;
-                
-                let models = d.models;
-                let mappings = d.mappings;
-                let partTypes = d.partTypes;
-                
-                try { if (typeof models === 'string') models = JSON.parse(models); } catch(e){}
-                try { if (typeof mappings === 'string') mappings = JSON.parse(mappings); } catch(e){}
-                try { if (typeof partTypes === 'string') partTypes = JSON.parse(partTypes); } catch(e){}
-
-                render(models || [], mappings || {}, partTypes || []);
-            }, err => console.warn('[sidebar]', err));
-
-            // ── Step 3: Removed REST API fetch — we rely purely on Supabase onSnapshot
+            // ── Supabase Fetch ──
+            const loadSupabaseCategories = async () => {
+                if (!window.supabaseClient) {
+                    setTimeout(loadSupabaseCategories, 200);
+                    return;
+                }
+                try {
+                    const { data, error } = await window.supabaseClient.from('settings').select('*').eq('id', 'spare_parts').single();
+                    if (error && error.code !== 'PGRST116') throw error;
+                    if (data) {
+                        const configData = (data.models || data.partTypes) ? data : (data.value || data);
+                        render(configData.models || [], configData.mappings || {}, configData.partTypes || []);
+                    }
+                } catch (e) {
+                    console.error('[sidebar] Failed to load categories', e);
+                }
+            };
+            loadSupabaseCategories();
         })();
 
         function handleFilterClick(model, type) {
@@ -550,23 +476,8 @@
             localStorage.setItem('pao_last_part_type', type);
             ProductSync.filterByDynamicParts(model, type);
         }
-
-        function toggleAccordion(header) {
-            const item = header.parentElement;
-            const wasActive = item.classList.contains('active');
-            document.querySelectorAll('.brand-item').forEach(i => i.classList.remove('active'));
-            if (!wasActive) item.classList.add('active');
-        }
     </script>
+<script src="premium-alerts.js"></script>
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-

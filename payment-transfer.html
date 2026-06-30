@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
@@ -7,27 +7,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=202" />
   <!-- Dependencies for AI Verification -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   
   <!-- Firebase SDK (v10.9.0 Compat) -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
-      authDomain: "paomobile-85e39.firebaseapp.com",
-      projectId: "paomobile-85e39",
-      storageBucket: "paomobile-85e39.firebasestorage.app",
-      messagingSenderId: "844151679424",
-      appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
-      measurementId: "G-BZYNZ9B9LQ"
-    };
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.firestore();
-  </script>
+  
+  
+  
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -330,8 +321,6 @@
     .success-loader .dot { width: 6px; height: 6px; background: #888; border-radius: 50%; animation: loaderBlink 1.4s infinite ease-in-out both; }
     @keyframes loaderBlink { 0%, 80%, 100% { transform: scale(0); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; } }
   </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="db.js"></script>
 </head>
 <body>
 
@@ -445,7 +434,7 @@
     function copyText(elementId) {
       const el = document.getElementById(elementId);
       navigator.clipboard.writeText(el.textContent).then(() => {
-        sellerAlert("คัดลอก " + el.textContent + " แล้ว", 'success');
+        alert("คัดลอก " + el.textContent + " แล้ว");
       });
     }
 
@@ -519,12 +508,10 @@
                 }
             } catch(e){}
 
-            if (window.supabase && ref) {
-                window.supabase.from('orders').update({ status: 'ยกเลิกแล้ว' }).eq('id', ref)
-                    .then(({error}) => {
-                        if(error) console.error("Supabase cancel failed:", error);
-                        else console.log("Supabase: Order cancelled due to timeout");
-                    });
+            if (typeof db !== 'undefined' && ref) {
+                db.collection('orders').doc(ref).update({ status: 'ยกเลิกแล้ว' })
+                    .then(() => console.log("Firestore: Order cancelled due to timeout"))
+                    .catch(err => console.error("Firestore cancel failed:", err));
             }
         }
         
@@ -611,7 +598,7 @@
         const diffMinutes = (Date.now() - slipTime) / (1000 * 60);
         if (diffMinutes > 45) {
             setStepStatus('time', 'error');
-            sellerAlert('สลิปนี้เก่าเกินไป (เกิน 45 นาที)\nกรุณาใช้สลิปปัจจุบันที่คุณเพิ่งโอนสำเร็จ', 'error');
+            alert('✕ ไม่ผ่าน: สลิปนี้เก่าเกินไป (เกิน 45 นาที) กรุณาใช้สลิปปัจจุบันที่คุณเพิ่งโอนสำเร็จ');
             return;
         }
         setStepStatus('time', 'success');
@@ -621,7 +608,7 @@
         await sleep(500);
         if (!hasQR) {
             setStepStatus('qr', 'error');
-            sellerAlert("ไม่พบ QR Code ของธนาคารบนสลิป\nกรุณาอัปโหลดสลิปของแท้ที่มี QR Code", 'error');
+            alert("✕ ไม่ผ่าน: ไม่พบ QR Code ของธนาคารบนสลิป กรุณาอัปโหลดสลิปของแท้ที่มี QR Code");
             return;
         }
         setStepStatus('qr', 'success');
@@ -644,12 +631,12 @@
 
             if (!nameMatch) {
                 setStepStatus('ocr', 'error');
-                sellerAlert('AI ตรวจไม่พบชื่อผู้รับ "เขมรัฐ นาคภักดี" บนสลิป', 'error');
+                alert('✕ ไม่ผ่าน: AI ตรวจไม่พบชื่อผู้รับ "เขมรัฐ นาคภักดี" บนสลิป');
                 return;
             }
             if (!dateMatch) {
                 setStepStatus('ocr', 'error');
-                sellerAlert(`วันที่บนสลิปไม่ตรงกับออเดอร์ (${day}/${month}/${yearBE})`, 'error');
+                alert(`✕ ไม่ผ่าน: วันที่บนสลิปไม่ตรงกับออเดอร์ (${day}/${month}/${yearBE})`);
                 return;
             }
             setStepStatus('ocr', 'success');
@@ -662,7 +649,7 @@
                 setStepStatus('amount', 'success');
             } else {
                 setStepStatus('amount', 'error');
-                sellerAlert(`ยอดเงินบนสลิปไม่ตรงกับยอด ฿${amount.toLocaleString()}\nกรุณาโอนให้ตรงตามยอดระบุ`, 'error');
+                alert(`✕ ไม่ผ่าน: ยอดเงินบนสลิปไม่ตรงกับยอด ฿${amount.toLocaleString()} กรุณาโอนให้ตรงตามยอดระบุ`);
                 return;
             }
 
@@ -670,7 +657,7 @@
             await confirmPayment();
         } catch (e) {
             console.error("OCR Error", e);
-            sellerAlert('ระบบ AI ขัดข้องชั่วคราว\nกรุณาติดต่อแอดมิน', 'error');
+            alert('✕ ระะบบ AI ขัดข้องชั่วคราว กรุณาติดต่อแอดมิน');
         }
     }
 
@@ -759,12 +746,12 @@
                           paymentSlipUrl = previewImg.src;
                       }
 
-                      await window.supabase.from('orders').update({
+                      await db.collection('orders').doc(orderId).update({
                           status: 'ที่ต้องจัดส่ง',
-                          paymentDate: new Date().toISOString(),
-                          paymentMethod: 'โอนเงินต่างธนาคาร (AI-Verified)',
-                          paymentSlipUrl: paymentSlipUrl || ''
-                      }).eq('id', orderId);
+                          paymentDate: firebase.firestore.FieldValue.serverTimestamp(),
+                          paymentMethod: 'โอนทางธนาคาร (AI-Verified)',
+                          paymentSlip: paymentSlipUrl || "" 
+                      });
                       
                       try {
                           const bc = new BroadcastChannel('pao_order_sync');
@@ -775,7 +762,7 @@
               }
               window.location.href = 'purchases.html?tab=ship';
           }
-      } catch (err) { sellerAlert('เกิดข้อผิดพลาด: ' + err.message, 'error'); }
+      } catch (err) { alert('เกิดข้อผิดพลาด: ' + err.message); }
     }
   </script>
 
@@ -804,14 +791,7 @@
             <div class="search-results-area" id="searchResults"></div>
         </div>
     </div>
-    <script src="pao-search.js"></script><script src="premium-alerts.js"></script>
+    <script src="search.js"></script><script src="premium-alerts.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
 

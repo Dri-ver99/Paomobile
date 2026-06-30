@@ -113,50 +113,37 @@ const ProductSync = {
             const cachedTime = localStorage.getItem(cacheKey + '_time');
             // 15 minutes TTL
             if (cached && cachedTime && (Date.now() - parseInt(cachedTime) < 15 * 60 * 1000)) {
-                isCacheValid = true;
-            }
-
             if (cached) {
                 this.allProducts = JSON.parse(cached);
                 this.render();
                 this.autoOpenFromUrl();
-            } else {
-                // DO NOT render baseline immediately if it's empty or placeholder-heavy
-                // Instead, keep the "Loading..." state visible in HTML until Firestore returns
-                // Try FALLBACK_LIVE_DATA first
-                const checkFallback = (fallbackArray) => {
-                    this.allProducts = fallbackArray;
-                };
-
-                if (this.allProducts && this.allProducts.length === 0 && window.FALLBACK_LIVE_DATA) {
-                    const fallbackArray = Array.isArray(window.FALLBACK_LIVE_DATA) ? window.FALLBACK_LIVE_DATA : (window.FALLBACK_LIVE_DATA.value || []);
-                    checkFallback(fallbackArray);
-                    console.log("[Sync] errCb: Fallback to window.FALLBACK_LIVE_DATA. Found:", this.allProducts.length);
-                }
-                
-                if (this.allProducts && this.allProducts.length > 0) {
-                    this.render();
-                }
             }
         } catch (e) {
             this.allProducts = [];
         }
 
-        if (typeof db === 'undefined' || !db) {
+        const supabase = window.supabaseClient;
+        if (!supabase) {
             setTimeout(() => this.listen(), 500);
             return;
-        };
+        }
 
-        db.collection('settings').doc('deleted_products').onSnapshot(doc => {
-            if (doc.exists) {
-                const data = doc.data();
+        const handleDeletedSettings = (data) => {
+            if (data) {
                 this.deletedIds = (data.value && data.value.deletedIds) ? data.value.deletedIds : (data.deletedIds || []);
                 this.render();
             }
-        }, err => console.warn("[Sync] Deleted List Sync Error:", err));
+        };
 
-        // 2. Optimized Real-time Firestore Listen
-        let query = db.collection('products');
+        supabase.from('settings').select('*').eq('id', 'deleted_products').single().then(({data}) => handleDeletedSettings(data));
+
+        supabase.channel('public:settings:pao-products')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'settings', filter: 'id=eq.deleted_products' }, payload => {
+                handleDeletedSettings(payload.new);
+            }).subscribe();
+
+        // 2. Optimized Real-time Supabase Listen
+        let query = supabase.from('products').select('*');
         
         // Server-side filtering with Synonym Support (Thai/English)
         if (this.category && this.category !== 'all') {
@@ -168,18 +155,18 @@ const ProductSync = {
             else if (this.category === 'accessory') categoryList = ['accessory', 'อุปกรณ์', 'อุปกรณ์เสริม'];
             else if (this.category === 'parts') categoryList = ['parts', 'อะไหล่'];
             
-            query = query.where('category', 'in', categoryList);
+            query = query.in('category', categoryList);
         }
         
-        // Limit increased from 60 to 400 to load many products while avoiding Supabase statement timeouts
         query = query.limit(1000);
         
-        // Add a limit for safety (prevents massive accidental reads)
-        // Use onSnapshot for instant loading via Firestore local cache and real-time updates
-        query.onSnapshot(snapshot => {
-            console.log("ONSNAPSHOT RETURNED DOCS:", snapshot.docs.length);
-            const firestoreProducts = snapshot.docs.map(doc => {
-                const data = doc.data();
+        const fetchProducts = async () => {
+            const { data: snapshotDocs, error } = await query;
+            if (error) { console.warn("Supabase fetch error:", error); return; }
+            if (!snapshotDocs) return;
+
+            const firestoreProducts = snapshotDocs.map(doc => {
+                const data = doc;
                 if (data.img && typeof data.img === 'string' && !data.img.startsWith('http') && !data.img.startsWith('data:image')) {
                     if (data.img.length > 100 && !data.img.toLowerCase().includes('.jpg') && !data.img.toLowerCase().includes('.png') && !data.img.toLowerCase().includes('.webp')) {
                         data.img = 'data:image/jpeg;base64,' + data.img;
@@ -195,7 +182,7 @@ const ProductSync = {
                         return img;
                     });
                 }
-                return { id: doc.id, ...data };
+                return { ...data };
             });
             
             // Client-side fallback for synonyms (if any were missed by the server query)
@@ -225,11 +212,12 @@ const ProductSync = {
                 fallbackData.filter(isMatch).forEach(p => mergedMap.set(p.id, p));
             }
 
-            // 2. Overwrite with live Firestore data (highest priority)
+            // 2. Overwrite with latest DB data (highest priority)
             matchingFirestore.forEach(p => mergedMap.set(p.id, p));
 
             const finalProducts = Array.from(mergedMap.values());
             this.allProducts = finalProducts;
+
             this.hasLoadedOnce = true;
             
             this.debounceRender();
@@ -676,11 +664,12 @@ const ProductSync = {
                 setTimeout(() => tryFind(n - 1), 150);
                 return;
             }
-            // Final fallback: fetch directly from Firestore
-            if (typeof db !== 'undefined' && db) {
-                db.collection('products').doc(productId).get().then(doc => {
-                    if (doc.exists) openModal({ id: doc.id, ...doc.data() });
-                }).catch(err => console.warn('[AutoOpen] Firestore fetch failed:', err));
+            // Final fallback: fetch directly from Supabase
+            const supabase = window.supabaseClient;
+            if (supabase) {
+                supabase.from('products').select('*').eq('id', productId).single().then(({data, error}) => {
+                    if (data && !error) openModal({ id: data.id, ...data });
+                }).catch(err => console.warn('[AutoOpen] Supabase fetch failed:', err));
             }
         };
 
