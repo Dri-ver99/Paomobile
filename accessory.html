@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="products.css" />
     <style>
     </style>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=202" />
 </head>
 
 <body>
@@ -54,6 +54,7 @@
                         </div>
                     </div>
                 </li>
+                <li><a href="repair-track.html">เช็คสถานะซ่อม</a></li>
                 <li><a href="index.html#why-us">ทำไมต้องเรา</a></li>
                 <li class="has-mega-menu"><a href="index.html#reviews">รีวิว</a>
                     <div class="mega-menu">
@@ -156,7 +157,7 @@
                             <div style="height:1px; background:rgba(0,0,0,0.05); margin:8px 0;"></div><span style="font-size:12px; color:var(--text-muted); padding-left:0px; margin-bottom:4px; display:block; font-weight:600;">บริการเสริม</span><a href="select-glass-film.html">ติดฟิล์มกระจก</a><a href="select-software.html">ล้างเครื่อง / ลงโปรแกรม</a><a href="select-unlock.html">ปลดล็อครหัสหน้าจอ / gmail</a><a href="accessory.html">เคส / อุปกรณ์เสริม</a>
                         </div>
 
-                    </div><a href="index.html#why-us">ทำไมต้องเรา</a>
+                    </div><a href="repair-track.html">เช็คสถานะซ่อม</a><a href="index.html#why-us">ทำไมต้องเรา</a>
                     <div class="menu-item-wrapper">
                         <div class="menu-item-parent">รีวิว</div>
                         <div class="mobile-sub-menu"><a href="index.html#reviews">รีวิวลูกค้า</a><a
@@ -308,7 +309,11 @@
         </div>
     </div>
 
-    <footer class="footer">
+    <!-- Footer Wave Divider -->
+    <div class="footer-wave-divider" style="width: 100%; line-height: 0; position: relative; z-index: 1; background-color: var(--bg); margin-bottom: -10px;">
+        <img src="footer-waves.svg" alt="" style="width: 100%; display: block; transform: translateY(1px);">
+    </div>
+    <footer class="footer" style="position: relative; z-index: 2;">
         <div class="container">
             <div class="footer-top">
                 <div class="footer-brand">
@@ -366,14 +371,16 @@
         </div>
     </footer>
 
+    
+    
+    
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="db.js"></script>
-    <script src="script.js"></script>
-    <script src="cart.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="script.js?v=202"></script>
+    <script src="cart.js?v=4"></script>
     <script src="product-modal.js"></script>
-    <script src="products-cache.js"></script>
-    <script src="fallback-data.js"></script>
-    <script src="pao-products.js"></script>
+    <script src="products-sync.js?v=2026.04.23.v5"></script>
     <div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
             aria-label="Close Search">&#x2715;</button>
         <div class="search-modal-container">
@@ -384,7 +391,7 @@
             <div class="search-results-area" id="searchResults"></div>
         </div>
     </div>
-    <script src="pao-search.js"></script>
+    <script src="search.js"></script>
     <script src="auth.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -395,10 +402,3 @@
 </body>
 
 </html>
-
-
-
-
-
-
-

@@ -145,7 +145,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             if (subtotalEl) subtotalEl.textContent = '฿' + subtotal.toLocaleString();
             
             const shippingEl = document.getElementById('s-shipping');
-            if (shippingEl) shippingEl.textContent = '฿' + shippingCost.toLocaleString();
+            if (shippingEl) shippingEl.textContent = '฿' + finalShipping.toLocaleString();
             
             // Voucher Display Rows (Summary)
             const discountRow = document.getElementById('s-discount-row');
@@ -287,8 +287,14 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                                     if (code) usageCounts[code] = (usageCounts[code] || 0) + 1;
                                 }
                             });
+                            
+                            // C. Update pao_used_vouchers_{email} based on cloud usage
+                            const usedCodesFromCloud = Object.keys(usageCounts);
+                            if (usedCodesFromCloud.length > 0) {
+                                localStorage.setItem('pao_used_vouchers_' + email, JSON.stringify(usedCodesFromCloud));
+                            }
 
-                            // C. Re-render silently with completely updated limits & codes
+                            // D. Re-render silently with completely updated limits & codes
                             renderPersonalVouchers(usageCounts);
                             refreshVoucherListUI();
                         }
@@ -440,6 +446,15 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                             const expDate = new Date(vData.expiry + 'T23:59:59');
                             if (expDate < now) {
                                 alert('ขออภัย คูปองนี้หมดอายุการใช้งานแล้วครับ ⏰');
+                                return;
+                            }
+                        }
+                        
+                        // Check One-Time condition
+                        if (vData.isOneTimeOnly) {
+                            const usedVouchers = JSON.parse(localStorage.getItem('pao_used_vouchers_' + email) || '[]');
+                            if (usedVouchers.includes(code)) {
+                                alert('ขออภัย โค้ดนี้สามารถเก็บและใช้ได้เพียงครั้งเดียวต่อผู้ใช้งาน 1 ท่านครับ 🙏');
                                 return;
                             }
                         }
@@ -682,9 +697,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             // Create Order Object
             const subtotal = cartItems.reduce((s, i) => s + (i.price * i.qty), 0);
             let finalShipping = shippingCost;
-            if (appliedShipCode) {
-                finalShipping = 0; // Free shipping discount applied
-            }
+            if (appliedShipCode) finalShipping = 0;
             const total = Math.max(0, subtotal + finalShipping - appliedDiscount);
             const orderId = 'PAO-' + Date.now().toString(36).toUpperCase().slice(-8);
             
@@ -704,6 +717,8 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                     source: i.source || 'ไม่ระบุ'
                 })),
                 orderPage: window.location.pathname.split('/').pop() || 'index.html',
+                subtotal: subtotal,
+                baseShippingCost: shippingCost,
                 total: total,
                 method: methodLabel,
                 paymentMethod: methodLabel,    // v1.2.13
@@ -715,24 +730,21 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                 orderSource: orderSourceStr
             };
 
-            // Use Direct Cloud Sync Logic (Supabase)
+            // Use Direct Cloud Sync Logic (Simple & Robust)
             const syncToCloud = async (data) => {
-                if (!window.supabase) {
-                    console.error("[v1.2.10] Supabase not found");
+                const firestoreDB = (typeof db !== 'undefined') ? db : (window.firebase ? firebase.firestore() : null);
+                if (!firestoreDB) {
+                    console.error("[v1.2.10] Firestore not found");
                     return false;
                 }
                 try {
                     console.log("[v1.2.10] Sending to Cloud:", data.id);
-                    // Remove firebase specific fields if any before sending to supabase
-                    const dbData = { ...data };
-                    // Items should be JSON, but supabase js client automatically handles JS arrays to JSONB
-                    const { error } = await window.supabase.from('orders').insert([dbData]);
-                    if (error) throw error;
+                    await firestoreDB.collection('orders').doc(data.id).set(data);
                     console.log("[v1.2.10] Cloud Sync Success");
                     return true;
                 } catch (err) {
                     console.error("[v1.2.10] Cloud Sync Error:", err);
-                    alert("⚠️ คำเตือน: ออเดอร์บันทึกสำเร็จแต่ส่งเข้า Cloud ไม่ได้ (Error: " + err.message + ")");
+                    alert("⚠️ คำเตือน: ออเดอร์บันทึกสำเร็จแต่ส่งเข้า Cloud ไม่ได้ (Error: " + err.code + ")");
                     return false;
                 }
             };
@@ -761,7 +773,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         shippingMethod: shippingMethod,
                         paymentMethod: methodLabel,
                         paymentBank: selectedBank,
-                        createdAt: new Date().toISOString()
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
 
                     // 2. Save Locally (Immediate)
@@ -779,7 +791,9 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         const user = JSON.parse(localStorage.getItem('paomobile_user'));
                         const email = user ? user.email : '';
                         const V_KEY = 'pao_user_vouchers_' + email;
+                        const USED_KEY = 'pao_used_vouchers_' + email;
                         let pVouchers = JSON.parse(localStorage.getItem(V_KEY)) || [];
+                        let usedVouchers = JSON.parse(localStorage.getItem(USED_KEY)) || [];
                         
                         let changed = false;
                         codesToConsume.forEach(code => {
@@ -789,24 +803,16 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                                 changed = true;
                                 console.log("[Checkout] Personal voucher consumed:", code);
                             }
+                            // Always record as used
+                            if (!usedVouchers.includes(code)) {
+                                usedVouchers.push(code);
+                            }
                         });
                         
                         if (changed) {
                             localStorage.setItem(V_KEY, JSON.stringify(pVouchers));
                         }
-
-                        // Delete from Supabase to prevent it from re-appearing in Member Profile
-                        if (window.supabase && email) {
-                            codesToConsume.forEach(code => {
-                                window.supabase.from('vouchers_redemptions')
-                                    .delete()
-                                    .eq('email', email)
-                                    .eq('code', code)
-                                    .then(({error}) => {
-                                        if (error) console.error("[Checkout] Failed to remove voucher redemption:", error);
-                                    });
-                            });
-                        }
+                        localStorage.setItem(USED_KEY, JSON.stringify(usedVouchers));
                     }
 
                     // 3. Save to Cloud (Optimized wait)
@@ -1165,58 +1171,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             openAddrFormModal(index);
         }
 
-        // Removed getCurrentUserEmail as we will use getActiveUserId() instead
-
-        async function loadAddressesFromSupabase() {
-            const uid = getActiveUserId();
-            if(!uid || uid === 'guest' || !window.supabase) return;
-            try {
-                const { data, error } = await window.supabase
-                    .from('customer_addresses')
-                    .select('addresses_json')
-                    .eq('uid', uid)
-                    .limit(1);
-                
-                if (!error && data && data.length > 0 && data[0].addresses_json) {
-                    userAddresses = data[0].addresses_json;
-                    savedAddress = userAddresses.find(a => a.isDefault) || userAddresses[0] || null;
-                    localStorage.setItem(getAddressKey(), JSON.stringify(userAddresses));
-                    renderAddress();
-                }
-            } catch (e) {
-                console.error("Failed to load addresses from Supabase", e);
-            }
-        }
-
-        async function saveAddressesToSupabase() {
-            const uid = getActiveUserId();
-            if(!uid || uid === 'guest' || !window.supabase) return;
-            try {
-                const { data, error } = await window.supabase
-                    .from('customer_addresses')
-                    .select('uid')
-                    .eq('uid', uid)
-                    .limit(1);
-                    
-                if (!error && data && data.length > 0) {
-                    await window.supabase
-                        .from('customer_addresses')
-                        .update({ addresses_json: userAddresses })
-                        .eq('uid', uid);
-                } else if (!error) {
-                    await window.supabase
-                        .from('customer_addresses')
-                        .insert([{ uid: uid, addresses_json: userAddresses }]);
-                }
-            } catch (e) {
-                console.error("Failed to save addresses to Supabase", e);
-            }
-        }
-
-        // Call load immediately if possible
-        loadAddressesFromSupabase();
-
-        function saveAddress() {
+        async function saveAddress() {
             const name = document.getElementById('f-name').value.trim();
             const phone = document.getElementById('f-phone').value.trim();
             const addr1 = document.getElementById('f-addr1').value.trim();
@@ -1235,7 +1190,46 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             }
             
             const tag = locState.tag || 'บ้าน';
-            const newAddr = { name, phone, addr1, province: prov, amphoe: amp, district: dist, zip, isDefault, tag };
+            const userEmail = getActiveUserId();
+            let existingId = null;
+            if (editingAddressIndex >= 0 && userAddresses[editingAddressIndex]) {
+                existingId = userAddresses[editingAddressIndex].id;
+            }
+
+            const newAddr = { id: existingId, name, phone, addr1, province: prov, amphoe: amp, district: dist, zip, isDefault, tag };
+            
+            // Sync to Supabase
+            if (window.supabaseClient && userEmail !== 'guest') {
+                try {
+                    // Reset defaults in DB if needed
+                    if (isDefault) {
+                        await window.supabaseClient.from('user_addresses')
+                            .update({ is_default: false })
+                            .eq('user_email', userEmail);
+                    }
+                    
+                    const dbPayload = {
+                        user_email: userEmail,
+                        name: newAddr.name,
+                        phone: newAddr.phone,
+                        province: newAddr.province,
+                        amphoe: newAddr.amphoe,
+                        district: newAddr.district,
+                        zip: newAddr.zip,
+                        addr1: newAddr.addr1,
+                        is_default: newAddr.isDefault
+                    };
+
+                    if (existingId) {
+                        await window.supabaseClient.from('user_addresses').update(dbPayload).eq('id', existingId);
+                    } else {
+                        const { data, error } = await window.supabaseClient.from('user_addresses').insert(dbPayload).select().single();
+                        if (!error && data) {
+                            newAddr.id = data.id; // Save DB ID to local state
+                        }
+                    }
+                } catch(e) { console.error("Supabase address save error", e); }
+            }
             
             if (isDefault) {
                 userAddresses.forEach(a => a.isDefault = false);
@@ -1250,7 +1244,6 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             }
             
             localStorage.setItem(getAddressKey(), JSON.stringify(userAddresses));
-            saveAddressesToSupabase();
             renderAddress();
             if (document.getElementById('addressListView') && !document.getElementById('addressListView').classList.contains('hidden')) {
                 renderAddressList();
@@ -1270,9 +1263,18 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             if(m) m.style.display = 'none';
         }
 
-        function executeDeleteAddress() {
+        async function executeDeleteAddress() {
             closeConfirmDelete();
             if (editingAddressIndex >= 0) {
+                const target = userAddresses[editingAddressIndex];
+                
+                // Delete from Supabase if it has an id
+                if (window.supabaseClient && target && target.id) {
+                    try {
+                        await window.supabaseClient.from('user_addresses').delete().eq('id', target.id);
+                    } catch(e) { console.error("Supabase address delete error", e); }
+                }
+
                 userAddresses.splice(editingAddressIndex, 1);
                 if(savedAddress) {
                     const stillExists = userAddresses.find(a => a.name === savedAddress.name && a.phone === savedAddress.phone && a.addr1 === savedAddress.addr1);
@@ -1281,7 +1283,6 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                     }
                 }
                 localStorage.setItem(getAddressKey(), JSON.stringify(userAddresses));
-                saveAddressesToSupabase();
                 renderAddress();
                 if (document.getElementById('addressListView')) {
                     renderAddressList();
@@ -1365,8 +1366,54 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
             btn.style.borderColor='#ee4d2d'; btn.style.color='#ee4d2d';
         }
 
+        // sync from Supabase
+        async function syncAddressesFromSupabase() {
+            if (!window.supabaseClient) return;
+            const userEmail = getActiveUserId();
+            if (userEmail === 'guest') return;
+            
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('user_addresses')
+                    .select('*')
+                    .eq('user_email', userEmail)
+                    .order('created_at', { ascending: false });
+                    
+                if (error) {
+                    console.error("Supabase fetch address error:", error);
+                    return;
+                }
+                
+                if (data && data.length > 0) {
+                    // Map to expected local format
+                    const mappedAddresses = data.map(dbAddr => ({
+                        id: dbAddr.id, // Keep the UUID for updates/deletes
+                        name: dbAddr.name,
+                        phone: dbAddr.phone,
+                        province: dbAddr.province,
+                        amphoe: dbAddr.amphoe,
+                        district: dbAddr.district,
+                        zip: dbAddr.zip,
+                        addr1: dbAddr.addr1,
+                        isDefault: dbAddr.is_default
+                    }));
+                    
+                    userAddresses = mappedAddresses;
+                    savedAddress = userAddresses.find(a => a.isDefault) || userAddresses[0] || null;
+                    localStorage.setItem(getAddressKey(), JSON.stringify(userAddresses));
+                    renderAddress();
+                    if (document.getElementById('addressListView') && !document.getElementById('addressListView').classList.contains('hidden')) {
+                        renderAddressList();
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to sync addresses:", err);
+            }
+        }
+
         // init
         document.addEventListener('DOMContentLoaded', () => {
+            syncAddressesFromSupabase();
             // Check if user is guest - force login if strictly required
             if (getActiveUserId() === 'guest') {
                 alert('กรุณาเข้าสู่ระบบก่อนดำเนินการสั่งซื้อ');

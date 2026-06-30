@@ -1,4 +1,4 @@
-﻿(async function () {
+(async function () {
     const USER_KEY = 'paomobile_user';
     const getActiveUserId = () => {
         try { const u = JSON.parse(localStorage.getItem(USER_KEY)); return u ? (u.uid || u.phone || 'default') : 'guest'; }
@@ -63,8 +63,13 @@
         catch { return []; }
     }
 
-    function saveLocalCart(cart) {
+    function saveLocalCart(cart, timestamp = null) {
         localStorage.setItem(getCartKey(), JSON.stringify(cart));
+        if (timestamp) {
+            localStorage.setItem(getCartKey() + '_updated', timestamp.toString());
+        } else {
+            localStorage.setItem(getCartKey() + '_updated', Date.now().toString());
+        }
     }
 
     async function syncWithFirestore(uid) {
@@ -73,30 +78,29 @@
         try {
             const snap = await window.db.collection('carts').doc(uid).get();
             let remoteCart = [];
+            let remoteUpdated = 0;
             if (snap.exists) {
-                remoteCart = snap.data().cart || [];
-                console.log("[Cart] Cloud data found for", uid, ":", remoteCart.length, "items.");
+                const data = snap.data();
+                remoteCart = data.cart || [];
+                remoteUpdated = data.cartUpdatedAt ? new Date(data.cartUpdatedAt).getTime() : 0;
             }
 
             const localCart = getLocalCart();
-            let merged = [...remoteCart];
+            const localUpdatedStr = localStorage.getItem(getCartKey() + '_updated');
+            const localUpdated = localUpdatedStr ? parseInt(localUpdatedStr, 10) : 0;
 
-            console.log("[Cart] Merging scoped cart data...");
-            localCart.forEach(lItem => {
-                const idx = merged.findIndex(rItem => rItem.id === lItem.id);
-                if (idx >= 0) {
-                    merged[idx].qty = Math.max(merged[idx].qty, lItem.qty);
-                } else {
-                    merged.push(lItem);
-                }
-            });
-
-            console.log("[Cart] Sync complete.");
-            saveLocalCart(merged);
-            await window.db.collection('carts').doc(uid).set({ cart: merged, cartUpdatedAt: new Date().toISOString() }, { merge: true });
-            CartUI.update();
-            CartUI.renderSidebar();
-            CartUI.renderFullPage();
+            if (localUpdated > remoteUpdated) {
+                console.log("[Cart] Local data is newer. Pushing to cloud.");
+                await window.db.collection('carts').doc(uid).set({ cart: localCart, cartUpdatedAt: new Date(localUpdated).toISOString() }, { merge: true });
+            } else if (remoteUpdated > localUpdated) {
+                console.log("[Cart] Cloud data is newer. Syncing to local.");
+                saveLocalCart(remoteCart, remoteUpdated);
+                CartUI.update();
+                CartUI.renderSidebar();
+                CartUI.renderFullPage();
+            } else {
+                console.log("[Cart] Local and Cloud are in sync.");
+            }
         } catch (e) {
             console.error("[Cart] Sync failed:", e);
         }

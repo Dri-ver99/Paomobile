@@ -1,4 +1,4 @@
-﻿/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
 (function() {
     if (window.__alertOverrideInjected) return;
     window.__alertOverrideInjected = true;
@@ -46,13 +46,6 @@
 
         if (!isFullyLoggedIn) {
             console.log("[Auth] No verified session (Guest Mode).");
-            
-            // If they have a session but are not verified, redirect them to the verification page (login.html)
-            if (user && !user.isVerified && !window.location.pathname.endsWith('login.html')) {
-                console.log("[Auth] User is unverified. Redirecting to login.html to complete verification.");
-                window.location.replace('login.html');
-                return;
-            }
             
             // Cleanup: remove dynamic elements safely
             document.querySelectorAll('.is-logged-in, .dynamic-logout, #mobile-auth-header, .guest-member-link, .dynamic-member-link, .seller-centre-dropdown-item').forEach(el => el.remove());
@@ -356,21 +349,14 @@
         isUpdating = false;
     }
 
-    async function handleLogout(e) {
+    function handleLogout(e) {
         if (e) { e.preventDefault(); e.stopPropagation(); }
-        try {
-            if (window.supabase) await window.supabase.auth.signOut();
-        } catch(err) { console.error('Supabase logout error:', err); }
-        
-        // Bulletproof: Manually clear any remaining Supabase tokens from localStorage
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
-                localStorage.removeItem(key);
-            }
-        });
-        
         localStorage.removeItem(AUTH_KEY);
-        window.location.reload();
+        if (window.getSupabaseClient) { 
+            window.getSupabaseClient().auth.signOut().then(() => window.location.reload()); 
+        } else { 
+            window.location.reload(); 
+        }
     }
 
     // Use a more controlled observer
@@ -434,5 +420,3 @@
         }
     };
 })();
-
-

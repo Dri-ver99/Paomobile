@@ -33,6 +33,110 @@ const getClientOld = () => {
 // 2. FIREBASE V8 FIRESTORE COMPATIBILITY LAYER
 // ----------------------------------------------------
 
+class SupabaseCollectionRef {
+    constructor(name) {
+        this.col = name;
+        this.filters = [];
+        this.orderByFields = [];
+        this.limitCount = null;
+    }
+    doc(id) {
+        return new SupabaseDocRef(this.col, id || Math.random().toString(36).substring(2, 15));
+    }
+    where(field, op, val) {
+        this.filters.push({ field, op, val });
+        return this;
+    }
+    orderBy(field, dir) {
+        this.orderByFields.push({ field, dir });
+        return this;
+    }
+    limit(n) {
+        this.limitCount = n;
+        return this;
+    }
+    async add(data) {
+        const docRef = this.doc();
+        await docRef.set(data);
+        return docRef;
+    }
+        async get() {
+        // Simple caching for large queries to save egress
+        const cacheKey = this.col + '_' + JSON.stringify(this.filters) + '_' + JSON.stringify(this.orderByFields);
+        
+        try {
+            let q = getClient().from(this.col).select('*');
+            for (const f of this.filters) {
+                if (f.op === '==') q = q.eq(f.field, f.val);
+                else if (f.op === '>') q = q.gt(f.field, f.val);
+                else if (f.op === '<') q = q.lt(f.field, f.val);
+                else if (f.op === '>=') q = q.gte(f.field, f.val);
+                else if (f.op === '<=') q = q.lte(f.field, f.val);
+                else if (f.op === 'in') q = q.in(f.field, f.val);
+                else if (f.op === 'array-contains') q = q.contains(f.field, [f.val]);
+            }
+            for (const o of this.orderByFields) {
+                q = q.order(o.field, { ascending: o.dir !== 'desc' });
+            }
+            if (this.limitCount) q = q.limit(this.limitCount);
+
+            const { data, error } = await q;
+            if (error) throw error;
+
+            // Save to memory cache (helps during single session navigation)
+            window._dbCache = window._dbCache || {};
+            window._dbCache[cacheKey] = data;
+
+            return this._formatDocs(data);
+        } catch (error) {
+            console.warn("[Supabase] Query failed or Quota Exceeded. Attempting fallback...", error);
+            
+            // 1. Try memory cache
+            if (window._dbCache && window._dbCache[cacheKey]) {
+                return this._formatDocs(window._dbCache[cacheKey]);
+            }
+            
+            // 2. Try FALLBACK_LIVE_DATA (for products)
+            if (this.col === 'products' && window.FALLBACK_LIVE_DATA && window.FALLBACK_LIVE_DATA.value) {
+                console.log("[Supabase] Using FALLBACK_LIVE_DATA for products.");
+                let data = window.FALLBACK_LIVE_DATA.value;
+                
+                // Apply simple memory filters if needed (basic support)
+                if (this.filters.length > 0) {
+                    data = data.filter(item => {
+                        return this.filters.every(f => {
+                            if (f.op === '==') return item[f.field] === f.val;
+                            return true; // Simplified for fallback
+                        });
+                    });
+                }
+                
+                return this._formatDocs(data);
+            }
+            
+            throw error;
+        }
+    }
+    
+    _formatDocs(data) {
+        return {
+            docs: (data || []).map(d => ({
+                id: d.id,
+                data: () => d,
+                exists: true,
+                ref: this.doc(d.id)
+            })),
+            empty: (data || []).length === 0,
+            size: (data || []).length
+        };
+    }
+
+    onSnapshot(cb, errCb) {
+        this.get().then(snap => cb(snap)).catch(errCb || console.error);
+        return () => {};
+    }
+}
+
 class SupabaseDocRef {
     constructor(col, id) {
         this.originalCol = col;
@@ -48,17 +152,32 @@ class SupabaseDocRef {
         return new SupabaseCollectionRef(this.originalCol + '/' + this.id + '/' + subcol);
     }
     async get() {
-        const { data, error } = await getClient().from(this.col).select('*').eq('id', this.id).maybeSingle();
-        if (error) {
-            console.error(`[Supabase] getDoc Error (${this.col}/${this.id}):`, JSON.stringify(error));
-            throw error;
+        // Simple caching for DocRef
+        const cacheKey = this.col + '_' + this.id;
+        try {
+            const { data, error } = await getClient().from(this.col).select('*').eq('id', this.id).maybeSingle();
+            if (error) throw error;
+            
+            if (data) {
+                window._dbCache = window._dbCache || {};
+                window._dbCache[cacheKey] = data;
+            }
+            if (!data) return { exists: false, data: () => null, id: this.id };
+            return { exists: true, data: () => data, id: this.id };
+        } catch (error) {
+            console.warn("[Supabase] getDoc Error fallback:", error);
+            if (window._dbCache && window._dbCache[cacheKey]) {
+                return { exists: true, data: () => window._dbCache[cacheKey], id: this.id };
+            }
+            if (this.col === 'products' && window.FALLBACK_LIVE_DATA && window.FALLBACK_LIVE_DATA.value) {
+                const item = window.FALLBACK_LIVE_DATA.value.find(p => p.id === this.id);
+                if (item) return { exists: true, data: () => item, id: this.id };
+            }
+            return { exists: false, data: () => null, id: this.id };
         }
-        if (!data) return { exists: false, data: () => null, id: this.id };
-        return { exists: true, data: () => data, id: this.id };
     }
     async set(data, options = {}) {
         const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
-        if (options.merge) return this.update(cleanData);
         const { error } = await getClient().from(this.col).upsert({ id: this.id, ...cleanData });
         if (error) throw error;
     }
@@ -73,165 +192,16 @@ class SupabaseDocRef {
     }
     onSnapshot(cb, errCb) {
         this.get().then(snap => cb(snap)).catch(errCb || console.error);
-        const randId = Math.random().toString(36).substring(2, 9);
-        const channel = getClient().channel(`public:${this.col}:${this.id}:${randId}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: this.col, filter: `id=eq.${this.id}` }, payload => {
-                this.get().then(snap => cb(snap)).catch(errCb || console.error);
-            }).subscribe();
-        return () => supabase.removeChannel(channel);
-    }
-}
-
-class SupabaseCollectionRef {
-    constructor(name) {
-        this.originalName = name;
-        this.name = name.replace(/\//g, '_'); // Fallback flattening
-        this.queryOps = [];
-
-        // Route chats subcollections to flat chat_messages table
-        if (name.startsWith('chats/') && name.endsWith('/messages')) {
-            const parts = name.split('/');
-            this.name = 'chat_messages';
-            this.queryOps.push({ type: 'where', field: 'chatId', op: '==', value: parts[1] });
-        } else {
-            this.name = name;
-        }
-    }
-    where(field, op, value) {
-        this.queryOps.push({ type: 'where', field, op, value });
-        return this;
-    }
-    limit(n) {
-        this.queryOps.push({ type: 'limit', value: n });
-        return this;
-    }
-    orderBy(field, dir = 'asc') {
-        this.queryOps.push({ type: 'orderBy', field, direction: dir });
-        return this;
-    }
-    doc(id) {
-        if (!id) {
-            return new SupabaseDocRef(this.originalName, 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));
-        }
-        return new SupabaseDocRef(this.originalName, id);
-    }
-    async add(data) {
-        const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
-        
-        if (!cleanData.id) {
-            cleanData.id = 'doc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        }
-
-        // Auto-inject chatId if mapping to chat_messages
-        if (this.originalName.startsWith('chats/') && this.originalName.endsWith('/messages')) {
-            const parts = this.originalName.split('/');
-            cleanData.chatId = parts[1];
-        }
-
-        const { data: result, error } = await getClient().from(this.name).insert([cleanData]).select().single();
-        if (error) throw error;
-        return new SupabaseDocRef(this.originalName, result.id);
-    }
-    async get() {
-        let q = getClient().from(this.name).select('*');
-
-        for (const op of this.queryOps) {
-            if (op.type === 'where') {
-                if (op.op === '==') q = q.eq(op.field, op.value);
-                else if (op.op === '!=') q = q.neq(op.field, op.value);
-                else if (op.op === '<') q = q.lt(op.field, op.value);
-                else if (op.op === '<=') q = q.lte(op.field, op.value);
-                else if (op.op === '>') q = q.gt(op.field, op.value);
-                else if (op.op === '>=') q = q.gte(op.field, op.value);
-                else if (op.op === 'array-contains') q = q.contains(op.field, [op.value]);
-                else if (op.op === 'in') q = q.in(op.field, op.value);
-            } else if (op.type === 'orderBy') {
-                q = q.order(op.field, { ascending: op.direction === 'asc' });
-            } else if (op.type === 'limit') {
-                q = q.limit(op.value);
-            }
-        }
-
-        const { data, error } = await q;
-        if (error) {
-            console.error(`[Supabase] getDocs Error (${this.name}):`, JSON.stringify(error));
-            throw error;
-        }
-
-        const docs = data.map(d => ({
-            id: d.id,
-            data: () => {
-                const out = { ...d };
-                const dateFields = ['timestamp', 'created_at', 'lastTimestamp', 'lastMessageTime', 'lastSeen', 'createdAt', 'updatedAt'];
-                dateFields.forEach(field => {
-                    if (out[field] && typeof out[field] === 'string') {
-                        const t = new Date(out[field]);
-                        out[field] = { toDate: () => t, toMillis: () => t.getTime() };
-                    }
-                });
-                return out;
-            },
-            ref: new SupabaseDocRef(this.originalName, d.id)
-        }));
-
-        return {
-            empty: docs.length === 0,
-            size: docs.length,
-            docs: docs,
-            forEach: function(cb) { this.docs.forEach(cb) }
-        };
-    }
-    onSnapshot(cb, errCb) {
-        let lastUpdatedAt = null;
-        let lastCount = 0;
-
-        const triggerFetch = () => {
-            this.get().then(snap => {
-                if (snap.docs.length > 0) {
-                    const dates = snap.docs.map(d => new Date(d.data().updatedAt || d.data().created_at || 0).getTime());
-                    lastUpdatedAt = Math.max(...dates.filter(t => !isNaN(t)));
-                }
-                lastCount = snap.docs.length;
-                snap.docChanges = () => snap.docs.map(doc => ({ type: 'added', doc }));
-                cb(snap);
-            }).catch(errCb || console.error);
-        };
-
-        // Initial fetch
-        triggerFetch();
-
-        // Supabase Native Realtime (if enabled in Dashboard)
-        const randId = Math.random().toString(36).substring(2, 9);
-        const channel = getClient().channel(`public:${this.name}:${randId}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: this.name }, payload => {
-                triggerFetch();
-            }).subscribe();
-
-        // Auto-refresh ONLY every 2 minutes (120000ms) as a slow-fallback
-        // DISABLED: This causes massive statement timeouts on Supabase Free Tier because updatedAt is not indexed!
-        // We rely 100% on Supabase Realtime now.
-            
-        return () => {
-            getClient().removeChannel(channel);
-        };
+        return () => {};
     }
 }
 
 class SupabaseBatch {
-    constructor() {
-        this.ops = [];
-    }
-    set(docRef, data, options = {}) {
-        this.ops.push({ type: options.merge ? 'update' : 'upsert', ref: docRef, data });
-    }
-    update(docRef, data) {
-        this.ops.push({ type: 'update', ref: docRef, data });
-    }
-    delete(docRef) {
-        this.ops.push({ type: 'delete', ref: docRef });
-    }
+    constructor() { this.ops = []; }
+    set(docRef, data) { this.ops.push({ type: 'set', ref: docRef, data }); }
+    update(docRef, data) { this.ops.push({ type: 'update', ref: docRef, data }); }
+    delete(docRef) { this.ops.push({ type: 'delete', ref: docRef }); }
     async commit() {
-        // Execute sequentially to avoid RPC requirement
         for (const op of this.ops) {
             try {
                 if (op.type === 'delete') await op.ref.delete();
@@ -247,29 +217,47 @@ class SupabaseBatch {
 // ----------------------------------------------------
 // 3. FIREBASE AUTH COMPATIBILITY LAYER
 // ----------------------------------------------------
-
-const signInWithEmailAndPassword = async (authObj, email, password) => {
-    const { data, error } = await getClient().auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    return { user: { uid: data.user.id, email: data.user.email } };
-};
-
-const createUserWithEmailAndPassword = async (authObj, email, password) => {
-    const { data, error } = await getClient().auth.signUp({ email, password });
-    if (error) throw error;
-    return { user: { uid: data.user.id, email: data.user.email } };
-};
-
-const onAuthStateChanged = (authObj, callback) => {
-    const buildUser = (session) => ({
+const buildUser = (session) => {
+    if (!session || !session.user) return null;
+    return {
         uid: session.user.id,
         email: session.user.email,
         displayName: session.user.user_metadata?.name || session.user.email.split("@")[0],
         photoURL: session.user.user_metadata?.avatar || "",
         emailVerified: !!session.user.email_confirmed_at,
         providerData: session.user.app_metadata?.providers?.map(p => ({ providerId: p + ".com" })) || []
-    });
+    };
+};
 
+const signInWithEmailAndPassword = async (authObj, email, password) => {
+    const { data, error } = await getClient().auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    const u = data.user;
+    return { user: {
+        uid: u.id,
+        email: u.email,
+        displayName: u.user_metadata?.name || u.email.split("@")[0],
+        photoURL: u.user_metadata?.avatar || "",
+        emailVerified: !!u.email_confirmed_at,
+        providerData: u.app_metadata?.providers?.map(p => ({ providerId: p + ".com" })) || []
+    }};
+};
+
+const createUserWithEmailAndPassword = async (authObj, email, password) => {
+    const { data, error } = await getClient().auth.signUp({ email, password });
+    if (error) throw error;
+    const u = data.user;
+    return { user: {
+        uid: u.id,
+        email: u.email,
+        displayName: u.user_metadata?.name || u.email.split("@")[0],
+        photoURL: u.user_metadata?.avatar || "",
+        emailVerified: !!u.email_confirmed_at,
+        providerData: u.app_metadata?.providers?.map(p => ({ providerId: p + ".com" })) || []
+    }};
+};
+
+const onAuthStateChanged = (authObj, callback) => {
     getClient().auth.getSession().then(({ data: { session } }) => {
         if (session) {
             callback(buildUser(session));
@@ -313,7 +301,22 @@ const sendPasswordResetEmail = async (authObj, email) => {
 // ----------------------------------------------------
 
 const authMock = { 
-    currentUser: null,
+    _currentUser: null,
+    get currentUser() {
+        if (this._currentUser) return this._currentUser;
+        const localAdminActive = localStorage.getItem('paomobile_admin_active') === 'true';
+        if (localAdminActive) {
+            return { uid: 'admin-bypass', email: 'sattawat2560@gmail.com' };
+        }
+        try {
+            const lsUser = JSON.parse(localStorage.getItem('paomobile_user'));
+            if (lsUser && lsUser.uid) return lsUser;
+        } catch(e) {}
+        return null;
+    },
+    set currentUser(val) {
+        this._currentUser = val;
+    },
     onAuthStateChanged: (callback) => {
         return onAuthStateChanged(null, callback);
     },
@@ -329,7 +332,7 @@ window.addEventListener('DOMContentLoaded', () => {
     try {
         getClient().auth.onAuthStateChange((event, session) => {
             if (session) {
-                authMock.currentUser = { uid: session.user.id, email: session.user.email };
+                authMock.currentUser = buildUser(session);
             } else {
                 authMock.currentUser = null;
             }
@@ -355,23 +358,55 @@ window.db = {
 
 window.auth = authMock;
 
-window.sendEmailVerification = async () => { console.log('[Supabase] Verification email is handled automatically by signUp.'); };
+window.sendEmailVerification = async (user) => {
+    const email = user?.email || authMock.currentUser?.email;
+    if (!email) return Promise.resolve();
+    try {
+        const { error } = await getClient().auth.resend({
+            type: 'signup',
+            email: email,
+            options: {
+                emailRedirectTo: window.location.origin + '/login.html'
+            }
+        });
+        if (error) console.warn("[Supabase] sendEmailVerification resend error:", error.message);
+    } catch (err) {
+        console.warn("[Supabase] sendEmailVerification failed:", err);
+    }
+    return Promise.resolve();
+};
+
+window.sendVerificationEmail = async () => {
+    const email = authMock.currentUser?.email;
+    if (!email) {
+        alert("ไม่พบข้อมูลอีเมลสำหรับส่งลิงก์ยืนยันตัวตนครับ");
+        return;
+    }
+    try {
+        const { error } = await getClient().auth.resend({
+            type: 'signup',
+            email: email,
+            options: {
+                emailRedirectTo: window.location.origin + '/login.html'
+            }
+        });
+        if (error) throw error;
+        alert("ส่งอีเมลยืนยันตัวตนใหม่สำเร็จเรียบร้อยแล้วค่ะ! กรุณาตรวจสอบในกล่องข้อความหรือกล่องจดหมายขยะ (Spam/Junk) นะคะ");
+    } catch (err) {
+        console.error("Resend error:", err);
+        alert("ส่งอีเมลยืนยันไม่สำเร็จ: " + err.message);
+    }
+};
+
 window.firebaseAuth = {
-    signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail
+    signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail,
+    sendEmailVerification: window.sendEmailVerification
 };
 
 const firestoreMock = () => window.db;
 firestoreMock.FieldValue = {
     serverTimestamp: () => new Date().toISOString(),
     increment: (n) => n
-};
-firestoreMock.Timestamp = {
-    fromDate: (date) => date.toISOString(),
-    now: () => new Date().toISOString()
-};
-firestoreMock.Timestamp = {
-    fromDate: (date) => new Date(date).toISOString(),
-    now: () => new Date().toISOString()
 };
 
 // Global Firebase Mock so inline scripts don't fail
@@ -389,4 +424,5 @@ window.db.enablePersistence = async () => {};
 window.db.enableIndexedDbPersistence = async () => {};
 
 console.log("Supabase V8 Compatibility Layer Initialized");
+
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -224,17 +224,17 @@
         }
 
         .consent-item input[type="checkbox"]:checked {
-            background-color: #fff;
-            border-color: #d1d5db;
+            background-color: #0052cc;
+            border-color: #0052cc;
         }
 
         .consent-item input[type="checkbox"]:checked::after {
-            content: '✓';
+            content: '\2713';
             position: absolute;
-            left: 5px;
-            top: -1px;
-            color: #4b5563;
-            font-size: 16px;
+            left: 4px;
+            top: 0px;
+            color: #fff;
+            font-size: 14px;
             font-weight: 700;
         }
 
@@ -574,193 +574,8 @@
         .modal-body b {
             color: #1e293b;
         }
-        /* --- Custom Beautiful Modal --- */
-        .custom-modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 9999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .custom-modal {
-            background: #ffffff;
-            width: 90%;
-            max-width: 420px;
-            border-radius: 20px;
-            padding: 32px 24px;
-            text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            transform: scale(0.9) translateY(20px);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .custom-modal-overlay.active {
-            display: flex;
-            opacity: 1;
-        }
-        .custom-modal-overlay.active .custom-modal {
-            transform: scale(1) translateY(0);
-        }
-        .modal-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-        .modal-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 8px;
-        }
-        .modal-desc {
-            font-size: 14px;
-            color: #64748b;
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-        .modal-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .btn-modal-primary {
-            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-            color: #fff;
-            border: none;
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .btn-modal-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-        }
-        .btn-modal-secondary {
-            background: #f1f5f9;
-            color: #475569;
-            border: none;
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .btn-modal-secondary:hover {
-            background: #e2e8f0;
-            color: #1e293b;
-        }
-        /* --------------------------- */
-        /* --- Custom Alert Modal --- */
-        .alert-modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 10000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .alert-modal-overlay.active {
-            display: flex;
-            opacity: 1;
-        }
-        .alert-modal {
-            background: #ffffff;
-            width: 90%;
-            max-width: 380px;
-            border-radius: 20px;
-            padding: 32px 24px 24px;
-            text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-            transform: scale(0.9) translateY(20px);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .alert-modal-overlay.active .alert-modal {
-            transform: scale(1) translateY(0);
-        }
-        .alert-icon {
-            font-size: 56px;
-            margin-bottom: 16px;
-            line-height: 1;
-        }
-        .alert-message {
-            font-size: 16px;
-            color: #334155;
-            line-height: 1.6;
-            margin-bottom: 28px;
-            white-space: pre-wrap;
-        }
-        .btn-alert-ok {
-            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
-            color: #fff;
-            border: none;
-            padding: 12px 36px;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .btn-alert-ok:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(225, 29, 72, 0.4);
-        }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // Supabase Initialization (Embedded to prevent CORS/Cache issues)
-        document.addEventListener("DOMContentLoaded", () => {
-            // FIX: Auto-clear huge caches to prevent QuotaExceededError during login
-            try {
-                localStorage.removeItem('pao_seller_cache');
-                ['new', 'used', 'accessory', 'parts', 'all'].forEach(cat => {
-                    localStorage.removeItem(`pao_cache_${cat}`);
-                });
-                console.log("Cleared heavy caches to free up space for login tokens.");
-            } catch(e) {}
-
-            if (window.supabase && window.supabase.createClient) {
-                const supabaseUrl = 'https://ivnayulkvlxjnwfwjxmj.supabase.co';
-                const supabaseKey = 'sb_publishable_ZZPe_GiGq-5W780KOI64yg_zzsjWvq7';
-                window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-                
-                // Override window.supabase to be the client for backward compatibility in login.html
-                const originalSupabase = window.supabase;
-                window.supabase = window.supabaseClient;
-                window.supabase.createClient = originalSupabase.createClient;
-                console.log("Supabase Client initialized inline.");
-            } else {
-                console.error("Supabase UMD not loaded.");
-            }
-        });
-    </script>
-    <script>
-        // Check if supabase loaded successfully
-        window.addEventListener('load', () => {
-            if (typeof supabase === 'undefined') {
-                console.error('Supabase failed to load from CDN');
-                alert("เกิดข้อผิดพลาดในการโหลดระบบฐานข้อมูล กรุณารีเฟรชหน้าเว็บ หรือตรวจสอบอินเทอร์เน็ตครับ");
-            }
-        });
-    </script>
-    <script src="db.js"></script>
+</head>
 
 <body>
 
@@ -782,7 +597,7 @@
             <!-- In-App Browser Guide -->
             <div id="webviewNotice"
                 style="display: none; background: #fff9db; border: 1px solid #fcc419; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; font-size: 14px;">
-                <p>⚠️ <b>พบข้อจำกัด:</b> หากเปิดผ่านแอป (LINE/FB) โปรดเลือก "เปิดด้วยเบราว์เซอร์หลัก" เพื่อใช้งาน Google
+                <p>?? <b>พบข้อจำกัด:</b> หากเปิดผ่านแอป (LINE/FB) โปรดเลือก "เปิดด้วยเบราว์เซอร์หลัก" เพื่อใช้งาน Google
                     Login</p>
             </div>
 
@@ -824,7 +639,7 @@
                     เข้าสู่ระบบด้วยบัญชี Google
                 </button>
 
-                <a href="index.html" style="display: block; margin-top: 24px; color: #64748b; font-size: 14px; text-decoration: none;">✨ กลับสู่หน้าหลัก</a>
+                <a href="index.html" style="display: block; margin-top: 24px; color: #64748b; font-size: 14px; text-decoration: none; font-weight: 500;"> <span style="margin-right: 6px; font-size: 16px;">&#x1F3E0;</span> กลับสู่หน้าหลัก</a>
             </div>
         </div>
 
@@ -1151,48 +966,10 @@
 
     <!-- UI Interactivity Script (Standard - Works on local file://) -->
     <script>
-        // Override native alert with beautiful modal
-        window.alert = function(message) {
-            const modal = document.getElementById("customAlertModal");
-            const msgEl = document.getElementById("customAlertMessage");
-            const iconEl = document.getElementById("customAlertIcon");
-            const btnOk = document.getElementById("btnCustomAlertOk");
-            
-            if (modal && msgEl) {
-                msgEl.textContent = message;
-                
-                // Set icon based on message content
-                if (message.includes("สำเร็จ") || message.includes("เรียบร้อย")) {
-                    iconEl.textContent = "✅";
-                    btnOk.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
-                    btnOk.style.boxShadow = "0 4px 15px rgba(16, 185, 129, 0.3)";
-                } else if (message.includes("ไม่ถูกต้อง") || message.includes("ผิดพลาด") || message.includes("ไม่พบบัญชี")) {
-                    iconEl.textContent = "❌";
-                    btnOk.style.background = "linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)";
-                    btnOk.style.boxShadow = "0 4px 15px rgba(225, 29, 72, 0.3)";
-                } else if (message.includes("อัปเกรด") || message.includes("ขออภัยครับ บัญชีของคุณยังไม่ได้รับการยืนยัน")) {
-                    iconEl.textContent = "🔄";
-                    btnOk.style.background = "linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)";
-                    btnOk.style.boxShadow = "0 4px 15px rgba(37, 99, 235, 0.3)";
-                } else {
-                    iconEl.textContent = "🔔";
-                    btnOk.style.background = "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)";
-                    btnOk.style.boxShadow = "0 4px 15px rgba(139, 92, 246, 0.3)";
-                }
-                
-                modal.classList.add("active");
-                
-                btnOk.onclick = function() {
-                    modal.classList.remove("active");
-                };
-            } else {
-                console.log("[Alert Fallback]:", message);
-            }
-        };
-
         // --- UI State & Transitions ---
         function initExtraActions() {
             console.log("[UI] Initializing view transitions and validation...");
+
             const showCreateBtn = document.getElementById("btnShowCreateAccount");
             if (showCreateBtn) {
                 showCreateBtn.addEventListener("click", function (e) {
@@ -1255,6 +1032,7 @@
                     }
                 });
             }
+
 
             // --- Terms Modal Logic ---
             const termsModal = document.getElementById("termsModal");
@@ -1380,7 +1158,7 @@
 
                 // 3. Identifier Check (Email Only)
                 const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-                const isIdentifierValid = isEmailFormatValid; // Bypass public.users check due to orphaned records
+                const isIdentifierValid = isEmailFormatValid && isEmailAvailable;
 
                 // 4. Checkboxes (Only Terms is REQUIRED)
                 const isChecked = (checkTerms && checkTerms.checked) && (checkMarketing && checkMarketing.checked);
@@ -1423,6 +1201,22 @@
                     clearTimeout(emailDebounceTimer);
 
                     const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+
+                    if (isEmailFormatValid) {
+                        emailDebounceTimer = setTimeout(() => {
+                            if (window.checkIdentifierExists) {
+                                window.checkIdentifierExists(identifier).then(res => {
+                                    if (res.exists) {
+                                        if (emailError) emailError.style.display = "block";
+                                        isEmailAvailable = false;
+                                    } else {
+                                        isEmailAvailable = true;
+                                    }
+                                    validateForm();
+                                });
+                            }
+                        }, 500);
+                    }
                     validateForm();
                 });
             }
@@ -1498,64 +1292,56 @@
 
     </script>
 
-    <!-- Supabase Auth Implementation -->
-    <script>
+    <!-- Firebase SDK Implementation (Module) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+    <script type="module">
+        // Supabase Migration: We rely on db.js which initializes window.firebaseAuth and window.db
+        const { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } = window.firebaseAuth;
+        const auth = window.auth;
+        const db = window.db;
+        const doc = (db, col, id) => db.collection(col).doc(id);
+        const setDoc = (ref, data, options) => ref.set(data, options);
+        const getDoc = (ref) => ref.get();
+        const collection = (db, col) => db.collection(col);
+        const where = (field, op, val) => ({field, op, val});
+        const query = (colRef, qry) => colRef;
+        const getDocs = async (q) => {
+            const snap = await q.get();
+            return snap;
+        };
 
         // IMPROVED: Returns {exists: boolean, email?: string}
         window.checkIdentifierExists = async (rawIdentifier) => {
-
             console.log("[Auth] Checking existence for:", rawIdentifier);
             const identifier = normalizeIdentifier(rawIdentifier);
             const isEmail = identifier.includes("@");
 
             try {
-                const column = isEmail ? "email" : "phone";
-                const { data, error } = await window.supabase.from("users").select("*").eq(column, identifier).limit(1);
-                if (error) {
-                    console.warn("[Auth] Supabase query failed:", error.message);
-                    return { exists: false };
-                }
-                if (data && data.length > 0) {
-                    console.log("[Auth] Found in Supabase:", data[0]);
-                    let resolvedEmail = data[0].email || (isEmail ? identifier : `${identifier}@paomobile.auth`);
+                const snap = await db.collection("users")
+                    .where(isEmail ? "email" : "phone", "==", identifier)
+                    .limit(1)
+                    .get();
+
+                if (!snap.empty) {
+                    const userData = snap.docs[0].data();
+                    console.log("[Auth] Found in Firestore:", userData);
+                    let resolvedEmail = userData.email || (isEmail ? identifier : `${identifier}@paomobile.auth`);
                     return { exists: true, email: resolvedEmail };
                 }
+
                 return { exists: false };
-            } catch (error) {
-                console.error("[Auth] Error checking identifier:", error);
+            } catch (e) {
+                console.warn("[Auth] Identifier check error:", e);
                 return { exists: false };
             }
         };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         // --- Resilience State ---
         let isNavigating = false;
         let isCheckingRedirect = true;
         let isRegistering = false;
         let verificationInterval;
-
-
 
         const overlay = document.getElementById('loadingOverlay');
         const showLoading = (reason = "") => {
@@ -1571,7 +1357,7 @@
             if (overlay) overlay.style.display = 'none';
         };
 
-        window.transitionToVerification = async (name, supabaseEmail = null) => {
+        window.transitionToVerification = (name, fallbackEmail = "") => {
             console.log("[Auth] ---> transitionToVerification triggered for:", name);
             isRegistering = true;
 
@@ -1585,12 +1371,11 @@
                 successView.style.display = "block";
 
                 // Check if user is already verified (e.g. Google users)
-                const { data, error } = await window.supabase.auth.getUser();
-                const user = data ? data.user : null;
-                if (user && user.email_confirmed_at) {
+                const user = auth.currentUser;
+                if (user && user.emailVerified) {
                     updateUIForVerified(name);
                 } else {
-                    updateUIForUnverified(user ? user.email : supabaseEmail);
+                    updateUIForUnverified(fallbackEmail);
                     startVerificationCheck(); // Start auto-reloading
                 }
             }
@@ -1614,6 +1399,10 @@
             document.getElementById("btnSuccessFinish").style.display = "block";
             document.getElementById("verifyArea").style.display = "none";
 
+            // Clear temp credentials
+            window.tempVerificationEmail = null;
+            window.tempVerificationPassword = null;
+
             // Sync verified status to local session
             const userDataStr = localStorage.getItem('paomobile_user');
             if (userDataStr) {
@@ -1627,36 +1416,15 @@
             console.log("[Auth] Verification successful. Success view is active.");
         }
 
-                                function updateUIForUnverified(supabaseEmail = null) {
+        function updateUIForUnverified(fallbackEmail = "") {
             document.getElementById("successIcon").style.display = "none";
             document.getElementById("verifyIcon").style.display = "flex";
             document.getElementById("statusTitle").textContent = "กรุณายืนยันอีเมล";
-            
-            let emailStr = supabaseEmail;
-            if (!emailStr && document.getElementById('regEmail')) {
-                emailStr = document.getElementById('regEmail').value;
-            }
-            if (!emailStr) {
-                const lsUserStr = localStorage.getItem('paomobile_user');
-                if (lsUserStr) {
-                    try {
-                        const lsUser = JSON.parse(lsUserStr);
-                        emailStr = lsUser.email;
-                    } catch(e){}
-                }
-            }
-            if (!emailStr) {
-                emailStr = localStorage.getItem('pending_verification_email') || "อีเมลของคุณ";
-            }
+            const user = auth.currentUser;
+            const emailStr = user ? user.email : (fallbackEmail || "อีเมลของคุณ");
             document.getElementById("statusText").innerHTML = `เราได้ส่งลิงก์ยืนยันไปที่ <b>${emailStr}</b> เรียบร้อยแล้วค่ะ<br>กรุณาคลิกลิงก์ในอีเมลเพื่อเปิดใช้งานบัญชีค่ะ`;
-            document.getElementById("btnCheckVerify").style.display = "none";
-            document.getElementById("btnSuccessFinish").style.display = "block";
-            document.getElementById("btnSuccessFinish").textContent = "ไปหน้าเข้าสู่ระบบ";
-            document.getElementById("btnSuccessFinish").onclick = () => {
-                localStorage.removeItem('pending_verification_email');
-                window.location.reload();
-            };
-            
+            document.getElementById("btnCheckVerify").style.display = "block";
+            document.getElementById("btnSuccessFinish").style.display = "none";
             document.getElementById("verifyArea").style.display = "block";
         }
 
@@ -1664,15 +1432,31 @@
         const RESEND_COOLDOWN = 60000; // Increased to 60 seconds to match Firebase
 
         window.checkVerificationState = async (auto = false) => {
-            const { data, error } = await window.supabase.auth.getUser();
-                const user = data ? data.user : null;
+            const user = auth.currentUser;
             if (!user) return;
 
             if (!auto) {
                 showLoading("Checking status...");
             }
 
-            if (user.email_confirmed_at) {
+            // TRY TO LOG IN IF TEMP CREDENTIALS EXIST
+            if (window.tempVerificationEmail && window.tempVerificationPassword) {
+                try {
+                    const cred = await signInWithEmailAndPassword(auth, window.tempVerificationEmail, window.tempVerificationPassword);
+                    console.log("[Auth] Verification check: Logged in successfully, user is verified!");
+                    await saveUserToFirestore(cred.user, 'email_login');
+                    
+                    if (verificationInterval) clearInterval(verificationInterval);
+                    updateUIForVerified(cred.user.displayName || cred.user.email.split('@')[0]);
+                    if (!auto) hideLoading(true, "Verified");
+                    return;
+                } catch (err) {
+                    console.log("[Auth] Verification check: User is still unverified.", err.message);
+                }
+            }
+
+            await user.reload();
+            if (user.emailVerified) {
                 console.log("[Auth] User is now verified!");
                 if (verificationInterval) clearInterval(verificationInterval);
                 updateUIForVerified(user.displayName || user.email.split('@')[0]);
@@ -1712,6 +1496,7 @@
             updateBtn();
         }
 
+
         function startVerificationCheck() {
             if (verificationInterval) clearInterval(verificationInterval);
             verificationInterval = setInterval(() => {
@@ -1728,12 +1513,11 @@
             showLoading("Signing out...");
             try {
                 if (verificationInterval) clearInterval(verificationInterval);
-                if (window.supabase) await window.supabase.auth.signOut();
+                await auth.signOut();
                 localStorage.clear();
                 window.location.replace("index.html");
             } catch (err) {
                 console.error("Logout error:", err);
-                localStorage.clear();
                 window.location.replace("index.html");
             }
         };
@@ -1756,11 +1540,8 @@
                 const isPhone = /^[0-9]{10}$/.test(rawIdentifier);
                 console.log("[Auth] Triggering Firebase Reset for:", targetEmail, "(isPhone:", isPhone, ")");
 
-                const { error: resetError } = await window.supabase.auth.resetPasswordForEmail(targetEmail, {
-                    redirectTo: window.location.origin + '/login.html?mode=reset'
-                });
-                if (resetError) throw resetError;
-                console.log("[Auth] Supabase Success: Reset email sent.");
+                await sendPasswordResetEmail(auth, targetEmail);
+                console.log("[Auth] Firebase Success: Reset email sent.");
 
                 if (isPhone) {
                     alert("เราได้ส่งลิงก์สำหรับตั้งรหัสผ่านใหม่ไปให้คุณทาง SMS เรียบร้อยแล้วครับ กรุณาตรวจสอบและดำเนินการตามขั้นตอน");
@@ -1782,15 +1563,13 @@
 
         // --- Verification Email Action ---
         window.sendVerificationEmail = async () => {
-            const emailEl = document.getElementById("emailInput");
-            const regEmailEl = document.getElementById("regEmail");
-            const userEmail = (emailEl && emailEl.value.trim()) || (regEmailEl && regEmailEl.value.trim()) || "";
-            if (!userEmail) {
-                alert("กรุณาระบุอีเมลที่ต้องการส่งลิงก์ยืนยันครับ");
+            const user = auth.currentUser;
+            if (!user) {
+                alert("กรุณาเข้าสู่ระบบก่อนขอยืนยันบัญชีครับ");
                 return;
             }
 
-            if (userEmail.endsWith("@paomobile.auth")) {
+            if (user.email.endsWith('@paomobile.auth')) {
                 alert("ไม่สามารถส่งอีเมลยืนยันสำหรับบัญชีที่สมัครด้วยเบอร์โทรศัพท์ได้ครับ");
                 return;
             }
@@ -1804,14 +1583,14 @@
 
             showLoading("Sending verification email");
             try {
-                const { error } = await window.supabase.auth.resend({ type: "signup", email: userEmail });
-                if (error) throw error;
+                await sendEmailVerification(user);
                 lastEmailSentTime = Date.now();
                 startResendCountdown();
-                alert("สำเร็จ! เราได้ส่งลิงก์ยืนยันบัญชีไปให้คุณอีกครั้งแล้วครับ กรุณาตรวจสอบในกล่องจดหมาย (หรือในหน้า 'จดหมายขยะ', 'ถังขยะ' หรือ 'โปรโมชัน') นะครับ");
+                alert("เราได้ส่งลิงก์ยืนยันบัญชีไปให้คุณอีกครั้งแล้วครับ กรุณาตรวจสอบในกล่องจดหมาย (หรือในหน้า 'จดหมายขยะ', 'ถังขยะ' หรือ 'โปรโมชัน') นะครับ");
             } catch (error) {
-                console.error("[Auth] Resend verification error:", error);
-                if (error.status === 429 || (error.message && error.message.includes("rate limit"))) {
+                console.error("[Auth] Verification error:", error);
+                if (error.code === 'auth/too-many-requests') {
+                    lastEmailSentTime = Date.now(); // Reset timer to force wait
                     startResendCountdown();
                     alert("ระบบส่งอีเมลยืนยันชั่วคราวเกินขีดจำกัดแล้วครับ กรุณารอประมาณ 60 วินาทีตามตัวเลขบนปุ่ม แล้วค่อยกดยืนยันใหม่อีกครั้งนะครับ");
                 } else {
@@ -1826,12 +1605,20 @@
         function detectRestrictedBrowser() {
             const ua = navigator.userAgent || navigator.vendor || window.opera;
             const isRestricted = /Line|FBAN|FBAV|Instagram|Messenger|WhatsApp|FB_IAB|FBSS/i.test(ua);
+
             if (isRestricted) {
-                console.warn("[Auth] Restricted browser detected.");
+                console.warn("[Auth] Restricted WebView detected:", ua);
+                const notice = document.getElementById('webviewNotice');
+                if (notice) notice.style.display = 'block';
+
+                const formArea = document.getElementById('loginFormArea');
+                if (formArea) formArea.style.opacity = '0.7';
+                return true;
             }
-            return isRestricted;
+            return false;
         }
 
+        // --- Normalization Helper ---
         function normalizeIdentifier(val) {
             const trimmed = val.trim();
             if (trimmed.includes("@")) return trimmed.toLowerCase();
@@ -1841,37 +1628,22 @@
 
         // --- Auth Initializer (Sequenced Flow) ---
         async function initAuth() {
-            const pendingEmail = localStorage.getItem('pending_verification_email');
-            if (pendingEmail) {
-                console.log("[Auth] Found pending verification for:", pendingEmail);
-                window.transitionToVerification(pendingEmail.split('@')[0], pendingEmail);
-                return;
-            }
-
-            const localUserStr = localStorage.getItem('paomobile_user');
-            if (localUserStr) {
-                try {
-                    const localUser = JSON.parse(localUserStr);
-                    const isPhone = localUser.email && localUser.email.endsWith('@paomobile.auth');
-                    if (localUser && !localUser.isVerified && !isPhone) {
-                        console.log("[Auth] Found unverified local session. Forcing Verification View.");
-                        window.transitionToVerification(localUser.name || localUser.email.split('@')[0], localUser.email);
-                        return;
-                    }
-                } catch (e) {}
-            }
+            if (!auth) return;
 
             // 1. Handle actual logout request (Wait for it to finish)
             if (localStorage.getItem('pao_logout_pending')) {
                 console.log("[Auth] Logout signal detected. Forcing signOut...");
                 showLoading(); // Ensure spinner is up
-                if (window.supabase) await window.supabase.auth.signOut();
+                await auth.signOut();
                 localStorage.removeItem('pao_logout_pending');
                 console.log("[Auth] Cloud sign-out complete.");
                 hideLoading();
             }
 
-            // 2. Release redirect lock (Observer can now handle UI)
+            // 2. Check for Google Redirect Result
+            await checkRedirectResult();
+
+            // 3. Release redirect lock (Observer can now handle UI)
             isCheckingRedirect = false;
             console.log("[Auth] Redirect check finished. Observer active.");
         }
@@ -1881,44 +1653,48 @@
         initAuth();
 
         // --- Observer (The persistent sentry) ---
-        window.supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log("[Auth] Observer: State changed. Event:", event, "Registering:", isRegistering, "Navigating:", isNavigating);
+        onAuthStateChanged(auth, async (user) => {
+            console.log("[Auth] Observer: State changed. Registering:", isRegistering, "Navigating:", isNavigating);
             if (isCheckingRedirect || isRegistering) {
                 console.log("[Auth] Observer: BLOCKED (Redirect check or Registering)");
                 return;
             }
 
-            const user = session?.user;
-            if (user && !isNavigating && event === 'SIGNED_IN') {
-                console.log("[Auth] State: IN -> Initializing session for:", user.email, "Verified:", user.email_confirmed_at != null);
+            if (user && !isNavigating) {
+                console.log("[Auth] State: IN -> Initializing session for:", user.email, "Verified:", user.emailVerified);
 
-                if (!user.email_confirmed_at && !(user.email || '').endsWith('@paomobile.auth') && !(user.app_metadata?.providers || []).includes('google')) {
+                if (!user.emailVerified && !(user.email || '').endsWith('@paomobile.auth') && !user.providerData.some(p => p.providerId === 'google.com')) {
                     console.log("[Auth] User not verified. Forcing Verification View.");
-                    window.transitionToVerification(user.user_metadata?.name || user.email.split('@')[0]);
+                    window.transitionToVerification(user.displayName || user.email.split('@')[0]);
                     return;
                 }
 
-                // Normalise data to old firebase format temporarily for saveUserToFirestore
-                const mappedUser = {
-                    uid: user.id,
-                    email: user.email,
-                    displayName: user.user_metadata?.name || user.email.split('@')[0],
-                    photoURL: user.user_metadata?.avatar || "",
-                    emailVerified: user.email_confirmed_at != null,
-                    providerData: user.app_metadata?.providers?.map(p => ({ providerId: p + '.com' })) || []
-                };
-
-                await saveUserToFirestore(mappedUser, 'state_change');
+                await saveUserToFirestore(user, 'state_change');
 
                 // Only redirect if we are STILL on the login page
                 if (window.location.pathname.endsWith('login.html')) {
-                    finishLogin(mappedUser.displayName);
+                    finishLogin(user.displayName || user.email.split('@')[0]);
                 }
-            } else if (event === 'SIGNED_OUT' || !user) {
+            } else {
                 console.log("[Auth] State: OUT");
                 hideLoading();
             }
         });
+
+        // Check result of redirect sign-in
+        async function checkRedirectResult() {
+            try {
+                const result = await getRedirectResult(auth);
+                if (result && result.user) {
+                    console.log("[Auth] Redirect Success:", result.user.email);
+                    await saveUserToFirestore(result.user, 'google_redirect');
+                    finishLogin(result.user.displayName || result.user.email.split('@')[0]);
+                }
+            } catch (error) {
+                console.error("[Auth] Redirect Failure:", error);
+                hideLoading();
+            }
+        }
 
         // Final Redirection Sequence (With Lock)
         async function finishLogin(name) {
@@ -1928,46 +1704,23 @@
                 return;
             }
 
-            const localUserStr = localStorage.getItem('paomobile_user');
-            if (localUserStr) {
-                const localUser = JSON.parse(localUserStr);
-                const isPhone = localUser.email && localUser.email.endsWith('@paomobile.auth');
-                if (!localUser.isVerified && !isPhone) {
-                    console.warn("[Auth] finishLogin BLOCKED: Email not verified");
-                    isNavigating = false;
-                    hideLoading();
-                    window.transitionToVerification(name || localUser.name || localUser.email.split('@')[0]);
-                    return;
-                }
-            } else {
-                const { data } = await window.supabase.auth.getUser();
-                const user = data?.user;
-                if (user && (!user.email_confirmed_at && !(user.email || '').endsWith('@paomobile.auth') && !(user.app_metadata?.providers || []).includes('google'))) {
-                    console.warn("[Auth] finishLogin BLOCKED: Email not verified");
-                    isNavigating = false;
-                    hideLoading();
-                    window.transitionToVerification(name || user.user_metadata?.name || user.email.split('@')[0]);
-                    return;
-                }
+            const user = auth.currentUser;
+            // CRITICAL: Block finish if not verified (unless phone/google)
+            if (user && !user.emailVerified && !(user.email || '').endsWith('@paomobile.auth') && !user.providerData.some(p => p.providerId === 'google.com')) {
+                console.warn("[Auth] finishLogin BLOCKED: Email not verified");
+                isNavigating = false;
+                hideLoading();
+                window.transitionToVerification(name || user.displayName || user.email.split('@')[0]);
+                return;
             }
 
             isNavigating = true;
             showLoading("finishLogin init");
 
             if (!localStorage.getItem('paomobile_user')) {
-                const { data } = await window.supabase.auth.getUser();
-                const user = data?.user;
                 if (user) {
                     console.log("[Auth] Initializing session data...");
-                    // Normalise for legacy function
-                    await saveUserToFirestore({
-                        uid: user.id,
-                        email: user.email,
-                        displayName: user.user_metadata?.name || user.email.split('@')[0],
-                        photoURL: user.user_metadata?.avatar || "",
-                        emailVerified: user.email_confirmed_at != null,
-                        providerData: user.app_metadata?.providers?.map(p => ({ providerId: p + '.com' })) || []
-                    }, 'recovery');
+                    await saveUserToFirestore(user, 'recovery');
                 }
             }
 
@@ -1983,14 +1736,13 @@
             }
         }
 
-        // --- Save user data to Cloud (Non-blocking UI) ---
+        // --- Save user data to Firestore (Version 1.7 - Preserves custom name/avatar) ---
         async function saveUserToFirestore(user, provider) {
             console.log("[Auth] Syncing profile with Cloud...");
 
             let finalName = user.displayName || 'Member';
             let finalAvatar = user.photoURL || "";
 
-            // 1. Prepare local userData immediately
             let email = user.email || '';
             if (email.endsWith('@paomobile.auth')) {
                 email = email.split('@')[0]; 
@@ -1999,54 +1751,41 @@
                 finalName = email.split('@')[0];
             }
 
-            let existingData = {};
-            try {
-                if (email) {
-                    const { data: allDocs, error } = await window.supabase.from('users').select('*').eq('email', email);
-                    if (!error && allDocs && allDocs.length > 0) {
-                        allDocs.sort((a, b) => {
-                            const ta = new Date(a.updatedAt || a.created_at || a.createdAt || 0).getTime();
-                            const tb = new Date(b.updatedAt || b.created_at || b.createdAt || 0).getTime();
-                            return ta - tb; // Oldest first, so newest overwrites at the end
-                        });
-
-                        allDocs.forEach(d => {
-                            if (d.name && d.name !== 'Member' && d.name !== email.split('@')[0]) existingData.name = d.name;
-                            if (d.phone) existingData.phone = d.phone;
-                            if (d.avatar) existingData.avatar = d.avatar;
-                            if (d.photo) existingData.photo = d.photo;
-                            if (d.isVerified) existingData.isVerified = d.isVerified;
-                        });
-                    }
-                }
-            } catch (e) {
-                console.warn("[Auth] Failed to fetch existing user profile", e);
-            }
-
             const userData = {
                 uid: user.uid,
-                name: existingData.name || finalName,
+                name: finalName,
                 email: email,
-                avatar: existingData.avatar || existingData.photo || finalAvatar,
-                photo: existingData.photo || existingData.avatar || finalAvatar,
-                phone: existingData.phone || "",
-                isVerified: existingData.isVerified === false ? false : !!(user.emailVerified || provider.includes('google') || existingData.isVerified)
+                avatar: finalAvatar,
+                photo: finalAvatar,
+                isVerified: !!(user.emailVerified || provider.includes('google'))
             };
 
-            // Save to local session IMMEDIATELY so app feels fast
-            localStorage.setItem('paomobile_user', JSON.stringify(userData));
-
-            // 2. Background Supabase update
-            window.supabase.from("users").upsert({
-                uid: user.uid,
-                id: user.uid,
-                name: userData.name,
-                email: userData.email,
-                avatar: userData.avatar,
-                photo: userData.photo,
-                isVerified: userData.isVerified,
-                lastLogin: new Date().toISOString()
-            }).then(() => console.log("[Auth] Supabase Background Sync: complete")).catch(e => console.warn("[Auth] Cloud Background Sync Error:", e.message));
+            // Fetch existing profile from database FIRST to preserve custom name/avatar
+            if (db) {
+                try {
+                    const userRef = doc(db, "users", user.uid);
+                    const snap = await getDoc(userRef);
+                    if (snap.exists) {
+                        const existing = snap.data();
+                        // Use the customer's custom name/avatar if they set one
+                        if (existing.name) userData.name = existing.name;
+                        if (existing.avatar) {
+                            userData.avatar = existing.avatar;
+                            userData.photo = existing.avatar;
+                        }
+                        console.log("[Auth] Loaded saved profile:", userData.name);
+                    }
+                    // Save to localStorage with merged data
+                    localStorage.setItem('paomobile_user', JSON.stringify(userData));
+                    // Background write (don't await)
+                    setDoc(userRef, { ...userData, lastLogin: new Date() }, { merge: true }).catch(e => console.warn("[Auth] Write error:", e.message));
+                } catch (e) {
+                    console.warn("[Auth] Cloud Sync Error, using defaults:", e.message);
+                    localStorage.setItem('paomobile_user', JSON.stringify(userData));
+                }
+            } else {
+                localStorage.setItem('paomobile_user', JSON.stringify(userData));
+            }
         }
 
         // Handle Google Login
@@ -2056,25 +1795,31 @@
                 if (detectRestrictedBrowser()) return;
 
                 showLoading("Google Auth Start");
+                const provider = new GoogleAuthProvider();
 
                 try {
-                    console.log("[Auth] Attempting Supabase Google OAuth...");
-                    // Using window.supabase from db.js
-                    const { data, error } = await window.supabase.auth.signInWithOAuth({
-                        provider: 'google',
-                        options: {
-                            // Supabase will redirect back to this page.
-                            // Note: Google Auth requires running on http://localhost or a real domain.
-                            // It will not work on file:/// URLs.
-                            redirectTo: window.location.href
-                        }
-                    });
-                    
-                    if (error) throw error;
-                    // The page will redirect to Google, so we just wait.
+                    // Try Popup first as it's more reliable and better UX on desktop
+                    console.log("[Auth] Attempting Google Popup...");
+                    const result = await signInWithPopup(auth, provider);
+                    if (result.user) {
+                        console.log("[Auth] Popup Success:", result.user.email);
+                        await saveUserToFirestore(result.user, 'google_popup');
+                        finishLogin(result.user.displayName || result.user.email.split('@')[0]);
+                    }
                 } catch (error) {
-                    console.error("[Auth] Google Auth Error:", error);
-                    alert("ไม่สามารถเชื่อมต่อกับ Google ได้ในขณะนี้ครับ: " + error.message);
+                    console.warn("[Auth] Popup failed or blocked, falling back to Redirect:", error.code);
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        hideLoading();
+                        return;
+                    }
+                    // Fallback to Redirect
+                    try {
+                        await signInWithRedirect(auth, provider);
+                    } catch (redirectError) {
+                        console.error("[Auth] Redirect failed:", redirectError);
+                        alert("ไม่สามารถเชื่อมต่อกับ Google ได้ในขณะนี้ครับ: " + redirectError.message);
+                    }
+                } finally {
                     hideLoading(true, "Google finalizer");
                 }
             });
@@ -2098,29 +1843,38 @@
                 }
 
                 showLoading();
-                const isPasswordVisible = passwordGroup.style.display === 'block';
-                
-                let res;
-                try {
-                    res = await window.checkIdentifierExists(identifier);
+                const res = await window.checkIdentifierExists(identifier);
 
-                    // Bypass 'Account not found' modal to support unverified users logging in directly
-                    // if (!isPasswordVisible && !res.exists) { ... }
-                } catch (e) {
-                    console.error("Caught checkIdentifier error:", e); 
+                if (!res.exists) {
+                    hideLoading();
+                    const choice = await sellerConfirm("ไม่พบบัญชีผู้ใช้ในระบบค่ะ\n\nต้องการสมัครใหม่ (OK) หรือจะลองเข้าสู่ระบบด้วยรหัสผ่าน anyway (Cancel) คะ?\n(กรณีกด Cancel ระบบจะแสดงช่องใส่รหัสผ่านให้ลองดูค่ะ)", "info");
+                    
+                    if (choice) {
+                        console.log("[Auth] Seamless transition to Register View");
+                        const registerView = document.getElementById("registerView");
+                        const loginView = document.getElementById("loginView");
+                        if (registerView && loginView) {
+                            loginView.style.display = "none";
+                            registerView.style.display = "block";
+                            const regEmail = document.getElementById("regEmail");
+                            if (regEmail) {
+                                regEmail.value = emailInput.value;
+                                const event = new Event('input', { bubbles: true });
+                                regEmail.dispatchEvent(event);
+                            }
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    } else {
+                        // User chose "Cancel" -> "ฉันมีบัญชีอยู่แล้ว (ลองล็อกอิน)"
+                        console.log("[Auth] Force showing password field for existing user...");
+                        passwordGroup.style.display = 'block';
+                        btnLogin.textContent = "เข้าสู่ระบบ anyway ??";
+                        return;
+                    }
+                    return;
                 }
 
-
-
-
-
-
-
-
-
-
-
-                if (!isPasswordVisible) {
+                if (passwordGroup.style.display === 'none') {
                     hideLoading();
                     passwordGroup.style.display = 'block';
                     btnLogin.textContent = "เข้าสู่ระบบ";
@@ -2135,68 +1889,28 @@
                 }
 
                 try {
-                    let finalUser;
-                    const targetEmail = (res && res.email) ? res.email : identifier;
-                    
-                    // 1. Try Supabase Auth First (New Users)
-                    const { data: sbData, error: sbError } = await window.supabase.auth.signInWithPassword({
-                        email: targetEmail,
-                        password: password
-                    });
-                    
-                    if (sbError) {
-                        if (sbError.message.includes('Email not confirmed')) {
-                            console.log("[Auth] User exists but email is not confirmed. Forcing verification view.");
-                            hideLoading();
-                            localStorage.setItem('pending_verification_email', targetEmail);
-                            window.transitionToVerification(targetEmail.split('@')[0], targetEmail);
-                            return;
-                        }
-
-                        console.warn("[Auth] Supabase login failed:", sbError.message);
-                        throw sbError;
-                    } else {
-                        // Supabase Success
-                        const sbUser = sbData.user;
-                        finalUser = {
-                            uid: sbUser.id,
-                            email: sbUser.email,
-                            displayName: sbUser.user_metadata?.name || sbUser.email.split('@')[0],
-                            photoURL: sbUser.user_metadata?.avatar || "",
-                            emailVerified: !!sbUser.email_confirmed_at,
-                            providerData: sbUser.app_metadata?.providers?.map(p => ({ providerId: p + '.com' })) || []
-                        };
-                        console.log("[Auth] Supabase Login Success:", finalUser.email);
-                    }
-
-                    await saveUserToFirestore(finalUser, 'email_login');
-                    finishLogin(finalUser.displayName || finalUser.email.split('@')[0]);
+                    const cred = await signInWithEmailAndPassword(auth, res.email, password);
+                    console.log("[Auth] Email Login Success:", cred.user.email);
+                    await saveUserToFirestore(cred.user, 'email_login');
+                    finishLogin(cred.user.displayName || cred.user.email.split('@')[0]);
                 } catch (error) {
-                    isNavigating = false;
                     hideLoading();
-                    console.error("[Auth] Login error:", error.code || error.message);
-                    if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential' || (error.message && error.message.includes('Invalid login'))) {
-                        if (res && !res.exists) {
-                            if (!document.getElementById("customNotFoundModal")) {
-                                const style = document.createElement("style");
-                                style.textContent = ` .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999; opacity: 0; visibility: hidden; transition: all 0.3s ease; } .custom-modal-overlay.active { opacity: 1; visibility: visible; } .custom-modal { background: #fff; border-radius: 24px; padding: 32px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.1); transform: scale(0.9); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); } .custom-modal-overlay.active .custom-modal { transform: scale(1); } .modal-icon { width: 64px; height: 64px; border-radius: 50%; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 20px; } .modal-title { font-size: 20px; font-weight: 700; color: #111; margin-bottom: 12px; font-family: "Noto Sans Thai", sans-serif; } .modal-desc { font-size: 15px; color: #666; margin-bottom: 24px; line-height: 1.5; font-family: "Noto Sans Thai", sans-serif; } .modal-buttons { display: flex; flex-direction: column; gap: 12px; } .btn-modal-primary { width: 100%; padding: 14px; border-radius: 12px; border: none; background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); color: white; font-weight: 600; font-size: 16px; cursor: pointer; font-family: "Noto Sans Thai", sans-serif; transition: all 0.2s; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); } .btn-modal-secondary { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #e5e7eb; background: #fff; color: #4b5563; font-weight: 600; font-size: 16px; cursor: pointer; font-family: "Noto Sans Thai", sans-serif; transition: all 0.2s; } `;
-                                document.head.appendChild(style);
-                                const overlay = document.createElement("div");
-                                overlay.id = "customNotFoundModal";
-                                overlay.className = "custom-modal-overlay";
-                                overlay.innerHTML = ` <div class="custom-modal"> <div class="modal-icon">🔍</div> <h3 class="modal-title">ไม่พบบัญชีผู้ใช้</h3> <p class="modal-desc">อีเมลนี้ยังไม่ได้ลงทะเบียนในระบบค่ะ คุณต้องการสมัครสมาชิกใหม่ หรือลองเข้าสู่ระบบอีกครั้ง?</p> <div class="modal-buttons"> <button class="btn-modal-primary" id="btnModalRegisterDynamic">สร้างบัญชีใหม่</button> <button class="btn-modal-secondary" id="btnModalLoginAnywayDynamic">ลองเข้าสู่ระบบอีกครั้ง</button> </div> </div> `;
-                                document.body.appendChild(overlay);
-                                document.getElementById("btnModalRegisterDynamic").addEventListener("click", () => { document.getElementById("customNotFoundModal").classList.remove("active"); const registerView = document.getElementById("registerView"); const loginView = document.getElementById("loginView"); if (registerView && loginView) { loginView.style.display = "none"; registerView.style.display = "block"; const regEmail = document.getElementById("regEmail"); if (regEmail) { regEmail.value = document.getElementById("emailInput").value; regEmail.dispatchEvent(new Event("input", { bubbles: true })); } window.scrollTo({ top: 0, behavior: "smooth" }); } });
-                                document.getElementById("btnModalLoginAnywayDynamic").addEventListener("click", () => { document.getElementById("customNotFoundModal").classList.remove("active"); });
-                            }
-                            setTimeout(() => document.getElementById("customNotFoundModal").classList.add("active"), 50);
-                        } else {
-                            alert("รหัสผ่านไม่ถูกต้องครับ");
+                    console.error("[Auth] Login error:", error.code, error.message);
+                    if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential' || (error.message && error.message.includes("Invalid login credentials"))) {
+                        alert("อีเมลหรือรหัสผ่านไม่ถูกต้องครับ");
+                    } else if (error.message && error.message.includes("Email not confirmed")) {
+                        window.tempVerificationEmail = res.email;
+                        window.tempVerificationPassword = password;
+                        if (window.auth) {
+                            window.auth._currentUser = { email: res.email, uid: "", emailVerified: false };
                         }
+                        const displayName = res.email.split('@')[0];
+                        window.transitionToVerification(displayName, res.email);
                     } else {
-                        alert("เกิดข้อผิดพลาด: " + (error.message || error.code));
+                        alert("เกิดข้อผิดพลาด: " + error.message);
                     }
                 }
+
             });
 
             // Support Enter key for Login
@@ -2229,47 +1943,41 @@
                 isNavigating = true;
 
                 try {
-                    const { data: cred, error: signUpError } = await window.supabase.auth.signUp({ email: email, password: password });
-                    if (signUpError) throw signUpError;
-                    if (!cred || !cred.user) {
-                        throw { message: "อีเมลนี้ถูกลงทะเบียนไปแล้ว หรือระบบได้ส่งลิงก์ยืนยันไปที่อีเมลนี้แล้วครับ" };
-                    }
-                    console.log("[Auth] Supabase User Created:", cred.user.id);
+                    const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    console.log("[Auth] Firebase User Created:", cred.user.uid);
+
                     const name = email.split('@')[0];
 
                     // Background persistence (Non-blocking)
-
-                    window.supabase.from("users").upsert([{
-                        uid: cred.user.id,
-                        id: cred.user.id, // Primary key for upsert
+                    const userRef = doc(db, "users", cred.user.uid);
+                    setDoc(userRef, {
+                        uid: cred.user.uid,
                         name: name,
                         email: email,
-                        phone: "",
+                        phone: "", // No phone during email registration
                         marketing: document.getElementById("checkMarketing").checked,
-                        provider: "email_registration",
-                        isVerified: false
-                    }]).then(() => console.log("[Auth] Supabase persistence complete."));
-                    
-                    console.log("[Auth] Forcing verification email send via Supabase resend...");
-                    window.supabase.auth.resend({ type: "signup", email: email }).catch(e => console.warn(e));
+                        provider: 'email_registration',
+                        createdAt: new Date()
+                    }).then(() => console.log("[Auth] Firestore persistence complete."));
+
+                    // Send Verification Email immediately
+                    await sendEmailVerification(cred.user);
+                    console.log("[Auth] Verification email sent automatically.");
+
+                    if (window.auth) {
+                        window.auth._currentUser = { email: email, uid: cred.user.uid, emailVerified: false };
+                    }
+
                     // Switch to Verification View
-                                        localStorage.setItem('pending_verification_email', email);
                     window.transitionToVerification(name, email);
+
                 } catch (error) {
                     console.error("[Auth] Registration caught error:", error);
                     isRegistering = false;
                     isNavigating = false;
                     hideLoading(true, "Registration error alert");
-                    if (error.message && error.message.toLowerCase().includes('already registered')) {
-                        alert("อีเมลนี้มีผู้ใช้งานแล้วครับ หรือระบบได้ส่งลิงก์ยืนยันไปแล้ว");
-                        if (emailError) {
-                            emailError.style.display = "block";
-                            emailError.textContent = "อีเมลนี้มีผู้ใช้งานแล้ว";
-                        }
-                    } else if (error.code === 'auth/email-already-in-use') {
-                        alert("อีเมลนี้ถูกใช้งานแล้วครับ");
-                    } else if (error.message && error.message.toLowerCase().includes('rate limit')) {
-                        alert("ระบบจำกัดการสมัครชั่วคราวเนื่องจากคุณทดสอบสมัครรัวๆ เกินโควต้าของระบบ (Email rate limit exceeded)\n\nวิธีแก้:\n1. ใช้อีเมลอื่นทดสอบ\n2. หรือไปที่เว็บ Supabase -> Authentication -> Rate Limits เพื่อเพิ่มลิมิตครับ\n3. หรือรอประมาณ 60 นาทีครับ");
+                    if (error.code === 'auth/email-already-in-use') {
+                        alert("อีเมลหรือเบอร์โทรนี้ถูกใช้งานไปแล้วครับ");
                     } else {
                         alert("การลงทะเบียนผิดพลาด: " + error.message);
                     }
@@ -2294,61 +2002,6 @@
     </script>
 
 <script src="premium-alerts.js"></script>
-    <!-- Custom Modal -->
-    <div class="custom-modal-overlay" id="notFoundModal">
-        <div class="custom-modal">
-            <div class="modal-icon">🤷‍♂️</div>
-            <div class="modal-title">ไม่พบบัญชีนี้ในระบบครับ</div>
-            <div class="modal-desc">
-                ระบบไม่พบอีเมลที่คุณกรอกในฐานข้อมูลของเรา<br>คุณต้องการสมัครสมาชิกใหม่หรือไม่?
-            </div>
-            <div class="modal-buttons">
-                <button class="btn-modal-primary" id="btnModalRegister">✨ ไปหน้าสมัครสมาชิกใหม่</button>
-                <button class="btn-modal-secondary" id="btnModalLoginAnyway">🔑 ลองใส่รหัสผ่านดูก่อน (มีบัญชีแล้ว)</button>
-            </div>
-        </div>
-    </div>
-    <!-- Custom Alert Modal -->
-    <div class="alert-modal-overlay" id="customAlertModal">
-        <div class="alert-modal">
-            <div class="alert-icon" id="customAlertIcon">⚠️</div>
-            <div class="alert-message" id="customAlertMessage">ข้อความแจ้งเตือน</div>
-            <button class="btn-alert-ok" id="btnCustomAlertOk">ตกลง</button>
-        </div>
-    </div>
 </body>
 
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
