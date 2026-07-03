@@ -1,0 +1,460 @@
+?﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>๏ฟฝ๏ฟฝยช๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝูก๏ฟฝ๏ฟฝ๏ฟฝ ๏ฟฝ Seller Centre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="seller-centre.css">
+    <style>
+        body { font-family: 'Outfit', 'Noto Sans Thai', sans-serif; }
+        
+        .customer-table { width: 100%; border-collapse: collapse; }
+        .customer-table th, .customer-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .customer-table th { color: #888; font-weight: 500; font-size: 0.85rem; }
+        
+        .customer-avatar-cell { width: 60px; }
+        .customer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #64748b;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .customer-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .customer-name { font-weight: 600; color: #1e293b; }
+        .customer-email { color: #64748b; font-size: 0.85rem; }
+        .customer-phone { color: #334155; font-size: 0.9rem; }
+        .join-date { color: #94a3b8; font-size: 0.8rem; }
+
+        .search-container {
+            margin-bottom: 25px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-box input:focus { border-color: #ee4d2d; }
+        .search-box svg {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .count-badge {
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .main-wrapper { margin-left: 0; padding: 15px; margin-top: 60px; }
+            .customer-table thead { display: none; }
+            .customer-table tr {
+                display: block;
+                background: #fff;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                margin-bottom: 15px;
+                padding: 15px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            }
+            .customer-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 0;
+                border: none;
+            }
+            .customer-table td:not(:last-child) { border-bottom: 1px dashed #f1f5f9; }
+            .customer-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: #64748b;
+                font-size: 0.75rem;
+            }
+            .customer-avatar-cell { width: 100%; justify-content: center !important; border-bottom: 1px solid #f1f5f9 !important; padding-bottom: 12px !important; margin-bottom: 8px; }
+            .customer-avatar-cell::before { display: none; }
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+</head>
+<body class="bg-repair">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="seller-centre.html" class="sidebar-logo">
+                <img src="logo.png" alt="Paomobile">
+                <span>Seller Centre</span>
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                    <span class="menu-icon">๐ </span> กลับหน้าหลักร้านค้า
+                </a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">เมนูหลัก</p>
+                <a href="seller-centre.html" class="menu-item"><span class="menu-icon">๐“</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">๐’ฌ</span> แชทกับลูกค้า <span id="chat-unread-total" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700;">0</span></a>
+                <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">๐ซ</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-customers.html" class="menu-item active"><span class="menu-icon">๐‘ฅ</span> รายชื่อลูกค้า</a>
+                <a href="seller-repairs.html" class="menu-item"><span class="menu-icon">๐”ง</span> จัดการงานซ่อม</a>
+                <a href="seller-centre.html#promotion-card" class="menu-item" ><span class="menu-icon">๐</span> จัดการโปรโมชั่น</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">คำสั่งซื้อ</p>
+                <a href="seller-orders.html" class="menu-item"><span class="menu-icon">๐“ฆ</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">๐</span> ที่ต้องจัดส่ง</a>
+                <a href="seller-orders.html?tab=processed" class="menu-item"><span class="menu-icon">โก๏ธ</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?tab=cancelled" class="menu-item"><span class="menu-icon">๐ซ</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">สินค้า</p>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">๐๏ธ</span> สินค้าของฉัน</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">โ•</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">โ๏ธ</span> จัดการหมวดหมู่อะไหล่</a>
+            </div>
+        </nav>
+    </aside>
+
+    <header class="top-nav">
+        <div class="nav-left">
+            <button class="hamburger-menu" id="mobileMenuBtn" onclick="toggleSellerMobileMenu(true)">
+                <span></span><span></span><span></span>
+            </button>
+            <h2>๏ฟฝ๏ฟฝยช๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝูก๏ฟฝ๏ฟฝ๏ฟฝ</h2>
+        </div>
+        <div class="nav-right">
+            <div id="admin-status" style="font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 8px;">
+                <span id="status-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #ccc;"></span>
+                <span id="status-text">๏ฟฝ๏ฟฝ๏ฟฝัง๏ฟฝ๏ฟฝวจ๏ฟฝอบ...</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-wrapper">
+        <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <div>
+                <h1 style="font-size: 1.5rem; color: #1e293b; margin: 0;">๏ฟฝูก๏ฟฝ๏ฟฝาท๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝัค๏ฟฝ๏ฟฝ๏ฟฝาชิก</h1>
+                <p style="color: #64748b; font-size: 0.9rem; margin-top: 5px;">๏ฟฝ๏ฟฝยช๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝูก๏ฟฝ๏ฟฝาท๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝัค๏ฟฝ๏ฟฝ๏ฟฝาชิก๏ฟฝ๏ฟฝานหน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝไซต๏ฟฝ</p>
+            </div>
+            <div class="count-badge" id="total-count">๏ฟฝูก๏ฟฝ๏ฟฝาท๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ: 0 ๏ฟฝ๏ฟฝาน</div>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="customerSearch" placeholder="๏ฟฝ๏ฟฝ๏ฟฝาช๏ฟฝ๏ฟฝ๏ฟฝ, ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝัพ๏ฟฝ๏ฟฝ..." oninput="filterCustomers()">
+            </div>
+        </div>
+
+        <div class="card" style="padding: 0; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <div style="overflow-x: auto;">
+                <table class="customer-table">
+                    <thead>
+                        <tr>
+                            <th class="customer-avatar-cell">๏ฟฝูป</th>
+                            <th>๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ-๏ฟฝ๏ฟฝ๏ฟฝสก๏ฟฝ๏ฟฝ</th>
+                            <th>๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ</th>
+                            <th>๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝัพ๏ฟฝ๏ฟฝ</th>
+                            <th>๏ฟฝ๏ฟฝัค๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝัน๏ฟฝ๏ฟฝ๏ฟฝ</th>
+                            <th style="text-align: center;">๏ฟฝัด๏ฟฝ๏ฟฝ๏ฟฝ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customer-list-body">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 50px; color: #94a3b8;">
+                                ?? ๏ฟฝ๏ฟฝ๏ฟฝัง๏ฟฝึง๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝูก๏ฟฝ๏ฟฝาจาก Cloud...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div id="mobileSidebarOverlay" class="mobile-sidebar-overlay" onclick="toggleSellerMobileMenu(false)">
+        <div class="mobile-sidebar" onclick="event.stopPropagation()">
+            <div class="mobile-sidebar-header">
+                <a href="seller-centre.html" class="logo">
+                    <img src="logo.png" alt="Paomobile">
+                    <span>Seller Centre</span>
+                </a>
+                <div class="mobile-sidebar-close" onclick="toggleSellerMobileMenu(false)">&times;</div>
+            </div>
+            <div class="mobile-sidebar-content">
+                <nav class="sidebar-menu">
+                    <div class="menu-section">
+                        <a href="index.html" class="menu-item-home"><span class="menu-icon">๐ </span> กลับหน้าหลักร้านค้า</a>
+                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">๐“</span> แผงควบคุม</a>
+                        <a href="seller-chat.html" class="menu-item"><span class="menu-icon">๐’ฌ</span> แชทกับลูกค้า</a>
+                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">๐ซ</span> โค้ดส่วนลด</a>
+                        <a href="seller-customers.html" class="menu-item active"><span class="menu-icon">๐‘ฅ</span> รายชื่อลูกค้า</a>
+                        <a href="seller-repairs.html" class="menu-item"><span class="menu-icon">๐”ง</span> จัดการงานซ่อม</a>
+                        <a href="seller-centre.html#promotion-card" class="menu-item" ><span class="menu-icon">๐</span> จัดการโปรโมชั่น</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">คำสั่งซื้อ</p>
+                        <a href="seller-orders.html" class="menu-item"><span class="menu-icon">๐“ฆ</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">๐</span> ที่ต้องจัดส่ง</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">สินค้า</p>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">๐๏ธ</span> สินค้าของฉัน</a>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">โ•</span> เพิ่มสินค้าใหม่</a>
+                    </div>
+                </nav>
+            </div>
+                    <div class="menu-section">
+                        <p class="menu-title">๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ่งซ๏ฟฝ๏ฟฝ๏ฟฝ</p>
+                        <a href="seller-orders.html" class="menu-item"><span class="menu-icon">??</span> ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ่งซ๏ฟฝ๏ฟฝอของ๏ฟฝัน</a>
+                        <a href="seller-orders.html?tab=toship" class="menu-item"><span class="menu-icon">??</span> ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝอง๏ฟฝัด๏ฟฝ๏ฟฝ</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">๏ฟฝิน๏ฟฝ๏ฟฝ๏ฟฝ</p>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">???</span> ๏ฟฝิน๏ฟฝ๏ฟฝาของ๏ฟฝัน</a>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">?</span> ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝิน๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // v1.2.16 - Enable Persistence for Instant Loading
+        try {
+            db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+                if (err.code == 'failed-precondition') console.warn("Persistence failed: multiple tabs.");
+                else if (err.code == 'unimplemented') console.warn("Persistence unsupported.");
+            });
+        } catch(e) {}
+
+        let allCustomers = [];
+        let customersUnsubscribe = null;
+        const SELLER_EMAIL = "sattawat2560@gmail.com";
+
+        // --- Instant Local Load ---
+        function initLocalData() {
+            const cached = localStorage.getItem('pao_customers_cache');
+            if (cached) {
+                try {
+                    allCustomers = JSON.parse(cached);
+                    renderCustomers(allCustomers);
+                    document.getElementById('total-count').textContent = `๏ฟฝูก๏ฟฝ๏ฟฝาท๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ: ${allCustomers.length} ๏ฟฝ๏ฟฝาน (แคช)`;
+                } catch(e) { console.warn("Cache error", e); }
+            }
+        }
+
+        async function loadCustomers() {
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            const body = document.getElementById('customer-list-body');
+            const totalCount = document.getElementById('total-count');
+
+            if (!window.supabase) {
+                statusDot.style.background = '#ef4444';
+                statusText.textContent = 'Supabase ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝำงาน';
+                return;
+            }
+
+            statusDot.style.background = '#22c55e';
+            statusText.textContent = 'Admin Connected (Supabase)';
+
+            const fetchCustomers = async () => {
+                try {
+                    const { data, error } = await window.supabase.from('users').select('*');
+                    if (error) throw error;
+
+                    const customerMap = new Map();
+
+                    // 1. Add Supabase users
+                    if (data) {
+                        data.forEach(doc => {
+                            const emailKey = (doc.email || doc.id).toLowerCase();
+                            customerMap.set(emailKey, {
+                                id: doc.id,
+                                ...doc
+                            });
+                        });
+                    }
+
+                    allCustomers = Array.from(customerMap.values());
+
+                    // Sort client-side by updatedAt (newest first)
+                    allCustomers.sort((a, b) => {
+                        const getMillis = (item) => {
+                            if (item.updatedAt) return new Date(item.updatedAt).getTime() || 0;
+                            if (item.createdAt) return new Date(item.createdAt).getTime() || 0;
+                            return 0;
+                        };
+                        return getMillis(b) - getMillis(a);
+                    });
+
+                    localStorage.setItem('pao_customers_cache', JSON.stringify(allCustomers));
+                    localStorage.setItem('pao_total_customers_count', allCustomers.length);
+
+                    renderCustomers(allCustomers);
+                    totalCount.textContent = `๏ฟฝูก๏ฟฝ๏ฟฝาท๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ: ${allCustomers.length} ๏ฟฝ๏ฟฝาน`;
+                } catch (err) {
+                    console.error("Supabase sync error:", err);
+                    body.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:50px; color:#ef4444;">? ๏ฟฝิด๏ฟฝ๏ฟฝอผิด๏ฟฝ๏ฟฝาด: ${err.message}</td></tr>`;
+                }
+            };
+
+            fetchCustomers();
+
+            window.supabase.channel('public:users:admin_customers')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+                    fetchCustomers();
+                })
+                .subscribe();
+
+            // Chat Badge Listener (Using db.js compatibility layer for chats)
+            try {
+                if (typeof db !== 'undefined' && db.collection) {
+                    db.collection('chats').onSnapshot(snapshot => {
+                        let totalUnread = 0;
+                        snapshot.forEach(doc => {
+                            totalUnread += (doc.data().unreadCount || 0);
+                        });
+                        const badge = document.getElementById('chat-unread-total');
+                        if (badge) {
+                            badge.textContent = totalUnread;
+                            badge.style.display = totalUnread > 0 ? 'block' : 'none';
+                        }
+                    }, err => console.warn("Unread badge sync failed:", err));
+                }
+            } catch(e) {}
+        }
+
+        function renderCustomers(customers) {
+            const body = document.getElementById('customer-list-body');
+            if (customers.length === 0) {
+                body.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:50px; color:#94a3b8;">๏ฟฝ๏ฟฝ่พบ๏ฟฝ๏ฟฝยช๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝูก๏ฟฝ๏ฟฝ๏ฟฝ</td></tr>';
+                return;
+            }
+
+            body.innerHTML = customers.map(c => {
+                const date = c.updatedAt ? (c.updatedAt.toDate ? c.updatedAt.toDate() : new Date(c.updatedAt)).toLocaleDateString('th-TH', {
+                    day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                }) : '๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝีข๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ';
+
+                const avatarContent = c.avatar 
+                    ? `<img src="${c.avatar}" alt="${c.name}">` 
+                    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b;font-weight:700;">${c.name ? c.name.charAt(0).toUpperCase() : '?'}</div>`;
+
+                return `
+                    <tr>
+                        <td data-label="๏ฟฝูป" class="customer-avatar-cell">
+                            <div class="customer-avatar">${avatarContent}</div>
+                        </td>
+                        <td data-label="๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ-๏ฟฝ๏ฟฝ๏ฟฝสก๏ฟฝ๏ฟฝ">
+                            <div class="customer-name">${c.name || '๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝะบุช๏ฟฝ๏ฟฝ๏ฟฝ'}</div>
+                        </td>
+                        <td data-label="๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ">
+                            <div class="customer-email">${c.email || '-'}</div>
+                        </td>
+                        <td data-label="๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝัพ๏ฟฝ๏ฟฝ">
+                            <div class="customer-phone">${c.phone || '-'}</div>
+                        </td>
+                        <td data-label="๏ฟฝ๏ฟฝัค๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝัน๏ฟฝ๏ฟฝ๏ฟฝ">
+                            <div class="join-date">${date}</div>
+                        </td>
+                        <td data-label="๏ฟฝัด๏ฟฝ๏ฟฝ๏ฟฝ" style="text-align: center;">
+                            <button onclick="(() => {
+                                const email = '${c.email || ''}';
+                                const targetId = (email && email !== '-' && email !== '๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝีข๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ๏ฟฝ') ? email : '${c.id}';
+                                window.location.href = 'seller-chat.html?id=' + encodeURIComponent(targetId);
+                            })()" 
+                                    style="background:#ee4d2d; color:#fff; border:none; padding:6px 15px; border-radius:8px; font-size:0.8rem; font-weight:600; cursor:pointer; transition: opacity 0.2s;"
+                                    onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                                ?? แชท
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterCustomers() {
+            const query = document.getElementById('customerSearch').value.toLowerCase();
+            const filtered = allCustomers.filter(c => 
+                (c.name && c.name.toLowerCase().includes(query)) ||
+                (c.email && c.email.toLowerCase().includes(query)) ||
+                (c.phone && c.phone.includes(query))
+            );
+            renderCustomers(filtered);
+        }
+
+        function toggleSellerMobileMenu(open) {
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            overlay.classList.toggle('active', open);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initLocalData();
+            loadCustomers();
+        });
+    </script>
+<script src="premium-alerts.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
