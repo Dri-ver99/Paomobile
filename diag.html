@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Global Firestore Data Scanner</title>
+    
+    
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.5; color: #333; }
+        .item { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+        .title { font-weight: bold; color: #ee4d2d; margin-bottom: 10px; display: block; border-bottom: 1px solid #eee; }
+        .data { white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; color: #555; background: #f9f9f9; padding: 10px; display: block; overflow-x: auto; }
+        .count { font-weight: bold; font-size: 1.2rem; margin: 10px 0; }
+        .error { color: #ff4d4f; }
+        .log { border-left: 4px solid #aaa; padding-left: 10px; font-size: 0.9rem; color: #777; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Global Firestore Data Scanner (Recovery Mode)</h2>
+    <div id="logArea"></div>
+    <div id="results"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+<script src="premium-alerts.js"></script>
+</body>
+</html>

@@ -1,0 +1,1995 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ŧ��������� - Paomobile</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
+            background-color: #f7f7f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: #111;
+        }
+
+        input, button, select, textarea {
+            font-family: inherit;
+        }
+
+        .login-card {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 480px;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: auto;
+            margin: 0 auto 32px auto;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: left;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+
+        .btn-social {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            border: 1px solid #e5e7eb;
+            background-color: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: background-color 0.2s;
+            font-family: inherit;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .divider:not(:empty)::before {
+            margin-right: 16px;
+        }
+
+        .divider:not(:empty)::after {
+            margin-left: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #111;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #111;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: #7fa9ee;
+        }
+
+        /* Registration Specific Styles */
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            color: #555;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-back:hover {
+            color: #111;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+            user-select: none;
+            z-index: 10;
+        }
+
+        .toggle-password:hover {
+            color: #64748b;
+        }
+
+        .toggle-password svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2;
+        }
+
+        .reg-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 26px;
+            font-weight: 700;
+            color: #1e293b;
+            white-space: nowrap;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .consent-group {
+            margin-bottom: 32px;
+            text-align: left;
+        }
+
+        .consent-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        .consent-item input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            margin-top: 1px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-color: #fff;
+            position: relative;
+        }
+
+        .consent-item input[type="checkbox"]:checked {
+            background-color: #fff;
+            border-color: #d1d5db;
+        }
+
+        .consent-item input[type="checkbox"]:checked::after {
+            content: '?';
+            position: absolute;
+            left: 5px;
+            top: -1px;
+            color: #4b5563;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .consent-item span a {
+            color: #7fa9ee;
+            text-decoration: underline;
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #7fa9ee;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 32px 24px;
+                box-shadow: none;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+        }
+
+        .auth-extra-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+        }
+
+        .auth-extra-links a {
+            font-size: 14px;
+            color: #7fa9ee !important;
+            text-decoration: underline !important;
+            font-weight: 500;
+        }
+
+        /* Forgot Password Specific Styles */
+        .forgot-pass-desc {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: #0b5edd;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 24px;
+            font-family: inherit;
+        }
+
+        .btn-link:hover {
+            color: #094db3;
+            text-decoration: underline;
+        }
+
+        /* Success View Styling */
+        #successView {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .success-icon {
+            width: 90px;
+            height: 90px;
+            background: #ecfdf5;
+            color: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+            animation: success-pulse 2s infinite;
+        }
+
+        @keyframes success-pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+            }
+
+            70% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 15px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .success-icon svg {
+            width: 50px;
+            height: 50px;
+        }
+
+        .success-icon svg polyline {
+            stroke-width: 4;
+            stroke-dasharray: 100;
+            animation: checkmark-draw 0.6s ease-in-out forwards;
+        }
+
+        @keyframes checkmark-draw {
+            from {
+                stroke-dashoffset: 100;
+                opacity: 0;
+            }
+
+            to {
+                stroke-dashoffset: 0;
+                opacity: 1;
+            }
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+
+        .success-text {
+            color: #64748b;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 32px;
+        }
+
+        .btn-continue {
+            width: 100%;
+            background: #cbd5e1;
+            /* Default inactive */
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: not-allowed;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-continue.active {
+            background: #0052cc;
+            cursor: pointer;
+        }
+
+        .btn-continue.active:hover {
+            background: #003d99;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 82, 204, 0.2);
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+            text-align: left;
+        }
+
+        .btn-success-finish {
+            width: 100%;
+            background: #0052cc;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-success-finish:hover {
+            background: #094db3;
+        }
+
+        /* Terms Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #fff;
+            width: 100%;
+            max-width: 700px;
+            max-height: 85vh;
+            border-radius: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            animation: modal-fade-in 0.3s ease-out;
+        }
+
+        @keyframes modal-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 24px 32px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+            color: #1e293b;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .modal-body {
+            padding: 32px;
+            overflow-y: auto;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #475569;
+            text-align: left;
+            scroll-behavior: smooth;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .modal-body h3 {
+            font-size: 17px;
+            font-weight: 700;
+            margin: 28px 0 12px 0;
+            color: #0f172a;
+            border-left: 4px solid #0052cc;
+            padding-left: 12px;
+        }
+
+        .modal-body p {
+            margin-bottom: 20px;
+        }
+
+        .modal-body h3:first-child {
+            margin-top: 0;
+        }
+
+        .modal-body b {
+            color: #1e293b;
+        }
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="db.js"></script>
+</head>
+
+<body>
+
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">���ѧ�����ż�...</div>
+    </div>
+
+    <div class="login-card">
+        <!-- Login View -->
+        <div id="loginView">
+            <a href="index.html">
+                <img src="logo.png" alt="Paomobile Logo" class="logo"
+                    onerror="this.onerror=null; this.src='https://placehold.co/80x80?text=Logo';">
+            </a>
+            <h1>ŧ���������</h1>
+            <p class="subtitle">ŧ����������������ҧ�ѭ�ռ����</p>
+
+            <!-- In-App Browser Guide -->
+            <div id="webviewNotice"
+                style="display: none; background: #fff9db; border: 1px solid #fcc419; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: left; font-size: 14px;">
+                <p>?? <b>����ͨӡѴ:</b> �ҡ�Դ��ҹ�ͻ (LINE/FB) �ô���͡ "�Դ���������������ѡ" ������ҹ Google
+                    Login</p>
+            </div>
+
+            <div id="loginFormArea">
+                <div class="input-group">
+                    <label>�����</label>
+                    <input type="email" id="emailInput" placeholder="�к�����ż����ҹ">
+                </div>
+                <div class="input-group" style="display: none;" id="passwordGroup">
+                    <label for="passwordInput">���ʼ�ҹ</label>
+                    <div style="position: relative;">
+                        <input type="password" id="passwordInput" placeholder="��������">
+                        <span class="toggle-password" data-target="passwordInput" title="�ʴ�/��͹���ʼ�ҹ">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                                </path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
+                <button class="btn-continue active" id="btnEmailLogin">���Թ��õ��</button>
+
+                <div class="auth-extra-links">
+                    <a id="btnShowCreateAccount" href="javascript:void(0)">���ҧ�ѭ��</a>
+                    <a id="btnForgotPassword" href="javascript:void(0)">������ʼ�ҹ?</a>
+                </div>
+
+                <div class="divider" style="margin-top: 32px;">����</div>
+
+                <button id="btnGoogleLogin" class="btn-social btn-google">
+                    <span class="social-icon" style="margin-right: 12px;">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo"
+                            width="24" height="24">
+                    </span>
+                    �������к����ºѭ�� Google
+                </button>
+
+                <a href="index.html" style="display: block; margin-top: 24px; color: #64748b; font-size: 14px;">
+                    ��Ѻ���˹����ѡ</a>
+            </div>
+        </div>
+
+        <!-- Registration View -->
+        <div id="registerView" style="display: none;">
+            <div class="card-header">
+                <button class="btn-back" id="btnBackToLogin">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+                <span class="reg-title">���ҧ�ѭ�մ��������</span>
+            </div>
+
+            <div class="input-group">
+                <label>�����</label>
+                <input type="email" id="regEmail" placeholder="�к����������Ѻ��Ѥ���Ҫԡ">
+                <div id="regEmailError" class="error-message">����Ź���ռ����ҹ����</div>
+                <div id="regEmailHint" class="error-message">*��س��к���������١��ͧ (�� Paomobile@gmail.com)</div>
+            </div>
+
+            <div class="input-group">
+                <label>���ʼ�ҹ</label>
+                <div class="password-input-wrapper">
+                    <input type="password" id="regPassword" placeholder="�к����ʼ�ҹ">
+                    <span class="toggle-password" data-target="regPassword">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                            </path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </span>
+                </div>
+                <div id="regPassHint" class="error-message">*���ʼ�ҹ��ͧ�� A-Z, a-z, 0-9 ������ҧ���� 8 ����ѡ��</div>
+            </div>
+
+            <div class="input-group">
+                <label>�׹�ѹ���ʼ�ҹ</label>
+                <div class="password-input-wrapper">
+                    <input type="password" id="regConfirmPassword" placeholder="�к��׹�ѹ���ʼ�ҹ">
+                    <span class="toggle-password" data-target="regConfirmPassword">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                            </path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+
+            <div class="consent-group">
+                <label class="consent-item">
+                    <input type="checkbox" id="checkTerms" required>
+                    <span>�ѹ����ҹ�������Ѻ <a href="javascript:void(0)" id="btnOpenTerms">��͡�˹�㹡�����ԡ��</a>
+                        �ͧ���</span>
+                </label>
+                <label class="consent-item">
+                    <input type="checkbox" id="checkMarketing" required>
+                    <span>�ѹʹ��Ѻ�����Ţ������ ��ǹŴ���������蹼�ҹ�ҧ�����</span>
+                </label>
+            </div>
+
+            <button class="btn-continue" id="btnContinueRegister" disabled>���ҧ�ѭ��</button>
+        </div>
+
+        <!-- Success / Verification View -->
+        <div id="successView" style="display: none;">
+            <div class="success-icon" id="successIcon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12" fill="none" style="stroke-dasharray: 100;"></polyline>
+                </svg>
+            </div>
+            <div class="success-icon" id="verifyIcon" style="display: none; background: #e0f2fe; color: #0ea5e9;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 17.002V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"></path>
+                    <path d="M5.45 5.11 12 12l6.55-6.89"></path>
+                    <path d="m15 19 2 2 4-4"></path>
+                </svg>
+            </div>
+
+            <h2 class="success-title" id="statusTitle">��س��׹�ѹ��ǵ�</h2>
+            <p class="success-text" id="statusText">
+                ���������駤��׹�ѹ��ǵ�价������Ţͧ�س����<br>�ô��ԡ��駤����������ҹ�ѭ�� Paomobile ���</p>
+
+            <div id="actionArea">
+                <button class="btn-success-finish" id="btnCheckVerify"
+                    style="background: #0ea5e9; margin-bottom: 12px; font-weight: 600;">
+                    ��ǨʶҹС���׹�ѹ
+                </button>
+                <button class="btn-success-finish" id="btnSuccessFinish" style="display: none;">
+                    价��˹����ѡ
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
+                <button class="btn-link" id="btnLogoutOnVerify"
+                    style="margin-top: 10px; font-size: 14px; color: #94a3b8;">�͡�ҡ�к�</button>
+            </div>
+
+            <div id="verifyArea" style="margin-top: 20px; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+                <p style="font-size: 14px; color: #64748b; margin-bottom: 8px;">�ѧ������Ѻ������׹�ѹ?</p>
+                <button class="btn-link" id="btnResendVerify"
+                    style="margin-top: 0; font-size: 15px; color: #0b5edd; font-weight: bold;">��������׹�ѹ�ա����</button>
+            </div>
+        </div>
+
+        <!-- Forgot Password View -->
+        <div id="forgotPasswordView" style="display: none;">
+            <div class="card-header">
+                <button class="btn-back" id="btnBackFromForgot">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+                <span class="reg-title">������ʼ�ҹ</span>
+            </div>
+
+            <p class="forgot-pass-desc">
+                Paomobile �зӡ�����ԧ�������ʼ�ҹ������ѧ����Ţͧ�س �����׹�ѹ��������Ңͧ�ѭ��
+            </p>
+
+            <div class="input-group">
+                <label>�����</label>
+                <input type="email" id="forgotIdentifier" placeholder="�к�����ŷ������Ѥ���Ҫԡ">
+                <div id="forgotError" class="error-message">��辺�ѭ�ռ����ҹ��к�</div>
+            </div>
+
+            <button class="btn-continue active" id="btnSendReset" style="margin-top: 24px;">�������׹�ѹ</button>
+
+            <button class="btn-link" id="lnkBackToLogin">�������к�</button>
+        </div>
+    </div>
+
+    <!-- Terms of Service Modal -->
+    <div id="termsModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>��͡�˹�㹡�����ԡ��</h2>
+                <button class="modal-close" id="btnCloseTerms">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h3>�Ҿ���</h3>
+                <p>���䫵�����Թ����� Paomobile ��ʹ������䫵� ����� ���Ҕ ��ǡ��Ҕ ��� ��ͧ��Ҕ ���¶֧
+                    Paomobile �� Paomobile �繼����ʹ����䫵��� ����֧������ ����ͧ���
+                    ��к�ԡ�÷������������������䫵������Ѻ�س ����繼����
+                    �������͹���Ҥس�е�ͧ����Ѻ��͡�˹� ���͹� ��º�� ��л�С�ȷ���������к��������</p>
+
+                <p>�����Ҫ����䫵�ͧ������/���ͫ����Թ��Һҧ���ҧ�ҡ��� ���¤�����Ҥس������� ���ԡ�Ô �ͧ���
+                    ��е�ŧ���л�ԺѵԵ����͡�˹�������͹䢵��仹�� (���͡�˹�㹡�����ԡ�Ô, ���͡�˹��)
+                    ����֧��͡�˹�������͹����������й�º�·����ҧ�ԧ㹷����
+                    ���/��������ö��Ҷ֧���ҹ�������ԧ�� ��͡�˹�㹡�����ԡ������ҹ���ռšѺ��������䫵�ء��
+                    ����֧�����ӡѴ��§������������������ �ǹ���� �١��� �����
+                    ���/���ͼ������ǹʹѺʹع������</p>
+
+                <p>�ô��ҹ��͡�˹�㹡�����ԡ������ҹ�����ҧ�����´��͹��Ҷ֧���������䫵�ͧ���
+                    �����Ҷ֧������ҹ��ǹ㴢ͧ���䫵����
+                    ���¤�����Ҥس��ŧ���л�ԺѵԵ����͡�˹�㹡�����ԡ������ҹ��
+                    �ҡ�س�����繴��¡Ѻ��͡�˹�������͹䢷������ͧ��͵�ŧ���
+                    �س���������ö��Ҷ֧���䫵��������ԡ���� �� �ҡ��͡�˹�㹡�����ԡ������ҹ�����繢���ʹ�
+                    �������Ѻ�ШӡѴ੾�Т�͡�˹�㹡�����ԡ������ҹ�����ҧ�Ѵ��</p>
+
+                <p>��������������ͧ�������㴡������������������ҹ��һѨ�غѹ�е�ͧ��仵����͡�˹�㹡�����ԡ�ô���
+                    �س����ö�٢�͡�˹�㹡�����ԡ�������ѹ����ش��ء����ͷ��˹�ҹ�� ��Ң�ʧǹ�Է���㹡���ѻവ
+                    ����¹�ŧ ����᷹�����ǹ���ǹ˹�觢ͧ��͡�˹�㹡�����ԡ������ҹ��
+                    �¡���ʵ����ѻവ���/���͡������¹�ŧ�����䫵�ͧ���
+                    �繤����Ѻ�Դ�ͺ�ͧ�س���е�ͧ��Ǩ�ͺ˹�ҹ�����������ʹ١������¹�ŧ
+                    ��÷��س�ѧ����ҹ������Ҷ֧���䫵�����ѧ�ҡ����ա���ʵ�������¹�ŧ��
+                    �ж���繡������Ѻ�������¹�ŧ����ҹ��</p>
+
+                <p>Paomobile
+                    �繼������ԡ���ŵ������դ��������͹�Ź����������������ö����Թ�����к�ԡ�âͧ������Ѻ�س��
+                </p>
+
+                <h3>��ǹ��� 1 - ��͡�˹�����ǡѺ��ҹ����͹�Ź�</h3>
+                <p>�������Ѻ��͡�˹�㹡�����ԡ������ҹ��
+                    ���¤�����Ҥس�Ѻ�ͧ��Ҥس�����غ���عԵ��������ҧ���µ��ࡳ���衮���¡�˹���Ѱ���ͨѧ��Ѵ���س���������
+                    ���ͤس�����غ���عԵ����е��ࡳ���衮���¡�˹���Ѱ���ͨѧ��Ѵ���س���������
+                    ��Фس�Թ���������͹حҵ����������㹤������Ţͧ�س����ö�����䫵�����</p>
+                <p>�س�������ö���Թ��Ңͧ��������ѵ�ػ��ʧ����Դ����������������Ѻ͹حҵ �����������Դ��������
+                    �ࢵ�ӹҨ��Ţͧ�س (����֧�����ӡѴ��§�������Ԣ�Է���) ������ԡ�ù��</p>
+                <p>�س�е�ͧ����觵������������������������� ������ѡɳз������ҧ</p>
+                <p>��ý�ҽ׹���͡������Դ��͡�˹��� ���觼�����ԡ�âͧ�س����شŧ�ѹ��</p>
+
+                <h3>��ǹ��� 2 - ���͹䢷����</h3>
+                <p>��Ң�ʧǹ�Է���㹡�û���ʸ�������ԡ����ؤ��㴡��������˵ؼ�㴡�����ء�����</p>
+                <p>�س������������Ңͧ�س (�������֧�����źѵ��ôԵ) �Ҩ�ա�ö����͹Ẻ�����������������ǹ� (�)
+                    ��ö����͹��ҹ���͢��µ�ҧ� ��� (�)
+                    �������¹�ŧ��������ʹ���ͧ��л�Ѻ�����ҡѺ��͡�˹��ҧ෤�Ԥ�ͧ���͢��������ػ�ó�����������
+                    �����źѵ��ôԵ���ա�������������������ҧ��ö����͹��ҹ���͢���</p>
+                <p>�س��ŧ�������ӡ�ü�Ե��� �ӫ�� �Ѵ�͡ ��� ��µ�� ���������ª��ҡ��ǹ���ǹ˹�觢ͧ��ԡ��
+                    ������ԡ�� ���͡����Ҷ֧��ԡ�����ͼ��Դ��ͺ����䫵��ҹ��ԡ�÷���ͺ���
+                    ��������Ѻ͹حҵ������ѡɳ��ѡ�èҡ������ҧ�Ѵ��</p>
+                <p>�������ͧ�����㹢�͵�ŧ����к�������ͤ����дǡ��ҹ�� ��Ш����ӡѴ�����觼š�з���
+                    ��͢�͡�˹�����ҹ��</p>
+
+                <h3>��ǹ��� 3 - �����١��ͧ ��������ó� ��Ф����繻Ѩ�غѹ�ͧ������</h3>
+                <p>�������Ѻ�Դ�ͺ�ҡ�����ź����䫵������١��ͧ �������ó� ��������繻Ѩ�غѹ
+                    �����Һ����䫵���Ѵ�Ӣ�������������ŷ������ҹ��
+                    �������þ�觾��������繢����ž�鹰ҹ��§���ҧ����㹡�õѴ�Թ�������֡�����觢�������ѡ���١��ͧ
+                    ����ó� �����繻Ѩ�غѹ���� �����ҧ�ԧ�����Һ����䫵������繤�������§�ͧ�س</p>
+                <p>���䫵����Ҩ�բ����źҧ��С�÷���繢������ʹյ
+                    �������ʹյ���������繢����ŻѨ�غѹ�������������繢�������ҧ�ԧ�ͧ�س��ҹ��
+                    ��Ң�ʧǹ�Է���㹡����������Һ����䫵�����ء�����
+                    �������������м١�ѹ���е�ͧ�ѻവ�������� �����䫵�ͧ���
+                    �س��ŧ����繤����Ѻ�Դ�ͺ�ͧ�س㹡�õ�Ǩ�ͺ�������¹�ŧ����Դ��鹺����䫵�ͧ���</p>
+
+                <h3>��ǹ��� 4 - ��û�Ѻ����¹��ԡ������Ҥ�</h3>
+                <p>�Ҥ��Թ��Ңͧ����Ҩ�ա������¹�ŧ������ͧ�����س��Һ</p>
+                <p>��Ң�ʧǹ�Է���㹡����������صԡ������ԡ�� (������ǹ���ǹ˹������������) ��ء�����
+                    ������ͧ�����س��Һ</p>
+                <p>��Ҩ�����Ѻ�Դ��ͤس���ͺؤ����¹͡����Ѻ��û�Ѻ����¹ �������¹�ŧ�Ҥ� ����ЧѺ
+                    ���͡���صԡ������ԡ��</p>
+
+                <h3>��ǹ��� 5 - �Թ������ͺ�ԡ�� (�ҡ��)</h3>
+                <p>�Թ������ͺ�ԡ�úҧ���ҧ�Ҩ�������˹������;��������ԡ��੾�Ъ�ͧ�ҧ�͹�Ź��ҹ���䫵���ҹ��
+                    �Թ������ͺ�ԡ������ҹ���Ҩ�ըӹǹ�ӡѴ �������ö�׹��������¹������º�¢ͧ�����ҹ��</p>
+                <p>��駹��
+                    ��Ҿ��������ҧ�����������ʴ�������ٻ�Ҿ�ͧ�Թ��ҷ���ҡ�����䫵����١��ͧ����ش��ҷ��������
+                    ����������ö�Ѻ��Сѹ����պ��ͤ���������ͧ�س���ʴ��Ŷ١��ͧ</p>
+                <p>��Ң�ʧǹ�Է��� ����������м١�ѹ㹡�èӡѴ��â���Թ������ͺ�ԡ�âͧ������Ѻ�ؤ��
+                    �����Ҥ�ҧ������ʵ�� ����ࢵ�ӹҨ����� ����Ҩ����Է���������¡ó�
+                    ��Ң�ʧǹ�Է���㹡�èӡѴ�ӹǹ�Թ������ͺ�ԡ���� �����ҹ��ʹ�
+                    ��͸Ժ���Թ������͡�á�˹��Ҥ��Թ��ҷ������Ҩ�ա������¹�ŧ��ء�����������ͧ�����س��Һ
+                    �¢������Ѻ���¾ԹԨ�ͧ�������§�������</p>
+
+                <h3>��ǹ��� 6 - �����١��ͧ�ͧ������¡���Թ��Т����źѭ��</h3>
+                <p>��Ң�ʧǹ�Է���㹡�û���ʸ����觫����� ���س�ӡѺ���
+                    ����Ҩ�ӡѴ����¡��ԡ�ӹǹ�Թ������ͺ�ԡ�÷���ա�ë��͵�ͤ� ��ͤ������͹ ���͵�ͤ���觫���
+                    �¢������Ѻ���¾ԹԨ�ͧ�������§�������</p>
+                <p>�س��ŧ�����������š�ë�����кѭ�շ���繻Ѩ�غѹ ����ó� ��ж١��ͧ����Ѻ��ë��ͷ��������ӡѺ���
+                    ��������������ö�Ӹ�á����ͧ�س�����������ó���еԴ��ͤس���ҡ����</p>
+
+                <h3>��ǹ��� 7 - ����ͧ��������</h3>
+                <p>����Ҩ����Է���س㹡����Ҷ֧����ͧ��ͧ͢�ؤ����¹͡ ������������Ǩ�ͺ �Ǻ��� ���ͻ�͹��������
+                    �س�Ѻ��Һ��е�ŧ����������Է�������Ҷ֧����ͧ��ʹѧ����� "��������" ��� "��������"
+                    ������ա���Ѻ��Сѹ��</p>
+
+                <h3>��ǹ��� 8 - �ԧ��ҡ�ؤ����¹͡</h3>
+                <p>������ �Թ��� ��к�ԡ�úҧ���ҧ���������ҹ��ԡ�âͧ����Ҩ�������Ҩҡ�ؤ����¹͡����������
+                    ��������˹�ҷ��㹡�õ�Ǩ�ͺ���ͻ����Թ���������ͤ����١��ͧ
+                    ����������Ѻ��Сѹ����Ѻ�������������䫵�ͧ�ؤ����¹͡����</p>
+
+                <h3>��ǹ��� 9 - �����Դ��繢ͧ����� ����ʹ��� ��С��������</h3>
+                <p>�ҡ�س�觺ҧ��觺ҧ���ҧ (�� �ŧҹ��һ�СǴ) ���¤�����Ҥس��ŧ����������ö��� �Ѵ�͡ �����
+                    �Ѵ��˹��� ���������Դ��繷��س��������������͵�ҧ� ��ء�����������բ�ͨӡѴ</p>
+
+                <h3>��ǹ��� 10 - ��������ǹ�ؤ��</h3>
+                <p>����觢�������ǹ�ؤ�Ţͧ�س��ҹ�ҧ˹�����䫵������������º�¤�������ǹ��Ǣͧ���</p>
+
+                <h3>��ǹ��� 11 - ��ͼԴ��Ҵ �������١��ͧ ��С�������</h3>
+                <p>�ҧ�����Ҩ�բ����ź����䫵�ͧ�������㹺�ԡ�÷���բ�ͼԴ��Ҵ��ҹ��þ���� �������١��ͧ
+                    ���͡������鹷���Ҩ����Ǣ�ͧ�Ѻ��͸Ժ���Թ��� ��á�˹��Ҥ� �����ѹ ����ʹ� ��ҨѴ���Թ���
+                    �������ҡ�â��� ��Ф��������㹡�è�˹�����������ԡ�� ��Ң�ʧǹ�Է���㹡����䢢�ͼԴ��Ҵ
+                    �������١��ͧ ���͡��������� ��Т�ʧǹ�Է���㹡������¹�ŧ�����ѻവ������
+                    ����¡��ԡ����觫����ҡ��������
+                    㹺�ԡ�����ͺ����䫵�������Ǣ�ͧ���١��ͧ��ء�����������ͧ������Һ��ǧ˹��</p>
+
+                <h3>��ǹ��� 12 - �����ҹ������͹حҵ</h3>
+                <p>�͡�˹�ͨҡ����������� �������к�㹢�͡�˹�㹡�����ԡ��
+                    �س������Ѻ͹حҵ��������䫵����������Ңͧ���䫵������ѵ�ػ��ʧ����Դ������
+                    ���ͪѡ�ǹ����������з���������ǹ����㹡Ԩ�������Դ������ ������������Դ��ͺѧ�Ѻ �� ������
+                    ���͢�ͺѭ�ѵ�㹷�ͧ����� �����дѺ�ҹҪҵ� �����дѺ�Ѱ��š�ҧ</p>
+
+                <h3>��ǹ��� 13 - ���ʧǹ�Է������Ѻ��Сѹ ��èӡѴ�����Ѻ�Դ</h3>
+                <p>�������Ѻ��Сѹ�����Ѻ�ͧ��ҡ�����ԡ�âͧ��Ҩ������ش�Чѡ �ѹ���� ��ʹ��� ���ͻ��Ȩҡ��ͼԴ��Ҵ
+                    �س��ŧ�ªѴ����ҡ���������������ö���ԡ����ͧ�س����繤�������§�ͧ�س����§�������</p>
+
+                <h3>��ǹ��� 14 - ��ê������Թ�����᷹</h3>
+                <p>�س��ŧ���Ъ��� ����ͧ ��ж����� Paomobile ��к���ѷ��� ����ѷ�����
+                    �������ǹ�Ѻ�Դ��͡�����¡��ͧ���ͤ�����ͧ�����
+                    ����֧��ҷ��¤���������˵����ŷ���Դ��鹨ҡ�ؤ����¹͡
+                    �ѹ���ͧ�Ҩҡ�����Դ��鹨ҡ��ý�ҽ׹��͡�˹�㹡�����ԡ������ҹ��</p>
+
+                <h3>��ǹ��� 15 - ����¡�͡�ҡ�ѹ��ͧ��͡�˹�</h3>
+                <p>㹡óշ���ա�þԨ�óҢ�͡�˹��� �ͧ��͡�˹�㹡�����ԡ������ҹ������繡�á�зӷ��Դ������
+                    ������ �����������ö�ѧ�Ѻ����
+                    ��͡�˹��ѧ����Ǩ��ѧ������ö�ѧ�Ѻ��������������衮���·������Ǣ�ͧ͹حҵ</p>
+
+                <h3>��ǹ��� 16 - �������ش�ѭ��</h3>
+                <p>��ͼ١�ѹ��Ф����Ѻ�Դ�ͧ���µ�ҧ�
+                    ����Դ��鹡�͹�ѹ�������ش�ѭ�Ҩ��ѧ���ռźѧ�Ѻ���������͵�ŧ��������شŧ
+                    �����ѵ�ػ��ʧ�������
+                    �¢�͡�˹�㹡�����ԡ������ҹ����ռźѧ�Ѻ�騹���Ҩ��ա�����ص��¤س�������</p>
+
+                <h3>��ǹ��� 17 - ��͵�ŧ������</h3>
+                <p>��͡�˹�㹡�����ԡ������ҹ����й�º�����͡���ô��Թ�ҹ�� �������ʵ���麹���䫵���
+                    ����繢�͵�ŧ��Ф������㨷����������ҧ�س�Ѻ���</p>
+
+                <h3>��ǹ��� 18 - �����·��ѧ�Ѻ��</h3>
+                <p>��͡�˹�㹡�����ԡ������ҹ����Т�͵�ŧ�¡��ҧ�ҡ��
+                    �������Ǣ�ͧ�Ѻ��ԡ�÷������ͺ���س�������������еդ�����������¢ͧ�������</p>
+
+                <h3>��ǹ��� 19 - �������¹�ŧ��͡�˹�㹡�����ԡ��</h3>
+                <p>�س����ö�٢�͡�˹�㹡�����ԡ�������ѹ����ش��ء����ͷ��˹�ҹ�� ��Ң�ʧǹ�Է���㹡���ѻവ
+                    ����¹�ŧ ����᷹�����ǹ���ǹ˹�觢ͧ��͡�˹�㹡�����ԡ������ҹ��</p>
+
+                <h3>��ǹ��� 20 - �����ŵԴ���</h3>
+                <p>�ô�觤Ӷ������ǡѺ��͡�˹�㹡�����ԡ�ö֧��ҷ�� <b>paomobile@gmail.com</b></p>
+                <p><b>Paomobile Official</b><br>
+                    �����: paomobile@gmail.com<br>
+                    ���䫵�: www.paomobile.com<br>
+                    ��: 0xx-xxx-xxxx</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Interactivity Script (Standard - Works on local file://) -->
+    <script>
+        // --- UI State & Transitions ---
+        function initExtraActions() {
+            console.log("[UI] Initializing view transitions and validation...");
+
+            const showCreateBtn = document.getElementById("btnShowCreateAccount");
+            if (showCreateBtn) {
+                showCreateBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    console.log("[UI] Switching to Register View");
+
+                    // Sync identifier from login to register
+                    const loginVal = document.getElementById("emailInput").value.trim();
+                    if (loginVal) {
+                        document.getElementById("regEmail").value = loginVal;
+                        // Trigger validation on the new field
+                        const event = new Event('input', { bubbles: true });
+                        document.getElementById("regEmail").dispatchEvent(event);
+                    }
+
+                    document.getElementById("loginView").style.display = "none";
+                    document.getElementById("registerView").style.display = "block";
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            const backBtn = document.getElementById("btnBackToLogin");
+            if (backBtn) {
+                backBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    console.log("[UI] Returning to Login View");
+
+                    // Sync identifier from register back to login
+                    const regVal = document.getElementById("regEmail").value.trim();
+                    if (regVal) {
+                        document.getElementById("emailInput").value = regVal;
+                    }
+
+                    document.getElementById("registerView").style.display = "none";
+                    document.getElementById("loginView").style.display = "block";
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            const checkVerifyBtn = document.getElementById("btnCheckVerify");
+            if (checkVerifyBtn) {
+                checkVerifyBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    console.log("[UI] Checking verification status...");
+                    if (window.checkVerificationState) {
+                        window.checkVerificationState();
+                    }
+                });
+            }
+
+            const logoutVerifyBtn = document.getElementById("btnLogoutOnVerify");
+            if (logoutVerifyBtn) {
+                logoutVerifyBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    console.log("[UI] Logout from verification requested.");
+                    if (window.handleForceLogout) {
+                        window.handleForceLogout();
+                    } else {
+                        window.location.reload();
+                    }
+                });
+            }
+
+            // --- Terms Modal Logic ---
+            const termsModal = document.getElementById("termsModal");
+            const btnOpenTerms = document.getElementById("btnOpenTerms");
+            const btnCloseTerms = document.getElementById("btnCloseTerms");
+
+            if (btnOpenTerms && termsModal) {
+                btnOpenTerms.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Prevent label click
+                    termsModal.style.display = "flex";
+                });
+            }
+
+            if (btnCloseTerms && termsModal) {
+                btnCloseTerms.addEventListener("click", function () {
+                    termsModal.style.display = "none";
+                });
+            }
+
+            if (termsModal) {
+                termsModal.addEventListener("click", function (e) {
+                    if (e.target === termsModal) {
+                        termsModal.style.display = "none";
+                    }
+                });
+            }
+
+            const successFinishBtn = document.getElementById("btnSuccessFinish");
+            if (successFinishBtn) {
+                successFinishBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    console.log("[UI] Success complete. Redirecting to Home.");
+                    if (window.finishLoginWithUser) {
+                        window.finishLoginWithUser();
+                    } else {
+                        window.location.replace("index.html");
+                    }
+                });
+            }
+
+            const resendVerifyBtn = document.getElementById("btnResendVerify");
+            if (resendVerifyBtn) {
+                resendVerifyBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    console.log("[UI] Requesting verification email...");
+                    if (window.sendVerificationEmail) {
+                        window.sendVerificationEmail();
+                    }
+                });
+            }
+
+            const forgotPassBtn = document.getElementById("btnForgotPassword");
+            if (forgotPassBtn) {
+                forgotPassBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    console.log("[UI] Switching to Forgot Password View");
+
+                    // Sync identifier
+                    const loginVal = document.getElementById("emailInput").value.trim();
+                    if (loginVal) {
+                        document.getElementById("forgotIdentifier").value = loginVal;
+                    }
+
+                    document.getElementById("loginView").style.display = "none";
+                    document.getElementById("forgotPasswordView").style.display = "block";
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            const backFromForgotBtn = document.getElementById("btnBackFromForgot");
+            const lnkBackToLogin = document.getElementById("lnkBackToLogin");
+            [backFromForgotBtn, lnkBackToLogin].forEach(btn => {
+                if (btn) {
+                    btn.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        console.log("[UI] Returning to Login from Forgot Password");
+
+                        const forgotVal = document.getElementById("forgotIdentifier").value.trim();
+                        if (forgotVal) {
+                            document.getElementById("emailInput").value = forgotVal;
+                        }
+
+                        document.getElementById("forgotPasswordView").style.display = "none";
+                        document.getElementById("loginView").style.display = "block";
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                }
+            });
+
+            // --- Registration Logic & Validation ---
+            const regEmail = document.getElementById("regEmail");
+            const regPassword = document.getElementById("regPassword");
+            const regConfirmPassword = document.getElementById("regConfirmPassword");
+            const regPhone = document.getElementById("regPhone");
+            const checkTerms = document.getElementById("checkTerms");
+            const checkMarketing = document.getElementById("checkMarketing");
+            const regBtn = document.getElementById("btnContinueRegister");
+            const emailError = document.getElementById("regEmailError");
+            const emailHint = document.getElementById("regEmailHint");
+            const passHint = document.getElementById("regPassHint");
+
+            let isEmailAvailable = true;
+            let emailDebounceTimer;
+
+            function validateForm() {
+                if (!regEmail || !regPassword || !regBtn) return;
+
+                const identifier = regEmail.value.trim();
+                const pass = regPassword.value;
+                const confirmPass = regConfirmPassword.value;
+
+                // 1. Password Complexity Check (Allow symbols)
+                const hasUpper = /[A-Z]/.test(pass);
+                const hasLower = /[a-z]/.test(pass);
+                const hasNumber = /[0-9]/.test(pass);
+                const validChars = /^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]*$/.test(pass);
+                const isLongEnough = pass.length >= 8;
+                const isPassValid = hasUpper && hasLower && hasNumber && validChars && isLongEnough;
+
+                // 2. Confirm Password Match
+                const isMatch = pass === confirmPass && pass !== "";
+
+                // 3. Identifier Check (Email Only)
+                const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+                const isIdentifierValid = isEmailFormatValid && isEmailAvailable;
+
+                // 4. Checkboxes (Only Terms is REQUIRED)
+                const isChecked = (checkTerms && checkTerms.checked) && (checkMarketing && checkMarketing.checked);
+
+                // Toggle Hints
+                if (identifier.length > 0 && !isEmailFormatValid) {
+                    if (emailHint) emailHint.style.display = "block";
+                } else {
+                    if (emailHint) emailHint.style.display = "none";
+                }
+
+                if (pass.length > 0 && !isPassValid) {
+                    if (passHint) passHint.style.display = "block";
+                } else {
+                    if (passHint) passHint.style.display = "none";
+                }
+
+                if (isPassValid && isMatch && isIdentifierValid && isChecked) {
+                    regBtn.classList.add("active");
+                    regBtn.disabled = false;
+                } else {
+                    regBtn.classList.remove("active");
+                    regBtn.disabled = true;
+                }
+            }
+
+            // Run once to initialize hints state
+            validateForm();
+
+            // Email Availability Check (Debounced)
+            if (regEmail) {
+                regEmail.addEventListener("input", () => {
+                    let identifier = regEmail.value.trim();
+                    // Real-time normalization
+                    identifier = identifier.toLowerCase();
+
+                    if (emailError) emailError.style.display = "none";
+                    isEmailAvailable = true;
+
+                    clearTimeout(emailDebounceTimer);
+
+                    const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+
+                    if (isEmailFormatValid) {
+                        emailDebounceTimer = setTimeout(() => {
+                            if (window.checkIdentifierExists) {
+                                window.checkIdentifierExists(identifier).then(res => {
+                                    if (res.exists) {
+                                        if (emailError) emailError.style.display = "block";
+                                        isEmailAvailable = false;
+                                    } else {
+                                        isEmailAvailable = true;
+                                    }
+                                    validateForm();
+                                });
+                            }
+                        }, 500);
+                    }
+                    validateForm();
+                });
+            }
+
+            [regPassword, regConfirmPassword, checkTerms, checkMarketing].forEach(el => {
+                if (el) {
+                    el.addEventListener("input", validateForm);
+                    if (el.type === "checkbox") el.addEventListener("change", validateForm);
+                }
+            });
+
+            initPasswordVisibility();
+            initForgotPasswordLogic();
+        }
+
+        function initForgotPasswordLogic() {
+            const btnSendReset = document.getElementById("btnSendReset");
+            const forgotIdentifier = document.getElementById("forgotIdentifier");
+            const forgotError = document.getElementById("forgotError");
+
+            if (btnSendReset) {
+                btnSendReset.addEventListener("click", async () => {
+                    const identifier = forgotIdentifier.value.trim();
+                    if (!identifier) {
+                        alert("��س��к�����������������Ѿ���Ѻ");
+                        return;
+                    }
+
+                    if (window.sendResetEmailAction) {
+                        window.sendResetEmailAction(identifier);
+                    } else {
+                        alert("�к����ѧ�������͡Ѻ��������� ��س����ѡ���������ͧ�����Ѻ (Authentication module not ready)");
+                        console.error("[Auth] sendResetEmailAction not found");
+                    }
+                });
+
+                forgotIdentifier.addEventListener("keypress", (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        btnSendReset.click();
+                    }
+                });
+            }
+        }
+
+        function initPasswordVisibility() {
+            // Password Visibility Toggle
+            const eyeIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            const eyeOffIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+            document.querySelectorAll(".toggle-password").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const targetId = this.getAttribute("data-target");
+                    const input = document.getElementById(targetId);
+                    if (!input) return;
+                    if (input.type === "password") {
+                        input.type = "text";
+                        this.innerHTML = eyeIcon;
+                    } else {
+                        input.type = "password";
+                        this.innerHTML = eyeOffIcon;
+                    }
+                });
+            });
+        }
+
+        // Initialize UI immediately
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initExtraActions);
+        } else {
+            initExtraActions();
+        }
+
+    </script>
+
+    <!-- Firebase SDK Implementation (Module) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getAuth, signInWithRedirect, signInWithPopup, getRedirectResult, GoogleAuthProvider, fetchSignInMethodsForEmail, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, query, collection, where, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+        // Inlined Config for reliability on local files
+        const firebaseConfig = {
+            apiKey: "AIzaSyBAGDBKRUPTmp4RCMao2mnXfgfQmIp54to",
+            authDomain: "paomobile-85e39.firebaseapp.com",
+            projectId: "paomobile-85e39",
+            storageBucket: "paomobile-85e39.firebasestorage.app",
+            messagingSenderId: "844151679424",
+            appId: "1:844151679424:web:0cfd6f491b79cd175ec025",
+            measurementId: "G-BZYNZ9B9LQ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // IMPROVED: Returns {exists: boolean, email?: string}
+        window.checkIdentifierExists = async (rawIdentifier) => {
+            console.log("[Auth] Checking existence for:", rawIdentifier);
+            const identifier = normalizeIdentifier(rawIdentifier);
+            const isEmail = identifier.includes("@");
+
+            try {
+                // 1. Check Firestore first (Universal Lookup)
+                let querySnapshot;
+                try {
+                    const q = query(
+                        collection(db, "users"),
+                        where(isEmail ? "email" : "phone", "==", identifier)
+                    );
+                    // Add timeout for getDocs to prevent hanging UI
+                    querySnapshot = await Promise.race([
+                        getDocs(q),
+                        new Promise((_, rec) => setTimeout(() => rec(new Error("Timeout")), 5000))
+                    ]);
+                } catch (firestoreErr) {
+                    console.warn("[Auth] Firestore query failed/slow:", firestoreErr.message);
+                    querySnapshot = { empty: true };
+                }
+
+                if (!querySnapshot.empty) {
+                    const userData = querySnapshot.docs[0].data();
+                    console.log("[Auth] Found in Firestore:", userData);
+                    let resolvedEmail = userData.email || (isEmail ? identifier : `${identifier}@paomobile.auth`);
+                    return { exists: true, email: resolvedEmail };
+                }
+
+                // 2. Fallback to direct Firebase Auth (Enumeration Protection may block this)
+                if (isEmail) {
+                    try {
+                        const methods = await fetchSignInMethodsForEmail(auth, identifier);
+                        if (methods.length > 0) return { exists: true, email: identifier };
+                    } catch (e) {
+                         console.warn("[Auth] fetchSignInMethods failed (Normal for new projects):", e.code);
+                    }
+                }
+
+                return { exists: false };
+            } catch (e) {
+                console.warn("[Auth] Identifier check error:", e);
+                return { exists: false };
+            }
+        };
+
+        // --- Resilience State ---
+        let isNavigating = false;
+        let isCheckingRedirect = true;
+        let isRegistering = false;
+        let verificationInterval;
+
+        const overlay = document.getElementById('loadingOverlay');
+        const showLoading = (reason = "") => {
+            console.log("[Auth] showLoading called. Reason:", reason);
+            if (overlay) overlay.style.display = 'flex';
+        };
+        const hideLoading = (force = false, reason = "") => {
+            console.log("[Auth] hideLoading called. Force:", force, "Reason:", reason);
+            if (isNavigating && !force) {
+                console.warn("[Auth] hideLoading BLOCKED by isNavigating (Reason: " + reason + ")");
+                return;
+            }
+            if (overlay) overlay.style.display = 'none';
+        };
+
+        window.transitionToVerification = (name) => {
+            console.log("[Auth] ---> transitionToVerification triggered for:", name);
+            isRegistering = true;
+
+            const loginView = document.getElementById("loginView");
+            const registerView = document.getElementById("registerView");
+            const successView = document.getElementById("successView");
+
+            if (loginView) loginView.style.display = "none";
+            if (registerView) registerView.style.display = "none";
+            if (successView) {
+                successView.style.display = "block";
+
+                // Check if user is already verified (e.g. Google users)
+                const user = (await supabase.auth.getSession()).data.session?.user;
+                if (user && user.emailVerified) {
+                    updateUIForVerified(name);
+                } else {
+                    updateUIForUnverified();
+                    startVerificationCheck(); // Start auto-reloading
+                }
+            }
+
+            hideLoading(true, "Success view transition");
+
+            window.finishLoginWithUser = () => {
+                console.log("[Auth] finishLoginWithUser called manually");
+                isRegistering = false;
+                isNavigating = false;
+                finishLogin(name);
+            };
+        };
+
+        function updateUIForVerified(name) {
+            document.getElementById("successIcon").style.display = "flex";
+            document.getElementById("verifyIcon").style.display = "none";
+            document.getElementById("statusTitle").textContent = "��Ѥ��������";
+            document.getElementById("statusText").innerHTML = `�Թ�մ��¤��! �ѭ�� ${name} �ͧ�س<br>�������ҹ���º�������Ǥ��`;
+            document.getElementById("btnCheckVerify").style.display = "none";
+            document.getElementById("btnSuccessFinish").style.display = "block";
+            document.getElementById("verifyArea").style.display = "none";
+
+            // Sync verified status to local session
+            const userDataStr = localStorage.getItem('paomobile_user');
+            if (userDataStr) {
+                const userData = JSON.parse(userDataStr);
+                userData.isVerified = true;
+                localStorage.setItem('paomobile_user', JSON.stringify(userData));
+                console.log("[Auth] Local session sync: Marked as verified");
+            }
+
+            // Removed auto-redirect to allow user to see success state
+            console.log("[Auth] Verification successful. Success view is active.");
+        }
+
+        function updateUIForUnverified() {
+            document.getElementById("successIcon").style.display = "none";
+            document.getElementById("verifyIcon").style.display = "flex";
+            document.getElementById("statusTitle").textContent = "��س��׹�ѹ�����";
+            const user = (await supabase.auth.getSession()).data.session?.user;
+            const emailStr = user ? user.email : "����Ţͧ�س";
+            document.getElementById("statusText").innerHTML = `��������ԧ���׹�ѹ价�� <b>${emailStr}</b> ���º�������Ǥ��<br>��سҤ�ԡ�ԧ�������������Դ��ҹ�ѭ�դ��`;
+            document.getElementById("btnCheckVerify").style.display = "block";
+            document.getElementById("btnSuccessFinish").style.display = "none";
+            document.getElementById("verifyArea").style.display = "block";
+        }
+
+        let lastEmailSentTime = 0;
+        const RESEND_COOLDOWN = 60000; // Increased to 60 seconds to match Firebase
+
+        window.checkVerificationState = async (auto = false) => {
+            const user = (await supabase.auth.getSession()).data.session?.user;
+            if (!user) return;
+
+            if (!auto) {
+                showLoading("Checking status...");
+            }
+
+            await user.reload();
+            if (user.emailVerified) {
+                console.log("[Auth] User is now verified!");
+                if (verificationInterval) clearInterval(verificationInterval);
+                updateUIForVerified(user.displayName || user.email.split('@')[0]);
+                if (!auto) hideLoading(true, "Verified");
+            } else {
+                if (!auto) {
+                    console.log("[Auth] Still unverified.");
+                    alert("�����¤�Ѻ �ѭ�բͧ�س�ѧ������Ѻ����׹�ѹ��Ѻ ú�ǹ��Ǩ�ͺ�ԧ���������ա���駹Ф�Ѻ\n\n(�ҡ��辺㹡��ͧ����� ��س��ͧ��� '�����¢��', '�ѧ���' ���� '�����ѹ' �ٹФ�Ѻ)");
+                    hideLoading(true, "Still unverified");
+                }
+            }
+        };
+
+        function startResendCountdown() {
+            const btn = document.getElementById("btnResendVerify");
+            if (!btn) return;
+
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+            btn.style.cursor = "not-allowed";
+
+            const updateBtn = () => {
+                const now = Date.now();
+                const remaining = Math.ceil((RESEND_COOLDOWN - (now - lastEmailSentTime)) / 1000);
+
+                if (remaining > 0) {
+                    btn.textContent = `(${remaining})`;
+                    setTimeout(updateBtn, 1000);
+                } else {
+                    btn.disabled = false;
+                    btn.style.opacity = "1";
+                    btn.style.cursor = "pointer";
+                    btn.textContent = "��������׹�ѹ�ա����";
+                }
+            };
+
+            updateBtn();
+        }
+
+        function startVerificationCheck() {
+            if (verificationInterval) clearInterval(verificationInterval);
+            verificationInterval = setInterval(() => {
+                const successView = document.getElementById("successView");
+                if (successView && successView.style.display === "block") {
+                    window.checkVerificationState(true);
+                } else {
+                    clearInterval(verificationInterval);
+                }
+            }, 3000);
+        }
+
+        window.handleForceLogout = async () => {
+            showLoading("Signing out...");
+            try {
+                if (verificationInterval) clearInterval(verificationInterval);
+                await auth.signOut();
+                localStorage.clear();
+                window.location.replace("index.html");
+            } catch (err) {
+                console.error("Logout error:", err);
+                window.location.replace("index.html");
+            }
+        };
+
+        // --- Action Bindings ---
+        window.sendResetEmailAction = async (rawIdentifier) => {
+            showLoading("Sending reset email");
+            const errEl = document.getElementById("forgotError");
+            if (errEl) errEl.style.display = "none";
+
+            try {
+                const res = await window.checkIdentifierExists(rawIdentifier);
+                if (!res.exists) {
+                    if (errEl) errEl.style.display = "block";
+                    hideLoading(true, "Identifier not found");
+                    return;
+                }
+
+                const targetEmail = res.email;
+                const isPhone = /^[0-9]{10}$/.test(rawIdentifier);
+                console.log("[Auth] Triggering Firebase Reset for:", targetEmail, "(isPhone:", isPhone, ")");
+
+                await supabase.auth.resetPasswordForEmail(targetEmail);
+                console.log("[Auth] Firebase Success: Reset email sent.");
+
+                if (isPhone) {
+                    alert("��������ԧ������Ѻ������ʼ�ҹ��������س�ҧ SMS ���º�������Ǥ�Ѻ ��سҵ�Ǩ�ͺ��д��Թ��õ����鹵͹");
+                } else {
+                    alert("��������ԧ������Ѻ������ʼ�ҹ��������س�ҧ��������º�������Ǥ�Ѻ\n\n(�ҡ��辺㹡��ͧ����� ��س��ͧ���˹�� '�����¢�� (Spam)', '�ѧ���' ���� '�����ѹ' �ٹФ�Ѻ)");
+                }
+
+                // Return to login
+                document.getElementById("forgotPasswordView").style.display = "none";
+                document.getElementById("loginView").style.display = "block";
+
+            } catch (error) {
+                console.error("[Auth] Reset error:", error);
+                alert("�Դ��ͼԴ��Ҵ: " + error.message);
+            } finally {
+                hideLoading(true, "Reset complete");
+            }
+        };
+
+        // --- Verification Email Action ---
+        window.sendVerificationEmail = async () => {
+            const user = (await supabase.auth.getSession()).data.session?.user;
+            if (!user) {
+                alert("��س��������к���͹���׹�ѹ�ѭ�դ�Ѻ");
+                return;
+            }
+
+            if (user.email.endsWith('@paomobile.auth')) {
+                alert("�������ö��������׹�ѹ����Ѻ�ѭ�շ����Ѥô����������Ѿ�����Ѻ");
+                return;
+            }
+
+            const now = Date.now();
+            if (now - lastEmailSentTime < RESEND_COOLDOWN) {
+                const timeToWait = Math.ceil((RESEND_COOLDOWN - (now - lastEmailSentTime)) / 1000);
+                alert(`��س��ͧ������ա ${timeToWait} �Թҷդ��`);
+                return;
+            }
+
+            showLoading("Sending verification email");
+            try {
+                await sendEmailVerification(user);
+                lastEmailSentTime = Date.now();
+                startResendCountdown();
+                alert("��������ԧ���׹�ѹ�ѭ������س�ա�������Ǥ�Ѻ ��سҵ�Ǩ�ͺ㹡��ͧ������ (�����˹�� '�����¢��', '�ѧ���' ���� '�����ѹ') �Ф�Ѻ");
+            } catch (error) {
+                console.error("[Auth] Verification error:", error);
+                if (error.code === 'auth/too-many-requests') {
+                    lastEmailSentTime = Date.now(); // Reset timer to force wait
+                    startResendCountdown();
+                    alert("�к���������׹�ѹ���Ǥ����Թ�մ�ӡѴ���Ǥ�Ѻ ��س��ͻ���ҳ 60 �Թҷյ������Ţ������ ���Ǥ��¡��׹�ѹ�����ա���駹Ф�Ѻ");
+                } else {
+                    alert("�Դ��ͼԴ��Ҵ: " + error.message);
+                }
+            } finally {
+                hideLoading(true, "Verification complete");
+            }
+        };
+
+        // --- WebView Detection ---
+        function detectRestrictedBrowser() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const isRestricted = /Line|FBAN|FBAV|Instagram|Messenger|WhatsApp|FB_IAB|FBSS/i.test(ua);
+
+            if (isRestricted) {
+                console.warn("[Auth] Restricted WebView detected:", ua);
+                const notice = document.getElementById('webviewNotice');
+                if (notice) notice.style.display = 'block';
+
+                const formArea = document.getElementById('loginFormArea');
+                if (formArea) formArea.style.opacity = '0.7';
+                return true;
+            }
+            return false;
+        }
+
+        // --- Normalization Helper ---
+        function normalizeIdentifier(val) {
+            const trimmed = val.trim();
+            if (trimmed.includes("@")) return trimmed.toLowerCase();
+            // Remove all non-digits for phone numbers
+            return trimmed.replace(/\D/g, "");
+        }
+
+        // --- Auth Initializer (Sequenced Flow) ---
+        async function initAuth() {
+            if (!auth) return;
+
+            // 1. Handle actual logout request (Wait for it to finish)
+            if (localStorage.getItem('pao_logout_pending')) {
+                console.log("[Auth] Logout signal detected. Forcing signOut...");
+                showLoading(); // Ensure spinner is up
+                await auth.signOut();
+                localStorage.removeItem('pao_logout_pending');
+                console.log("[Auth] Cloud sign-out complete.");
+                hideLoading();
+            }
+
+            // 2. Check for Google Redirect Result
+            await checkRedirectResult();
+
+            // 3. Release redirect lock (Observer can now handle UI)
+            isCheckingRedirect = false;
+            console.log("[Auth] Redirect check finished. Observer active.");
+        }
+
+        // --- Start the flow ---
+        detectRestrictedBrowser();
+        initAuth();
+
+        // --- Observer (The persistent sentry) ---
+        onAuthStateChanged(auth, async (user) => {
+            console.log("[Auth] Observer: State changed. Registering:", isRegistering, "Navigating:", isNavigating);
+            if (isCheckingRedirect || isRegistering) {
+                console.log("[Auth] Observer: BLOCKED (Redirect check or Registering)");
+                return;
+            }
+
+            if (user && !isNavigating) {
+                console.log("[Auth] State: IN -> Initializing session for:", user.email, "Verified:", user.emailVerified);
+
+                if (!user.emailVerified && !(user.email || '').endsWith('@paomobile.auth') && !user.providerData.some(p => p.providerId === 'google.com')) {
+                    console.log("[Auth] User not verified. Forcing Verification View.");
+                    window.transitionToVerification(user.displayName || user.email.split('@')[0]);
+                    return;
+                }
+
+                await saveUserToFirestore(user, 'state_change');
+
+                // Only redirect if we are STILL on the login page
+                if (window.location.pathname.endsWith('login.html')) {
+                    finishLogin(user.displayName || user.email.split('@')[0]);
+                }
+            } else {
+                console.log("[Auth] State: OUT");
+                hideLoading();
+            }
+        });
+
+        // Check result of redirect sign-in
+        async function checkRedirectResult() {
+            try {
+                const result = await getRedirectResult(auth);
+                if (result && result.user) {
+                    console.log("[Auth] Redirect Success:", result.user.email);
+                    await saveUserToFirestore(result.user, 'google_redirect');
+                    finishLogin(result.user.displayName || result.user.email.split('@')[0]);
+                }
+            } catch (error) {
+                console.error("[Auth] Redirect Failure:", error);
+                hideLoading();
+            }
+        }
+
+        // Final Redirection Sequence (With Lock)
+        async function finishLogin(name) {
+            console.log("[Auth] finishLogin check triggered for:", name);
+            if (isNavigating && (!overlay || overlay.style.display !== 'flex')) {
+                console.warn("[Auth] finishLogin BLOCKED: Already navigating");
+                return;
+            }
+
+            const user = (await supabase.auth.getSession()).data.session?.user;
+            // CRITICAL: Block finish if not verified (unless phone/google)
+            if (user && !user.emailVerified && !(user.email || '').endsWith('@paomobile.auth') && !user.providerData.some(p => p.providerId === 'google.com')) {
+                console.warn("[Auth] finishLogin BLOCKED: Email not verified");
+                isNavigating = false;
+                hideLoading();
+                window.transitionToVerification(name || user.displayName || user.email.split('@')[0]);
+                return;
+            }
+
+            isNavigating = true;
+            showLoading("finishLogin init");
+
+            if (!localStorage.getItem('paomobile_user')) {
+                if (user) {
+                    console.log("[Auth] Initializing session data...");
+                    await saveUserToFirestore(user, 'recovery');
+                }
+            }
+
+            await wait(800);
+            
+            // v1.3.2 - Support redirect after login (e.g., from QR redeem)
+            const redirectUrl = localStorage.getItem('redirect_after_login');
+            if (redirectUrl) {
+                localStorage.removeItem('redirect_after_login');
+                window.location.replace(redirectUrl);
+            } else {
+                window.location.replace("index.html");
+            }
+        }
+
+        // --- Save user data to Firestore (Version 1.6.1 - Non-blocking UI) ---
+        async function saveUserToFirestore(user, provider) {
+            console.log("[Auth] Syncing profile with Cloud...");
+
+            let finalName = user.displayName || 'Member';
+            let finalAvatar = user.photoURL || "";
+
+            // 1. Prepare local userData immediately (Don't wait for Firestore)
+            let email = user.email || '';
+            if (email.endsWith('@paomobile.auth')) {
+                email = email.split('@')[0]; 
+                if (finalName === 'Member' || finalName === user.email) finalName = email; 
+            } else if (finalName === 'Member' && email) {
+                finalName = email.split('@')[0];
+            }
+
+            const userData = {
+                uid: user.uid,
+                name: finalName,
+                email: email,
+                avatar: finalAvatar,
+                photo: finalAvatar,
+                isVerified: !!(user.emailVerified || provider.includes('google'))
+            };
+
+            // Save to local session IMMEDIATELY so app feels fast
+            localStorage.setItem('paomobile_user', JSON.stringify(userData));
+
+            // 2. Background Firestore update (Don't await it to block logic, unless you really need existing data)
+            if (db) {
+                const userRef = doc(db, "users", user.uid);
+                // We use Doc Fetch in background
+                getDoc(userRef).then(snap => {
+                    if (snap.exists()) {
+                        const existing = snap.data();
+                        // Merge and update local storage if Firestore has newer info
+                        const updatedData = { ...userData, name: existing.name || finalName, avatar: existing.avatar || finalAvatar };
+                        localStorage.setItem('paomobile_user', JSON.stringify(updatedData));
+                    }
+                    // Final background write
+                    return setDoc(userRef, { ...userData, lastLogin: new Date() }, { merge: true });
+                }).catch(e => console.warn("[Auth] Cloud Background Sync Error:", e.message));
+            }
+        }
+
+        // Handle Google Login
+        const btnGoogle = document.getElementById('btnGoogleLogin');
+        if (btnGoogle) {
+            btnGoogle.addEventListener('click', async () => {
+                if (detectRestrictedBrowser()) return;
+
+                showLoading("Google Auth Start");
+                const provider = new GoogleAuthProvider();
+
+                try {
+                    // Try Popup first as it's more reliable and better UX on desktop
+                    console.log("[Auth] Attempting Google Popup...");
+                    const result = await signInWithPopup(auth, provider);
+                    if (result.user) {
+                        console.log("[Auth] Popup Success:", result.user.email);
+                        await saveUserToFirestore(result.user, 'google_popup');
+                        finishLogin(result.user.displayName || result.user.email.split('@')[0]);
+                    }
+                } catch (error) {
+                    console.warn("[Auth] Popup failed or blocked, falling back to Redirect:", error.code);
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        hideLoading();
+                        return;
+                    }
+                    // Fallback to Redirect
+                    try {
+                        await signInWithRedirect(auth, provider);
+                    } catch (redirectError) {
+                        console.error("[Auth] Redirect failed:", redirectError);
+                        alert("�������ö�������͡Ѻ Google ��㹢�й���Ѻ: " + redirectError.message);
+                    }
+                } finally {
+                    hideLoading(true, "Google finalizer");
+                }
+            });
+        }
+
+        // Handle Email Login/Continue
+        const btnLogin = document.getElementById('btnEmailLogin');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const passwordGroup = document.getElementById('passwordGroup');
+
+        if (btnLogin) {
+            btnLogin.addEventListener('click', async () => {
+                const identifier = normalizeIdentifier(emailInput.value);
+                if (!identifier) return;
+
+                if (identifier.endsWith('@paomobile.auth')) {
+                    hideLoading();
+                    alert("��س����������Ѿ�� 10 ��ѡ ���١��ͧ");
+                    return;
+                }
+
+                showLoading();
+                const res = await window.checkIdentifierExists(identifier);
+
+                if (!res.exists) {
+                    hideLoading();
+                    const choice = confirm("��辺�ѭ�ռ������к����\n\n��ͧ�����Ѥ����� (OK) ���ͨ��ͧ�������к��������ʼ�ҹ anyway (Cancel) ��?\n(�óա� Cancel �к����ʴ���ͧ������ʼ�ҹ����ͧ�٤��)");
+                    
+                    if (choice) {
+                        console.log("[Auth] Seamless transition to Register View");
+                        const registerView = document.getElementById("registerView");
+                        const loginView = document.getElementById("loginView");
+                        if (registerView && loginView) {
+                            loginView.style.display = "none";
+                            registerView.style.display = "block";
+                            const regEmail = document.getElementById("regEmail");
+                            if (regEmail) {
+                                regEmail.value = emailInput.value;
+                                const event = new Event('input', { bubbles: true });
+                                regEmail.dispatchEvent(event);
+                            }
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    } else {
+                        // User chose "Cancel" -> "�ѹ�պѭ���������� (�ͧ��͡�Թ)"
+                        console.log("[Auth] Force showing password field for existing user...");
+                        passwordGroup.style.display = 'block';
+                        btnLogin.textContent = "�������к� anyway ??";
+                        return;
+                    }
+                    return;
+                }
+
+                if (passwordGroup.style.display === 'none') {
+                    hideLoading();
+                    passwordGroup.style.display = 'block';
+                    btnLogin.textContent = "�������к�";
+                    return;
+                }
+
+                const password = passwordInput.value;
+                if (!password) {
+                    hideLoading();
+                    alert("��سҡ�͡���ʼ�ҹ��Ѻ");
+                    return;
+                }
+
+                try {
+                    const cred = await supabase.auth.signInWithPassword({ email: res.email, password: password });
+                    console.log("[Auth] Email Login Success:", cred.user.email);
+                    await saveUserToFirestore(cred.user, 'email_login');
+                    finishLogin(cred.user.displayName || cred.user.email.split('@')[0]);
+                } catch (error) {
+                    hideLoading();
+                    console.error("[Auth] Login error:", error.code);
+                    if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                        alert("���ʼ�ҹ���١��ͧ��Ѻ");
+                    } else {
+                        alert("�Դ��ͼԴ��Ҵ: " + error.message);
+                    }
+                }
+            });
+
+            // Support Enter key for Login
+            [emailInput, passwordInput].forEach(input => {
+                if (input) {
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            btnLogin.click();
+                        }
+                    });
+                }
+            });
+        }
+
+        // Handle Registration
+        const btnRegContinue = document.getElementById('btnContinueRegister');
+        if (btnRegContinue) {
+            btnRegContinue.addEventListener('click', async () => {
+                const email = document.getElementById('regEmail').value.trim().toLowerCase();
+                const password = document.getElementById('regPassword').value;
+
+                if (!email.includes("@")) {
+                    alert("��س��к���������١��ͧ");
+                    return;
+                }
+
+                showLoading("Registration begin");
+                isRegistering = true;
+                isNavigating = true;
+
+                try {
+                    const cred = await supabase.auth.signUp({ email: email, password: password });
+                    console.log("[Auth] Firebase User Created:", cred.user.uid);
+
+                    const name = email.split('@')[0];
+
+                    // Background persistence (Non-blocking)
+                    const userRef = doc(db, "users", cred.user.uid);
+                    setDoc(userRef, {
+                        uid: cred.user.uid,
+                        name: name,
+                        email: email,
+                        phone: "", // No phone during email registration
+                        marketing: document.getElementById("checkMarketing").checked,
+                        provider: 'email_registration',
+                        createdAt: new Date()
+                    }).then(() => console.log("[Auth] Firestore persistence complete."));
+
+                    // Send Verification Email immediately
+                    await sendEmailVerification(cred.user);
+                    console.log("[Auth] Verification email sent automatically.");
+
+                    // Switch to Verification View
+                    window.transitionToVerification(name);
+
+                } catch (error) {
+                    console.error("[Auth] Registration caught error:", error);
+                    isRegistering = false;
+                    isNavigating = false;
+                    hideLoading(true, "Registration error alert");
+                    if (error.code === 'auth/email-already-in-use') {
+                        alert("��������������ù��١��ҹ����Ǥ�Ѻ");
+                    } else {
+                        // Only alert if it's NOT a reference error we just fixed, 
+                        // but better yet, just show the error if it's actually an auth error.
+                        alert("���ŧ����¹�Դ��Ҵ: " + error.message);
+                    }
+                }
+            });
+
+            // Support Enter key for Registration
+            ['regEmail', 'regPassword', 'regConfirmPassword', 'regPhone'].forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' && !btnRegContinue.disabled) {
+                            e.preventDefault();
+                            btnRegContinue.click();
+                        }
+                    });
+                }
+            });
+        }
+
+        function wait(ms) { return new Promise(res => setTimeout(res, ms)); }
+    </script>
+
+<script src="premium-alerts.js"></script>
+</body>
+
+</html>
+
