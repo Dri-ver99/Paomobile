@@ -79,10 +79,7 @@ const ProductSync = {
             this.allProducts = [];
         }
 
-        if (typeof db === 'undefined' || !db) {
-            setTimeout(() => this.listen(), 500);
-            return;
-        };
+        // (Legacy Firebase db check removed for Supabase)
 
         const supabase = window.supabaseClient;
         if (!supabase) {
