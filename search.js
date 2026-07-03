@@ -111,10 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Sync All Products
     const fetchProducts = async () => {
-        const { data: snapshotDocs } = await supabase.from('products').select('*').limit(2000);
+        const { data: snapshotDocs } = await supabase.from('products').select('id, name, brand, category, partModel, partType, price, emoji, img, isOutOfStock, isHidden').limit(2000);
         if (!snapshotDocs) return;
         firestoreProducts = snapshotDocs.map(doc => ({ ...doc }));
-        console.log(`[SearchSync] Synced ${firestoreProducts.length} global products`);
+        console.log(`[SearchSync] Synced ${firestoreProducts.length} global products (Optimized)`);
         updateMergedProducts();
         if (searchInput && searchInput.value) {
             renderResults(searchInput.value.trim().toLowerCase());
@@ -124,7 +124,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     supabase.channel('public:products:search')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
-            fetchProducts();
+            if (payload.eventType === 'DELETE') {
+                firestoreProducts = firestoreProducts.filter(p => p.id !== payload.old.id);
+            } else if (payload.new && payload.new.id) {
+                const idx = firestoreProducts.findIndex(p => p.id === payload.new.id);
+                if (idx !== -1) firestoreProducts[idx] = { ...firestoreProducts[idx], ...payload.new };
+                else firestoreProducts.push(payload.new);
+            }
+            updateMergedProducts();
+            if (searchInput && searchInput.value) {
+                renderResults(searchInput.value.trim().toLowerCase());
+            }
         }).subscribe();
   }
 

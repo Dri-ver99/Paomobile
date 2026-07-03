@@ -375,83 +375,67 @@ function restartFirestoreListener() {
     if (statusDot) statusDot.style.background = '#ffc107'; // yellow/loading
 
     let query = supabase.from('products').select('*').limit(2000);
-    
-    const fetchProducts = async () => {
-        const { data: snapshotDocs, error } = await query;
-        if (error) {
-            console.error("[Seller Sync] Sync Error:", error);
-            if (statusText) statusText.textContent = "ออฟไลน์ (เชื่อมต่อไม่สำเร็จ)";
-            if (statusDot) statusDot.style.background = '#dc3545';
-            return;
-        }
-        
-        console.log(`[Seller Sync] Success: Received ${snapshotDocs.length} items from Cloud for ${currentCategory}`);
-        
-        const firestoreProducts = snapshotDocs.map(doc => ({ ...doc }));
+    let firestoreProducts = [];
 
-        // Robust Merge Logic (Mirroring products-sync.js logic more closely)
-        const isOriginalMock = (p) => {
-            const isMock = MOCK_PRODUCTS_BASELINE.some(m => m.id === p.id);
-            if (!isMock) return false;
-            if (p.id.endsWith('-orig')) return true;
-            return !deletedMockIds.includes(p.id);
-        };
-
+    const applyMergeAndRender = () => {
         const mergedMap = new Map();
-        
-        // 1. First, populate with all non-deleted baseline items
         MOCK_PRODUCTS_BASELINE.forEach(p => {
              const isOriginalPart = p.id.endsWith('-orig');
              if (isOriginalPart || !deletedMockIds.includes(p.id)) {
                  mergedMap.set(p.id, p);
              }
         });
-        
-        // 2. Overwrite or add with Cloud data
         firestoreProducts.forEach(p => mergedMap.set(p.id, p));
-        
         allProducts = Array.from(mergedMap.values());
 
-        // Cache update
         try {
             const optimizedCache = allProducts.map(p => ({
-                id: p.id,
-                name: p.name,
-                price: p.price,
-                brand: p.brand,
-                category: p.category,
-                partModel: p.partModel,
-                partType: p.partType,
-                img: p.img,
-                emoji: p.emoji,
-                badge: p.badge,
-                isOutOfStock: p.isOutOfStock,
-                tags: p.tags,
-                specs: p.specs,
+                id: p.id, name: p.name, price: p.price, brand: p.brand, category: p.category,
+                partModel: p.partModel, partType: p.partType, img: p.img, emoji: p.emoji,
+                badge: p.badge, isOutOfStock: p.isOutOfStock, tags: p.tags, specs: p.specs,
                 variations: p.variations ? p.variations.map(v => ({ price: v.price })) : undefined
             }));
             localStorage.setItem('pao_seller_cache', JSON.stringify(optimizedCache));
         } catch (e) {}
 
-        // UI update
         const statusDot = document.getElementById('statusIndicator');
         const countStatus = document.getElementById('productCountStatus');
         const statusTxt = document.getElementById('statusText');
 
         if (statusDot) statusDot.style.background = '#52c41a';
         if (statusTxt) statusTxt.textContent = "เชื่อมต่อ Cloud เรียบร้อย ✅";
-        if (countStatus) {
-            countStatus.textContent = "สินค้าทั้งหมด: " + allProducts.length + " (เชื่อมต่อ Cloud ✅)";
-        }
+        if (countStatus) countStatus.textContent = "สินค้าทั้งหมด: " + allProducts.length + " (เชื่อมต่อ Cloud ✅)";
         
         updateBrandsDatalist();
         filterProducts();
     };
 
+    const fetchProducts = async () => {
+        const { data: snapshotDocs, error } = await query;
+        if (error) {
+            console.error("[Seller Sync] Sync Error:", error);
+            const statusText = document.getElementById('statusText');
+            const statusDot = document.getElementById('statusIndicator');
+            if (statusText) statusText.textContent = "ออฟไลน์ (เชื่อมต่อไม่สำเร็จ)";
+            if (statusDot) statusDot.style.background = '#dc3545';
+            return;
+        }
+        console.log(`[Seller Sync] Success: Received ${snapshotDocs.length} items from Cloud for ${currentCategory} (Optimized)`);
+        firestoreProducts = snapshotDocs.map(doc => ({ ...doc }));
+        applyMergeAndRender();
+    };
+
     fetchProducts();
     productUnsubscribe = supabase.channel('public:products:seller-products')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, payload => {
-            fetchProducts();
+            if (payload.eventType === 'DELETE') {
+                firestoreProducts = firestoreProducts.filter(p => p.id !== payload.old.id);
+            } else if (payload.new && payload.new.id) {
+                const idx = firestoreProducts.findIndex(p => p.id === payload.new.id);
+                if (idx !== -1) firestoreProducts[idx] = { ...firestoreProducts[idx], ...payload.new };
+                else firestoreProducts.push(payload.new);
+            }
+            applyMergeAndRender();
         }).subscribe();
 }
 
