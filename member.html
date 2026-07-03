@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -993,7 +993,7 @@
                     };
 
                     try {
-                        await await supabase.from('users').upsert({ id: firebase.auth().currentUser.uid, ...payload, { merge: true } });
+                        await supabase.from('users').upsert({ id: firebase.auth().currentUser.uid, ...payload });
                         isTyping = false;
 
                         // Update local userData object to ensure localStorage is consistent
