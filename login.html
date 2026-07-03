@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -1293,13 +1293,25 @@
     </script>
 
     <!-- Firebase SDK Implementation (Module) -->
+    <script>
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            alert("Error: " + msg + "\nLine: " + lineNo + "\nCol: " + columnNo);
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            alert("Unhandled Promise Rejection: " + (event.reason ? event.reason.message : ""));
+        });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="db.js"></script>
-    <script type="module">
+    <script>
+        (function() {
         // Supabase Migration: We rely on db.js which initializes window.firebaseAuth and window.db
         
-        const supabase = window.supabaseClient;
-        
+        const supabase = window.supabase;
+        const db = window.db;
+
+
         const doc = (db, col, id) => db.collection(col).doc(id);
         const setDoc = (ref, data, options) => ref.set(data, options);
         const getDoc = (ref) => ref.get();
@@ -1357,7 +1369,7 @@
             if (overlay) overlay.style.display = 'none';
         };
 
-        window.transitionToVerification = (name, fallbackEmail = "") => {
+        window.transitionToVerification = async (name, fallbackEmail = "") => {
             console.log("[Auth] ---> transitionToVerification triggered for:", name);
             isRegistering = true;
 
@@ -1372,7 +1384,7 @@
 
                 // Check if user is already verified (e.g. Google users)
                 const user = (await supabase.auth.getSession()).data.session?.user;
-                if (user && user.emailVerified) {
+                if (user && (user.email_confirmed_at || (user.app_metadata?.providers || []).includes('google'))) {
                     updateUIForVerified(name);
                 } else {
                     updateUIForUnverified(fallbackEmail);
@@ -1416,7 +1428,7 @@
             console.log("[Auth] Verification successful. Success view is active.");
         }
 
-        function updateUIForUnverified(fallbackEmail = "") {
+        async function updateUIForUnverified(fallbackEmail = "") {
             document.getElementById("successIcon").style.display = "none";
             document.getElementById("verifyIcon").style.display = "flex";
             document.getElementById("statusTitle").textContent = "กรุณายืนยันอีเมล";
@@ -1442,7 +1454,10 @@
             // TRY TO LOG IN IF TEMP CREDENTIALS EXIST
             if (window.tempVerificationEmail && window.tempVerificationPassword) {
                 try {
-                    const cred = await supabase.auth.signInWithPassword({ email: window.tempVerificationEmail, password: window.tempVerificationPassword });
+                    const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({ email: window.tempVerificationEmail, password: window.tempVerificationPassword });
+                    if (authErr) throw authErr;
+                    const cred = { user: authData.user };
+                    if (cred.user) cred.user.uid = cred.user.id;
                     console.log("[Auth] Verification check: Logged in successfully, user is verified!");
                     await saveUserToFirestore(cred.user, 'email_login');
                     
@@ -1456,7 +1471,7 @@
             }
 
             await user.reload();
-            if (user.emailVerified) {
+            if (user.email_confirmed_at || (user.app_metadata?.providers || []).includes('google')) {
                 console.log("[Auth] User is now verified!");
                 if (verificationInterval) clearInterval(verificationInterval);
                 updateUIForVerified(user.displayName || user.email.split('@')[0]);
@@ -1583,7 +1598,12 @@
 
             showLoading("Sending verification email");
             try {
-                await sendEmailVerification(user);
+                const { error } = await supabase.auth.resend({
+                    type: 'signup',
+                    email: user.email,
+                    options: { emailRedirectTo: window.location.origin + '/login.html' }
+                });
+                if (error) throw error;
                 lastEmailSentTime = Date.now();
                 startResendCountdown();
                 alert("เราได้ส่งลิงก์ยืนยันบัญชีไปให้คุณอีกครั้งแล้วครับ กรุณาตรวจสอบในกล่องจดหมาย (หรือในหน้า 'จดหมายขยะ', 'ถังขยะ' หรือ 'โปรโมชัน') นะครับ");
@@ -1628,22 +1648,19 @@
 
         // --- Auth Initializer (Sequenced Flow) ---
         async function initAuth() {
-            if (!auth) return;
+            if (!supabase) return;
 
             // 1. Handle actual logout request (Wait for it to finish)
             if (localStorage.getItem('pao_logout_pending')) {
                 console.log("[Auth] Logout signal detected. Forcing signOut...");
                 showLoading(); // Ensure spinner is up
-                await auth.signOut();
+                await supabase.auth.signOut();
                 localStorage.removeItem('pao_logout_pending');
                 console.log("[Auth] Cloud sign-out complete.");
                 hideLoading();
             }
 
-            // 2. Check for Google Redirect Result
-            await checkRedirectResult();
-
-            // 3. Release redirect lock (Observer can now handle UI)
+            // 2. Release redirect lock (Observer can now handle UI)
             isCheckingRedirect = false;
             console.log("[Auth] Redirect check finished. Observer active.");
         }
@@ -1653,21 +1670,24 @@
         initAuth();
 
         // --- Observer (The persistent sentry) ---
-        onAuthStateChanged(auth, async (user) => {
-            console.log("[Auth] Observer: State changed. Registering:", isRegistering, "Navigating:", isNavigating);
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            const user = session?.user;
+            console.log("[Auth] Observer:", event, "Registering:", isRegistering, "Navigating:", isNavigating);
             if (isCheckingRedirect || isRegistering) {
                 console.log("[Auth] Observer: BLOCKED (Redirect check or Registering)");
                 return;
             }
 
             if (user && !isNavigating) {
-                console.log("[Auth] State: IN -> Initializing session for:", user.email, "Verified:", user.emailVerified);
+                console.log("[Auth] State: IN -> Initializing session for:", user.email);
 
-                if (!user.emailVerified && !(user.email || '').endsWith('@paomobile.auth') && !user.providerData.some(p => p.providerId === 'google.com')) {
+                if (!user.email_confirmed_at && !(user.email || '').endsWith('@paomobile.auth') && !(user.app_metadata?.providers || []).includes('google') && !(user.providerData || []).some(p => p.providerId === 'google.com')) {
                     console.log("[Auth] User not verified. Forcing Verification View.");
                     window.transitionToVerification(user.displayName || user.email.split('@')[0]);
                     return;
                 }
+                
+                user.uid = user.id;
 
                 await saveUserToFirestore(user, 'state_change');
 
@@ -1681,21 +1701,6 @@
             }
         });
 
-        // Check result of redirect sign-in
-        async function checkRedirectResult() {
-            try {
-                const result = await getRedirectResult(auth);
-                if (result && result.user) {
-                    console.log("[Auth] Redirect Success:", result.user.email);
-                    await saveUserToFirestore(result.user, 'google_redirect');
-                    finishLogin(result.user.displayName || result.user.email.split('@')[0]);
-                }
-            } catch (error) {
-                console.error("[Auth] Redirect Failure:", error);
-                hideLoading();
-            }
-        }
-
         // Final Redirection Sequence (With Lock)
         async function finishLogin(name) {
             console.log("[Auth] finishLogin check triggered for:", name);
@@ -1706,7 +1711,7 @@
 
             const user = (await supabase.auth.getSession()).data.session?.user;
             // CRITICAL: Block finish if not verified (unless phone/google)
-            if (user && !user.emailVerified && !(user.email || '').endsWith('@paomobile.auth') && !user.providerData.some(p => p.providerId === 'google.com')) {
+            if (user && !user.email_confirmed_at && !(user.email || '').endsWith('@paomobile.auth') && !(user.app_metadata?.providers || []).includes('google') && !(user.providerData || []).some(p => p.providerId === 'google.com')) {
                 console.warn("[Auth] finishLogin BLOCKED: Email not verified");
                 isNavigating = false;
                 hideLoading();
@@ -1757,7 +1762,7 @@
                 email: email,
                 avatar: finalAvatar,
                 photo: finalAvatar,
-                isVerified: !!(user.emailVerified || provider.includes('google'))
+                isVerified: !!(user.email_confirmed_at || provider.includes('google'))
             };
 
             // Fetch existing profile from database FIRST to preserve custom name/avatar
@@ -1788,38 +1793,22 @@
             }
         }
 
-        // Handle Google Login
         const btnGoogle = document.getElementById('btnGoogleLogin');
         if (btnGoogle) {
             btnGoogle.addEventListener('click', async () => {
                 if (detectRestrictedBrowser()) return;
 
                 showLoading("Google Auth Start");
-                const provider = new GoogleAuthProvider();
-
                 try {
-                    // Try Popup first as it's more reliable and better UX on desktop
-                    console.log("[Auth] Attempting Google Popup...");
-                    const result = await signInWithPopup(auth, provider);
-                    if (result.user) {
-                        console.log("[Auth] Popup Success:", result.user.email);
-                        await saveUserToFirestore(result.user, 'google_popup');
-                        finishLogin(result.user.displayName || result.user.email.split('@')[0]);
-                    }
+                    const { data, error } = await supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: { redirectTo: window.location.origin + '/login.html' }
+                    });
+                    if (error) throw error;
+                    // Redirection will happen automatically.
                 } catch (error) {
-                    console.warn("[Auth] Popup failed or blocked, falling back to Redirect:", error.code);
-                    if (error.code === 'auth/popup-closed-by-user') {
-                        hideLoading();
-                        return;
-                    }
-                    // Fallback to Redirect
-                    try {
-                        await signInWithRedirect(auth, provider);
-                    } catch (redirectError) {
-                        console.error("[Auth] Redirect failed:", redirectError);
-                        alert("ไม่สามารถเชื่อมต่อกับ Google ได้ในขณะนี้ครับ: " + redirectError.message);
-                    }
-                } finally {
+                    console.error("[Auth] Google Login failed:", error);
+                    alert("ไม่สามารถเชื่อมต่อกับ Google ได้ในขณะนี้ครับ: " + error.message);
                     hideLoading(true, "Google finalizer");
                 }
             });
@@ -1833,8 +1822,16 @@
 
         if (btnLogin) {
             btnLogin.addEventListener('click', async () => {
-                const identifier = normalizeIdentifier(emailInput.value);
-                if (!identifier) return;
+                let rawIdentifier = emailInput.value.trim();
+                if (!rawIdentifier) {
+                    alert("กรุณาระบุอีเมลหรือเบอร์โทรศัพท์ครับ");
+                    return;
+                }
+                const identifier = normalizeIdentifier(rawIdentifier);
+                if (!identifier) {
+                    alert("รูปแบบอีเมลหรือเบอร์โทรศัพท์ไม่ถูกต้องครับ (ต้องมี @ สำหรับอีเมล หรือมีตัวเลขสำหรับเบอร์โทร)");
+                    return;
+                }
 
                 if (identifier.endsWith('@paomobile.auth')) {
                     hideLoading();
@@ -1847,7 +1844,12 @@
 
                 if (!res.exists) {
                     hideLoading();
-                    const choice = await sellerConfirm("ไม่พบบัญชีผู้ใช้ในระบบค่ะ\n\nต้องการสมัครใหม่ (OK) หรือจะลองเข้าสู่ระบบด้วยรหัสผ่าน anyway (Cancel) คะ?\n(กรณีกด Cancel ระบบจะแสดงช่องใส่รหัสผ่านให้ลองดูค่ะ)", "info");
+                    let choice;
+                    if (window.sellerConfirm) {
+                        choice = await window.sellerConfirm("ไม่พบบัญชีผู้ใช้ในระบบค่ะ\n\nต้องการสมัครใหม่ (OK) หรือจะลองเข้าสู่ระบบด้วยรหัสผ่าน anyway (Cancel) คะ?\n(กรณีกด Cancel ระบบจะแสดงช่องใส่รหัสผ่านให้ลองดูค่ะ)", "info");
+                    } else {
+                        choice = confirm("ไม่พบบัญชีผู้ใช้ในระบบค่ะ\n\nต้องการสมัครใหม่ (OK) หรือจะลองเข้าสู่ระบบด้วยรหัสผ่าน anyway (Cancel) คะ?\n(กรณีกด Cancel ระบบจะแสดงช่องใส่รหัสผ่านให้ลองดูค่ะ)");
+                    }
                     
                     if (choice) {
                         console.log("[Auth] Seamless transition to Register View");
@@ -1889,7 +1891,10 @@
                 }
 
                 try {
-                    const cred = await supabase.auth.signInWithPassword({ email: res.email, password: password });
+                    const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({ email: res.email, password: password });
+                    if (authErr) throw authErr;
+                    const cred = { user: authData.user };
+                    if (cred.user) cred.user.uid = cred.user.id;
                     console.log("[Auth] Email Login Success:", cred.user.email);
                     await saveUserToFirestore(cred.user, 'email_login');
                     finishLogin(cred.user.displayName || cred.user.email.split('@')[0]);
@@ -1943,7 +1948,10 @@
                 isNavigating = true;
 
                 try {
-                    const cred = await supabase.auth.signUp({ email: email, password: password });
+                    const { data: authData, error: authErr } = await supabase.auth.signUp({ email: email, password: password });
+                    if (authErr) throw authErr;
+                    const cred = { user: authData.user };
+                    if (cred.user) cred.user.uid = cred.user.id;
                     console.log("[Auth] Firebase User Created:", cred.user.uid);
 
                     const name = email.split('@')[0];
@@ -1961,7 +1969,12 @@
                     }).then(() => console.log("[Auth] Firestore persistence complete."));
 
                     // Send Verification Email immediately
-                    await sendEmailVerification(cred.user);
+                    const { error: resendErr } = await supabase.auth.resend({
+                        type: 'signup',
+                        email: email,
+                        options: { emailRedirectTo: window.location.origin + '/login.html' }
+                    });
+                    if (resendErr) console.warn("Auto verification resend failed:", resendErr);
                     console.log("[Auth] Verification email sent automatically.");
 
                     if (window.auth) {
@@ -1999,6 +2012,7 @@
         }
 
         function wait(ms) { return new Promise(res => setTimeout(res, ms)); }
+        })();
     </script>
 
 <script src="premium-alerts.js"></script>

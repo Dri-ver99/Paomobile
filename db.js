@@ -14,7 +14,11 @@ window.getSupabaseClient = () => {
     return window.supabaseClientInstance;
 };
 const getClient = window.getSupabaseClient;
-getClient(); // Initialize immediately!
+try {
+    getClient(); // Initialize immediately!
+} catch (e) {
+    console.warn("Supabase initial load failed, will retry on demand:", e);
+}
 const getClientOld = () => {
     if (window.supabaseClientInstance) return window.supabaseClientInstance;
     
