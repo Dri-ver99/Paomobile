@@ -146,23 +146,21 @@
                 return getT(b) - getT(a);
             });
             try { localStorage.setItem('paomobile_chat_cache', JSON.stringify(allChats)); } catch(e) {}
+            if (window.chatsSub) window.supabaseClient.removeChannel(window.chatsSub);
+        
+            window.chatsSub = supabase.channel('chats-sync')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
+                    fetchChats();
+                })
+                .subscribe();
+            
+            if (!window.chatsPolling) {
+                window.chatsPolling = setInterval(fetchChats, 5000);
+            }
             renderChatList();
         };
 
         await fetchChats();
-
-        chatListUnsubscribe = supabase.channel('chats-list-sync')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, payload => {
-                if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-                    const idx = allChats.findIndex(c => c.id === payload.new.id);
-                    if (idx >= 0) allChats[idx] = { ...allChats[idx], ...payload.new };
-                    else allChats.push({ ...payload.new, id: payload.new.id });
-                } else if (payload.eventType === 'DELETE') {
-                    allChats = allChats.filter(c => c.id !== payload.old.id);
-                }
-                sortAndRenderChats();
-            })
-            .subscribe();
     }
     window.loadChatList = loadChatList;
 
@@ -409,10 +407,19 @@
                     const d = new Date(msg.timestamp_ms);
                     msgDate = d.toLocaleDateString();
                     timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                } else if (msg.timestamp && msg.timestamp.toDate) {
-                    const d = new Date(msg.timestamp.toDate());
-                    msgDate = d.toLocaleDateString();
-                    timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                } else if (msg.timestamp) {
+                    let d;
+                    if (typeof msg.timestamp === 'string') {
+                        d = new Date(msg.timestamp);
+                    } else if (msg.timestamp.toDate) {
+                        d = new Date(msg.timestamp.toDate());
+                    } else {
+                        d = new Date(msg.timestamp);
+                    }
+                    if (!isNaN(d)) {
+                        msgDate = d.toLocaleDateString();
+                        timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    }
                 }
                 
                 if (msgDate !== lastDate && msgDate !== "") {
@@ -426,13 +433,18 @@
                 const metaHtml = `<div class="msg-meta" style="font-size:0.65rem; opacity:0.8;">${timeStr}${tickHtml}</div>`;
 
                 if (msg.type === 'card') {
+                    console.log("[SellerChat] Rendering card:", msg);
+                    let cData = msg.cardData || {};
+                    if (typeof cData === 'string') {
+                        try { cData = JSON.parse(cData); } catch(e) {}
+                    }
                     html += `
                         <div class="msg-row seller">
-                            <div class="chat-card" onclick="handleChatCardClick('${msg.cardData.productId}', '${msg.cardData.category}', '${msg.cardData.link}')">
-                                <img src="${msg.cardData.image}" class="chat-card-img" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
+                            <div class="chat-card" onclick="handleChatCardClick('${cData.productId || ''}', '${cData.category || ''}', '${cData.link || ''}')">
+                                <img src="${cData.image || ''}" class="chat-card-img" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
                                 <div class="chat-card-info">
-                                    <div class="chat-card-title">${msg.cardData.title}</div>
-                                    <div class="chat-card-price">${msg.cardData.price}</div>
+                                    <div class="chat-card-title">${cData.title || 'สินค้า'}</div>
+                                    <div class="chat-card-price">${cData.price || ''}</div>
                                 </div>
                                 <div class="chat-card-btn">ดูรายละเอียด</div>
                             </div>
@@ -503,7 +515,19 @@
             }
 
             msgsArea.innerHTML = html;
-            setTimeout(() => { msgsArea.scrollTop = msgsArea.scrollHeight; }, 50);
+            
+            const scrollToBottom = () => {
+                msgsArea.scrollTop = msgsArea.scrollHeight;
+            };
+            scrollToBottom();
+            
+            // Robust auto-scroll for late-loading images
+            let scrollAttempts = 0;
+            const scrollInterval = setInterval(() => {
+                scrollToBottom();
+                scrollAttempts++;
+                if (scrollAttempts > 10) clearInterval(scrollInterval);
+            }, 100);
         };
 
         // Attempt instant load from cache
@@ -526,7 +550,9 @@
 
         const fetchMessages = async () => {
             const { data, error } = await supabase.from('chat_messages')
-                .select('*').eq('chatId', chatId).order('timestamp_ms', { ascending: true });
+                .select('*').eq('chatId', chatId).order('timestamp', { ascending: true });
+            
+            console.log(data);
             
             if (error) {
                 msgsArea.innerHTML = `<div style="text-align:center; padding:40px; color:#ef4444; font-size:0.9rem;">🚨 ข้อผิดพลาด: ${error.message}</div>`;
@@ -558,8 +584,15 @@
                 fetchMessages();
             })
             .subscribe();
-            
-        messagesUnsubscribe = () => { supabase.removeChannel(channel); };
+        window.currentChatSub = channel;
+        
+        if (window.currentChatInterval) clearInterval(window.currentChatInterval);
+        window.currentChatInterval = setInterval(fetchMessages, 3000);
+        
+        messagesUnsubscribe = () => { 
+            supabase.removeChannel(channel); 
+            if (window.currentChatInterval) clearInterval(window.currentChatInterval);
+        };
     };
 
     window.handleKeyPress = (e) => {
@@ -798,6 +831,7 @@
                 chatId: activeChatId,
                 text: "แนะนำสินค้าชิ้นนี้ครับ!",
                 sender: 'seller',
+                timestamp: timestampIso,
                 timestamp_ms: timestampMs,
                 type: 'card',
                 cardData: cardData,
