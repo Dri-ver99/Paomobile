@@ -1,4 +1,4 @@
-﻿/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
 (function() {
     if (window.__alertOverrideInjected) return;
     window.__alertOverrideInjected = true;
@@ -629,6 +629,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
                 fileUrl: `${index}.png`,
                 sender: 'customer',
                 timestamp: timestamp,
+                timestamp_ms: Date.now(),
                 isRead: false
             });
 
@@ -824,13 +825,17 @@ badge.textContent = '⚫ ปิดให้บริการ';
                 const timeHtml = `<div class="msg-time" style="font-size:0.65rem; opacity:0.7; text-align:right; margin-top:4px; margin-bottom:-2px;">${timeStr}${tickHtml}</div>`;
                 
                 if (msg.type === 'card') {
+                    let cData = msg.cardData || {};
+                    if (typeof cData === 'string') {
+                        try { cData = JSON.parse(cData); } catch(e) {}
+                    }
                     html += `
                         <div class="msg-row seller">
-                            <div class="chat-card" style="background:#fff; border-radius:12px; overflow:hidden; border:1px solid #eef2f6; cursor:pointer;" onclick="handleChatCardClick('${msg.cardData.productId}', '${msg.cardData.category}', '${msg.cardData.link}')">
-                                <img src="${msg.cardData.image}" class="chat-card-img" style="border-radius:12px 12px 0 0;" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
+                            <div class="chat-card" style="background:#fff; border-radius:12px; overflow:hidden; border:1px solid #eef2f6; cursor:pointer;" onclick="handleChatCardClick('${cData.productId || ''}', '${cData.category || ''}', '${cData.link || ''}')">
+                                <img src="${cData.image || ''}" class="chat-card-img" style="border-radius:12px 12px 0 0;" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
                                 <div class="chat-card-info" style="padding:10px;">
-                                    <div class="chat-card-title" style="font-weight:600; color:#1e293b;">${msg.cardData.title}</div>
-                                    <div class="chat-card-price" style="color:#ee4d2d; font-weight:700;">${msg.cardData.price}</div>
+                                    <div class="chat-card-title" style="font-weight:600; color:#1e293b;">${cData.title || 'สินค้า'}</div>
+                                    <div class="chat-card-price" style="color:#ee4d2d; font-weight:700;">${cData.price || ''}</div>
                                 </div>
                                 <div class="chat-card-btn" style="display:block; text-align:center; padding:8px; background:#f8fafc; color:#64748b; text-decoration:none; font-size:0.85rem; border-top:1px solid #f1f5f9;">ดูสินค้า</div>
                             </div>
@@ -1003,6 +1008,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
                         fileUrl: finalUrl,
                         sender: 'customer',
                         timestamp: timestamp,
+                        timestamp_ms: Date.now(),
                         isRead: false
                     });
 
@@ -1039,6 +1045,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
                     text: originalText,
                     sender: 'customer',
                     timestamp: timestamp,
+                    timestamp_ms: Date.now(),
                     type: 'text',
                     isRead: false
                 });
