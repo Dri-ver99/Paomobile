@@ -1555,7 +1555,9 @@
                 const isPhone = /^[0-9]{10}$/.test(rawIdentifier);
                 console.log("[Auth] Triggering Firebase Reset for:", targetEmail, "(isPhone:", isPhone, ")");
 
-                await supabase.auth.resetPasswordForEmail(targetEmail);
+                await supabase.auth.resetPasswordForEmail(targetEmail, {
+                    redirectTo: window.location.origin + '/reset-password.html'
+                });
                 console.log("[Auth] Firebase Success: Reset email sent.");
 
                 if (isPhone) {
