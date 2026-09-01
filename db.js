@@ -181,13 +181,68 @@ class SupabaseDocRef {
         }
     }
     async set(data, options = {}) {
-        const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
-        const { error } = await getClient().from(this.col).upsert({ id: this.id, ...cleanData });
-        if (error) throw error;
+        let cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+        
+        // Sanitize createdAt if it's an object or FieldValue
+        if (cleanData.createdAt && typeof cleanData.createdAt === 'object') {
+            cleanData.createdAt = new Date().toISOString();
+        }
+
+        // Fix for Supabase orders table schema: remove non-existent columns
+        if (this.col === 'orders') {
+            delete cleanData.subtotal;
+            delete cleanData.baseShippingCost;
+            if (!cleanData.customer) {
+                cleanData.customer = cleanData.customerEmail || cleanData.customerPhone || 'guest';
+            }
+        }
+
+        let { error } = await getClient().from(this.col).upsert({ id: this.id, ...cleanData });
+        
+        // If column error PGRST204 occurs, retry with core fields only
+        if (error && (error.code === 'PGRST204' || (error.message && error.message.includes('column')))) {
+            console.warn(`[Supabase ${this.col}] Column mismatch ${error.code}, retrying with core schema:`, error);
+            if (this.col === 'orders') {
+                const coreOrderFields = {
+                    id: this.id,
+                    status: cleanData.status || 'รอยืนยัน',
+                    total: Number(cleanData.total) || 0,
+                    customer: cleanData.customer || cleanData.customerEmail || 'guest',
+                    customerEmail: cleanData.customerEmail || '',
+                    customerName: cleanData.customerName || '',
+                    customerPhone: cleanData.customerPhone || '',
+                    customerAddress: cleanData.customerAddress || '',
+                    customerProfileName: cleanData.customerProfileName || '',
+                    paymentMethod: cleanData.paymentMethod || cleanData.method || '',
+                    paymentBank: cleanData.paymentBank || '',
+                    shippingMethod: cleanData.shippingMethod || '',
+                    items: typeof cleanData.items === 'object' ? cleanData.items : [],
+                    createdAt: cleanData.createdAt || new Date().toISOString(),
+                    voucherCode: cleanData.voucherCode || cleanData.appliedDiscountCode || '',
+                    discountAmount: Number(cleanData.discountAmount) || 0,
+                    orderSource: cleanData.orderSource || '',
+                    orderPage: cleanData.orderPage || ''
+                };
+                const retryRes = await getClient().from('orders').upsert(coreOrderFields);
+                error = retryRes.error;
+            }
+        }
+
+        if (error) {
+            console.error(`[Supabase ${this.col}] Final Upsert Error:`, error);
+            throw error;
+        }
     }
     async update(data) {
-        const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
-        const { error } = await getClient().from(this.col).update(cleanData).eq('id', this.id);
+        let cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+        if (cleanData.paymentDate && typeof cleanData.paymentDate === 'object') {
+            cleanData.paymentDate = new Date().toISOString();
+        }
+        let { error } = await getClient().from(this.col).update(cleanData).eq('id', this.id);
+        if (error && (error.code === 'PGRST204' || (error.message && error.message.includes('column')))) {
+            console.warn(`[Supabase ${this.col}] Update column error ${error.code} handled:`, error);
+            return;
+        }
         if (error) throw error;
     }
     async delete() {

@@ -1,14 +1,11 @@
-﻿(async function () {
+(async function () {
     const USER_KEY = 'paomobile_user';
     const getActiveUserId = () => {
-        try { const u = JSON.parse(localStorage.getItem(USER_KEY)); return u ? (u.uid || u.phone || 'default') : 'guest'; }
+        try { const u = JSON.parse(localStorage.getItem(USER_KEY)); return u ? (u.uid || u.id || u.phone || 'default') : 'guest'; }
         catch { return 'guest'; }
     };
     const getCartKey = () => 'pao_cart_' + getActiveUserId();
 
-    let db = null;
-    let auth = null;
-    let authReady = false;
     let initPromise = null;
 
     async function initFirebase() {
@@ -16,41 +13,21 @@
 
         initPromise = (async () => {
             try {
-                console.log("[Cart] Initializing persistent sync via Supabase...");
-                // Wait briefly if window.db isn't ready
-                if (!window.db) await new Promise(r => setTimeout(r, 500));
-                if (!window.db) {
-                    console.error("[Cart] window.db not found.");
-                    return false;
-                }
+                const supabase = window.supabaseClient;
+                if (!supabase) return false;
                 
-                return new Promise((resolve) => {
-                    const checkUser = () => {
-                        const user = window.auth && (await supabase.auth.getSession()).data.session?.user;
-                        if (user || localStorage.getItem(USER_KEY)) {
-                            const u = user || JSON.parse(localStorage.getItem(USER_KEY) || '{}');
-                            const uid = u.uid || u.id;
-                            if (uid) {
-                                console.log("[Cart] User detected, syncing with cloud...");
-                                syncWithFirestore(uid).then(() => resolve(true));
-                            } else {
-                                console.log("[Cart] No user session. Guest mode.");
-                                resolve(true);
-                            }
-                        } else {
-                            console.log("[Cart] No user session. Guest mode.");
-                            resolve(true);
-                        }
-                    };
-                    
-                    if (window.firebaseAuth && window.firebaseAuth.onAuthStateChanged) {
-                        window.firebaseAuth.onAuthStateChanged(window.auth, () => checkUser());
-                    } else {
-                        checkUser();
-                    }
-                });
+                const sessionRes = await supabase.auth.getSession().catch(() => null);
+                const user = sessionRes?.data?.session?.user;
+                const localUser = localStorage.getItem(USER_KEY) ? JSON.parse(localStorage.getItem(USER_KEY) || '{}') : null;
+                const activeUser = user || localUser;
+                const uid = activeUser ? (activeUser.uid || activeUser.id) : null;
+
+                if (uid) {
+                    await syncWithFirestore(uid);
+                }
+                return true;
             } catch (e) {
-                console.error("[Cart] DB init failed:", e);
+                console.warn("[Cart] DB init warning:", e);
                 return false;
             }
         })();
@@ -73,16 +50,16 @@
     }
 
     async function syncWithFirestore(uid) {
-        if (!window.db) return;
+        const supabase = window.supabaseClient;
+        if (!supabase) return;
 
         try {
-            const snap = await (await supabase.from('carts').select('*').eq('id', uid).maybeSingle()).data;
+            const { data: snap } = await supabase.from('carts').select('*').eq('id', uid).maybeSingle();
             let remoteCart = [];
             let remoteUpdated = 0;
-            if (snap.exists) {
-                const data = snap.data();
-                remoteCart = data.cart || [];
-                remoteUpdated = data.cartUpdatedAt ? new Date(data.cartUpdatedAt).getTime() : 0;
+            if (snap) {
+                remoteCart = snap.cart || [];
+                remoteUpdated = snap.cartUpdatedAt ? new Date(snap.cartUpdatedAt).getTime() : 0;
             }
 
             const localCart = getLocalCart();
@@ -91,18 +68,22 @@
 
             if (localUpdated > remoteUpdated) {
                 console.log("[Cart] Local data is newer. Pushing to cloud.");
-                await await supabase.from('carts').upsert({ id: uid, ...{ cart: localCart, cartUpdatedAt: new Date(localUpdated }).toISOString() }, { merge: true });
+                await supabase.from('carts').upsert({
+                    id: uid,
+                    cart: localCart,
+                    cartUpdatedAt: new Date(localUpdated).toISOString()
+                });
             } else if (remoteUpdated > localUpdated) {
                 console.log("[Cart] Cloud data is newer. Syncing to local.");
                 saveLocalCart(remoteCart, remoteUpdated);
-                CartUI.update();
-                CartUI.renderSidebar();
-                CartUI.renderFullPage();
-            } else {
-                console.log("[Cart] Local and Cloud are in sync.");
+                if (window.CartUI) {
+                    CartUI.update();
+                    CartUI.renderSidebar();
+                    CartUI.renderFullPage();
+                }
             }
         } catch (e) {
-            console.error("[Cart] Sync failed:", e);
+            console.warn("[Cart] Sync warning:", e);
         }
     }
 
@@ -115,17 +96,18 @@
         if (!user || (!user.uid && !user.id)) return;
         const uid = user.uid || user.id;
 
-        await initFirebase(); // Ensure db is ready
-        if (!window.db) return;
+        const supabase = window.supabaseClient;
+        if (!supabase) return;
 
         try {
-            await window.db.collection('carts').doc(uid).set({
+            await supabase.from('carts').upsert({
+                id: uid,
                 cart: getLocalCart(),
                 cartUpdatedAt: new Date().toISOString()
-            }, { merge: true });
+            });
             console.log("[Cart] Saved to cloud.");
         } catch (e) {
-            console.error("[Cart] Cloud save failed:", e);
+            console.warn("[Cart] Cloud save warning:", e);
         }
     }
 
@@ -243,8 +225,26 @@
                 setTimeout(() => btn.classList.remove('cart-flash'), 600);
             });
         },
-        open() { if (typeof closeMenu === 'function') closeMenu(); document.getElementById('cartSidebar')?.classList.add('open'); document.getElementById('cartOverlay')?.classList.add('open'); CartUI.renderSidebar(); },
-        close() { document.getElementById('cartSidebar')?.classList.remove('open'); document.getElementById('cartOverlay')?.classList.remove('open'); },
+        isOpen() {
+            return document.getElementById('cartSidebar')?.classList.contains('open') || false;
+        },
+        open() { 
+            if (typeof closeMenu === 'function') closeMenu(); 
+            document.getElementById('cartSidebar')?.classList.add('open'); 
+            document.getElementById('cartOverlay')?.classList.add('open'); 
+            CartUI.renderSidebar(); 
+        },
+        close() { 
+            document.getElementById('cartSidebar')?.classList.remove('open'); 
+            document.getElementById('cartOverlay')?.classList.remove('open'); 
+        },
+        toggle() {
+            if (this.isOpen()) {
+                this.close();
+            } else {
+                this.open();
+            }
+        },
         renderSidebar() {
             const list = document.getElementById('cartItemList');
             const totalEl = document.getElementById('cartTotal');
@@ -426,13 +426,31 @@
     };
 
     function initCartUI() {
-        CartUI.update();
-        document.querySelectorAll('.cart-icon-btn').forEach(btn => {
-            btn.addEventListener('click', CartUI.open);
-        });
-        document.getElementById('cartOverlay')?.addEventListener('click', CartUI.close);
-        document.getElementById('cartCloseBtn')?.addEventListener('click', CartUI.close);
+        if (window.CartUI) {
+            CartUI.update();
+        }
     }
+
+    // Global click listener for cart toggle & closing when clicking outside
+    document.addEventListener('click', (e) => {
+        const cartBtn = e.target.closest('#cartBtn, .cart-icon-btn, [aria-label="ตะกร้าสินค้า"]');
+        const cartSidebar = document.getElementById('cartSidebar');
+        const isInsideSidebar = cartSidebar && cartSidebar.contains(e.target);
+
+        if (cartBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (window.CartUI) {
+                CartUI.toggle();
+            }
+            return;
+        }
+
+        // Close cart sidebar when clicking outside on empty space / overlay
+        if (window.CartUI && CartUI.isOpen() && !isInsideSidebar) {
+            CartUI.close();
+        }
+    });
 
     // Robust init: handle both pre/post DOMContentLoaded
     if (document.readyState === 'loading') {

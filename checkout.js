@@ -1,4 +1,4 @@
-﻿/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
 (function() {
     if (window.__alertOverrideInjected) return;
     window.__alertOverrideInjected = true;
@@ -732,19 +732,32 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
 
             // Use Direct Cloud Sync Logic (Simple & Robust)
             const syncToCloud = async (data) => {
-                const firestoreDB = (typeof db !== 'undefined') ? db : (window.firebase ? firebase.firestore() : null);
-                if (!firestoreDB) {
-                    console.error("[v1.2.10] Firestore not found");
-                    return false;
-                }
                 try {
                     console.log("[v1.2.10] Sending to Cloud:", data.id);
-                    await firestoreDB.collection('orders').doc(data.id).set(data);
-                    console.log("[v1.2.10] Cloud Sync Success");
-                    return true;
+                    const cloudData = { ...data };
+                    delete cloudData.subtotal;
+                    delete cloudData.baseShippingCost;
+                    if (!cloudData.customer) cloudData.customer = getActiveUserId();
+
+                    if (window.supabaseClient) {
+                        const { error } = await window.supabaseClient.from('orders').upsert(cloudData);
+                        if (error) {
+                            console.warn("[v1.2.10] Supabase direct upsert error:", error);
+                        } else {
+                            console.log("[v1.2.10] Supabase Cloud Sync Success");
+                            return true;
+                        }
+                    }
+                    
+                    const firestoreDB = (typeof db !== 'undefined') ? db : (window.firebase ? firebase.firestore() : null);
+                    if (firestoreDB) {
+                        await firestoreDB.collection('orders').doc(data.id).set(cloudData);
+                        console.log("[v1.2.10] Cloud Sync via db Success");
+                        return true;
+                    }
+                    return false;
                 } catch (err) {
-                    console.error("[v1.2.10] Cloud Sync Error:", err);
-                    alert("⚠️ คำเตือน: ออเดอร์บันทึกสำเร็จแต่ส่งเข้า Cloud ไม่ได้ (Error: " + err.code + ")");
+                    console.warn("[v1.2.10] Cloud Sync Handled Gracefully:", err);
                     return false;
                 }
             };
@@ -773,7 +786,7 @@ const getCartKey = () => 'pao_cart_' + getActiveUserId();
                         shippingMethod: shippingMethod,
                         paymentMethod: methodLabel,
                         paymentBank: selectedBank,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        createdAt: new Date().toISOString()
                     };
 
                     // 2. Save Locally (Immediate)
