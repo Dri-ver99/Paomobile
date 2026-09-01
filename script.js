@@ -1,4 +1,4 @@
-﻿/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
+/* โ”€โ”€ Premium Alert Override (auto-injected) โ”€โ”€ */
 (function() {
     if (window.__alertOverrideInjected) return;
     window.__alertOverrideInjected = true;
@@ -396,12 +396,12 @@ badge.textContent = '⚫ ปิดให้บริการ';
     style.innerHTML = `
         @keyframes chatFadeIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .chat-window.active { animation: chatFadeIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
-        .msg-row { display: flex; flex-direction: column; width: 100%; margin: 8px 0; }
-        .msg-row.customer { align-items: flex-end; }
-        .msg-row.seller { align-items: flex-start; }
-        .msg-bubble { box-shadow: 0 2px 5px rgba(0,0,0,0.05); max-width: 85%; }
-        .msg-row.customer .msg-bubble { background: #ffffff !important; color: #000 !important; border: 1px solid #eef2f6 !important; border-radius: 18px 18px 4px 18px !important; }
-        .msg-row.seller .msg-bubble { background: #fff5f0 !important; color: #000 !important; border: 1px solid #ffe4d1 !important; border-radius: 18px 18px 18px 4px !important; }
+        .msg-row { display: flex; flex-direction: row; width: 100%; margin: 8px 0; align-items: flex-end; }
+        .msg-row.customer { justify-content: flex-end !important; }
+        .msg-row.seller { justify-content: flex-start !important; }
+        .msg-bubble { box-shadow: 0 2px 5px rgba(0,0,0,0.05); max-width: 75%; word-break: break-word; }
+        .msg-row.customer .msg-bubble { background: linear-gradient(135deg, #f58220 0%, #ee4d2d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 18px 18px 4px 18px !important; }
+        .msg-row.seller .msg-bubble { background: #ffffff !important; color: #1e293b !important; border: 1px solid #e2e8f0 !important; border-radius: 4px 18px 18px 18px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important; }
         
         /* Force Sticker Transparency */
         .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
@@ -619,8 +619,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
                 isRead: false
             });
 
-            await window.supabase.from('chats').upsert({
-                id: normalizedEmail,
+            await notifySellerChatUpdate(normalizedEmail, {
                 lastMessage: "✨ ส่งสติ๊กเกอร์",
                 lastTimestamp: timestamp
             });
@@ -630,6 +629,22 @@ badge.textContent = '⚫ ปิดให้บริการ';
             alert("❌ ส่งสติ๊กเกอร์ไม่สำเร็จครับ");
         }
     };
+
+    async function notifySellerChatUpdate(normalizedEmail, fields) {
+        const supabase = window.supabase || window.supabaseClient;
+        if (!supabase) return;
+        try {
+            const { data } = await supabase.from('chats').select('unreadCount').eq('id', normalizedEmail).single();
+            const currentUnread = (data && typeof data.unreadCount === 'number') ? data.unreadCount : 0;
+            await supabase.from('chats').upsert({
+                id: normalizedEmail,
+                unreadCount: currentUnread + 1,
+                ...fields
+            });
+        } catch (e) {
+            console.warn("[Chat] notifySellerChatUpdate error:", e);
+        }
+    }
 
     document.body.appendChild(chatContainer);
 
@@ -772,67 +787,99 @@ badge.textContent = '⚫ ปิดให้บริการ';
             }
             
             let html = '';
+            let lastDate = '';
             
             docsArray.forEach(msg => {
                 const isCustomer = msg.sender === 'customer' || msg.sender === 'user';
                 
                 let timeStr = '...';
+                let msgDate = '';
                 if (msg.timestamp_ms) {
-                    timeStr = new Date(msg.timestamp_ms).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                } else if (msg.timestamp && msg.timestamp.toDate) {
-                    timeStr = new Date(msg.timestamp.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const d = new Date(msg.timestamp_ms);
+                    timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    msgDate = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+                } else if (msg.timestamp) {
+                    const d = msg.timestamp.toDate ? msg.timestamp.toDate() : new Date(msg.timestamp);
+                    timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    msgDate = d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
                 }
 
-                const tickHtml = isCustomer 
-                    ? (msg.isRead ? '<span style="color:#2ecc71; margin-left:4px; font-weight:800;">✓✓ <span style="font-size:0.65rem; font-weight:500;">อ่านแล้ว</span></span>' : '<span style="color:#2ecc71; margin-left:4px; font-weight:800;">✓</span>') 
-                    : '';
-                const timeHtml = `<div class="msg-time" style="font-size:0.65rem; opacity:0.7; text-align:right; margin-top:4px; margin-bottom:-2px;">${timeStr}${tickHtml}</div>`;
+                if (msgDate && msgDate !== lastDate) {
+                    html += `<div style="text-align:center; margin:14px 0 8px;"><span style="background:rgba(28,23,16,0.75); color:#fff; font-size:0.72rem; font-weight:600; padding:4px 14px; border-radius:100px; backdrop-filter:blur(4px); box-shadow:0 1px 4px rgba(0,0,0,0.15);">${msgDate}</span></div>`;
+                    lastDate = msgDate;
+                }
+
+                const readHtml = (isCustomer && msg.isRead) ? '<span style="font-weight:700; color:#ee4d2d; margin-bottom:1px;">อ่านแล้ว</span>' : '';
+                const customerMetaHtml = `
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:flex-end; font-size:0.65rem; color:#94a3b8; margin-right:6px; flex-shrink:0; font-weight:600;">
+                        ${readHtml}
+                        <span>${timeStr}</span>
+                    </div>
+                `;
+                const sellerMetaHtml = `
+                    <div style="display:flex; flex-direction:column; justify-content:flex-end; font-size:0.65rem; color:#94a3b8; margin-left:6px; flex-shrink:0; font-weight:600;">
+                        <span>${timeStr}</span>
+                    </div>
+                `;
                 
+                const sellerAvatarHtml = !isCustomer ? `
+                    <div style="width:32px; height:32px; border-radius:50%; background:#fff; overflow:hidden; flex-shrink:0; border:1px solid rgba(0,0,0,0.1); margin-right:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08); align-self:flex-start; margin-top:2px;">
+                        <img src="logo.png" style="width:100%; height:100%; object-fit:cover;">
+                    </div>
+                ` : '';
+
                 if (msg.type === 'card') {
                     html += `
-                        <div class="msg-row seller">
-                            <div class="chat-card" style="background:#fff; border-radius:12px; overflow:hidden; border:1px solid #eef2f6; cursor:pointer;" onclick="handleChatCardClick('${msg.cardData.productId}', '${msg.cardData.category}', '${msg.cardData.link}')">
-                                <img src="${msg.cardData.image}" class="chat-card-img" style="border-radius:12px 12px 0 0;" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
+                        <div class="msg-row seller" style="display:flex; flex-direction:row; align-items:flex-end; justify-content:flex-start; margin-bottom:8px; width:100%;">
+                            ${sellerAvatarHtml}
+                            <div class="chat-card" style="background:#fff; border-radius:16px; overflow:hidden; border:1px solid #eef2f6; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.12);" onclick="handleChatCardClick('${msg.cardData.productId}', '${msg.cardData.category}', '${msg.cardData.link}')">
+                                <img src="${msg.cardData.image}" class="chat-card-img" style="border-radius:16px 16px 0 0;" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
                                 <div class="chat-card-info" style="padding:10px;">
                                     <div class="chat-card-title" style="font-weight:600; color:#1e293b;">${msg.cardData.title}</div>
                                     <div class="chat-card-price" style="color:#ee4d2d; font-weight:700;">${msg.cardData.price}</div>
                                 </div>
-                                <div class="chat-card-btn" style="display:block; text-align:center; padding:8px; background:#f8fafc; color:#64748b; text-decoration:none; font-size:0.85rem; border-top:1px solid #f1f5f9;">ดูสินค้า</div>
+                                <div class="chat-card-btn" style="display:block; text-align:center; padding:8px; background:#f8fafc; color:#ee4d2d; text-decoration:none; font-size:0.85rem; border-top:1px solid #f1f5f9; font-weight:700;">ดูรายละเอียดสินค้า</div>
                             </div>
-                            ${timeHtml}
+                            ${sellerMetaHtml}
                         </div>
                     `;
                 } else if (msg.type === 'image') {
                     html += `
-                        <div class="msg-row ${isCustomer ? 'customer' : 'seller'} sticker">
-                            <div class="msg-bubble" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:4px 0 !important; overflow:visible !important;">
-                                <img src="${msg.fileUrl}" class="sticker-img" style="mix-blend-mode:multiply !important; filter:contrast(1.1) brightness(1.1) !important;" onclick="openImageLarge('${msg.fileUrl}')" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
+                        <div class="msg-row ${isCustomer ? 'customer' : 'seller'}" style="display:flex; flex-direction:row; align-items:flex-end; ${isCustomer ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px; width:100%;">
+                            ${!isCustomer ? sellerAvatarHtml : ''}
+                            ${isCustomer ? customerMetaHtml : ''}
+                            <div class="msg-bubble sticker" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important;">
+                                <img src="${msg.fileUrl}" class="sticker-img" style="border-radius:14px; max-width:200px; max-height:200px; object-fit:cover; box-shadow:0 4px 12px rgba(0,0,0,0.15);" onclick="openImageLarge('${msg.fileUrl}')" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
                             </div>
-                            ${timeHtml}
+                            ${!isCustomer ? sellerMetaHtml : ''}
                         </div>
                     `;
                 } else if (msg.type === 'file') {
                     html += `
-                        <div class="msg-row ${isCustomer ? 'customer' : 'seller'}">
+                        <div class="msg-row ${isCustomer ? 'customer' : 'seller'}" style="display:flex; flex-direction:row; align-items:flex-end; ${isCustomer ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px; width:100%;">
+                            ${!isCustomer ? sellerAvatarHtml : ''}
+                            ${isCustomer ? customerMetaHtml : ''}
                             <div class="msg-bubble" style="padding:12px 16px;">
                                 <div style="display:flex; align-items:center; gap:10px;">
                                     <div style="font-size:1.6rem;">📁</div>
                                     <div style="min-width:0;">
                                         <div style="font-size:0.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px; color:inherit;">${msg.fileName || 'ไฟล์แนบ'}</div>
-                                        <a href="${msg.fileUrl}" target="_blank" style="font-size:0.75rem; color:#ee4d2d; font-weight:700; text-decoration:none;">📄 ดาวน์โหลดไฟล์</a>
+                                        <a href="${msg.fileUrl}" target="_blank" style="font-size:0.75rem; color:${isCustomer ? '#ffffff' : '#06C755'}; font-weight:700; text-decoration:underline;">📄 ดาวน์โหลดไฟล์</a>
                                     </div>
                                 </div>
-                                ${timeHtml}
                             </div>
+                            ${!isCustomer ? sellerMetaHtml : ''}
                         </div>
                     `;
                 } else if (msg.type === 'sticker') {
                     html += `
-                        <div class="msg-row ${isCustomer ? 'customer' : 'seller'} sticker">
-                            <div class="msg-bubble" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important; overflow:visible !important;">
-                                <img src="${msg.fileUrl}" class="sticker-img" onclick="openImageLarge('${msg.fileUrl}')" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
+                        <div class="msg-row ${isCustomer ? 'customer' : 'seller'}" style="display:flex; flex-direction:row; align-items:flex-end; ${isCustomer ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px; width:100%;">
+                            ${!isCustomer ? sellerAvatarHtml : ''}
+                            ${isCustomer ? customerMetaHtml : ''}
+                            <div class="msg-bubble sticker" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important;">
+                                <img src="${msg.fileUrl}" class="sticker-img" style="width:130px; height:auto;" onclick="openImageLarge('${msg.fileUrl}')" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
                             </div>
-                            ${timeHtml}
+                            ${!isCustomer ? sellerMetaHtml : ''}
                         </div>
                     `;
                 } else {
@@ -840,14 +887,16 @@ badge.textContent = '⚫ ปิดให้บริการ';
                     const isBigEmoji = msg.text && emojiRegex.test(msg.text) && msg.text.length < 10;
                     const bubbleStyle = isBigEmoji 
                         ? 'background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important; font-size:2.5rem !important;' 
-                        : 'padding:10px 16px; line-height:1.5;';
+                        : '';
 
                     html += `
-                        <div class="msg-row ${isCustomer ? 'customer' : 'seller'} ${isBigEmoji ? 'sticker' : ''}">
+                        <div class="msg-row ${isCustomer ? 'customer' : 'seller'}" style="display:flex; flex-direction:row; align-items:flex-end; ${isCustomer ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px; width:100%;">
+                            ${!isCustomer ? sellerAvatarHtml : ''}
+                            ${isCustomer ? customerMetaHtml : ''}
                             <div class="msg-bubble" style="${bubbleStyle}">
                                 ${msg.text}
-                                ${timeHtml}
                             </div>
+                            ${!isCustomer ? sellerMetaHtml : ''}
                         </div>
                     `;
                 }
@@ -956,8 +1005,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
 
                     document.querySelectorAll('[id^="loading-"], .upload-status-bubble').forEach(el => el.remove());
 
-                    await window.supabase.from('chats').upsert({
-                        id: normalizedEmail,
+                    await notifySellerChatUpdate(normalizedEmail, {
                         lastMessage: typeToSend === 'image' ? "📷 ส่งรูปภาพ" : "📁 ส่งไฟล์: " + finalName,
                         lastTimestamp: timestamp
                     });
@@ -990,8 +1038,7 @@ badge.textContent = '⚫ ปิดให้บริการ';
                     msgsArea.scrollTop = msgsArea.scrollHeight;
                 }
 
-                await window.supabase.from('chats').upsert({
-                    id: normalizedEmail,
+                await notifySellerChatUpdate(normalizedEmail, {
                     userEmail: normalizedEmail,
                     userName: user.name || user.email || 'ลูกค้า',
                     userAvatar: user.avatar || "",

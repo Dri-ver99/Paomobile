@@ -107,26 +107,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data, error } = await supabase.from('orders').select('*');
             if (error) {
                 console.error("[v1.2.10] Sync Error:", error);
-                const statusToast = document.getElementById('firestore-status');
-                if (statusToast) {
-                    let msg = 'ออฟไลน์ ⚠️';
-                    statusToast.innerHTML = `<span style="color:#ff4d4f;">&bull;</span> Cloud: ${msg}`;
-                    statusToast.style.borderColor = '#ffa39e';
-                    statusToast.style.background = '#fff1f0';
-                }
-                updateDashboard();
-                return;
             }
             
-            let fetchedOrders = data.map(doc => ({ ...doc }));
+            let fetchedOrders = (data || []).map(doc => ({ ...doc }));
             
-            fetchedOrders.sort((a, b) => {
-                const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
-                const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+            // Merge with local pao_global_orders so unsynced or local orders aren't destroyed
+            const localGlobal = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+            const orderMap = new Map();
+            localGlobal.forEach(o => orderMap.set(o.id, o));
+            fetchedOrders.forEach(o => orderMap.set(o.id, o));
+            let combinedOrders = Array.from(orderMap.values());
+
+            combinedOrders.sort((a, b) => {
+                const dateA = new Date(a.orderDate || a.createdAt || 0);
+                const dateB = new Date(b.orderDate || b.createdAt || 0);
                 return dateB - dateA;
             });
             
-            ordersData = processExpirations(fetchedOrders);
+            ordersData = processExpirations(combinedOrders);
             
             localStorage.setItem('pao_global_orders', JSON.stringify(ordersData.map(o => ({...o, items: o.items ? o.items.map(i => ({id:i.id, name:i.name, price:i.price, quantity:i.quantity, img:i.img})) : []}))));
             const statusToast = document.getElementById('firestore-status');
@@ -531,6 +529,7 @@ function renderRecentOrders(orders) {
                             <td style="padding: 12px 0; color: #4080ff; font-family: monospace;">${order.id}</td>
                             <td style="padding: 12px 0; max-width: 180px;">
                                 <div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${firstItemName}${others}">${firstItemName}${others}</div>
+                                ${order.returnReason ? `<div style="font-size: 0.72rem; color: #ff4d4f; background: #fff2f0; padding: 2px 6px; border-radius: 4px; margin-top: 4px; border: 1px solid #ffccc7; font-weight: 500;">⚠️ ${order.returnReason}</div>` : ''}
                             </td>
                             <td style="padding: 12px 0;">
                                 <div style="font-size: 0.8rem; color: #333;">${order.customerName || 'ไม่ระบุชื่อ'}</div>
@@ -554,19 +553,72 @@ function renderRecentOrders(orders) {
 }
 
 async function deleteOrder(orderId) {
-    if (!await window.sellerConfirm('🚨 ยืนยันการลบออเดอร์ ' + orderId + ' ใช่ไหมคับ? (ลบแล้วกู้ไม่ได้นะค๊าบ)', 'delete')) return;
-    
-    if (window.supabaseClient) {
-        window.supabaseClient.from('orders').delete().eq('id', orderId)
-            .then(() => alert("ลบทิ้งเรียบร้อยแล้วคับ!"))
-            .catch(err => alert("ลบไม่สำเร็จ (Error): " + err.message));
+    if (!orderId) return;
+    const confirmMsg = '🚨 ยืนยันการลบคำสั่งซื้อหมายเลข ' + orderId + ' ใช่ไหมคับ? (ลบแล้วไม่สามารถกู้คืนได้ค๊าบ)';
+    if (window.sellerConfirm) {
+        if (!await window.sellerConfirm(confirmMsg, 'delete')) return;
     } else {
-        // Fallback local delete
-        const gOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-        const filtered = gOrders.filter(o => o.id !== orderId);
-        localStorage.setItem('pao_global_orders', JSON.stringify(filtered));
-        updateDashboard();
-        alert("ลบในเครื่องเรียบร้อย (ไม่ได้ซิงค์ Cloud)");
+        if (!confirm(confirmMsg)) return;
+    }
+
+    const docId = String(orderId).trim();
+
+    // 1. Instantly remove from memory ordersData array
+    if (typeof ordersData !== 'undefined' && Array.isArray(ordersData)) {
+        ordersData = ordersData.filter(o => String(o.id).trim() !== docId);
+    }
+
+    // 2. Remove from pao_global_orders in localStorage
+    try {
+        const rawGlobal = localStorage.getItem('pao_global_orders') || '[]';
+        let gOrders = JSON.parse(rawGlobal);
+        if (Array.isArray(gOrders)) {
+            const filteredGlobal = gOrders.filter(o => String(o.id).trim() !== docId);
+            localStorage.setItem('pao_global_orders', JSON.stringify(filteredGlobal));
+        }
+    } catch(e) {}
+
+    // 3. Remove from all user-specific order keys in localStorage (pao_orders_*)
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('pao_orders_')) {
+                const uOrders = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(uOrders)) {
+                    const filteredU = uOrders.filter(o => String(o.id).trim() !== docId);
+                    localStorage.setItem(key, JSON.stringify(filteredU));
+                }
+            }
+        }
+    } catch(e) {}
+
+    // 4. Update UI immediately (Dashboard & tables update instantly)
+    if (typeof updateDashboard === 'function') updateDashboard();
+
+    // 5. Broadcast to all open tabs
+    try {
+        const bc = new BroadcastChannel('pao_order_sync');
+        bc.postMessage({ type: 'DELETE_ORDER', orderId: docId });
+        bc.close();
+    } catch(e) {}
+
+    // 6. Delete from Supabase Database
+    if (window.supabaseClient) {
+        try {
+            const { error } = await window.supabaseClient.from('orders').delete().eq('id', docId);
+            if (error) {
+                console.error("[DeleteOrder] Supabase Error:", error);
+            }
+        } catch(err) {
+            console.error("[DeleteOrder] Supabase Exception:", err);
+        }
+    }
+
+    // 7. Show success feedback
+    if (window.sellerAlert) {
+        await window.sellerAlert("ลบคำสั่งซื้อเรียบร้อยแล้วคับ!", "success");
+    } else {
+        alert("ลบคำสั่งซื้อเรียบร้อยแล้วคับ!");
     }
 }
 

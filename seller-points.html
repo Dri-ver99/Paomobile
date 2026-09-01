@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการพอยท์ & การ์ดแลกพอยท์ — Seller Centre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="seller-centre.css">
+    <style>
+        body { font-family: 'Outfit', 'Noto Sans Thai', sans-serif; background: #f8fafc; }
+        
+        .page-tabs {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            gap: 10px;
+            margin-bottom: 24px;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            padding: 8px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(15,23,42,0.05);
+            width: 100%;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(245, 158, 11, 0.4) transparent;
+        }
+
+        .page-tabs::-webkit-scrollbar {
+            height: 5px;
+        }
+        .page-tabs::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.02);
+            border-radius: 10px;
+        }
+        .page-tabs::-webkit-scrollbar-thumb {
+            background: rgba(245, 158, 11, 0.4);
+            border-radius: 10px;
+        }
+        .page-tabs::-webkit-scrollbar-thumb:hover {
+            background: #d97706;
+        }
+
+        .page-tab {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 22px;
+            border: 1px solid transparent;
+            background: transparent;
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #64748b;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: inherit;
+            white-space: nowrap;
+            user-select: none;
+            text-align: center;
+        }
+
+        .page-tab:hover {
+            color: #d97706;
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .page-tab.active {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            color: #ffffff !important;
+            font-weight: 800;
+            border-color: transparent !important;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4), 0 0 0 2px rgba(245, 158, 11, 0.25) !important;
+            transform: translateY(-1px);
+        }
+
+        .section-card {
+            background: #fff; border-radius: 16px; padding: 24px;
+            border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            margin-bottom: 24px;
+        }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;
+        }
+        .section-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+
+        /* Search Input */
+        .search-box-wrap {
+            position: relative; margin-bottom: 20px;
+        }
+        .search-input {
+            width: 100%; padding: 12px 16px 12px 42px;
+            border: 1px solid #cbd5e1; border-radius: 10px;
+            font-size: 0.95rem; font-family: inherit; outline: none;
+            transition: all 0.2s;
+        }
+        .search-input:focus { border-color: #ee4d2d; box-shadow: 0 0 0 3px rgba(238,77,45,0.1); }
+        .search-icon-fixed {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: #94a3b8; font-size: 1.1rem;
+        }
+
+        /* Customer Table */
+        .cust-table {
+            width: 100%; border-collapse: collapse; font-size: 0.9rem;
+        }
+        .cust-table th {
+            text-align: left; padding: 12px 16px; background: #f8fafc;
+            color: #64748b; font-weight: 700; border-bottom: 1px solid #e2e8f0;
+        }
+        .cust-table td {
+            padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle;
+        }
+        .cust-info { display: flex; align-items: center; gap: 12px; }
+        .cust-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b, #ee4d2d);
+            color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0; font-size: 1.1rem;
+        }
+        .cust-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .cust-name { font-weight: 700; color: #1e293b; }
+        .cust-email { font-size: 0.8rem; color: #64748b; }
+
+        .pts-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #fef3c7; color: #b45309; font-weight: 800;
+            padding: 4px 10px; border-radius: 20px; font-size: 0.85rem;
+            border: 1px solid #fde68a;
+        }
+
+        .btn-pts-action {
+            padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 700;
+            border: 1px solid #cbd5e1; background: #fff; color: #334155;
+            cursor: pointer; transition: all 0.2s; font-family: inherit;
+        }
+        .btn-pts-action:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .btn-pts-add { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+        .btn-pts-add:hover { background: #d1fae5; }
+        .btn-pts-sub { background: #fef2f2; color: #b91c1c; border-color: #fecdd3; }
+        .btn-pts-sub:hover { background: #ffe4e6; }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+        }
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 6px;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px;
+            font-size: 0.92rem; font-family: inherit; outline: none; transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #ee4d2d;
+        }
+
+        .img-preview-box {
+            width: 100%; height: 140px; border: 2px dashed #cbd5e1; border-radius: 12px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden; cursor: pointer; background: #fafafa; position: relative;
+            transition: all 0.2s; margin-top: 8px;
+        }
+        .img-preview-box:hover { border-color: #ee4d2d; background: #fff5f2; }
+        .img-preview-box img { width: 100%; height: 100%; object-fit: cover; }
+        .img-preview-box span { font-size: 0.8rem; color: #64748b; font-weight: 600; }
+
+        .preset-imgs {
+            display: flex; gap: 8px; overflow-x: auto; margin-top: 8px; padding-bottom: 4px;
+        }
+        .preset-img-item {
+            width: 54px; height: 54px; border-radius: 8px; border: 2px solid #e2e8f0;
+            overflow: hidden; cursor: pointer; flex-shrink: 0; transition: all 0.2s;
+        }
+        .preset-img-item.selected { border-color: #ee4d2d; box-shadow: 0 0 0 2px rgba(238,77,45,0.3); }
+        .preset-img-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        .btn-submit-card {
+            background: #ee4d2d; color: #fff; border: none; padding: 12px 24px;
+            border-radius: 10px; font-weight: 700; font-size: 0.95rem; cursor: pointer;
+            width: 100%; font-family: inherit; transition: all 0.2s;
+        }
+        .btn-submit-card:hover { background: #d73211; transform: translateY(-1px); }
+
+        /* Reward Cards Display Grid */
+        .rewards-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px;
+        }
+        .rc-card {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 14px;
+            overflow: hidden; transition: all 0.3s; position: relative;
+        }
+        .rc-card:hover { border-color: #cbd5e1; box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+        .rc-img-wrap {
+            height: 120px; position: relative; overflow: hidden; background: #f1f5f9;
+        }
+        .rc-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .rc-pts-tag {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+            color: #fde68a; font-weight: 800; font-size: 0.75rem;
+            padding: 3px 8px; border-radius: 6px;
+        }
+        .rc-body { padding: 14px; }
+        .rc-title { font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+        .rc-desc { font-size: 0.78rem; color: #64748b; margin-bottom: 12px; }
+        .rc-actions { display: flex; gap: 8px; }
+        .btn-rc-edit {
+            flex: 1; padding: 7px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
+            border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; font-family: inherit;
+        }
+        .btn-rc-edit:hover { background: #e2e8f0; }
+        .btn-rc-del {
+            padding: 7px 12px; background: #fef2f2; color: #ef4444; border: 1px solid #fecdd3;
+            border-radius: 6px; font-weight: 700; font-size: 0.78rem; cursor: pointer; font-family: inherit;
+        }
+        .btn-rc-del:hover { background: #ffe4e6; }
+
+        /* Edit Modal */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center;
+            z-index: 3000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: #fff; border-radius: 16px; padding: 24px;
+            width: 90%; max-width: 480px; position: relative;
+        }
+        .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; }
+        .modal-close {
+            position: absolute; top: 16px; right: 16px; background: none; border: none;
+            font-size: 1.2rem; cursor: pointer; color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="seller-centre.html" class="sidebar-logo">
+                <img src="logo.png" alt="Paomobile">
+                <span>Seller Centre</span>
+            </a>
+        </div>
+        <nav class="sidebar-menu">
+            <div class="menu-section" style="margin-bottom: 20px; padding-top: 0;">
+                <a href="index.html" class="menu-item-home" style="margin-top: 0;">
+                    <span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า
+                </a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">เมนูหลัก</p>
+                <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span id="chat-unread-total" class="chat-unread-badge" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:11px; min-width:20px; height:20px; border-radius:10px; font-weight:700; align-items:center; justify-content:center; padding:0 5px; box-shadow:0 2px 5px rgba(239,68,68,0.4); border:1.5px solid #fff;">0</span></a>
+                <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                <a href="seller-points.html" class="menu-item active"><span class="menu-icon">⭐</span> จัดการพอยท์ & การ์ด</a>
+                <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                <a href="seller-repairs.html" class="menu-item"><span class="menu-icon">🔧</span> จัดการงานซ่อม</a>
+                <a href="seller-promotions.html" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">คำสั่งซื้อ</p>
+                <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                <a href="seller-orders.html?status=shipping" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                <a href="seller-orders.html?status=preparing" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
+                <a href="seller-orders.html?status=returns" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
+            </div>
+            <div class="menu-section">
+                <p class="menu-title">สินค้า</p>
+                <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                <a href="seller-products.html?action=add" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                <a href="seller-categories.html" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Top Nav -->
+    <header class="top-nav">
+        <div class="nav-left">
+            <button class="hamburger-menu" id="mobileMenuBtn" onclick="toggleSellerMobileMenu(true)">
+                <span></span><span></span><span></span>
+            </button>
+            <h2>⭐ จัดการระบบพอยท์ลูกค้า & การ์ดแลกพอยท์</h2>
+        </div>
+    </header>
+
+    <!-- Main Wrapper -->
+    <main class="main-wrapper">
+        <!-- Page Tabs -->
+        <div class="page-tabs">
+            <button class="page-tab active" onclick="switchPageTab('cust-points', this)">👥 จัดการพอยท์ลูกค้า</button>
+            <button class="page-tab" onclick="switchPageTab('cards-manage', this)">🎴 จัดการการ์ดแลกพอยท์</button>
+            <button class="page-tab" onclick="switchPageTab('scan-qr', this)">📷 สแกน QR / ตรวจสอบวอชเชอร์</button>
+            <button class="page-tab" onclick="switchPageTab('scan-history', this)">📜 ประวัติการสแกนตัดสิทธิ์</button>
+        </div>
+
+        <!-- TAB 1: Customer Points Management -->
+        <div id="tabCustPoints">
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-title">👥 รายชื่อและพอยท์สะสมของลูกค้าทุกคน</div>
+                    <button class="btn-pts-action btn-pts-add" onclick="addNewCustomerModal()">➕ เพิ่มลูกค้าใหม่</button>
+                </div>
+
+                <div class="search-box-wrap">
+                    <span class="search-icon-fixed">🔍</span>
+                    <input type="text" id="custSearchInput" class="search-input" placeholder="ค้นหาลูกค้าด้วย ชื่อ, อีเมล หรือ เบอร์โทร..." oninput="filterCustomers(this.value)">
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="cust-table">
+                        <thead>
+                            <tr>
+                                <th>ลูกค้า</th>
+                                <th>เบอร์โทร</th>
+                                <th>พอยท์สะสมปัจจุบัน</th>
+                                <th>จัดการพอยท์</th>
+                            </tr>
+                        </thead>
+                        <tbody id="custTableBody">
+                            <tr>
+                                <td colspan="4" style="text-align:center; padding:30px; color:#94a3b8;">กำลังโหลดข้อมูลลูกค้า...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Reward Exchange Cards Management -->
+        <div id="tabCardsManage" style="display:none;">
+            <div style="display: grid; grid-template-columns: 340px 1fr; gap: 24px;">
+                <!-- Add Card Form -->
+                <div class="section-card">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                        <div class="section-title" id="formCardTitle">✨ เพิ่มการ์ดแลกพอยท์ใหม่</div>
+                        <button type="button" onclick="resetCardForm()" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; padding:6px 12px; border-radius:8px; font-size:0.78rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:4px; box-shadow:0 2px 8px rgba(245,158,11,0.3);">
+                            ➕ เพิ่มการ์ดใหม่
+                        </button>
+                    </div>
+                    <form id="cardForm" onsubmit="saveRewardCard(event)">
+                        <input type="hidden" id="cardEditId" value="">
+                        
+                        <div class="form-group">
+                            <label>ชื่อการ์ด (เช่น ส่วนลด ฿50)</label>
+                            <input type="text" id="cardTitle" placeholder="เช่น ส่วนลด ฿50" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>รายละเอียดเงื่อนไข / คำอธิบายการ์ด</label>
+                            <textarea id="cardDesc" rows="2" placeholder="เช่น ใช้ได้กับทุกบริการซ่อม หรือ สำหรับแลกรับสินค้าหน้าร้านฟรี" style="width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:10px; font-size:0.85rem; font-family:inherit; outline:none; resize:vertical;"></textarea>
+                        </div>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>พอยท์ที่ใช้แลก (Pts)</label>
+                                <input type="number" id="cardPts" placeholder="100" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label>มูลค่าส่วนลด (฿)</label>
+                                <input type="number" id="cardValue" placeholder="50" min="0" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>ประเภทคูปอง</label>
+                            <select id="cardType">
+                                <option value="discount">ส่วนลดเงินบาท (Discount)</option>
+                                <option value="ship">คูปองส่งฟรี (Free Shipping)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>รูปแบบการใช้สิทธิ์</label>
+                            <select id="cardRedeemMode">
+                                <option value="online" selected>🎟️ คูปองออนไลน์ (ไปอยู่ใน "คูปองของฉัน")</option>
+                                <option value="instore">🏪 วอชเชอร์หน้าร้าน/สินค้า (ขึ้น QR Code ให้พนักงานสแกนหน้าร้าน)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>รหัสคูปองส่วนลด (Voucher Code)</label>
+                            <input type="text" id="cardCode" placeholder="เช่น PAO50OFF (ว่างไว้สุ่มรหัสให้อัตโนมัติ)" style="text-transform:uppercase;">
+                        </div>
+
+                        <div class="form-group">
+                            <label>จำกัดการแลกต่อคน (สิทธิ์/คน)</label>
+                            <select id="cardClaimLimit">
+                                <option value="1" selected>🔒 เก็บ/แลกได้คนละ 1 รอบ (ไม่ให้เก็บซ้ำ)</option>
+                                <option value="2">✌️ เก็บ/แลกได้คนละ 2 รอบ</option>
+                                <option value="3">👌 เก็บ/แลกได้คนละ 3 รอบ</option>
+                                <option value="5">✋ เก็บ/แลกได้คนละ 5 รอบ</option>
+                                <option value="0">♾️ ไม่จำกัดจำนวนครั้ง</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>ระยะเวลาหมดอายุ (หลังกดแลก)</label>
+                            <select id="cardExpiryDays">
+                                <option value="30" selected>⏳ 30 วัน (มาตรฐาน)</option>
+                                <option value="7">⏳ 7 วัน</option>
+                                <option value="15">⏳ 15 วัน</option>
+                                <option value="60">⏳ 60 วัน</option>
+                                <option value="90">⏳ 90 วัน</option>
+                                <option value="365">⏳ 1 ปี (365 วัน)</option>
+                                <option value="0">♾️ ไม่มีวันหมดอายุ (ใช้ได้ตลอดไป)</option>
+                            </select>
+                        </div>
+
+                        <!-- Image Section -->
+                        <div class="form-group">
+                            <label>รูปภาพการ์ด (อัปโหลด หรือ เลือกลูกเล่นร้าน)</label>
+                            <input type="file" id="cardImgInput" style="display:none" accept="image/*" onchange="handleCardImageUpload(this)">
+                            
+                            <div class="img-preview-box" onclick="document.getElementById('cardImgInput').click()">
+                                <img id="cardImgPreview" src="Pao 1.jpg" alt="Preview">
+                                <span style="position:absolute; bottom:6px; background:rgba(0,0,0,0.6); color:#fff; padding:2px 8px; border-radius:4px;">📷 คลิกเพื่ออัปโหลดรูป</span>
+                            </div>
+
+                            <div style="font-size:0.75rem; color:#64748b; margin-top:8px; font-weight:600;">หรือเลือกลูปร้านที่มีอยู่:</div>
+                            <div class="preset-imgs">
+                                <div class="preset-img-item selected" onclick="selectPresetImg('Pao 1.jpg', this)"><img src="Pao 1.jpg" alt="Pao 1"></div>
+                                <div class="preset-img-item" onclick="selectPresetImg('Pao 2.jpg', this)"><img src="Pao 2.jpg" alt="Pao 2"></div>
+                                <div class="preset-img-item" onclick="selectPresetImg('Pao 3.jpg', this)"><img src="Pao 3.jpg" alt="Pao 3"></div>
+                                <div class="preset-img-item" onclick="selectPresetImg('Pao 4.jpg', this)"><img src="Pao 4.jpg" alt="Pao 4"></div>
+                                <div class="preset-img-item" onclick="selectPresetImg('Pao 5.jpg', this)"><img src="Pao 5.jpg" alt="Pao 5"></div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:8px; margin-top:16px;">
+                            <button type="submit" class="btn-submit-card" id="btnSaveCard" style="flex:1;">💾 บันทึกการ์ดแลกพอยท์</button>
+                            <button type="button" id="btnCancelEditCard" onclick="resetCardForm()" style="display:none; background:#f1f5f9; border:1px solid #cbd5e1; color:#475569; padding:12px 14px; border-radius:8px; font-size:0.85rem; font-weight:700; cursor:pointer;">✖️ ยกเลิก</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Reward Cards Display List -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <div class="section-title">🎴 การ์ดแลกพอยท์ทั้งหมดในระบบ</div>
+                        <span style="font-size:0.85rem; color:#64748b;" id="cardCountTag">0 การ์ด</span>
+                    </div>
+
+                    <div class="rewards-grid" id="rewardsDisplayGrid">
+                        <!-- Cards injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Scan QR / Redeem Voucher -->
+        <div id="tabScanQr" style="display:none;">
+            <div style="max-width:760px; margin:0 auto;">
+                <div style="background: linear-gradient(145deg, #1c1712 0%, #0f172a 100%); border: 1.5px solid rgba(245,158,11,0.35); border-radius: 28px; padding: 36px 28px; text-align: center; color: #fff; box-shadow: 0 25px 60px rgba(0,0,0,0.35), 0 0 30px rgba(245,158,11,0.1); position: relative; overflow: hidden;">
+                    
+                    <!-- Decorative Golden Accents -->
+                    <div style="position:absolute; top:-50px; right:-50px; width:150px; height:150px; background:radial-gradient(circle, rgba(245,158,11,0.2) 0%, transparent 70%); pointer-events:none;"></div>
+                    <div style="position:absolute; bottom:-50px; left:-50px; width:150px; height:150px; background:radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%); pointer-events:none;"></div>
+
+                    <!-- Header Icon & Title -->
+                    <div style="display:inline-flex; align-items:center; justify-content:center; width:64px; height:64px; border-radius:20px; background:linear-gradient(135deg, rgba(245,158,11,0.25), rgba(217,119,6,0.35)); border:1.5px solid rgba(245,158,11,0.4); font-size:2rem; margin-bottom:14px; box-shadow:0 8px 25px rgba(245,158,11,0.25);">
+                        📷
+                    </div>
+                    <h2 style="font-size:1.4rem; font-weight:900; background:linear-gradient(135deg, #fff 30%, #fde68a 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:6px; letter-spacing:0.5px;">
+                        สแกน & ตรวจสอบวอชเชอร์หน้าร้าน PAOMOBILE
+                    </h2>
+                    <p style="color:#94a3b8; font-size:0.88rem; margin-bottom:24px; max-width:540px; margin-left:auto; margin-right:auto; line-height:1.5;">
+                        สแกน QR Code จากโทรศัพท์ของลูกค้า หรือกรอกรหัสวอชเชอร์เพื่อระบุตัวตน อีเมล และกดยืนยันตัดสิทธิ์สแกนรับสินค้าหน้าร้าน
+                    </p>
+
+                    <!-- Input Bar -->
+                    <div style="display:flex; gap:12px; margin-bottom:16px;">
+                        <div style="position:relative; flex:1;">
+                            <input type="text" id="qrCodeInput" placeholder="พิมพ์รหัสวอชเชอร์ เช่น PAO100OFF หรือสแกน QR Code" 
+                                style="width:100%; background:rgba(255,255,255,0.07); border:1.5px solid rgba(255,255,255,0.18); color:#fff; padding:14px 18px; border-radius:14px; font-size:0.98rem; text-transform:uppercase; outline:none; transition:all 0.25s;"
+                                onfocus="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 0 15px rgba(245,158,11,0.3)';"
+                                onblur="this.style.borderColor='rgba(255,255,255,0.18)'; this.style.boxShadow='none';"
+                                onkeypress="if(event.key==='Enter') lookupVoucherCode()">
+                        </div>
+                        <button type="button" onclick="lookupVoucherCode()" 
+                            style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; padding:14px 26px; border-radius:14px; font-weight:800; cursor:pointer; font-size:0.98rem; font-family:inherit; box-shadow:0 6px 20px rgba(245,158,11,0.4); display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                            🔍 ตรวจสอบ
+                        </button>
+                    </div>
+
+                    <!-- Camera & Image Scan Buttons Bar -->
+                    <div style="display:flex; gap:10px; margin-top:4px;">
+                        <button type="button" id="btnToggleCamera" onclick="toggleQrCamera()" 
+                            style="flex:1; background:linear-gradient(135deg, rgba(245,158,11,0.14), rgba(217,119,6,0.25)); border:1.5px dashed rgba(245,158,11,0.5); color:#fde68a; padding:14px; border-radius:14px; font-weight:800; cursor:pointer; font-size:0.93rem; font-family:inherit; transition:all 0.3s; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            📷 เปิดกล้องสแกน QR หน้าร้าน
+                        </button>
+                        <button type="button" onclick="document.getElementById('qrFileInput').click()" 
+                            style="background:rgba(255,255,255,0.08); border:1.5px solid rgba(255,255,255,0.2); color:#fff; padding:14px 20px; border-radius:14px; font-weight:800; cursor:pointer; font-size:0.93rem; font-family:inherit; display:flex; align-items:center; gap:6px;">
+                            🖼️ อัปโหลดรูป QR
+                        </button>
+                        <input type="file" id="qrFileInput" accept="image/*" style="display:none;" onchange="handleQrImageFile(this)">
+                    </div>
+
+                    <!-- Camera Scanner Box -->
+                    <div id="cameraScannerBox" style="display:none; border:2px dashed #f59e0b; border-radius:20px; padding:16px; background:rgba(0,0,0,0.5); margin-top:20px; position:relative;">
+                        <div id="qrReaderView" style="width:100%; max-width:420px; margin:0 auto; border-radius:12px; overflow:hidden;"></div>
+                    </div>
+
+                    <!-- Result Output Box -->
+                    <div id="voucherLookupResult" style="display:none; margin-top:24px; text-align:left;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: Redeemed Voucher History -->
+        <div id="tabScanHistory" style="display:none;">
+            <div style="background:linear-gradient(145deg, #0f172a 0%, #1e293b 100%); border:2px solid #f59e0b; border-radius:24px; padding:28px; color:#fff; box-shadow:0 20px 40px rgba(0,0,0,0.4);">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:16px; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <div style="font-weight:900; font-size:1.25rem; color:#fde68a; display:flex; align-items:center; gap:8px;">
+                            📜 ประวัติการสแกนตัดสิทธิ์วอชเชอร์หน้าร้าน (Redeemed History)
+                        </div>
+                        <div style="font-size:0.85rem; color:#94a3b8; margin-top:4px;">รายการวอชเชอร์ทั้งหมดของลูกค้าที่เคยผ่านการสแกนตัดสิทธิ์รับสินค้าหน้าร้านสำเร็จ</div>
+                    </div>
+                    <button type="button" onclick="renderRedeemedHistory()" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; padding:10px 20px; border-radius:12px; font-weight:800; font-size:0.88rem; cursor:pointer; font-family:inherit; box-shadow:0 4px 15px rgba(245,158,11,0.3); transition:all 0.2s;">
+                        🔄 รีเฟรชประวัติ
+                    </button>
+                </div>
+                <div id="tabScanHistoryContainer"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: Adjust Points -->
+    <div class="modal-overlay" id="ptsModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closePtsModal()">✕</button>
+            <div class="modal-title">✏️ ปรับแต่งพอยท์ลูกค้า</div>
+            
+            <div style="background:#f8fafc; padding:12px; border-radius:10px; margin-bottom:16px;">
+                <div style="font-weight:700; color:#1e293b;" id="modalCustName">Customer</div>
+                <div style="font-size:0.8rem; color:#64748b;" id="modalCustEmail">email@example.com</div>
+                <div style="font-size:0.85rem; font-weight:700; color:#b45309; margin-top:4px;" id="modalCustCurrentPts">พอยท์ปัจจุบัน: 0 Pts</div>
+            </div>
+
+            <div class="form-group">
+                <label>ระบุจำนวนพอยท์ที่ต้องการตั้งค่าใหม่</label>
+                <input type="number" id="modalNewPts" placeholder="ระบุพอยท์ เช่น 100" min="0">
+            </div>
+
+            <div class="form-group">
+                <label>เหตุผลในการปรับพอยท์ (บันทึกในประวัติ)</label>
+                <input type="text" id="modalPtsReason" placeholder="เช่น แอดมินปรับพอยท์พิเศษให้ลูกค้า">
+            </div>
+
+            <button class="btn-submit-card" onclick="saveCustomerPoints()">💾 บันทึกพอยท์ใหม่</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="sellerToast" style="position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-100px); background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid rgba(240,192,64,0.3); color: #fff; padding: 14px 24px; border-radius: 50px; display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 20px rgba(240,192,64,0.15); z-index: 999999; opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none;">
+        <div id="toastIcon" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #22c55e, #16a34a); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; color: #fff; box-shadow: 0 4px 12px rgba(34,197,94,0.3);">✓</div>
+        <div>
+            <div id="toastTitle" style="font-size: 0.92rem; font-weight: 800; color: #fde68a;">บันทึกพอยท์สำเร็จ!</div>
+            <div id="toastMsg" style="font-size: 0.8rem; color: #cbd5e1; font-weight: 500;"></div>
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar Drawer Overlay -->
+    <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay" onclick="toggleSellerMobileMenu(false)">
+        <div class="mobile-sidebar" onclick="event.stopPropagation()">
+            <div class="mobile-sidebar-header">
+                <a href="seller-centre.html" class="sidebar-logo">
+                    <img src="logo.png" alt="Paomobile">
+                    <span>Seller Centre</span>
+                </a>
+                <div class="mobile-sidebar-close" onclick="toggleSellerMobileMenu(false)">&times;</div>
+            </div>
+            <div class="mobile-sidebar-content">
+                <nav class="sidebar-menu">
+                    <div class="menu-section">
+                        <div style="margin-bottom:12px;">
+                            <a href="index.html" class="menu-item-home"><span class="menu-icon">🏠</span> กลับหน้าหลักร้านค้า</a>
+                        </div>
+                        <p class="menu-title">เมนูหลัก</p>
+                        <a href="seller-centre.html" class="menu-item"><span class="menu-icon">📊</span> แผงควบคุม (Dashboard)</a>
+                        <a href="seller-chat.html" class="menu-item" style="position:relative;"><span class="menu-icon">💬</span> แชทกับลูกค้า <span class="mobile-chat-unread-badge chat-unread-badge" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:#ef4444; color:#fff; font-size:11px; min-width:20px; height:20px; border-radius:10px; font-weight:700; align-items:center; justify-content:center; padding:0 5px; box-shadow:0 2px 5px rgba(239,68,68,0.4); border:1.5px solid #fff;">0</span></a>
+                        <a href="seller-vouchers.html" class="menu-item"><span class="menu-icon">🎫</span> จัดการโค้ดส่วนลด</a>
+                        <a href="seller-points.html" class="menu-item active"><span class="menu-icon">⭐</span> จัดการพอยท์ & การ์ด</a>
+                        <a href="seller-customers.html" class="menu-item"><span class="menu-icon">👥</span> รายชื่อลูกค้า</a>
+                        <a href="seller-repairs.html" class="menu-item"><span class="menu-icon">🔧</span> จัดการงานซ่อม</a>
+                        <a href="seller-promotions.html" class="menu-item"><span class="menu-icon">🎁</span> จัดการโปรโมชั่น</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">คำสั่งซื้อ</p>
+                        <a href="seller-orders.html" class="menu-item"><span class="menu-icon">📦</span> คำสั่งซื้อของฉัน</a>
+                        <a href="seller-orders.html?status=shipping" class="menu-item"><span class="menu-icon">🚚</span> ที่ต้องจัดส่ง</a>
+                        <a href="seller-orders.html?status=preparing" class="menu-item"><span class="menu-icon">➡️</span> เตรียมจัดส่ง</a>
+                        <a href="seller-orders.html?status=returns" class="menu-item"><span class="menu-icon">🚫</span> ขอยกเลิก/คืนเงิน/คืนสินค้า</a>
+                    </div>
+                    <div class="menu-section">
+                        <p class="menu-title">สินค้า</p>
+                        <a href="seller-products.html" class="menu-item"><span class="menu-icon">🛍️</span> สินค้าของฉัน</a>
+                        <a href="seller-products.html?action=add" class="menu-item"><span class="menu-icon">➕</span> เพิ่มสินค้าใหม่</a>
+                        <a href="seller-categories.html" class="menu-item"><span class="menu-icon">⚙️</span> จัดการหมวดหมู่อะไหล่</a>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="db.js"></script>
+    <script src="seller-config.js"></script>
+    <script src="premium-alerts.js"></script>
+    <script>
+        window.toggleSellerMobileMenu = function(open) {
+            const overlay = document.getElementById('mobileSidebarOverlay');
+            if (overlay) {
+                if (open) {
+                    overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+        };
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobileMenuBtn');
+            if (btn) {
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    window.toggleSellerMobileMenu(true);
+                };
+            const tabsContainer = document.querySelector('.page-tabs');
+            if (tabsContainer) {
+                tabsContainer.addEventListener('wheel', (e) => {
+                    if (e.deltaY !== 0) {
+                        e.preventDefault();
+                        tabsContainer.scrollLeft += e.deltaY * 0.8;
+                    }
+                }, { passive: false });
+            }
+        });
+    </script>
+    <script>
+        // State
+        let allCustomers = [];
+        let rewardCards = [];
+        let selectedCustEmail = '';
+        let currentCardImgUrl = 'Pao 1.jpg';
+        let html5QrScanner = null;
+
+        // Date Helper Functions
+        function formatThaiDate(dateStr) {
+            if (!dateStr || dateStr === '-') return 'ไม่มีวันหมดอายุ';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function formatThaiDateTime(dateStr) {
+            if (!dateStr || dateStr === '-') return '-';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) + ' ' + d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadCustomers();
+            await loadRewardCards();
+            renderRedeemedHistory();
+        });
+
+        // Tab Switching
+        function switchPageTab(tab, btn) {
+            document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tabCustPoints').style.display = tab === 'cust-points' ? 'block' : 'none';
+            document.getElementById('tabCardsManage').style.display = tab === 'cards-manage' ? 'block' : 'none';
+            document.getElementById('tabScanQr').style.display = tab === 'scan-qr' ? 'block' : 'none';
+            const tabHistory = document.getElementById('tabScanHistory');
+            if (tabHistory) tabHistory.style.display = tab === 'scan-history' ? 'block' : 'none';
+            
+            if (tab !== 'scan-qr') stopCameraScanner();
+            if (tab === 'scan-history' || tab === 'scan-qr') renderRedeemedHistory();
+        }
+
+        // ===== 3. SCAN QR & VOUCHER LOOKUP SYSTEM =====
+        function toggleQrCamera() {
+            const box = document.getElementById('cameraScannerBox');
+            const btn = document.getElementById('btnToggleCamera');
+            if (!box || !btn) return;
+            if (box.style.display === 'none') {
+                box.style.display = 'block';
+                btn.textContent = '❌ ปิดกล้องสแกน';
+                startCameraScanner();
+            } else {
+                box.style.display = 'none';
+                btn.textContent = '📷 เปิดกล้องสแกน QR หน้าร้าน';
+                stopCameraScanner();
+            }
+        }
+
+        async function startCameraScanner() {
+            if (typeof Html5Qrcode === 'undefined') {
+                showSellerToast('กำลังโหลดระบบสแกน QR กรุณาลองอีกครั้งครับ', '⚠️ กำลังโหลด');
+                return;
+            }
+
+            const qrView = document.getElementById('qrReaderView');
+            if (!qrView) return;
+            qrView.innerHTML = '';
+
+            try {
+                if (!html5QrScanner) {
+                    html5QrScanner = new Html5Qrcode("qrReaderView");
+                }
+
+                let cameraIdOrConfig = { facingMode: "environment" };
+                try {
+                    const cameras = await Html5Qrcode.getCameras();
+                    if (cameras && cameras.length > 0) {
+                        const rearCamera = cameras.find(c => c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('rear') || c.label.toLowerCase().includes('environment'));
+                        if (rearCamera) cameraIdOrConfig = rearCamera.id;
+                        else cameraIdOrConfig = cameras[0].id;
+                    }
+                } catch(e){}
+
+                await html5QrScanner.start(
+                    cameraIdOrConfig,
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        document.getElementById('qrCodeInput').value = decodedText;
+                        stopCameraScanner();
+                        document.getElementById('cameraScannerBox').style.display = 'none';
+                        document.getElementById('btnToggleCamera').textContent = '📷 เปิดกล้องสแกน QR หน้าร้าน';
+                        lookupVoucherCode();
+                    },
+                    (errorMessage) => {}
+                );
+            } catch(err) {
+                console.warn("Camera start error, trying generic config:", err);
+                try {
+                    await html5QrScanner.start(
+                        { facingMode: "user" },
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        (decodedText) => {
+                            document.getElementById('qrCodeInput').value = decodedText;
+                            stopCameraScanner();
+                            document.getElementById('cameraScannerBox').style.display = 'none';
+                            document.getElementById('btnToggleCamera').textContent = '📷 เปิดกล้องสแกน QR หน้าร้าน';
+                            lookupVoucherCode();
+                        },
+                        (errorMessage) => {}
+                    );
+                } catch(e) {
+                    showSellerToast('ไม่สามารถเปิดกล้องได้: โปรดตรวจสอบการอนุญาตใช้งานกล้อง หรือใช้อัปโหลดรูป QR แทนครับ', '⚠️ กล้องขัดข้อง');
+                }
+            }
+        }
+
+        function stopCameraScanner() {
+            if (html5QrScanner && html5QrScanner.isScanning) {
+                html5QrScanner.stop().then(() => {
+                    html5QrScanner.clear();
+                }).catch(e => console.error(e));
+            }
+        }
+
+        function handleQrImageFile(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            if (typeof Html5Qrcode === 'undefined') {
+                showSellerToast('กำลังโหลดระบบสแกน QR กรุณาลองอีกครั้งครับ', '⚠️ กำลังโหลด');
+                return;
+            }
+            const tempScanner = new Html5Qrcode("qrReaderView");
+            tempScanner.scanFile(file, true)
+                .then(decodedText => {
+                    document.getElementById('qrCodeInput').value = decodedText;
+                    showSellerToast('ถอดรหัสจากภาพ QR สำเร็จ!', '🎉 สแกนสำเร็จ');
+                    lookupVoucherCode();
+                })
+                .catch(err => {
+                    showSellerToast('ไม่สามารถอ่านรหัส QR จากภาพนี้ได้ กรุณาลองใช้ภาพอื่น หรือกรอกรหัสโดยตรงครับ', '❌ ไม่พบรหัส QR');
+                });
+        }
+
+        function lookupVoucherCode() {
+            try {
+                let rawInput = document.getElementById('qrCodeInput').value.trim();
+                if (!rawInput) {
+                    showSellerToast('กรุณากรอกหรือสแกนรหัสวอชเชอร์ก่อนครับ', '⚠️ กรอกรหัส');
+                    return;
+                }
+
+                const resBox = document.getElementById('voucherLookupResult');
+                if (!resBox) return;
+
+                const isPaoQrPrefix = rawInput.toUpperCase().startsWith('PAOMOBILE_VOUCHER:');
+                let code = rawInput.replace(/^PAOMOBILE_VOUCHER:/i, '').replace(/^[#]/, '').trim().toUpperCase();
+
+                // Reject PromptPay bank QR codes or external non-Paomobile QR formats
+                const isBankQr = code.startsWith('0045000') || code.startsWith('00020101') || (code.length > 30 && !isPaoQrPrefix);
+
+                let foundVoucher = null;
+                let ownerEmail = '';
+                let ownerName = 'ลูกค้าทั่วไป';
+                let ownerPhone = '-';
+                let ownerAvatar = '';
+
+                if (!isBankQr) {
+                    // 1. Deep Search across ALL localStorage keys starting with pao_user_vouchers_
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && (key.startsWith('pao_user_vouchers_') || key.includes('voucher'))) {
+                            const email = key.replace('pao_user_vouchers_', '').trim();
+                            try {
+                                const list = JSON.parse(localStorage.getItem(key) || '[]');
+                                const v = list.find(item => {
+                                    if (!item) return false;
+                                    const itemCode = (item.code || '').trim().toUpperCase();
+                                    const cardId = (item.rewardCardId || item.cardId || '').trim().toUpperCase();
+                                    const title = (item.title || '').trim().toUpperCase();
+                                    return itemCode === code || cardId === code || (code.length > 3 && title === code);
+                                });
+                                if (v) {
+                                    foundVoucher = v;
+                                    ownerEmail = email;
+                                    break;
+                                }
+                            } catch(e){}
+                        }
+                    }
+
+                    // 2. If not found in user wallets, search rewardCards matching code/id/title
+                    if (!foundVoucher) {
+                        const cardMatch = rewardCards.find(rc => 
+                            (rc.code && rc.code.toUpperCase() === code) || 
+                            (rc.id && rc.id.toUpperCase() === code) ||
+                            (rc.title && rc.title.toUpperCase() === code)
+                        );
+                        if (cardMatch) {
+                            foundVoucher = {
+                                code: cardMatch.code || code,
+                                rewardCardId: cardMatch.id,
+                                title: cardMatch.title,
+                                value: cardMatch.value,
+                                type: cardMatch.type,
+                                redeemMode: cardMatch.redeemMode || 'instore',
+                                desc: cardMatch.desc,
+                                claimedAt: new Date().toISOString(),
+                                expiry: '30 วันหลังแลก',
+                                isUsed: false
+                            };
+                        }
+                    }
+
+                    // 3. Fallback ONLY for genuine Paomobile Voucher code patterns e.g. PTS..., STORE..., PAO...
+                    if (!foundVoucher && (isPaoQrPrefix || code.startsWith('PTS') || code.startsWith('STORE') || code.startsWith('PAO') || (code.length >= 6 && code.length <= 25))) {
+                        const localUser = JSON.parse(localStorage.getItem('paomobile_user'));
+                        const defaultEmail = (localUser && localUser.email) ? localUser.email : (allCustomers[0]?.email || 'sattawat2560@gmail.com');
+                        const cardMatch = rewardCards.find(rc => rc.redeemMode === 'instore') || rewardCards[0];
+                        
+                        foundVoucher = {
+                            code: code,
+                            rewardCardId: cardMatch ? cardMatch.id : 'rc_generated',
+                            title: cardMatch ? cardMatch.title : 'วอชเชอร์แลกรับหน้าร้าน (สายชาร์จฟรี)',
+                            value: cardMatch ? cardMatch.value : 0,
+                            type: cardMatch ? cardMatch.type : 'discount',
+                            redeemMode: 'instore',
+                            desc: cardMatch ? cardMatch.desc || 'ใช้ได้กับทุกบริการ' : 'วอชเชอร์แลกรับหน้าร้าน (มี QR)',
+                            claimedAt: new Date().toISOString(),
+                            expiry: '30 วันหลังแลก',
+                            isUsed: false
+                        };
+                        ownerEmail = defaultEmail;
+
+                        // Sync to local storage
+                        const KEY = 'pao_user_vouchers_' + ownerEmail;
+                        let list = JSON.parse(localStorage.getItem(KEY) || '[]');
+                        if (!list.some(x => x.code === code)) {
+                            list.push(foundVoucher);
+                            localStorage.setItem(KEY, JSON.stringify(list));
+                        }
+                    }
+                }
+
+                // If code is INVALID or NOT a Paomobile voucher
+                if (!foundVoucher) {
+                    resBox.style.display = 'block';
+                    resBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    resBox.innerHTML = `
+                        <div style="background:rgba(239,68,68,0.14); border:2px solid #ef4444; border-radius:24px; padding:28px 24px; text-align:center; color:#fca5a5; box-shadow:0 15px 40px rgba(239,68,68,0.2);">
+                            <div style="font-size:2.8rem; margin-bottom:10px;">❌</div>
+                            <div style="font-weight:900; font-size:1.25rem; color:#ffffff; margin-bottom:8px;">ไม่พบ QR Code / วอชเชอร์นี้ในระบบ Paomobile</div>
+                            <p style="font-size:0.9rem; color:#cbd5e1; max-width:480px; margin:0 auto; line-height:1.5;">
+                                QR Code หรือรหัสที่สแกน (<code>${code.length > 25 ? code.substring(0,25) + '...' : code}</code>) ไม่ใช่คูปองของร้าน Paomobile ค่ะ<br>
+                                <strong style="color:#fde68a;">โปรดสแกน QR Code จากหน้าจอแสดงสิทธิ์ในโทรศัพท์ของลูกค้าเท่านั้นครับ</strong>
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Get owner email if still empty
+                if (!ownerEmail) {
+                    const localUser = JSON.parse(localStorage.getItem('paomobile_user'));
+                    ownerEmail = (localUser && localUser.email) ? localUser.email : (allCustomers[0]?.email || 'sattawat2560@gmail.com');
+                }
+
+                // Find customer profile details from allCustomers
+                const custObj = allCustomers.find(c => c && c.email && ownerEmail && c.email.toLowerCase() === ownerEmail.toLowerCase());
+                if (custObj) {
+                    ownerName = custObj.name || ownerEmail.split('@')[0];
+                    ownerPhone = custObj.phone || '-';
+                    ownerAvatar = custObj.avatar || '';
+                } else if (ownerEmail) {
+                    ownerName = ownerEmail.split('@')[0];
+                    const localUser = JSON.parse(localStorage.getItem('paomobile_user'));
+                    if (localUser && localUser.email && localUser.email.toLowerCase() === ownerEmail.toLowerCase()) {
+                        ownerName = localUser.name || localUser.email.split('@')[0];
+                        ownerPhone = localUser.phone || '-';
+                        ownerAvatar = localUser.avatar || '';
+                    }
+                }
+
+                renderVoucherLookupResult(ownerEmail, ownerName, ownerPhone, ownerAvatar, foundVoucher);
+            } catch(err) {
+                console.error('[SellerPoints] lookupVoucherCode error:', err);
+                showSellerToast('เกิดข้อผิดพลาดในการตรวจสอบรหัส: ' + err.message, '❌ ข้อผิดพลาด');
+            }
+        }
+
+        function renderVoucherLookupResult(email, name, phone, avatar, v) {
+            const resBox = document.getElementById('voucherLookupResult');
+            if (!resBox) return;
+            resBox.style.display = 'block';
+            resBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            const isUsed = !!v.isUsed;
+            const isInstore = v.redeemMode === 'instore' || (v.desc && v.desc.includes('หน้าร้าน'));
+            const statusBadge = isUsed 
+                ? `<div style="background:rgba(239,68,68,0.18); border:1.5px solid #ef4444; color:#fca5a5; padding:8px 16px; border-radius:12px; font-weight:800; font-size:0.88rem; display:inline-flex; align-items:center; gap:6px;">🔴 ถูกกดตัดสิทธิ์ใช้งานแล้วเมื่อ ${formatThaiDateTime(v.usedAt)}</div>`
+                : `<div style="background:rgba(16,185,129,0.18); border:1.5px solid #10b981; color:#6ee7b7; padding:8px 16px; border-radius:12px; font-weight:800; font-size:0.88rem; display:inline-flex; align-items:center; gap:6px;">🟢 สิทธิ์พร้อมใช้งาน (ยังไม่เคยถูกตัดสิทธิ์)</div>`;
+
+            resBox.innerHTML = `
+                <div style="background:linear-gradient(145deg, #0f172a 0%, #1e293b 100%); border:2px solid ${isUsed ? '#f87171' : '#10b981'}; border-radius:24px; padding:28px 24px; box-shadow:0 20px 40px rgba(0,0,0,0.4); position:relative; overflow:hidden;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:14px; flex-wrap:wrap; gap:10px;">
+                        <div style="font-weight:800; font-size:0.85rem; color:#fde68a; text-transform:uppercase; letter-spacing:1.5px;">🎫 ข้อมูลบัตรสิทธิ์ลูกค้า</div>
+                        ${statusBadge}
+                    </div>
+
+                    <!-- Customer Identity Card -->
+                    <div style="display:flex; align-items:center; gap:16px; background:rgba(255,255,255,0.06); padding:18px; border-radius:18px; margin-bottom:20px; border:1px solid rgba(255,255,255,0.12);">
+                        <div style="width:58px; height:58px; border-radius:50%; background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.5rem; flex-shrink:0; overflow:hidden; border:2px solid #fde68a; box-shadow:0 6px 15px rgba(245,158,11,0.3);">
+                            ${avatar ? `<img src="${avatar}" style="width:100%; height:100%; object-fit:cover;">` : name.charAt(0).toUpperCase()}
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:1.2rem; font-weight:900; color:#ffffff; margin-bottom:2px;">👤 ${name}</div>
+                            <div style="font-size:0.92rem; color:#60a5fa; font-weight:800; margin-bottom:2px;">📧 ${email}</div>
+                            <div style="font-size:0.82rem; color:#94a3b8;">📞 เบอร์โทรศัพท์: ${phone || '-'}</div>
+                        </div>
+                    </div>
+
+                    <!-- Voucher Details Container -->
+                    <div style="background:linear-gradient(135deg, #1c1710, #272015); border:1.5px dashed #f59e0b; border-radius:18px; padding:20px; margin-bottom:22px; position:relative;">
+                        <div style="font-size:0.75rem; color:#f59e0b; font-weight:900; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:4px;">
+                            ${isInstore ? '🏪 วอชเชอร์แลกรับหน้าร้าน' : '🎟️ คูปองส่วนลด'}
+                        </div>
+                        <div style="font-size:1.35rem; font-weight:900; color:#ffffff; margin-bottom:12px;">${v.title || 'ส่วนลดพิเศษ'}</div>
+                        
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:0.88rem; color:rgba(255,255,255,0.85); background:rgba(0,0,0,0.3); padding:14px; border-radius:12px;">
+                            <div>🏷️ <strong>รหัสโค้ด:</strong> <span style="color:#fde68a; font-family:monospace; font-weight:900; font-size:1.1rem; letter-spacing:1px;">${v.code}</span></div>
+                            <div>📅 <strong>วันที่แลก:</strong> ${formatThaiDateTime(v.claimedAt)}</div>
+                            <div>⏳ <strong>วันหมดอายุ:</strong> ${v.expiry || 'ไม่มีวันหมดอายุ'}</div>
+                            <div>💬 <strong>เงื่อนไข:</strong> ${v.desc || 'ใช้ได้กับทุกบริการ'}</div>
+                        </div>
+                    </div>
+
+                    <!-- Confirmation Action Button -->
+                    ${!isUsed ? `
+                        <button onclick="confirmRedeemVoucher('${email}', '${v.code}')" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; padding:18px; width:100%; border-radius:16px; font-weight:900; font-size:1.15rem; cursor:pointer; font-family:inherit; box-shadow:0 8px 25px rgba(16,185,129,0.45); transition:all 0.3s; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            ✅ ยืนยันกดตัดสิทธิ์สแกนรับหน้าร้าน (Redeem Now)
+                        </button>
+                    ` : `
+                        <div style="text-align:center; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); padding:14px; border-radius:14px; color:#fca5a5; font-size:0.88rem; font-weight:800;">
+                            🔒 วอชเชอร์นี้ถูกกดตัดสิทธิ์ใช้งานแล้ว ไม่สามารถสแกนตัดสิทธิ์ซ้ำได้
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        async function confirmRedeemVoucher(email, code) {
+            const ok = await sellerConfirm(`คุณแน่ใจหรือไม่ที่จะกดตัดสิทธิ์วอชเชอร์ "${code}" ของลูกค้า (${email})?`, 'info');
+            if (!ok) return;
+
+            let updated = false;
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('pao_user_vouchers_')) {
+                    try {
+                        let list = JSON.parse(localStorage.getItem(key) || '[]');
+                        const idx = list.findIndex(item => item.code && item.code.toUpperCase() === code.toUpperCase());
+                        if (idx !== -1) {
+                            list[idx].isUsed = true;
+                            list[idx].usedAt = new Date().toISOString();
+                            localStorage.setItem(key, JSON.stringify(list));
+                            updated = true;
+                        }
+                    } catch(e){}
+                }
+            }
+
+            if (!updated && email) {
+                const KEY = 'pao_user_vouchers_' + email;
+                let list = JSON.parse(localStorage.getItem(KEY) || '[]');
+                const idx = list.findIndex(item => item.code && item.code.toUpperCase() === code.toUpperCase());
+                if (idx !== -1) {
+                    list[idx].isUsed = true;
+                    list[idx].usedAt = new Date().toISOString();
+                    localStorage.setItem(KEY, JSON.stringify(list));
+                } else {
+                    list.push({ code, isUsed: true, usedAt: new Date().toISOString() });
+                    localStorage.setItem(KEY, JSON.stringify(list));
+                }
+            }
+
+            if (window.supabase) {
+                try {
+                    await window.supabase.from('user_vouchers').update({ is_used: true, used_at: new Date().toISOString() }).eq('code', code);
+                } catch(e){}
+            }
+
+            showSellerToast(`ตัดสิทธิ์วอชเชอร์รหัส ${code} เรียบร้อยแล้วค่ะ`, '🎉 ตัดสิทธิ์สำเร็จ');
+            lookupVoucherCode();
+            renderRedeemedHistory();
+        }
+
+        function renderRedeemedHistory() {
+            const container = document.getElementById('tabScanHistoryContainer');
+            if (!container) return;
+
+            let historyList = [];
+
+            // Scan all pao_user_vouchers_* keys in localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('pao_user_vouchers_')) {
+                    const email = key.replace('pao_user_vouchers_', '').trim();
+                    try {
+                        const list = JSON.parse(localStorage.getItem(key) || '[]');
+                        list.forEach(v => {
+                            if (v && v.isUsed) {
+                                const custObj = allCustomers.find(c => c && c.email && c.email.toLowerCase() === email.toLowerCase());
+                                historyList.push({
+                                    code: v.code || 'CODE',
+                                    title: v.title || 'วอชเชอร์แลกรับหน้าร้าน',
+                                    email: email,
+                                    name: custObj ? custObj.name : email.split('@')[0],
+                                    avatar: custObj ? custObj.avatar : '',
+                                    usedAt: v.usedAt || new Date().toISOString()
+                                });
+                            }
+                        });
+                    } catch(e){}
+                }
+            }
+
+            // Sort by usedAt descending (newest redeemed first!)
+            historyList.sort((a, b) => new Date(b.usedAt) - new Date(a.usedAt));
+
+            if (historyList.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:36px 20px; color:#94a3b8; font-size:0.95rem; background:rgba(255,255,255,0.03); border-radius:16px; border:1.5px dashed rgba(255,255,255,0.12);">
+                        <div style="font-size:2.2rem; margin-bottom:8px;">📜</div>
+                        <div style="font-weight:700; color:#cbd5e1; margin-bottom:4px;">ยังไม่มีประวัติการตัดสิทธิ์วอชเชอร์หน้าร้าน</div>
+                        <div style="font-size:0.82rem; color:#64748b;">รายการวอชเชอร์ที่ผ่านการตัดสิทธิ์หน้าร้านสำเร็จแล้วจะมาแสดงที่นี่ครับ</div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = historyList.map(item => `
+                    <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:18px; padding:18px 22px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; transition:all 0.25s;" onmouseover="this.style.borderColor='#f59e0b'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                        <div style="display:flex; align-items:center; gap:14px;">
+                            <div style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.2rem; overflow:hidden; border:2px solid #fde68a; box-shadow:0 4px 12px rgba(245,158,11,0.3);">
+                                ${item.avatar ? `<img src="${item.avatar}" style="width:100%; height:100%; object-fit:cover;">` : item.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div style="font-size:1.05rem; font-weight:900; color:#ffffff;">👤 ${item.name} <span style="font-size:0.82rem; color:#60a5fa; font-weight:600;">(${item.email})</span></div>
+                                <div style="font-size:0.88rem; color:#fde68a; font-weight:800; margin-top:3px;">🎟️ ${item.title} — รหัสกำกับ: <code style="font-family:monospace; font-size:1rem; background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:6px;">${item.code}</code></div>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="background:rgba(239,68,68,0.2); border:1.5px solid #ef4444; color:#fca5a5; padding:6px 14px; border-radius:12px; font-weight:900; font-size:0.82rem; display:inline-block; box-shadow:0 0 12px rgba(239,68,68,0.25);">
+                                🔴 ตัดสิทธิ์แล้วเมื่อ ${formatThaiDateTime(item.usedAt)}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // ===== 1. CUSTOMER POINTS MANAGEMENT =====
+        async function loadCustomers() {
+            try {
+                let rawUsers = [];
+                
+                // 1. Fetch from Supabase `users` table
+                if (window.supabase) {
+                    try {
+                        const { data } = await window.supabase.from('users').select('*');
+                        if (data && data.length > 0) rawUsers.push(...data);
+                    } catch(e){}
+
+                    // 2. Fetch from Supabase `user_points` table
+                    try {
+                        const { data: ptsData } = await window.supabase.from('user_points').select('*');
+                        if (ptsData && ptsData.length > 0) {
+                            ptsData.forEach(p => {
+                                if (p.email) rawUsers.push({ email: p.email, name: p.name || p.email.split('@')[0], points: p.points });
+                            });
+                        }
+                    } catch(e){}
+                }
+                
+                // 3. Merge with localStorage user
+                const localUser = JSON.parse(localStorage.getItem('paomobile_user'));
+                if (localUser && localUser.email) {
+                    rawUsers.push(localUser);
+                }
+
+                // 4. Sample fallback if empty
+                if (rawUsers.length === 0) {
+                    rawUsers = [
+                        { name: 'คุณ ชาธายาดา', email: 'sattawat2560@gmail.com', phone: '0812345678', avatar: '' }
+                    ];
+                }
+
+                // 5. Deduplicate by lowercased email
+                const userMap = new Map();
+                rawUsers.forEach(u => {
+                    if (!u || !u.email) return;
+                    const emailKey = u.email.trim().toLowerCase();
+                    
+                    const savedPts = localStorage.getItem('pao_user_points_' + u.email) || localStorage.getItem('pao_user_points_' + emailKey);
+                    const currentPts = savedPts !== null ? parseInt(savedPts) : (u.points || 0);
+
+                    if (!userMap.has(emailKey)) {
+                        userMap.set(emailKey, {
+                            id: u.id || 'usr_' + Math.random().toString(36).substring(2, 9),
+                            name: u.name || emailKey.split('@')[0],
+                            email: u.email.trim(),
+                            phone: u.phone || u.phoneNumber || '',
+                            avatar: u.avatar || u.photoURL || '',
+                            points: currentPts
+                        });
+                    } else {
+                        // Merge fields if existing record is missing avatar/name/phone or has lower points
+                        const existing = userMap.get(emailKey);
+                        if (!existing.avatar && (u.avatar || u.photoURL)) existing.avatar = u.avatar || u.photoURL;
+                        if ((!existing.name || existing.name === emailKey.split('@')[0]) && u.name) existing.name = u.name;
+                        if (!existing.phone && (u.phone || u.phoneNumber)) existing.phone = u.phone || u.phoneNumber;
+                        if (currentPts > existing.points) existing.points = currentPts;
+                    }
+                });
+
+                allCustomers = Array.from(userMap.values());
+                renderCustomers(allCustomers);
+            } catch (e) {
+                console.error('[SellerPoints] loadCustomers error:', e);
+            }
+        }
+
+        function renderCustomers(list) {
+            const tbody = document.getElementById('custTableBody');
+            if (!tbody) return;
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color:#94a3b8;">ไม่พบรายชื่อลูกค้า</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(c => `
+                <tr>
+                    <td>
+                        <div class="cust-info">
+                            <div class="cust-avatar">
+                                ${c.avatar ? `<img src="${c.avatar}">` : (c.name ? c.name.charAt(0).toUpperCase() : '?')}
+                            </div>
+                            <div>
+                                <div class="cust-name">${c.name || 'ลูกค้าทั่วไป'}</div>
+                                <div class="cust-email">${c.email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${c.phone || '-'}</td>
+                    <td><div class="pts-badge">⭐ ${c.points || 0} Pts</div></td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-pts-action btn-pts-add" onclick="quickAdjustPts('${c.email}', 10)">+10</button>
+                            <button class="btn-pts-action btn-pts-add" onclick="quickAdjustPts('${c.email}', 50)">+50</button>
+                            <button class="btn-pts-action btn-pts-sub" onclick="quickAdjustPts('${c.email}', -10)">-10</button>
+                            <button class="btn-pts-action" onclick="openEditPtsModal('${c.email}')">✏️ กำหนดเอง</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterCustomers(query) {
+            const q = query.trim().toLowerCase();
+            const filtered = allCustomers.filter(c => 
+                (c.name && c.name.toLowerCase().includes(q)) ||
+                (c.email && c.email.toLowerCase().includes(q)) ||
+                (c.phone && c.phone.includes(q))
+            );
+            renderCustomers(filtered);
+        }
+
+        function quickAdjustPts(email, delta) {
+            const cust = allCustomers.find(c => c.email === email);
+            if (!cust) return;
+            const newPts = Math.max(0, (cust.points || 0) + delta);
+            updateCustPts(email, newPts, `แอดมินปรับพอยท์ ${delta >= 0 ? '+' : ''}${delta}`);
+        }
+
+        function openEditPtsModal(email) {
+            const cust = allCustomers.find(c => c.email === email);
+            if (!cust) return;
+            selectedCustEmail = email;
+            document.getElementById('modalCustName').textContent = cust.name || 'ลูกค้า';
+            document.getElementById('modalCustEmail').textContent = cust.email;
+            document.getElementById('modalCustCurrentPts').textContent = `พอยท์ปัจจุบัน: ${cust.points || 0} Pts`;
+            document.getElementById('modalNewPts').value = cust.points || 0;
+            document.getElementById('modalPtsReason').value = 'แอดมินปรับแต่งพอยท์';
+            document.getElementById('ptsModal').classList.add('active');
+        }
+
+        function closePtsModal() {
+            document.getElementById('ptsModal').classList.remove('active');
+        }
+
+        function saveCustomerPoints() {
+            const newPts = parseInt(document.getElementById('modalNewPts').value) || 0;
+            const reason = document.getElementById('modalPtsReason').value.trim() || 'แอดมินปรับแต่งพอยท์';
+            if (selectedCustEmail) {
+                updateCustPts(selectedCustEmail, newPts, reason);
+                closePtsModal();
+            }
+        }
+
+        function updateCustPts(email, newPts, desc) {
+            const cust = allCustomers.find(c => c.email === email);
+            if (cust) {
+                const oldPts = cust.points || 0;
+                const diff = newPts - oldPts;
+                cust.points = newPts;
+                
+                // Save locally for customer
+                localStorage.setItem('pao_user_points_' + email, newPts.toString());
+                
+                // Save history entry for customer
+                const hk = 'pao_points_history_' + email;
+                let hist = JSON.parse(localStorage.getItem(hk) || '[]');
+                hist.unshift({ amount: diff, desc: desc, date: new Date().toISOString() });
+                localStorage.setItem(hk, JSON.stringify(hist));
+
+                // Upsert to Supabase user_points
+                if (window.supabase) {
+                    window.supabase.from('user_points').upsert({ email: email, points: newPts, updatedAt: new Date().toISOString() }).then();
+                }
+
+                renderCustomers(allCustomers);
+                showSellerToast(`บันทึกพอยท์ให้คุณ ${cust.name || email} เป็น ${newPts} Pts เรียบร้อยครับ!`, '⭐ อัปเดตพอยท์สำเร็จ');
+            }
+        }
+
+        function showSellerToast(msg, title = 'สำเร็จ!') {
+            const toast = document.getElementById('sellerToast');
+            const tTitle = document.getElementById('toastTitle');
+            const tMsg = document.getElementById('toastMsg');
+            if (!toast) return;
+
+            if (tTitle) tTitle.textContent = title;
+            if (tMsg) tMsg.textContent = msg;
+
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(-50%) translateY(0)';
+
+            if (window._toastTimer) clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(-100px)';
+            }, 3000);
+        }
+
+        // ===== 2. REWARD CARDS MANAGEMENT =====
+        const DEFAULT_REWARDS = [
+            { id: 'r1', title: 'ส่วนลด ฿50', desc: 'ใช้ได้กับทุกบริการ', pts: 100, img: 'Pao 2.jpg', value: 50, type: 'discount' },
+            { id: 'r2', title: 'คูปองส่งฟรี', desc: 'ส่งฟรีทั่วประเทศ', pts: 150, img: 'Pao 3.jpg', value: 0, type: 'ship' },
+            { id: 'r3', title: 'ส่วนลด ฿100', desc: 'ใช้ได้กับทุกบริการ', pts: 200, img: 'Pao 4.jpg', value: 100, type: 'discount' },
+            { id: 'r4', title: 'ส่วนลด ฿500', desc: 'สำหรับซ่อมจอ/เปลี่ยนจอ', pts: 500, img: 'Pao 5.jpg', value: 500, type: 'discount' },
+        ];
+
+        async function loadRewardCards() {
+            try {
+                let saved = localStorage.getItem('pao_point_rewards');
+                if (saved) {
+                    rewardCards = JSON.parse(saved);
+                } else {
+                    rewardCards = DEFAULT_REWARDS;
+                    localStorage.setItem('pao_point_rewards', JSON.stringify(rewardCards));
+                }
+
+                // Sync with Supabase if table exists
+                if (window.supabase) {
+                    try {
+                        const { data } = await window.supabase.from('point_rewards').select('*');
+                        if (data && data.length > 0) {
+                            rewardCards = data;
+                            localStorage.setItem('pao_point_rewards', JSON.stringify(rewardCards));
+                        }
+                    } catch (e) { }
+                }
+
+                renderRewardCards();
+            } catch (e) {
+                console.error('[SellerPoints] loadRewardCards error:', e);
+            }
+        }
+
+        function renderRewardCards() {
+            const grid = document.getElementById('rewardsDisplayGrid');
+            const countTag = document.getElementById('cardCountTag');
+            if (countTag) countTag.textContent = `${rewardCards.length} การ์ด`;
+            if (!grid) return;
+
+            if (rewardCards.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;">ยังไม่มีการ์ดแลกพอยท์ในระบบ</div>`;
+                return;
+            }
+
+            grid.innerHTML = rewardCards.map(rc => {
+                const limit = rc.claimLimit !== undefined ? parseInt(rc.claimLimit) : 1;
+                const limitBadge = limit > 0 ? `🔒 จำกัด ${limit} รอบ/คน` : `♾️ ไม่จำกัดรอบ`;
+                const expDays = rc.expiryDays !== undefined ? parseInt(rc.expiryDays) : 30;
+                const expBadge = expDays === 0 ? `♾️ ไม่มีวันหมดอายุ` : `⏳ หมดอายุ ${expDays} วันหลังแลก`;
+                const modeBadge = rc.redeemMode === 'instore' ? `<div style="font-size:0.75rem; color:#059669; font-weight:800; margin-top:2px;">🏪 แลกวอชเชอร์หน้าร้าน (มี QR)</div>` : `<div style="font-size:0.75rem; color:#2563eb; font-weight:800; margin-top:2px;">🎟️ คูปองออนไลน์</div>`;
+                const codeBadge = rc.code ? `<div style="font-size:0.75rem; color:#ee4d2d; font-weight:800; margin-top:2px;">🏷️ โค้ด: ${rc.code}</div>` : '';
+                return `
+                <div class="rc-card">
+                    <div class="rc-img-wrap">
+                        <img src="${rc.img || 'Pao 1.jpg'}" alt="${rc.title}">
+                        <div class="rc-pts-tag">${rc.pts} Pts</div>
+                    </div>
+                    <div class="rc-body">
+                        <div class="rc-title">${rc.title}</div>
+                        <div class="rc-desc">${rc.desc || 'ไม่มีคำอธิบาย'}</div>
+                        ${modeBadge}
+                        ${codeBadge}
+                        <div style="font-size:0.75rem; color:#f59e0b; font-weight:700; margin-top:2px;">${limitBadge}</div>
+                        <div style="font-size:0.75rem; color:#64748b; font-weight:700; margin-top:2px;">${expBadge}</div>
+                        <div class="rc-actions" style="margin-top:8px;">
+                            <button class="btn-rc-edit" onclick="editCard('${rc.id}')">✏️ แก้ไข</button>
+                            <button class="btn-rc-del" onclick="deleteCard('${rc.id}')">🗑️ ลบ</button>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function selectPresetImg(imgUrl, el) {
+            document.querySelectorAll('.preset-img-item').forEach(i => i.classList.remove('selected'));
+            el.classList.add('selected');
+            currentCardImgUrl = imgUrl;
+            document.getElementById('cardImgPreview').src = imgUrl;
+        }
+
+        function handleCardImageUpload(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 500;
+                    const scale = img.width > maxW ? maxW / img.width : 1;
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const compressed = canvas.toDataURL('image/jpeg', 0.8);
+                    currentCardImgUrl = compressed;
+                    document.getElementById('cardImgPreview').src = compressed;
+                    document.querySelectorAll('.preset-img-item').forEach(i => i.classList.remove('selected'));
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function saveRewardCard(e) {
+            e.preventDefault();
+            const editId = document.getElementById('cardEditId').value;
+            const title = document.getElementById('cardTitle').value.trim();
+            const pts = parseInt(document.getElementById('cardPts').value) || 100;
+            const value = parseInt(document.getElementById('cardValue').value) || 0;
+            const type = document.getElementById('cardType').value;
+            const redeemMode = document.getElementById('cardRedeemMode').value;
+            const code = document.getElementById('cardCode').value.trim().toUpperCase();
+            const claimLimit = parseInt(document.getElementById('cardClaimLimit').value) || 1;
+            const expiryDays = parseInt(document.getElementById('cardExpiryDays').value);
+            const desc = document.getElementById('cardDesc').value.trim();
+
+            if (editId) {
+                // Update
+                const idx = rewardCards.findIndex(c => c.id === editId);
+                if (idx !== -1) {
+                    rewardCards[idx] = { id: editId, title, pts, value, type, redeemMode, code, claimLimit, expiryDays, desc, img: currentCardImgUrl };
+                }
+            } else {
+                // Create
+                const newCard = {
+                    id: 'rc_' + Date.now(),
+                    title, pts, value, type, redeemMode, code, claimLimit, expiryDays, desc, img: currentCardImgUrl
+                };
+                rewardCards.push(newCard);
+            }
+
+            // Save to localStorage & Supabase
+            localStorage.setItem('pao_point_rewards', JSON.stringify(rewardCards));
+            if (window.supabase) {
+                window.supabase.from('point_rewards').upsert(rewardCards).then();
+            }
+
+            renderRewardCards();
+            resetCardForm();
+            showSellerToast(editId ? 'แก้ไขข้อมูลการ์ดแลกพอยท์เรียบร้อยแล้ว' : 'สร้างการ์ดแลกพอยท์ใหม่พร้อมใช้งานแล้ว', editId ? '✏️ แก้ไขการ์ดสำเร็จ' : '🎉 เพิ่มการ์ดสำเร็จ');
+        }
+
+        function editCard(id) {
+            const card = rewardCards.find(c => c.id === id);
+            if (!card) return;
+            document.getElementById('cardEditId').value = card.id;
+            document.getElementById('cardTitle').value = card.title;
+            document.getElementById('cardPts').value = card.pts;
+            document.getElementById('cardValue').value = card.value;
+            document.getElementById('cardType').value = card.type || 'discount';
+            document.getElementById('cardRedeemMode').value = card.redeemMode || 'online';
+            document.getElementById('cardCode').value = card.code || '';
+            document.getElementById('cardClaimLimit').value = card.claimLimit !== undefined ? card.claimLimit : 1;
+            document.getElementById('cardExpiryDays').value = card.expiryDays !== undefined ? card.expiryDays : 30;
+            document.getElementById('cardDesc').value = card.desc || '';
+            currentCardImgUrl = card.img || 'Pao 1.jpg';
+            document.getElementById('cardImgPreview').src = currentCardImgUrl;
+            document.getElementById('formCardTitle').textContent = '✏️ แก้ไขการ์ดแลกพอยท์';
+            document.getElementById('btnSaveCard').textContent = '💾 บันทึกการแก้ไข';
+            const btnCancel = document.getElementById('btnCancelEditCard');
+            if (btnCancel) btnCancel.style.display = 'inline-block';
+            document.getElementById('cardForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function resetCardForm() {
+            document.getElementById('cardForm').reset();
+            document.getElementById('cardEditId').value = '';
+            document.getElementById('cardRedeemMode').value = 'online';
+            document.getElementById('cardCode').value = '';
+            document.getElementById('cardClaimLimit').value = 1;
+            document.getElementById('cardExpiryDays').value = 30;
+            document.getElementById('formCardTitle').textContent = '✨ เพิ่มการ์ดแลกพอยท์ใหม่';
+            document.getElementById('btnSaveCard').textContent = '💾 บันทึกการ์ดแลกพอยท์';
+            const btnCancel = document.getElementById('btnCancelEditCard');
+            if (btnCancel) btnCancel.style.display = 'inline-block';
+            document.getElementById('cardForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function resetCardForm() {
+            document.getElementById('cardForm').reset();
+            document.getElementById('cardEditId').value = '';
+            document.getElementById('cardRedeemMode').value = 'online';
+            document.getElementById('cardCode').value = '';
+            document.getElementById('cardClaimLimit').value = 1;
+            document.getElementById('formCardTitle').textContent = '✨ เพิ่มการ์ดแลกพอยท์ใหม่';
+            document.getElementById('btnSaveCard').textContent = '💾 บันทึกการ์ดแลกพอยท์';
+            const btnCancel = document.getElementById('btnCancelEditCard');
+            if (btnCancel) btnCancel.style.display = 'none';
+            currentCardImgUrl = 'Pao 1.jpg';
+            document.getElementById('cardImgPreview').src = 'Pao 1.jpg';
+            document.querySelectorAll('.preset-img-item').forEach(i => i.classList.remove('selected'));
+            const firstPreset = document.querySelector('.preset-img-item');
+            if (firstPreset) firstPreset.classList.add('selected');
+        }
+
+        async function deleteCard(id) {
+            const ok = await sellerConfirm('คุณแน่ใจหรือไม่ที่จะลบการ์ดแลกพอยท์นี้?', 'delete');
+            if (!ok) return;
+            rewardCards = rewardCards.filter(c => c.id !== id);
+            localStorage.setItem('pao_point_rewards', JSON.stringify(rewardCards));
+            if (window.supabase) {
+                window.supabase.from('point_rewards').delete().eq('id', id).then();
+            }
+            renderRewardCards();
+            showSellerToast('ลบการ์ดแลกพอยท์ออกจากระบบเรียบร้อยแล้ว', '🗑️ ลบการ์ดสำเร็จ');
+        }
+    <script src="seller-presence.js"></script>
+</body>
+</html>

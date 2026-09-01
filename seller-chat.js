@@ -146,21 +146,21 @@
                 return getT(b) - getT(a);
             });
             try { localStorage.setItem('paomobile_chat_cache', JSON.stringify(allChats)); } catch(e) {}
-            if (window.chatsSub) window.supabaseClient.removeChannel(window.chatsSub);
-        
+            renderChatList();
+        };
+
+        await fetchChats();
+
+        if (!window.chatsSub) {
             window.chatsSub = supabase.channel('chats-sync')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
                     fetchChats();
                 })
                 .subscribe();
-            
-            if (!window.chatsPolling) {
-                window.chatsPolling = setInterval(fetchChats, 5000);
-            }
-            renderChatList();
-        };
-
-        await fetchChats();
+        }
+        if (!window.chatsPolling) {
+            window.chatsPolling = setInterval(fetchChats, 30000);
+        }
     }
     window.loadChatList = loadChatList;
 
@@ -422,65 +422,76 @@
                     }
                 }
                 
-                if (msgDate !== lastDate && msgDate !== "") {
-                    html += `<div class="system-banner">${msgDate}</div>`;
+                if (msgDate && msgDate !== lastDate && msgDate !== "") {
+                    html += `<div style="text-align:center; margin:14px 0 8px;"><span style="background:#f1f5f9; color:#94a3b8; font-size:0.72rem; font-weight:600; padding:4px 14px; border-radius:100px; border:1px solid #e2e8f0;">${msgDate}</span></div>`;
                     lastDate = msgDate;
                 }
                 
-                const tickHtml = isSeller 
-                    ? (msg.isRead ? '<span class="read-tick" style="color:#2ecc71; margin-left:4px; font-weight:800;">✓✓ <span style="font-size:0.65rem; font-weight:500;">อ่านแล้ว</span></span>' : '<span class="read-tick" style="color:#2ecc71; margin-left:4px; font-weight:800;">✓</span>') 
-                    : '';
-                const metaHtml = `<div class="msg-meta" style="font-size:0.65rem; opacity:0.8;">${timeStr}${tickHtml}</div>`;
+                const readHtml = (isSeller && msg.isRead) ? '<span style="font-weight:700; color:#ee4d2d; margin-bottom:1px;">อ่านแล้ว</span>' : '';
+                const sellerMetaHtml = `
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:flex-end; font-size:0.65rem; color:#94a3b8; margin-right:6px; flex-shrink:0; font-weight:600;">
+                        ${readHtml}
+                        <span>${timeStr}</span>
+                    </div>
+                `;
+                const customerMetaHtml = `
+                    <div style="display:flex; flex-direction:column; justify-content:flex-end; font-size:0.65rem; color:#94a3b8; margin-left:6px; flex-shrink:0; font-weight:600;">
+                        <span>${timeStr}</span>
+                    </div>
+                `;
 
                 if (msg.type === 'card') {
-                    console.log("[SellerChat] Rendering card:", msg);
                     let cData = msg.cardData || {};
                     if (typeof cData === 'string') {
                         try { cData = JSON.parse(cData); } catch(e) {}
                     }
                     html += `
-                        <div class="msg-row seller">
-                            <div class="chat-card" onclick="handleChatCardClick('${cData.productId || ''}', '${cData.category || ''}', '${cData.link || ''}')">
-                                <img src="${cData.image || ''}" class="chat-card-img" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
-                                <div class="chat-card-info">
-                                    <div class="chat-card-title">${cData.title || 'สินค้า'}</div>
-                                    <div class="chat-card-price">${cData.price || ''}</div>
+                        <div class="msg-row seller" style="display:flex; align-items:flex-end; justify-content:flex-end; margin-bottom:8px;">
+                            ${sellerMetaHtml}
+                            <div class="chat-card" style="background:#fff; border-radius:16px; overflow:hidden; border:1px solid #eef2f6; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.12);" onclick="handleChatCardClick('${cData.productId || ''}', '${cData.category || ''}', '${cData.link || ''}')">
+                                <img src="${cData.image || ''}" class="chat-card-img" style="border-radius:16px 16px 0 0;" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
+                                <div class="chat-card-info" style="padding:10px;">
+                                    <div class="chat-card-title" style="font-weight:600; color:#1e293b;">${cData.title || 'สินค้า'}</div>
+                                    <div class="chat-card-price" style="color:#ee4d2d; font-weight:700;">${cData.price || ''}</div>
                                 </div>
-                                <div class="chat-card-btn">ดูรายละเอียด</div>
+                                <div class="chat-card-btn" style="display:block; text-align:center; padding:8px; background:#f8fafc; color:#ee4d2d; text-decoration:none; font-size:0.85rem; border-top:1px solid #f1f5f9; font-weight:700;">ดูรายละเอียดสินค้า</div>
                             </div>
                         </div>
                     `;
                 } else if (msg.type === 'image') {
                     html += `
-                        <div class="msg-row ${isSeller ? 'seller' : 'customer'} sticker">
-                            <div class="msg-bubble" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:4px 0 !important; overflow:visible !important;">
-                                <img src="${msg.fileUrl}" class="sticker-img" style="mix-blend-mode:multiply !important; filter:contrast(1.1) brightness(1.1) !important;" onclick="openImageLarge('${msg.fileUrl}')" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
+                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
+                            ${isSeller ? sellerMetaHtml : ''}
+                            <div class="msg-bubble sticker" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important;">
+                                <img src="${msg.fileUrl}" class="sticker-img" style="border-radius:14px; max-width:200px; max-height:200px; object-fit:cover; box-shadow:0 4px 12px rgba(0,0,0,0.15);" onclick="openImageLarge('${msg.fileUrl}')" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
                             </div>
-                            ${metaHtml}
+                            ${!isSeller ? customerMetaHtml : ''}
                         </div>
                     `;
                 } else if (msg.type === 'file') {
                     html += `
-                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}">
-                            <div class="msg-bubble file-bubble">
+                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
+                            ${isSeller ? sellerMetaHtml : ''}
+                            <div class="msg-bubble" style="padding:12px 16px;">
                                 <div style="display:flex; align-items:center; gap:10px;">
-                                    <div style="font-size:1.5rem;">📁</div>
+                                    <div style="font-size:1.6rem;">📁</div>
                                     <div style="min-width:0;">
-                                        <div style="font-size:0.85rem; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${msg.fileName || 'ไฟล์แนบ'}</div>
-                                        <a href="${msg.fileUrl}" target="_blank" style="font-size:0.75rem; color:#ee4d2d; text-decoration:none;">ดาวน์โหลด</a>
+                                        <div style="font-size:0.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px; color:inherit;">${msg.fileName || 'ไฟล์แนบ'}</div>
+                                        <a href="${msg.fileUrl}" target="_blank" style="font-size:0.75rem; color:${isSeller ? '#ffffff' : '#06C755'}; font-weight:700; text-decoration:underline;">📄 ดาวน์โหลดไฟล์</a>
                                     </div>
                                 </div>
                             </div>
-                            ${metaHtml}
+                            ${!isSeller ? customerMetaHtml : ''}
                         </div>
                     `;
                 } else if (msg.type === 'sticker') {
                     html += `
-                        <div class="msg-row ${isSeller ? 'seller' : 'customer'} sticker">
-                            <div class="msg-bubble" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important; overflow:visible !important;">
-                                <img src="${msg.fileUrl}" class="sticker-img" style="mix-blend-mode:multiply !important; filter:contrast(1.1) brightness(1.1) !important;" onclick="openImageLarge('${msg.fileUrl}')" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
+                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
+                            ${isSeller ? sellerMetaHtml : ''}
+                            <div class="msg-bubble sticker" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important;">
+                                <img src="${msg.fileUrl}" class="sticker-img" style="width:130px; height:auto;" onclick="openImageLarge('${msg.fileUrl}')" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
                             </div>
-                            ${metaHtml}
+                            ${!isSeller ? customerMetaHtml : ''}
                         </div>
                     `;
                 } else if (msg.type === 'text' || msg.text) {
@@ -492,11 +503,12 @@
                         : '';
                     
                     html += `
-                        <div class="msg-row ${isSeller ? 'seller' : 'customer'} ${isBigEmoji ? 'sticker' : ''}">
+                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
+                            ${isSeller ? sellerMetaHtml : ''}
                             <div class="msg-bubble" style="${bubbleStyle}">
                                 ${textVal}
                             </div>
-                            ${metaHtml}
+                            ${!isSeller ? customerMetaHtml : ''}
                         </div>
                     `;
                 }
@@ -552,14 +564,17 @@
             const { data, error } = await supabase.from('chat_messages')
                 .select('*').eq('chatId', chatId).order('timestamp', { ascending: true });
             
-            console.log(data);
-            
             if (error) {
                 msgsArea.innerHTML = `<div style="text-align:center; padding:40px; color:#ef4444; font-size:0.9rem;">🚨 ข้อผิดพลาด: ${error.message}</div>`;
                 return;
             }
 
             if (data) {
+                // Prevent unnecessary re-render if messages haven't changed
+                const newHash = data.map(m => m.id + (m.isRead ? '1' : '0')).join(',');
+                if (window._lastMsgHash === newHash) return;
+                window._lastMsgHash = newHash;
+
                 let isClosed = false;
                 if (data.length > 0) {
                     const lastMsg = data[data.length - 1];
@@ -586,8 +601,8 @@
             .subscribe();
         window.currentChatSub = channel;
         
+        // No more 3-second polling — real-time subscription handles updates
         if (window.currentChatInterval) clearInterval(window.currentChatInterval);
-        window.currentChatInterval = setInterval(fetchMessages, 3000);
         
         messagesUnsubscribe = () => { 
             supabase.removeChannel(channel); 
@@ -707,30 +722,7 @@
     };
 
     // 4. Product Picker Logic
-    const MOCK_PRODUCTS_BASELINE = [
-      // New Products
-      { id: "new-iph15-128", name: "iPhone 15 128GB", price: 28900, brand: "Apple", category: "new", img: "", emoji: "📱", badge: "ใหม่", tags: ["iphone", "ไอโฟน", "apple", "แอปเปิล", "มือ1", "มือ 1", "a16"] },
-      { id: "new-iph15pro-256", name: "iPhone 15 Pro 256GB", price: 42900, brand: "Apple", category: "new", img: "", emoji: "📱", badge: "ขายดี", tags: ["iphone", "ไอโฟน", "apple", "แอปเปิล", "มือ1", "มือ 1", "a17", "pro"] },
-      { id: "new-s24-256", name: "Samsung Galaxy S24 256GB", price: 29900, brand: "Samsung", category: "new", img: "", emoji: "📲", badge: "AI", tags: ["samsung", "ซัมซุง", "galaxy", "s24", "มือ1", "มือ 1", "ai"] },
-      { id: "new-xm14-256", name: "Xiaomi 14 256GB", price: 24900, brand: "Xiaomi", category: "new", img: "", emoji: "📲", badge: "Leica", tags: ["xiaomi", "เสียวหมี่", "leica", "มือ1", "มือ 1"] },
-      
-      // Used Products
-      { id: "used-iph13-128", name: "iPhone 13 128GB (มือ 2)", price: 14900, brand: "Apple", category: "used", img: "", emoji: "📱", badge: "สภาพนางฟ้า", tags: ["iphone", "ไอโฟน", "apple", "มือสอง", "มือ2", "มือ 2"] },
-      { id: "used-iph12-64", name: "iPhone 12 64GB (มือ 2)", price: 9900, brand: "Apple", category: "used", img: "", emoji: "📱", badge: "ราคาคุ้ม", tags: ["iphone", "ไอโฟน", "apple", "มือสอง", "มือ2", "มือ 2"] },
-      { id: "used-s23-256", name: "Samsung Galaxy S23 256GB (มือ 2)", price: 16500, brand: "Samsung", category: "used", emoji: "📲", badge: "มือสอง", tags: ["samsung", "ซัมซุง", "galaxy", "s23", "มือสอง", "มือ2", "มือ 2"] },
-      { id: "used-a54-128", name: "Samsung Galaxy A54 128GB (มือ 2)", price: 7900, brand: "Samsung", category: "used", emoji: "📲", badge: "มือสอง", tags: ["samsung", "ซัมซุง", "a54", "มือสอง", "มือ2", "มือ 2"] },
-      { id: "used-reno8pro-256", name: "OPPO Reno 8 Pro 256GB (มือ 2)", price: 8500, brand: "OPPO", category: "used", emoji: "📲", badge: "มือสอง", tags: ["oppo", "ออปโป้", "reno", "มือสอง", "มือ2", "มือ 2"] },
-
-      // Accessory
-      { id: "acc-why-60w", name: "สายชาร์จ Why 60W Type C To C", price: 399, brand: "Why", category: "accessory", img: "Why 60W-1 Type C To C - 1.jpg", emoji: "🔌", badge: "ขายดี", tags: ["สายชาร์จ", "why", "60w", "type c", "ชาร์จเร็ว", "อุปกรณ์เสริม", "accessory"] },
-      { id: "acc-why-20w", name: "ชุดชาร์จ Why 20W Type C To C", price: 599, brand: "Why", category: "accessory", img: "Why 20w-1.jpg", emoji: "🔌", tags: ["ชุดชาร์จ", "why", "20w", "type c", "อุปกรณ์เสริม", "accessory"] },
-      { id: "acc-headphone-gallery", name: "หูฟัง Anidary ANT004", price: 699, brand: "Anidary", category: "accessory", img: "earphone-1.jpg", emoji: "🎧", tags: ["หูฟัง", "anidary", "earphone", "ant004", "อุปกรณ์เสริม", "accessory"] },
-      { id: "acc-ans006-gallery", name: "ชุดชาร์จ Anidary ANS006", price: 599, brand: "Anidary", category: "accessory", img: "ANS006-1.jpg", emoji: "🔌", tags: ["ชุดชาร์จ", "anidary", "ans006", "อุปกรณ์เสริม", "accessory"] },
-      { id: "acc-why-cable-1m", name: "สายชาร์จ Why USB 1.0M", price: 159, brand: "Why", category: "accessory", img: "Why-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "why", "usb", "1m", "micro", "lightning", "อุปกรณ์เสริม", "accessory"] },
-      { id: "acc-anidary-anc001", name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", img: "USB-I 12W-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc001", "lightning", "iphone", "อุปกรณ์เสริม", "accessory"] },
-      { id: "acc-anidary-ctoc", name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc007", "type c", "อุปกรณ์เสริม", "accessory"] },
-      { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", badge: "โปรแรง", tags: ["สายชาร์จ", "anidary", "anc007", "โปรโมชั่น", "ราคาพิเศษ", "อุปกรณ์เสริม", "accessory"] }
-    ];
+    const MOCK_PRODUCTS_BASELINE = [];
 
     let allProducts = [];
 

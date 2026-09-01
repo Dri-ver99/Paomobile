@@ -265,25 +265,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const bc = new BroadcastChannel('pao_order_sync');
     bc.onmessage = (event) => {
-        if (event.data && event.data.type === 'REFRESH_ORDERS') {
+        if (!event.data) return;
+        if (event.data.type === 'DELETE_ORDER' && event.data.orderId) {
+            const delId = String(event.data.orderId).trim();
+            ordersData = ordersData.filter(o => String(o.id).trim() !== delId);
+            try {
+                const rawGlobal = localStorage.getItem('pao_global_orders') || '[]';
+                let gOrders = JSON.parse(rawGlobal);
+                if (Array.isArray(gOrders)) {
+                    localStorage.setItem('pao_global_orders', JSON.stringify(gOrders.filter(o => String(o.id).trim() !== delId)));
+                }
+            } catch(e) {}
+            renderOrders();
+            updateTabBadges();
+        } else if (event.data.type === 'SELLER_ORDER_UPDATE' || event.data.type === 'REFRESH_ORDERS') {
             if (event.data.updatedOrder) {
                 const updated = event.data.updatedOrder;
                 let found = false;
                 ordersData = ordersData.map(o => {
-                    if (o.id === updated.id) {
+                    if (String(o.id).trim() === String(updated.id).trim()) {
                         found = true;
                         return { ...o, ...updated };
                     }
                     return o;
                 });
+                if (!found) {
+                    ordersData.unshift(updated);
+                }
                 
-                if (found) {
-                    localStorage.setItem('pao_global_orders', JSON.stringify(ordersData.map(o => ({...o, items: o.items ? o.items.map(i => ({id:i.id, name:i.name, price:i.price, quantity:i.quantity, img:i.img})) : []}))));
+                localStorage.setItem('pao_global_orders', JSON.stringify(ordersData.map(o => ({...o, items: o.items ? o.items.map(i => ({id:i.id, name:i.name, price:i.price, quantity:i.quantity, img:i.img})) : []}))));
+                
+                if (updated.status === 'คืนเงิน/คืนสินค้า' || updated.status === 'ยกเลิกแล้ว') {
+                    if (typeof window.switchTab === 'function') window.switchTab('cancelled');
+                } else if (updated.status === 'สำเร็จแล้ว') {
+                    if (typeof window.switchTab === 'function') window.switchTab('completed');
+                } else if (updated.status === 'เตรียมจัดส่งแล้ว') {
+                    if (typeof window.switchTab === 'function') window.switchTab('processed');
+                } else if (updated.status === 'ที่ต้องได้รับ') {
+                    if (typeof window.switchTab === 'function') window.switchTab('receive');
+                } else {
                     renderOrders();
                     updateTabBadges();
                 }
             }
-            forceManualSync(true); 
+            if (typeof forceManualSync === 'function') forceManualSync(true); 
         }
     };
 });
@@ -298,27 +323,31 @@ function initTabs() {
         else btn.classList.remove('active');
     });
 
+    window.switchTab = function(tabName) {
+        if (!tabName) return;
+        currentTab = tabName;
+        btns.forEach(b => {
+            if (b.dataset.tab === currentTab) b.classList.add('active');
+            else b.classList.remove('active');
+        });
+        const url = new URL(window.location);
+        url.searchParams.set('tab', currentTab);
+        try {
+            window.history.pushState({}, '', url);
+        } catch (e) {
+            console.warn('pushState not supported on file:// protocol', e);
+        }
+        renderOrders();
+        updateTabBadges();
+        if (window.updateSidebarActiveState) window.updateSidebarActiveState();
+    };
+
     if (tabContainer) {
         tabContainer.addEventListener('click', (e) => {
             try {
                 const targetBtn = e.target.closest('.tab-btn');
                 if (!targetBtn) return;
-                
-                btns.forEach(b => b.classList.remove('active'));
-                targetBtn.classList.add('active');
-                currentTab = targetBtn.dataset.tab;
-                
-                const url = new URL(window.location);
-                url.searchParams.set('tab', currentTab);
-                try {
-                    window.history.pushState({}, '', url);
-                } catch (e) {
-                    console.warn('pushState not supported on file:// protocol', e);
-                }
-                
-                renderOrders();
-                updateTabBadges();
-                if (window.updateSidebarActiveState) window.updateSidebarActiveState();
+                window.switchTab(targetBtn.dataset.tab);
             } catch (err) {
                 alert("Tab Click Error: " + err.message + "\n" + err.stack);
             }
@@ -347,29 +376,41 @@ function renderOrders() {
         <table>
             <thead>
                 <tr>
-                    <th style="width: 15%">หมายเลขคำสั่งซื้อ</th>
-                    <th style="width: 30%">สินค้า</th>
-                    <th style="width: 15%; text-align: center;">ยอดรวม</th>
-                    <th style="width: 15%; text-align: center;">สถานะ</th>
-                    <th style="width: 25%; text-align: right;">จัดการ</th>
+                    <th style="width: 14%">หมายเลขคำสั่งซื้อ</th>
+                    <th style="width: 42%">สินค้า</th>
+                    <th style="width: 12%; text-align: center;">ยอดรวม</th>
+                    <th style="width: 12%; text-align: center;">สถานะ</th>
+                    <th style="width: 20%; text-align: right;">จัดการ</th>
                 </tr>
             </thead>
             <tbody>
                 ${filtered.map(order => {
                     const items = order.items || [];
-                    const itemsHtml = items.map(item => {
+                    let parsedItems = items;
+                    if (typeof parsedItems === 'string') {
+                        try { parsedItems = JSON.parse(parsedItems); } catch(e) { parsedItems = []; }
+                    }
+                    if (!Array.isArray(parsedItems)) parsedItems = [];
+
+                    const itemsHtml = parsedItems.map(item => {
                         let itemName = item.name || 'ไม่ระบุชื่อสินค้า';
                         let variantText = '';
                         if (item.options && typeof item.options === 'string') {
                             variantText = ` <span style="color:#ee4d2d; font-size: 0.85rem;">[${item.options}]</span>`;
-                        } else if (item.variant) {
-                            variantText = ` <span style="color:#ee4d2d; font-size: 0.85rem;">[${item.variant}]</span>`;
+                        } else if (item.variant || item.variationName) {
+                            variantText = ` <span style="color:#ee4d2d; font-size: 0.85rem;">[${item.variant || item.variationName}]</span>`;
                         } else if (item.color) {
                             variantText = ` <span style="color:#ee4d2d; font-size: 0.85rem;">[${item.color}]</span>`;
                         }
-                        return `<div style="font-weight: 500; font-size: 0.9rem; line-height: 1.4; margin-bottom: 4px;">
-                                   <span style="display:inline-block; min-width: 24px; color:#555; font-weight:600;">x${item.quantity || 1}</span> 
-                                   <span style="color:#222;">${itemName}</span>${variantText}
+                        const itemImg = item.img || item.image || item.imageUrl || 'logo.png';
+                        const itemQty = item.qty || item.quantity || 1;
+
+                        return `<div style="display: flex; align-items: center; gap: 14px; font-weight: 500; font-size: 0.92rem; line-height: 1.4; margin-bottom: 12px;">
+                                   <img src="${itemImg}" alt="${itemName}" onclick="viewSlipLightbox('${itemImg}')" title="คลิกเพื่อดูภาพขยาย HD" onerror="this.src='logo.png'" style="width: 90px; height: 90px; object-fit: contain; padding: 4px; border-radius: 10px; border: 1.5px solid #d1d5db; flex-shrink: 0; background: #ffffff; box-shadow: 0 3px 10px rgba(0,0,0,0.08); cursor: pointer; transition: all 0.2s ease; image-rendering: -webkit-optimize-contrast;">
+                                   <div>
+                                       <div style="color:#111827; font-weight: 600; font-size: 0.95rem;"><span style="color:#ee4d2d; font-weight:700; margin-right: 4px;">x${itemQty}</span> ${itemName}${variantText}</div>
+                                       <div style="font-size: 0.88rem; color: #6b7280; margin-top: 4px; font-weight: 500;">฿${(item.price || 0).toLocaleString()}</div>
+                                   </div>
                                 </div>`;
                     }).join('');
                     
@@ -393,6 +434,7 @@ function renderOrders() {
                                 ${displayHtml}
                                 <div style="font-size: 0.8rem; color: #757575; margin-top: 4px;">ลูกค้า: ${order.customerName || 'ไม่ระบุชื่อ'} (${order.customerPhone || '-'})</div>
                                 <div>${sourcePills}</div>
+                                ${order.returnReason ? `<div style="margin-top: 8px; padding: 6px 10px; background: #fff2f0; border: 1px solid #ffccc7; border-radius: 6px; font-size: 0.82rem; color: #ff4d4f; font-weight: 500; text-align: left;"><strong>⚠️ เหตุผลการคืนสินค้า:</strong> ${order.returnReason}</div>` : ''}
                             </td>
                             <td data-label="ยอดรวม" style="text-align: center; font-weight: 600; font-size: 1rem; color: #ee4d2d;">฿${(order.total || 0).toLocaleString()}</td>
                             <td data-label="สถานะ" style="text-align: center;">
@@ -416,17 +458,73 @@ function renderOrders() {
 }
 
 async function deleteOrder(orderId) {
-    if (!await window.sellerConfirm('🚨 ยืนยันการลบออเดอร์ ' + orderId + ' ใช่ไหมคับ?', 'delete')) return;
-    if (window.supabaseClient) {
-        window.supabaseClient.from('orders').delete().eq('id', orderId)
-            .then(() => alert("ลบทิ้งเรียบร้อยแล้วคับ!"))
-            .catch(err => alert("ลบไม่สำเร็จ (Error): " + err.message));
+    if (!orderId) return;
+    const confirmMsg = '🚨 ยืนยันการลบคำสั่งซื้อหมายเลข ' + orderId + ' ใช่ไหมคับ? (ลบแล้วไม่สามารถกู้คืนได้ค๊าบ)';
+    if (window.sellerConfirm) {
+        if (!await window.sellerConfirm(confirmMsg, 'delete')) return;
     } else {
-        const gOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-        const filtered = gOrders.filter(o => o.id !== orderId);
-        localStorage.setItem('pao_global_orders', JSON.stringify(filtered.map(o => ({...o, items: o.items ? o.items.map(i => ({id:i.id, name:i.name, price:i.price, quantity:i.quantity, img:i.img})) : []}))));
-        renderOrders();
-        alert("ลบเรียบร้อย");
+        if (!confirm(confirmMsg)) return;
+    }
+
+    const docId = String(orderId).trim();
+
+    // 1. Instantly remove from memory ordersData array
+    if (typeof ordersData !== 'undefined' && Array.isArray(ordersData)) {
+        ordersData = ordersData.filter(o => String(o.id).trim() !== docId);
+    }
+
+    // 2. Remove from pao_global_orders in localStorage
+    try {
+        const rawGlobal = localStorage.getItem('pao_global_orders') || '[]';
+        let gOrders = JSON.parse(rawGlobal);
+        if (Array.isArray(gOrders)) {
+            const filteredGlobal = gOrders.filter(o => String(o.id).trim() !== docId);
+            localStorage.setItem('pao_global_orders', JSON.stringify(filteredGlobal));
+        }
+    } catch(e) {}
+
+    // 3. Remove from all user-specific order keys in localStorage (pao_orders_*)
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('pao_orders_')) {
+                const uOrders = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(uOrders)) {
+                    const filteredU = uOrders.filter(o => String(o.id).trim() !== docId);
+                    localStorage.setItem(key, JSON.stringify(filteredU));
+                }
+            }
+        }
+    } catch(e) {}
+
+    // 4. Update UI immediately (Row vanishes instantly)
+    if (typeof renderOrders === 'function') renderOrders();
+    if (typeof updateTabBadges === 'function') updateTabBadges();
+
+    // 5. Broadcast to all open tabs
+    try {
+        const bc = new BroadcastChannel('pao_order_sync');
+        bc.postMessage({ type: 'DELETE_ORDER', orderId: docId });
+        bc.close();
+    } catch(e) {}
+
+    // 6. Delete from Supabase Database
+    if (window.supabaseClient) {
+        try {
+            const { error } = await window.supabaseClient.from('orders').delete().eq('id', docId);
+            if (error) {
+                console.error("[DeleteOrder] Supabase Error:", error);
+            }
+        } catch(err) {
+            console.error("[DeleteOrder] Supabase Exception:", err);
+        }
+    }
+
+    // 7. Show success feedback
+    if (window.sellerAlert) {
+        await window.sellerAlert("ลบคำสั่งซื้อเรียบร้อยแล้วคับ!", "success");
+    } else {
+        alert("ลบคำสั่งซื้อเรียบร้อยแล้วคับ!");
     }
 }
 
@@ -451,32 +549,89 @@ async function markAsCompleted(orderId) {
 }
 
 function updateOrderStatus(orderId, newStatus, trackingNum = null, trackingLink = null) {
+    if (!orderId) return;
+    const docId = String(orderId).trim();
+    const updateObj = { status: newStatus };
+    if (trackingNum !== null) updateObj.trackingNum = trackingNum;
+    if (trackingLink !== null) updateObj.trackingLink = trackingLink;
+
+    // 1. Update in-memory ordersData array
+    let updatedOrderObj = null;
+    if (typeof ordersData !== 'undefined' && Array.isArray(ordersData)) {
+        ordersData = ordersData.map(o => {
+            if (String(o.id).trim() === docId) {
+                updatedOrderObj = { ...o, ...updateObj };
+                return updatedOrderObj;
+            }
+            return o;
+        });
+    }
+
+    // 2. Update pao_global_orders in localStorage
     try {
-        const updateObj = { status: newStatus };
-        if (trackingNum) updateObj.trackingNum = trackingNum;
-        if (trackingLink) updateObj.trackingLink = trackingLink;
-
-        if (window.supabaseClient) {
-            const docId = orderId.trim();
-            window.supabaseClient.from('orders').update(updateObj).eq('id', docId)
-                .then(() => console.log("[Seller Sync] Supabase updated:", docId, newStatus))
-                .catch(err => console.error("Supabase update failed for", docId, err));
+        const rawGlobal = localStorage.getItem('pao_global_orders') || '[]';
+        let globalOrders = JSON.parse(rawGlobal);
+        if (Array.isArray(globalOrders)) {
+            const idx = globalOrders.findIndex(o => String(o.id).trim() === docId);
+            if (idx > -1) {
+                globalOrders[idx] = { ...globalOrders[idx], ...updateObj };
+                if (!updatedOrderObj) updatedOrderObj = globalOrders[idx];
+            } else if (updatedOrderObj) {
+                globalOrders.push(updatedOrderObj);
+            }
+            localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
         }
+    } catch(e) {}
 
-        const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-        const idx = globalOrders.findIndex(o => o.id === orderId);
-        if(idx > -1) {
-            globalOrders[idx] = { ...globalOrders[idx], ...updateObj };
-            localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders.map(o => ({...o, items: o.items ? o.items.map(i => ({id:i.id, name:i.name, price:i.price, quantity:i.quantity, img:i.img})) : []}))));
-            
-            // Broadcast the update so customer tabs update instantly
-            try {
-                const bc = new BroadcastChannel('pao_order_sync');
-                bc.postMessage({ type: 'SELLER_ORDER_UPDATE', updatedOrder: globalOrders[idx] });
-            } catch (e) {}
+    // 3. Update user-specific localStorage keys (pao_orders_*)
+    try {
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('pao_orders_')) {
+                const uOrders = JSON.parse(localStorage.getItem(key) || '[]');
+                if (Array.isArray(uOrders)) {
+                    let changed = false;
+                    const newUOrders = uOrders.map(o => {
+                        if (String(o.id).trim() === docId) {
+                            changed = true;
+                            return { ...o, ...updateObj };
+                        }
+                        return o;
+                    });
+                    if (changed) {
+                        localStorage.setItem(key, JSON.stringify(newUOrders));
+                    }
+                }
+            }
         }
-    } catch(e) {
-        console.error("Failed to update status:", e);
+    } catch(e) {}
+
+    // 4. Auto-switch to target tab on seller dashboard
+    let targetTab = null;
+    if (newStatus === 'เตรียมจัดส่งแล้ว' || newStatus === 'Processed') targetTab = 'processed';
+    else if (newStatus === 'ที่ต้องได้รับ' || newStatus === 'To Receive') targetTab = 'receive';
+    else if (newStatus === 'สำเร็จแล้ว' || newStatus === 'Completed') targetTab = 'completed';
+    else if (newStatus === 'ยกเลิกแล้ว' || newStatus === 'Cancelled') targetTab = 'cancelled';
+
+    if (targetTab && typeof window.switchTab === 'function') {
+        window.switchTab(targetTab);
+    } else {
+        renderOrders();
+        updateTabBadges();
+    }
+
+    // 5. Broadcast to customer tab and other seller tabs
+    try {
+        const bc = new BroadcastChannel('pao_order_sync');
+        bc.postMessage({ type: 'SELLER_ORDER_UPDATE', updatedOrder: updatedOrderObj || { id: docId, ...updateObj } });
+        bc.close();
+    } catch (e) {}
+
+    // 6. Update Cloud Database in Supabase
+    if (window.supabaseClient) {
+        window.supabaseClient.from('orders').update(updateObj).eq('id', docId)
+            .then(() => console.log("[Seller Sync] Supabase updated:", docId, newStatus))
+            .catch(err => console.error("Supabase update failed for", docId, err));
     }
 }
 

@@ -53,31 +53,65 @@
         if (!supabase) return;
 
         const updateBadge = async () => {
-            const { count, error } = await supabase.from('chats')
-                .select('*', { count: 'exact', head: true })
-                .gt('unreadCount', 0);
-                
-            if (error) {
-                console.warn("[GlobalBadgeSync] Error:", error);
-                return;
-            }
-            const badge = document.getElementById('chat-unread-total');
-            if (badge) {
-                if (count > 0) {
-                    badge.textContent = count;
-                    badge.style.display = 'block';
-                } else {
-                    badge.style.display = 'none';
+            try {
+                // Count number of unique customer chat rooms with unread messages (gt unreadCount 0)
+                const { count, error } = await supabase.from('chats')
+                    .select('*', { count: 'exact', head: true })
+                    .gt('unreadCount', 0);
+                    
+                if (error) {
+                    console.warn("[GlobalBadgeSync] Error:", error);
+                    return;
                 }
+                const badgeVal = count || 0;
+                const badges = document.querySelectorAll('#chat-unread-total, .chat-unread-badge, .mobile-chat-unread-badge');
+                badges.forEach(badge => {
+                    if (badgeVal > 0) {
+                        badge.textContent = badgeVal > 99 ? '99+' : badgeVal;
+                        badge.style.display = 'inline-flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                });
+
+                try {
+                    if (window.chatBadgeBc) {
+                        window.chatBadgeBc.postMessage({ type: 'CHAT_BADGE_UPDATE', count: badgeVal });
+                    }
+                } catch(e) {}
+            } catch (e) {
+                console.warn("[GlobalBadgeSync] Catch error:", e);
             }
         };
 
+        try {
+            if (!window.chatBadgeBc) {
+                window.chatBadgeBc = new BroadcastChannel('pao_chat_badge_sync');
+                window.chatBadgeBc.onmessage = (event) => {
+                    if (event.data && event.data.type === 'CHAT_BADGE_UPDATE') {
+                        const badgeVal = event.data.count || 0;
+                        const badges = document.querySelectorAll('#chat-unread-total, .chat-unread-badge, .mobile-chat-unread-badge');
+                        badges.forEach(badge => {
+                            if (badgeVal > 0) {
+                                badge.textContent = badgeVal > 99 ? '99+' : badgeVal;
+                                badge.style.display = 'inline-flex';
+                            } else {
+                                badge.style.display = 'none';
+                            }
+                        });
+                    }
+                };
+            }
+        } catch(e) {}
+
         await updateBadge();
-        supabase.channel('chats-badge')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
-                updateBadge();
-            })
-            .subscribe();
+        try {
+            supabase.channel('chats-badge-sync')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, () => {
+                    updateBadge();
+                })
+                .subscribe();
+        } catch(e) {}
     }
 
     async function startGlobalOrderBadgeSync() {
@@ -85,29 +119,36 @@
         if (!supabase) return;
         
         const updateBadge = async () => {
-            const { count, error } = await supabase.from('orders')
-                .select('*', { count: 'exact', head: true })
-                .in('status', ['รอชำระเงิน', 'รอตรวจสอบ', 'ที่ต้องจัดส่ง', 'เตรียมจัดส่งแล้ว']);
+            try {
+                const { count, error } = await supabase.from('orders')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('status', 'ที่ต้องจัดส่ง');
+                    
+                if (error) return;
                 
-            if (error) return;
-            
-            const badges = document.querySelectorAll('.order-count-badge');
-            badges.forEach(badge => {
-                if (count > 0) {
-                    badge.textContent = count;
-                    badge.style.display = 'inline-block';
-                } else {
-                    badge.style.display = 'none';
-                }
-            });
+                const badgeVal = count || 0;
+                const badges = document.querySelectorAll('#sidebar-badge-toship, #mobile-sidebar-badge-toship, .order-count-badge, .order-count-toship');
+                badges.forEach(badge => {
+                    if (badgeVal > 0) {
+                        badge.textContent = badgeVal > 99 ? '99+' : badgeVal;
+                        badge.style.display = 'inline-flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                });
+            } catch(e) {}
         };
 
         await updateBadge();
-        supabase.channel('orders-badge')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-                updateBadge();
-            })
-            .subscribe();
+        try {
+            if (!window.ordersBadgeSub) {
+                window.ordersBadgeSub = supabase.channel('orders-badge-sync')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+                        updateBadge();
+                    })
+                    .subscribe();
+            }
+        } catch(e) {}
     }
 
     // Auto-start when Supabase is ready
