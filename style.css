@@ -233,13 +233,13 @@ p {
     left: 0;
     width: 100%;
     z-index: 9999;
-    padding: 18px 0;
+    padding: 16px 0;
     transition: var(--transition);
     background: var(--bg-dark);
 }
 
 .navbar.scrolled {
-    padding: 15px 0;
+    padding: 12px 0;
     background: rgba(28, 23, 16, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -252,17 +252,22 @@ p {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    max-width: var(--max-w);
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 24px;
 }
 
 .logo {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 1.3rem;
+    font-size: 1.35rem;
     font-weight: 700;
     color: var(--text-on-dark);
     position: relative;
     z-index: 10;
+    flex-shrink: 0;
 }
 
 .logo-icon {
@@ -277,7 +282,7 @@ p {
 }
 
 .logo-img {
-    height: 48px;
+    height: 44px;
     width: auto;
     border-radius: var(--radius-sm);
     object-fit: contain;
@@ -285,22 +290,26 @@ p {
 }
 
 .navbar.scrolled .logo-img {
-    height: 40px;
+    height: 38px;
 }
 
 .nav-links {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 18px;
+    margin: 0 auto;
+    padding: 0 20px;
+    list-style: none;
 }
 
 .nav-links a {
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     font-weight: 500;
-    color: rgba(245, 237, 224, 0.65);
+    color: rgba(245, 237, 224, 0.75);
     position: relative;
     transition: var(--transition);
-    padding: 4px 0;
+    padding: 6px 2px;
+    white-space: nowrap;
 }
 
 .nav-links a:hover,
@@ -309,13 +318,24 @@ p {
 }
 
 .nav-btn {
-    padding: 10px 24px;
+    padding: 9px 22px;
     font-size: 0.85rem;
+    white-space: nowrap;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+    margin-right: 22px !important;
 }
 
 .nav-btn svg {
     width: 16px;
     height: 16px;
+}
+
+.nav-icon-group {
+    display: flex;
+    align-items: center;
+    gap: 22px !important;
+    flex-shrink: 0;
 }
 
 .menu-toggle {
@@ -3427,12 +3447,14 @@ body.menu-open .navbar .nav-links {
 }
 
 .chat-header {
-    background: #1c1710;
-    padding: 18px 20px;
+    background: linear-gradient(135deg, #1c1710 0%, #2a2218 100%);
+    padding: 16px 20px;
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    border-bottom: 2px solid #ee4d2d;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .chat-header h3 {
@@ -3443,56 +3465,75 @@ body.menu-open .navbar .nav-links {
 
 .chat-close-btn {
     cursor: pointer;
-    font-size: 1.2rem;
-    opacity: 0.7;
-    transition: opacity 0.2s;
+    font-size: 1.4rem;
+    color: #cbd5e1;
+    transition: all 0.2s;
 }
 
 .chat-close-btn:hover {
-    opacity: 1;
+    color: #ee4d2d;
+    transform: scale(1.1);
 }
 
 .chat-messages {
     flex: 1;
-    padding: 20px;
+    padding: 18px 14px;
     overflow-y: auto;
-    background: #f8f9fa;
+    background: #f4f2ee;
+    background-image: radial-gradient(rgba(238, 77, 45, 0.06) 1px, transparent 0);
+    background-size: 20px 20px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .msg-row {
     display: flex;
+    flex-direction: row;
     width: 100%;
+    margin-bottom: 8px;
+    align-items: flex-end;
+}
+
+.msg-row.seller {
+    justify-content: flex-start !important;
 }
 
 .msg-row.user,
 .msg-row.customer {
-    justify-content: flex-end;
+    justify-content: flex-end !important;
 }
 
 .msg-bubble {
-    max-width: 80%;
+    max-width: 75%;
     padding: 10px 14px;
-    border-radius: 12px;
-    font-size: 0.88rem;
-    line-height: 1.5;
+    border-radius: 18px;
+    font-size: 0.92rem;
+    line-height: 1.45;
     position: relative;
+    word-break: break-word;
 }
 
 .msg-row.seller .msg-bubble {
-    background: #fff;
-    color: #333;
-    border-bottom-left-radius: 2px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #e2e8f0 !important;
+    border-top-left-radius: 4px !important;
+    border-top-right-radius: 18px !important;
+    border-bottom-left-radius: 18px !important;
+    border-bottom-right-radius: 18px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
 }
 
 .msg-row.user .msg-bubble,
 .msg-row.customer .msg-bubble {
-    background: #ee4d2d;
-    color: #fff;
-    border-bottom-right-radius: 2px;
+    background: linear-gradient(135deg, #f58220 0%, #ee4d2d 100%) !important;
+    color: #ffffff !important;
+    border-top-left-radius: 18px !important;
+    border-top-right-radius: 4px !important;
+    border-bottom-left-radius: 18px !important;
+    border-bottom-right-radius: 18px !important;
+    box-shadow: 0 3px 10px rgba(238, 77, 45, 0.25) !important;
 }
 
 /* Sticker Transparency Safety Rule */
@@ -3505,15 +3546,13 @@ body.menu-open .navbar .nav-links {
 
 .msg-time {
     font-size: 0.65rem;
-    color: #999;
-    margin-top: 4px;
+    color: #94a3b8;
+    margin-top: 2px;
     display: block;
 }
 
-.msg-row.user .msg-time,
-.msg-row.customer .msg-time {
-    color: rgba(255, 255, 255, 0.7);
-    text-align: right;
+.msg-row.seller .msg-time {
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .chat-input-area {
@@ -3578,7 +3617,7 @@ body.menu-open .navbar .nav-links {
     right: 4px;
     top: 50%;
     transform: translateY(-50%);
-    background: #ee4d2d;
+    background: linear-gradient(135deg, #f58220 0%, #ee4d2d 100%);
     color: #fff;
     border: none;
     width: 38px;
@@ -3588,9 +3627,13 @@ body.menu-open .navbar .nav-links {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(238, 77, 45, 0.3);
+    box-shadow: 0 4px 12px rgba(238, 77, 45, 0.35);
     z-index: 10;
     transition: transform 0.2s;
+}
+
+.btn-send:hover {
+    transform: translateY(-50%) scale(1.05);
 }
 
 .btn-send:hover {
@@ -4125,4 +4168,195 @@ a[href*="000webhost"] {
 }
 html, body {
     overscroll-behavior-y: none;
+}
+
+/* =====================================================
+   PREMIUM CART ITEM THUMBNAIL SYSTEM (รูปตะกร้าใหญ่ คมชัด สวยงาม)
+   ===================================================== */
+.cart-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.07) !important;
+    border-radius: 16px !important;
+    padding: 14px 16px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03) !important;
+    transition: all 0.25s ease !important;
+}
+
+.cart-item:hover {
+    border-color: rgba(249, 115, 22, 0.3) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06) !important;
+}
+
+.cart-item-img {
+    width: 68px !important;
+    height: 68px !important;
+    min-width: 68px !important;
+    min-height: 68px !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    border: 1.5px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+    padding: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.cart-item-img img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.cart-item:hover .cart-item-img img {
+    transform: scale(1.08) !important;
+}
+
+.cart-item-info {
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+}
+
+.cart-item-name {
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: #18181b !important;
+    line-height: 1.35 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+}
+
+.cart-item-price {
+    font-size: 0.85rem !important;
+    color: #71717a !important;
+    font-weight: 600 !important;
+}
+
+.cart-item-subtotal {
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    color: #f97316 !important;
+    white-space: nowrap !important;
+}
+
+/* =====================================================
+   PURE WHITE PRODUCT CARD IMAGE CANVAS (ไม่มีขอบเทา ไม่มีกรอบซ้ำซ้อน)
+   ===================================================== */
+.product-card {
+    background: #ffffff !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03) !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.product-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08) !important;
+    border-color: rgba(249, 115, 22, 0.25) !important;
+}
+
+.product-img {
+    width: 100% !important;
+    height: 220px !important;
+    border-radius: 20px !important;
+    padding: 14px !important;
+    background: #f4f4f6 !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+.product-img img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    padding: 0 !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.product-card:hover .product-img img {
+    transform: scale(1.06) !important;
+}
+
+/* =====================================================
+   ROUNDED FLOATING GREY CARD IMAGE SYSTEM (EXPANDED PHOTO)
+   ===================================================== */
+.pd-layout {
+    display: flex !important;
+    gap: 16px !important;
+    min-height: 380px !important;
+    padding: 16px !important;
+}
+
+.pd-image-side {
+    flex: 0 0 320px !important;
+    width: 320px !important;
+    padding: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #f4f4f6 !important;
+    position: relative !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02) !important;
+}
+
+.pd-carousel {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.pd-main-img-container {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 285px !important;
+    aspect-ratio: 1 / 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #ffffff !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05) !important;
+}
+
+.pd-main-img {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    object-fit: cover !important;
+    padding: 0 !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    transition: all 0.35s ease !important;
 }

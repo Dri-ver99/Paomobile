@@ -409,12 +409,12 @@ badge.textContent = '⚫ ปิดให้บริการ';
     style.innerHTML = `
         @keyframes chatFadeIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .chat-window.active { animation: chatFadeIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
-        .msg-row { display: flex; flex-direction: column; width: 100%; margin: 8px 0; }
-        .msg-row.customer { align-items: flex-end; }
-        .msg-row.seller { align-items: flex-start; }
-        .msg-bubble { box-shadow: 0 2px 5px rgba(0,0,0,0.05); max-width: 85%; }
-        .msg-row.customer .msg-bubble { background: #ffffff !important; color: #000 !important; border: 1px solid #eef2f6 !important; border-radius: 18px 18px 4px 18px !important; }
-        .msg-row.seller .msg-bubble { background: #fff5f0 !important; color: #000 !important; border: 1px solid #ffe4d1 !important; border-radius: 18px 18px 18px 4px !important; }
+        .msg-row { display: flex; flex-direction: row; width: 100%; margin: 8px 0; align-items: flex-end; }
+        .msg-row.customer { justify-content: flex-end !important; }
+        .msg-row.seller { justify-content: flex-start !important; }
+        .msg-bubble { box-shadow: 0 2px 5px rgba(0,0,0,0.05); max-width: 75%; word-break: break-word; }
+        .msg-row.customer .msg-bubble { background: linear-gradient(135deg, #f58220 0%, #ee4d2d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 18px 18px 4px 18px !important; }
+        .msg-row.seller .msg-bubble { background: #ffffff !important; color: #1e293b !important; border: 1px solid #e2e8f0 !important; border-radius: 4px 18px 18px 18px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important; }
         
         /* Force Sticker Transparency */
         .msg-row.sticker .msg-bubble { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; overflow: visible !important; }
