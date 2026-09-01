@@ -14,6 +14,104 @@
         rel="stylesheet" />
     <link rel="stylesheet" href="products.css" />
     <style>
+        /* ✨ Premium Single Row Horizontal Scrollable Category Filter Pills */
+        .category-filter-container {
+            max-width: 1040px;
+            margin: 20px auto 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+        .filter-chips-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 8px 20px 14px 20px;
+            margin: 0 -20px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            -webkit-overflow-scrolling: touch;
+            width: calc(100% + 40px);
+            box-sizing: border-box;
+        }
+        .filter-chips-row::-webkit-scrollbar {
+            display: none;
+        }
+        .filter-chips-row::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 1px;
+            flex-shrink: 0;
+        }
+        .brand-chip-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1.5px solid rgba(220, 225, 230, 0.85);
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            user-select: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+            font-family: inherit;
+        }
+        .brand-chip-btn:hover {
+            background: #ffffff;
+            border-color: #ff7a28;
+            color: #ff7a28;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(255, 122, 40, 0.18);
+        }
+        .brand-chip-btn.active {
+            background: linear-gradient(135deg, #ff7a28 0%, #ee4d2d 100%) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 16px rgba(238, 77, 45, 0.35) !important;
+            transform: translateY(-1px);
+        }
+        .type-pill-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 16px;
+            background: rgba(248, 250, 252, 0.85);
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+            font-family: inherit;
+        }
+        .type-pill-btn:hover {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #1e293b;
+        }
+        .type-pill-btn.active {
+            background: #1e293b !important;
+            border-color: #1e293b !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(30, 41, 59, 0.25);
+        }
     </style>
     <link rel="stylesheet" href="style.css?v=202" />
 </head>
@@ -249,6 +347,16 @@
                         <button class="search-clear" id="heroSearchClear" style="display:none">✕</button>
                     </div>
                 </div>
+
+                <!-- ✨ Premium Category Filter Pills (Seller Centre Config Sync) -->
+                <div class="category-filter-container" id="categoryFilterContainer">
+                    <div class="filter-chips-row brand-chips" id="brandChipsRow">
+                        <!-- Dynamic Brand Chips (iPhone, Samsung, OPPO, Realme, etc.) -->
+                    </div>
+                    <div class="filter-chips-row type-chips" id="typeChipsRow">
+                        <!-- Dynamic Sub-type Pills (หน้าจอ, แบตเตอรี่, สายแพร, etc.) -->
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -409,15 +517,103 @@
         });
 
         // ── Dynamic Sidebar: แสดงหมวดหมู่ตาม Seller กำหนด ──────────────────
+        // ── Dynamic Sidebar & Category Filter Pills (Seller Config Sync) ──
         (function initDynamicSidebar() {
             const accordion = document.getElementById('dynamicBrandAccordion');
-            if (!accordion) return;
 
-            const cacheKey = 'pao_parts_sidebar_v2';
+            let activeFilterModel = null;
+            let activeFilterType = null;
+            let currentConfigModels = [];
+            let currentConfigMappings = {};
+            let currentConfigPartTypes = [];
+
+            function renderPillFilterBar() {
+                const brandRow = document.getElementById('brandChipsRow');
+                const typeRow = document.getElementById('typeChipsRow');
+                if (!brandRow || !typeRow) return;
+
+                // 1. Render Brand Chips
+                let brandHtml = `
+                    <button class="brand-chip-btn ${!activeFilterModel ? 'active' : ''}" onclick="window.selectFilterBrand(null)">
+                        ✨ ทั้งหมด
+                    </button>
+                `;
+                currentConfigModels.forEach(m => {
+                    const name = String(m).trim();
+                    if (!name) return;
+                    const isActive = activeFilterModel === name;
+                    brandHtml += `
+                        <button class="brand-chip-btn ${isActive ? 'active' : ''}" onclick="window.selectFilterBrand('${name}')">
+                            ${name}
+                        </button>
+                    `;
+                });
+                brandRow.innerHTML = brandHtml;
+
+                // 2. Render Sub-type Pills
+                let availableTypes = [];
+                if (activeFilterModel && currentConfigMappings[activeFilterModel] && Array.isArray(currentConfigMappings[activeFilterModel])) {
+                    const rawTypes = currentConfigMappings[activeFilterModel];
+                    if (currentConfigPartTypes.length > 0) {
+                        availableTypes = currentConfigPartTypes.filter(pt => rawTypes.includes(pt));
+                    } else {
+                        availableTypes = rawTypes;
+                    }
+                } else if (currentConfigPartTypes.length > 0) {
+                    availableTypes = currentConfigPartTypes;
+                }
+
+                let typeHtml = `
+                    <button class="type-pill-btn ${!activeFilterType ? 'active' : ''}" onclick="window.selectFilterType(null)">
+                        ประเภททั้งหมด
+                    </button>
+                `;
+                availableTypes.forEach(t => {
+                    const name = String(t).trim();
+                    if (!name) return;
+                    const isActive = activeFilterType === name;
+                    typeHtml += `
+                        <button class="type-pill-btn ${isActive ? 'active' : ''}" onclick="window.selectFilterType('${name}')">
+                            ${name}
+                        </button>
+                    `;
+                });
+                typeRow.innerHTML = typeHtml;
+            }
+
+            window.selectFilterBrand = function(brand) {
+                activeFilterModel = brand;
+                activeFilterType = null;
+                renderPillFilterBar();
+                const ps = window.ProductSync || (typeof ProductSync !== 'undefined' ? ProductSync : null);
+                if (ps && typeof ps.filterByDynamicParts === 'function') {
+                    ps.filterByDynamicParts(activeFilterModel, activeFilterType);
+                }
+            };
+
+            window.selectFilterType = function(type) {
+                activeFilterType = type;
+                renderPillFilterBar();
+                const ps = window.ProductSync || (typeof ProductSync !== 'undefined' ? ProductSync : null);
+                if (ps && typeof ps.filterByDynamicParts === 'function') {
+                    ps.filterByDynamicParts(activeFilterModel, activeFilterType);
+                }
+            };
+
+            // Invalidate all old cached versions to prevent stuck HTML strings
             localStorage.removeItem('pao_parts_sidebar_cache');
+            localStorage.removeItem('pao_parts_sidebar_v2');
+            localStorage.removeItem('pao_parts_sidebar_v3');
+            const cacheKey = 'pao_parts_sidebar_v10';
 
             function render(models, mappings, partTypes) {
-                if (!models || !models.length) return;
+                currentConfigModels = models || [];
+                currentConfigMappings = mappings || {};
+                currentConfigPartTypes = partTypes || [];
+
+                renderPillFilterBar();
+
+                if (!models || !models.length || !accordion) return;
                 const html = models.map(m => {
                     const name = m.trim();
                     const rawTypes = (mappings && Array.isArray(mappings[name])) ? mappings[name] : [];
@@ -431,12 +627,12 @@
 
                     if (!types.length) return '';
                     return `<li class="brand-item" id="brand-${name.replace(/\s+/g,'-')}" data-brand="${name}">
-                        <div class="brand-header" onclick="toggleAccordion(this)">
+                        <div class="brand-header">
                             <span>${name}</span>
                             <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
                         <ul class="sub-cat-list">
-                            ${types.map(t=>`<li><a href="javascript:void(0)" onclick="handleFilterClick('${name}','${t}')">${t}</a></li>`).join('')}
+                            ${types.map(t=>`<li><span class="sub-cat-item" data-model="${name}" data-type="${t}">${t}</span></li>`).join('')}
                         </ul>
                     </li>`;
                 }).join('');
@@ -446,36 +642,137 @@
                 }
             }
 
+            // Fallback default load
+            const defaultModels = ['iPhone', 'iPad', 'Samsung', 'Xiaomi', 'OPPO', 'Vivo', 'Huawei', 'Realme', 'OnePlus', 'Nokia'];
+            const defaultTypes = ['หน้าจอ Lcd (แท้)', 'แบตเตอรี่', 'แพรตูดชาร์จ', 'ฝาหลัง / บอดี้'];
+            renderPillFilterBar();
+
             const cached = localStorage.getItem(cacheKey);
-            if (cached && cached.includes('<li class="brand-item"')) {
+            if (cached && cached.includes('<li class="brand-item"') && accordion) {
                 accordion.innerHTML = cached;
             }
 
-            // ── Supabase Fetch ──
+            // ── Event Delegation for Accordion & Sub-Categories ──
+            if (accordion) {
+                accordion.addEventListener('click', (e) => {
+                    const header = e.target.closest('.brand-header');
+                    if (header) {
+                        e.preventDefault();
+                        const item = header.closest('.brand-item');
+                        if (!item) return;
+                        const isAlreadyActive = item.classList.contains('active');
+                        document.querySelectorAll('.brand-item').forEach(i => i.classList.remove('active'));
+                        if (!isAlreadyActive) {
+                            item.classList.add('active');
+                        }
+                        const brandName = item.dataset.brand || '';
+                        if (brandName) {
+                            activeFilterModel = brandName;
+                            activeFilterType = null;
+                            renderPillFilterBar();
+                            document.querySelectorAll('.sub-cat-item').forEach(el => el.classList.remove('active'));
+                            if (window.ProductSync) {
+                                window.ProductSync.filterByDynamicParts(brandName, '');
+                            }
+                        }
+                        return;
+                    }
+
+                    const subItem = e.target.closest('.sub-cat-item');
+                    if (subItem) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const model = subItem.dataset.model || '';
+                        const type = subItem.dataset.type || subItem.textContent.trim();
+
+                        activeFilterModel = model;
+                        activeFilterType = type;
+                        renderPillFilterBar();
+
+                        document.querySelectorAll('.sub-cat-item').forEach(el => el.classList.remove('active'));
+                        subItem.classList.add('active');
+
+                        localStorage.setItem('pao_last_part_model', model);
+                        localStorage.setItem('pao_last_part_type', type);
+
+                        if (window.ProductSync && typeof window.ProductSync.filterByDynamicParts === 'function') {
+                            window.ProductSync.filterByDynamicParts(model, type);
+                        }
+                    }
+                });
+            }
+
+            // ── Supabase & Broadcast Real-time Category Sync ──
             const loadSupabaseCategories = async () => {
                 if (!window.supabaseClient) {
                     setTimeout(loadSupabaseCategories, 200);
                     return;
                 }
-                try {
-                    const { data, error } = await window.supabaseClient.from('settings').select('*').eq('id', 'spare_parts').single();
-                    if (error && error.code !== 'PGRST116') throw error;
-                    if (data) {
-                        const configData = (data.models || data.partTypes) ? data : (data.value || data);
-                        render(configData.models || [], configData.mappings || {}, configData.partTypes || []);
+                const supabase = window.supabaseClient;
+                const fetchAndRender = async () => {
+                    try {
+                        const { data, error } = await supabase.from('settings').select('*').eq('id', 'spare_parts').single();
+                        if (error && error.code !== 'PGRST116') throw error;
+                        if (data) {
+                            const configData = (data.models || data.partTypes) ? data : (data.value || data);
+                            render(configData.models || defaultModels, configData.mappings || {}, configData.partTypes || defaultTypes);
+                        } else {
+                            render(defaultModels, {}, defaultTypes);
+                        }
+                    } catch (e) {
+                        console.error('[sidebar] Failed to load categories', e);
+                        render(defaultModels, {}, defaultTypes);
                     }
-                } catch (e) {
-                    console.error('[sidebar] Failed to load categories', e);
-                }
+                };
+
+                await fetchAndRender();
+
+                // 1. Real-time websocket listener for Seller Centre category updates (Add/Delete/Reorder)
+                try {
+                    supabase.channel('public:settings:spare_parts_customer')
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'settings', filter: 'id=eq.spare_parts' }, payload => {
+                            if (payload.new) {
+                                const configData = (payload.new.models || payload.new.partTypes) ? payload.new : (payload.new.value || payload.new);
+                                render(configData.models || defaultModels, configData.mappings || {}, configData.partTypes || defaultTypes);
+                            }
+                        }).subscribe();
+                } catch (err) { }
+
+                // 2. BroadcastChannel listener for instant zero-latency cross-tab updates
+                try {
+                    const categoryChannel = new BroadcastChannel('pao_category_sync');
+                    categoryChannel.onmessage = (event) => {
+                        if (event.data && event.data.type === 'CATEGORY_UPDATE' && event.data.data) {
+                            const configData = event.data.data;
+                            render(configData.models || defaultModels, configData.mappings || {}, configData.partTypes || defaultTypes);
+                        }
+                    };
+                } catch (err) { }
             };
             loadSupabaseCategories();
         })();
 
-        function handleFilterClick(model, type) {
-            localStorage.setItem('pao_last_part_model', model);
-            localStorage.setItem('pao_last_part_type', type);
-            ProductSync.filterByDynamicParts(model, type);
-        }
+        window.toggleAccordion = function(headerEl) {
+            const item = headerEl.closest('.brand-item');
+            if (!item) return;
+            const isAlreadyActive = item.classList.contains('active');
+            document.querySelectorAll('.brand-item').forEach(i => i.classList.remove('active'));
+            if (!isAlreadyActive) {
+                item.classList.add('active');
+            }
+            const brandName = item.dataset.brand || '';
+            if (brandName && window.ProductSync) {
+                window.ProductSync.filterByDynamicParts(brandName, '');
+            }
+        };
+
+        window.handleFilterClick = function(model, type) {
+            localStorage.setItem('pao_last_part_model', model || '');
+            localStorage.setItem('pao_last_part_type', type || '');
+            if (window.ProductSync && typeof window.ProductSync.filterByDynamicParts === 'function') {
+                window.ProductSync.filterByDynamicParts(model, type);
+            }
+        };
     </script>
 <script src="premium-alerts.js"></script>
 </body>

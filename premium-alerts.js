@@ -286,7 +286,7 @@
     window.sellerConfirm = sellerConfirm;
     window.sellerPrompt = sellerPrompt;
 
-    // 6. Global alert() Override
+    // 6. Global alert() & confirm() Override
     if (!window.__globalAlertOverride) {
         window.__globalAlertOverride = true;
         window.alert = function(msg) {
@@ -298,6 +298,12 @@
                 else if (lower.includes('กรุณา') || lower.includes('ระวัง') || lower.includes('⚠️')) type = 'warning';
             }
             sellerAlert(String(msg), type);
+        };
+        window.confirm = function(msg) {
+            let type = 'warning';
+            if (typeof msg === 'string' && (msg.includes('ลบ') || msg.includes('delete'))) type = 'delete';
+            sellerConfirm(String(msg), type);
+            return false;
         };
     }
 })();

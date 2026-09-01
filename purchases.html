@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -327,7 +327,7 @@
                 </svg>
                 สอบถามเพิ่มเติม
             </a>
-            <div class="nav-icon-group" style="display:flex; align-items:center; gap: 30px;">
+            <div class="nav-icon-group" style="display:flex; align-items:center; gap: 20px;">
                 <button class="search-icon-btn" id="searchBtn" aria-label="ค้นหา">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -638,7 +638,7 @@
                             </svg></a><a href="https://line.me/R/ti/p/@pao789" target="_blank" aria-label="LINE"><svg
                                 width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                                 <path
-                                    d="M19.365 9.864c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-2.05v.744h2.05c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.104.108h-3.426a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h3.426zm-4.91 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108h-1.272a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zm-2.594 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H10.59a.106.106 0 01-.086-.044l-1.99-2.696v2.632c0 .06-.048.108-.108.108H7.134a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272c.034 0 .066.016.086.044l1.99 2.694V9.972c0-.06.048-.108.108-.108h1.272zm-5.648 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H4.941a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zM24 10.62C24 5.076 18.614 .573 12 .573S0 5.076 0 10.62c0 4.962 4.402 9.122 10.348 9.908.403.087.952.266 1.09.61.126.314.082.804.04 1.12l-.164 1.022c-.054.314-.248 1.228 1.076.67 1.324-.56 7.146-4.208 9.752-7.204C23.464 15.254 24 13.046 24 10.62z" />
+                                    d="M19.365 9.864c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.108.108h-2.05v.744h2.05c.058 0 .104.048.104.108v1.272c0 .06-.046.108-.108.108h-3.426a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h3.426zm-4.91 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108h-1.272a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zm-2.594 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H10.59a.106.106 0 01-.086-.044l-1.99-2.696v2.632c0 .06-.048.108-.108.108H7.134a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272c.034 0 .066.016.086.044l1.99 2.694V9.972c0-.06.048-.108.108-.108h1.272zm-5.648 0c.06 0 .108.048.108.108v3.504c0 .06-.048.108-.108.108H4.941a.108.108 0 01-.108-.108V9.972c0-.06.048-.108.108-.108h1.272zM24 10.62C24 5.076 18.614 .573 12 .573S0 5.076 0 10.62c0 4.962 4.402 9.122 10.348 9.908.403.087.952.266 1.09.61.126.314.082.804.04 1.12l-.164 1.022c-.054.314-.248 1.228 1.076.67 1.324-.56 7.146-4.208 9.752-7.204C23.464 15.254 24 13.046 24 10.62z" />
                             </svg></a><a href="https://www.tiktok.com/@paomobile.chanal?_r=1&_t=ZS-94eLN3HMFdP"
                             target="_blank" aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24"
                                 fill="currentColor">
@@ -707,8 +707,26 @@
             let ordersData = []; // Combined local and cloud orders
 
             function loadLocalOnly() {
+                const userId = getActiveUserId();
                 const local = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
-                ordersData = local.length > 0 ? local : mockData;
+                const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+                
+                const map = new Map();
+                globalOrders.forEach(o => map.set(o.id, o));
+                local.forEach(o => map.set(o.id, o));
+                
+                let combined = Array.from(map.values());
+                if (userId !== 'guest') {
+                    const u = JSON.parse(localStorage.getItem('paomobile_user'));
+                    const userEmail = u ? u.email : '';
+                    const userPhone = u ? u.phone : '';
+                    combined = combined.filter(o => 
+                        o.customer === userId || 
+                        (userEmail && o.customerEmail === userEmail) || 
+                        (userPhone && o.customerPhone === userPhone)
+                    );
+                }
+                ordersData = combined;
                 ordersData = processExpirations(ordersData);
                 const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
                 renderOrders(ordersData, activeTab);
@@ -729,9 +747,6 @@
                                 if (window.supabaseClient) {
                                     window.supabaseClient.from('orders').update({ status: 'ยกเลิกแล้ว' }).eq('id', o.id)
                                         .catch(err => console.warn("Supabase Background expiry sync failed for", o.id, err));
-                                } else if (typeof db !== 'undefined' && db.collection) {
-                                    await supabase.from('orders').update({ status: 'ยกเลิกแล้ว' }).eq('id', o.id)
-                                        .catch(err => console.warn("Firebase Background expiry sync failed for", o.id, err));
                                 }
                             }
                         }
@@ -744,44 +759,32 @@
                         const rawGlobal = localStorage.getItem('pao_global_orders') || '[]';
                         let globalOrders = JSON.parse(rawGlobal);
                         let gUpdated = false;
-                        globalOrders.forEach(go => {
-                            if (go.status === 'ที่ต้องชำระ' && go.orderDate && (Date.now() - new Date(go.orderDate).getTime() > 30 * 60 * 1000)) {
-                                go.status = 'ยกเลิกแล้ว';
+                        orders.forEach(o => {
+                            let gOrder = globalOrders.find(go => go.id === o.id);
+                            if (gOrder && gOrder.status !== o.status) {
+                                gOrder.status = o.status;
                                 gUpdated = true;
                             }
                         });
                         if (gUpdated) { localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders)); }
-                    } catch (e) { }
+                    } catch(e){}
                 }
                 return orders;
             }
 
-            // Firestore Sync (v1.2.10)
+            // Cloud Sync
             function startCloudSync() {
                 const userId = getActiveUserId();
-                if (userId === 'guest') {
-                    console.log("[v1.2.10] Guest mode: Cloud sync disabled.");
-                    loadLocalOnly();
-                    return;
-                }
-
                 console.log("[v1.2.11] Starting Cloud Sync for user:", userId);
 
                 // Pre-render local data for instant visibility
-                const localOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
-                if (localOrders.length > 0) {
-                    ordersData = localOrders;
-                    const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
-                    renderOrders(ordersData, activeTab);
-                }
+                loadLocalOnly();
 
                 const handleCloudSync = (cloudOrders) => {
-                    // Merge with local (local as priority for unsynced orders if any)
                     const localOrders = JSON.parse(localStorage.getItem(getOrdersKey()) || '[]');
+                    const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
 
-                    // Deduplicate: Use Map with ID as key
                     const mergedMap = new Map();
-
                     // Pass 1: Local
                     localOrders.forEach(o => mergedMap.set(o.id, o));
 
@@ -834,11 +837,23 @@
                 if (window.supabaseClient) {
                     const fetchOrders = async () => {
                         try {
-                            const { data, error } = await window.supabaseClient.from('orders').select('*').eq('customer', userId);
+                            const u = JSON.parse(localStorage.getItem('paomobile_user'));
+                            const userEmail = u ? u.email : '';
+                            const userPhone = u ? u.phone : '';
+
+                            const { data, error } = await window.supabaseClient.from('orders').select('*');
                             if (error) throw error;
-                            if (data) handleCloudSync(data);
+                            if (data) {
+                                const userCloudOrders = userId === 'guest' ? data : data.filter(o => 
+                                    o.customer === userId || 
+                                    (userEmail && o.customerEmail === userEmail) || 
+                                    (userPhone && o.customerPhone === userPhone)
+                                );
+                                handleCloudSync(userCloudOrders);
+                            }
                         } catch (err) {
                             console.error("[v1.2.10] Supabase Sync Error:", err);
+                            loadLocalOnly();
                         }
                     };
                     fetchOrders();
@@ -989,7 +1004,12 @@
                     // 2. Search Filter
                     if (!q) return true;
                     const idMatch = (o.id || '').toLowerCase().includes(q);
-                    const nameMatch = (o.items || []).some(item => (item.name || '').toLowerCase().includes(q));
+                    let rawItems = o.items || [];
+                    if (typeof rawItems === 'string') {
+                        try { rawItems = JSON.parse(rawItems); } catch(e) { rawItems = []; }
+                    }
+                    if (!Array.isArray(rawItems)) rawItems = [];
+                    const nameMatch = rawItems.some(item => (item && item.name || '').toLowerCase().includes(q));
                     return idMatch || nameMatch;
                 });
 
@@ -1005,7 +1025,11 @@
 
                 try {
                     container.innerHTML = filtered.map(order => {
-                        const items = order.items || [];
+                        let items = order.items || [];
+                        if (typeof items === 'string') {
+                            try { items = JSON.parse(items); } catch(e) { items = []; }
+                        }
+                        if (!Array.isArray(items)) items = [];
                         const status = order.status || 'รอดำเนินการ';
                         return `
                     <div class="order-card" style="border: 1px solid #eee; margin-bottom: 20px; border-radius: 8px; overflow: visible; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.03);">
@@ -1075,6 +1099,14 @@
                                 <div class="total-price" style="font-weight: 600; color: #ee4d2d; font-size: ${status.includes('ชำระ') ? '1.4rem' : '1.3rem'};">฿${(order.total || 0).toLocaleString()}</div>
                                 <svg id="chevron-${order.id}" style="width: 16px; height: 16px; color: #888; transition: transform 0.3s ease; margin-left: 2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
+                            ${order.returnReason ? `
+                            <div style="width: 100%; margin-top: 10px; padding: 10px 14px; background: #fff2f0; border: 1px solid #ffccc7; border-radius: 8px; font-size: 0.9rem; color: #ff4d4f; display: flex; align-items: flex-start; gap: 8px; box-sizing: border-box; text-align: left;">
+                                <span style="font-size: 1.1rem; line-height: 1;">⚠️</span>
+                                <div style="flex: 1;">
+                                    <strong style="color: #cf1322;">เหตุผลการขอคืนเงิน/คืนสินค้า:</strong> <span style="color: #434343;">${order.returnReason}</span>
+                                </div>
+                            </div>
+                            ` : ''}
                         </div>
                         <div class="order-card-footer" style="padding: 15px 20px; border-top: 1px solid #f5f5f5; background: #fff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                                 <div style="font-size: 0.85rem; color: #757575;">
@@ -1082,27 +1114,43 @@
                                 </div>
 
                                 <div class="order-actions" style="gap: 12px; display: flex; align-items: center;">
-                                    ${status === 'ที่ต้องชำระ' ? `
-                                        <button class="btn-purchase btn-purchase-primary" 
-                                            onclick="window.goToPayment && window.goToPayment({id: '${order.id}', total: ${order.total}, method: '${order.method || ''}', paymentMethod: '${order.paymentMethod || ''}', paymentBank: '${order.paymentBank || ''}'})" 
-                                            style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">ชำระเงินตอนนี้</button>
-                                        <div style="position: relative; display: inline-block;">
-                                            <button class="btn-purchase" onclick="toggleDropdown('${order.id}', event)" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">เพิ่มเติม ˅</button>
-                                            <div id="dropdown-${order.id}" class="more-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #ee4d2d; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 2px; padding: 8px 0; min-width: 190px; z-index: 100; margin-top: 5px;">
-                                                <div onclick="cancelOrderUser('${order.id}')" style="padding: 10px 16px; cursor: pointer; color: #555; font-size: 0.9rem;">ยกเลิกคำสั่งซื้อ</div>
-                                                <div onclick="changePaymentUser('${order.id}', '${order.paymentMethod || 'QR พร้อมเพย์'}')" style="padding: 10px 16px; cursor: pointer; color: #555; font-size: 0.9rem;">เปลี่ยนช่องทางการชำระเงิน</div>
-                                            </div>
-                                        </div>
-                                    ` : (['ที่ต้องจัดส่ง', 'ที่ต้องได้รับ', 'เตรียมจัดส่งแล้ว', 'Processed'].includes(status) ? `
-                                        ${(status === 'ที่ต้องได้รับ' || status === 'เตรียมจัดส่งแล้ว' || status === 'Processed') ? `
-                                            <button class="btn-purchase btn-purchase-primary" 
-                                                onclick="window.markAsCompletedUser('${order.id}')" 
-                                                style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">จัดส่งสำเร็จ</button>
-                                        ` : ''}
-                                    ` : `
-                                        <button class="btn-purchase" onclick="window.requestReturn('${order.id}')" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">คืนเงิน/คืนสินค้า</button>
-                                        <button class="btn-purchase btn-purchase-primary" onclick="window.buyAgain('${order.id}')" style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">ซื้ออีกครั้ง</button>
-                                    `)}
+                                    ${(function() {
+                                        if (status === 'ที่ต้องชำระ') {
+                                            return `
+                                                <button class="btn-purchase btn-purchase-primary" 
+                                                    onclick="window.goToPayment && window.goToPayment({id: '${order.id}', total: ${order.total}, method: '${order.method || ''}', paymentMethod: '${order.paymentMethod || ''}', paymentBank: '${order.paymentBank || ''}'})" 
+                                                    style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">ชำระเงินตอนนี้</button>
+                                                <div style="position: relative; display: inline-block;">
+                                                    <button class="btn-purchase" onclick="toggleDropdown('${order.id}', event)" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">เพิ่มเติม ˅</button>
+                                                    <div id="dropdown-${order.id}" class="more-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #ee4d2d; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 2px; padding: 8px 0; min-width: 190px; z-index: 100; margin-top: 5px;">
+                                                        <div onclick="cancelOrderUser('${order.id}')" style="padding: 10px 16px; cursor: pointer; color: #555; font-size: 0.9rem;">ยกเลิกคำสั่งซื้อ</div>
+                                                        <div onclick="changePaymentUser('${order.id}', '${order.paymentMethod || 'QR พร้อมเพย์'}')" style="padding: 10px 16px; cursor: pointer; color: #555; font-size: 0.9rem;">เปลี่ยนช่องทางการชำระเงิน</div>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        } else if (status === 'ที่ต้องจัดส่ง') {
+                                            return `
+                                                <button class="btn-purchase" onclick="window.requestReturn('${order.id}')" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">คืนเงิน/คืนสินค้า</button>
+                                            `;
+                                        } else if (status === 'เตรียมจัดส่งแล้ว' || status === 'Processed' || status === 'ที่ต้องได้รับ') {
+                                            return `
+                                                <button class="btn-purchase btn-purchase-primary" 
+                                                    onclick="window.markAsCompletedUser('${order.id}')" 
+                                                    style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">จัดส่งสำเร็จ</button>
+                                                <button class="btn-purchase" onclick="window.requestReturn('${order.id}')" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">คืนเงิน/คืนสินค้า</button>
+                                            `;
+                                        } else if (status === 'สำเร็จแล้ว' || status === 'Completed') {
+                                            return `
+                                                <button class="btn-purchase" onclick="window.requestReturn('${order.id}')" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">คืนเงิน/คืนสินค้า</button>
+                                                <button class="btn-purchase btn-purchase-primary" onclick="window.buyAgain('${order.id}')" style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">ซื้ออีกครั้ง</button>
+                                            `;
+                                        } else {
+                                            // Cancelled (ยกเลิกแล้ว) or Returned (คืนเงิน/คืนสินค้า)
+                                            return `
+                                                <button class="btn-purchase btn-purchase-primary" onclick="window.buyAgain('${order.id}')" style="border-radius: 4px; border: none; background: #ee4d2d; color: #fff; font-weight: 500; padding: 8px 20px; font-size: 0.95rem;">ซื้ออีกครั้ง</button>
+                                            `;
+                                        }
+                                    })()}
                                     <button class="btn-purchase" onclick="window.open('https://line.me/R/ti/p/@pao789', '_blank')" style="border-radius: 4px; background: #fff; color: #555; border: 1px solid #ddd; padding: 8px 16px; font-size: 0.95rem;">ติดต่อผู้ขาย</button>
                                 </div>
                         </div>
@@ -1154,9 +1202,13 @@
             // Search event
             const searchInputEl = document.getElementById('orderSearchInput');
             if (searchInputEl) {
+                let searchDebounceTimer;
                 searchInputEl.addEventListener('input', function () {
-                    const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
-                    renderOrders(ordersData, activeTab);
+                    clearTimeout(searchDebounceTimer);
+                    searchDebounceTimer = setTimeout(() => {
+                        const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                        renderOrders(ordersData, activeTab);
+                    }, 150);
                 });
             }
 
@@ -1198,19 +1250,55 @@
                 }
             });
 
+            window.switchCustomerTab = function(filter) {
+                if (!filter) return;
+                document.querySelectorAll('.order-tab').forEach(t => {
+                    if (t.dataset.filter === filter) {
+                        t.classList.add('active');
+                    } else {
+                        t.classList.remove('active');
+                    }
+                });
+                try {
+                    const url = new URL(window.location);
+                    url.searchParams.set('tab', filter);
+                    window.history.pushState({}, '', url);
+                } catch(e) {}
+                updateTabCounts(ordersData);
+                renderOrders(ordersData, filter);
+            };
+
             // Listen for direct broadcast updates from seller dashboard
             try {
                 const globalBc = new BroadcastChannel('pao_order_sync');
                 globalBc.onmessage = (event) => {
-                    if (event.data && event.data.type === 'SELLER_ORDER_UPDATE' && event.data.updatedOrder) {
+                    if (!event.data) return;
+                    if (event.data.type === 'SELLER_ORDER_UPDATE' && event.data.updatedOrder) {
                         const fo = event.data.updatedOrder;
-                        const idx = ordersData.findIndex(o => o.id === fo.id);
+                        const idx = ordersData.findIndex(o => String(o.id).trim() === String(fo.id).trim());
                         if (idx > -1) {
                             ordersData[idx] = { ...ordersData[idx], ...fo };
-                            localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
+                        } else {
+                            ordersData.unshift(fo);
+                        }
+                        localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
+                        
+                        if (fo.status === 'สำเร็จแล้ว' || fo.status === 'Completed') {
+                            window.switchCustomerTab('completed');
+                        } else if (fo.status === 'คืนเงิน/คืนสินค้า') {
+                            window.switchCustomerTab('return');
+                        } else if (fo.status === 'ยกเลิกแล้ว') {
+                            window.switchCustomerTab('cancel');
+                        } else {
                             const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
                             renderOrders(ordersData, activeTab);
                         }
+                    } else if (event.data.type === 'DELETE_ORDER' && event.data.orderId) {
+                        const delId = String(event.data.orderId).trim();
+                        ordersData = ordersData.filter(o => String(o.id).trim() !== delId);
+                        localStorage.setItem(getOrdersKey(), JSON.stringify(ordersData));
+                        const activeTab = document.querySelector('.order-tab.active')?.dataset.filter || 'all';
+                        renderOrders(ordersData, activeTab);
                     }
                 };
             } catch (e) {}
@@ -1392,7 +1480,7 @@
                             .then(() => console.log("[Cloud] Status updated to Completed via Supabase:", orderId))
                             .catch(err => console.error("[Cloud Error] Supabase Failed to update status:", err));
                     } else if (typeof db !== 'undefined' && db.collection) {
-                        await supabase.from('orders').update(updateObj).eq('id', orderId)
+                        db.collection('orders').doc(orderId).update(updateObj)
                             .then(() => console.log("[Cloud] Status updated to Completed via Firebase:", orderId))
                             .catch(err => console.error("[Cloud Error] Firebase Failed to update status:", err));
                     }
@@ -1459,7 +1547,8 @@
                     // ✅ Notify other tabs (Seller Centre) to refresh immediately
                     try {
                         const bc = new BroadcastChannel('pao_order_sync');
-                        bc.postMessage({ type: 'REFRESH_ORDERS', orderId: orderId });
+                        bc.postMessage({ type: 'SELLER_ORDER_UPDATE', updatedOrder: { id: orderId, status: 'สำเร็จแล้ว' } });
+                        bc.close();
                     } catch (e) { }
 
                     closeSuccessModal();
@@ -1633,8 +1722,10 @@
                 }
             };
 
+            window.currentReturnOrderId = null;
+
             window.requestReturn = function (orderId) {
-                currentReturnOrderId = orderId;
+                window.currentReturnOrderId = orderId;
                 const overlay = document.getElementById('returnModalOverlay');
                 const modal = document.getElementById('returnModal');
                 if (overlay && modal) {
@@ -1643,17 +1734,50 @@
                 }
             };
 
+            window.showOtherReasonInput = function () {
+                document.getElementById('returnReasonListStep').style.display = 'none';
+                document.getElementById('returnOtherInputStep').style.display = 'block';
+                const headerTitle = document.getElementById('returnModalHeaderTitle');
+                if (headerTitle) headerTitle.textContent = 'ระบุรายละเอียดเหตุผลการคืนสินค้า';
+                const txt = document.getElementById('otherReasonText');
+                if (txt) { txt.value = ''; txt.focus(); }
+            };
+
+            window.backToReturnReasonList = function () {
+                document.getElementById('returnOtherInputStep').style.display = 'none';
+                document.getElementById('returnReasonListStep').style.display = 'block';
+                const headerTitle = document.getElementById('returnModalHeaderTitle');
+                if (headerTitle) headerTitle.textContent = 'เลือกเหตุผลการคืนสินค้า';
+            };
+
+            window.submitOtherReturnReason = function () {
+                const txtEl = document.getElementById('otherReasonText');
+                const reasonVal = txtEl ? txtEl.value.trim() : '';
+                if (!reasonVal) {
+                    alert('กรุณากรอกรายละเอียดเหตุผลการคืนสินค้าด้วยนะค๊าบ');
+                    return;
+                }
+                window.executeReturnOrder('อื่นๆ: ' + reasonVal);
+            };
+
             window.closeReturnModal = function () {
                 const overlay = document.getElementById('returnModalOverlay');
                 const modal = document.getElementById('returnModal');
                 if (modal) modal.classList.remove('show');
-                setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 300);
-                currentReturnOrderId = null;
+                setTimeout(() => { 
+                    if (overlay) overlay.style.display = 'none'; 
+                    window.backToReturnReasonList();
+                }, 300);
+                window.currentReturnOrderId = null;
             };
 
             window.executeReturnOrder = function (reasonTitle) {
-                if (!currentReturnOrderId) return;
-                const orderId = currentReturnOrderId.trim();
+                console.log("[Return Debug] Executing return for order:", window.currentReturnOrderId, "reason:", reasonTitle);
+                if (!window.currentReturnOrderId) {
+                    alert("ไม่พบรหัสออเดอร์ในการขอคืนสินค้า กรุณาลองใหม่อีกครั้งค๊าบ");
+                    return;
+                }
+                const orderId = String(window.currentReturnOrderId).trim();
                 
                 try {
                     const updateObj = { 
@@ -1665,68 +1789,81 @@
                     // 1. Cloud Sync (Priority Supabase)
                     if (window.supabaseClient) {
                         window.supabaseClient.from('orders').update(updateObj).eq('id', orderId)
+                            .then(() => console.log("[Cloud] Order return updated on Supabase:", orderId))
                             .catch(err => console.error("[Cloud Error] Supabase Refund update failed:", err));
                     } else if (typeof db !== 'undefined' && db.collection) {
-                        await supabase.from('orders').update(updateObj).eq('id', orderId)
+                        db.collection('orders').doc(orderId).update(updateObj)
                             .catch(err => console.error("[Cloud Error] Firebase Refund update failed:", err));
                     }
                     
-                    // 2. Local Storage Sync
-                    const rawOrders = localStorage.getItem(getOrdersKey()) || '[]';
+                    // 2. Local Storage Sync (User orders)
+                    const userKey = getOrdersKey();
+                    const rawOrders = localStorage.getItem(userKey) || '[]';
                     let currentOrders = JSON.parse(rawOrders);
                     let foundLocal = false;
-                    currentOrders.forEach(o => {
-                        if (o.id && o.id.trim() === orderId) {
-                            o.status = 'คืนเงิน/คืนสินค้า';
-                            o.returnReason = reasonTitle;
+                    currentOrders = currentOrders.map(o => {
+                        if (o.id && String(o.id).trim() === orderId) {
                             foundLocal = true;
+                            return { ...o, ...updateObj };
                         }
+                        return o;
                     });
-                    if (foundLocal) localStorage.setItem(getOrdersKey(), JSON.stringify(currentOrders));
+                    if (!foundLocal) {
+                        const inMem = ordersData.find(o => o.id && String(o.id).trim() === orderId);
+                        currentOrders.unshift(inMem ? { ...inMem, ...updateObj } : { id: orderId, ...updateObj });
+                    }
+                    localStorage.setItem(userKey, JSON.stringify(currentOrders));
                     
-                    // 3. Global Sync Fallback
+                    // 3. Global Sync Fallback (pao_global_orders)
                     try {
                         let globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
-                        globalOrders.forEach(go => {
-                            if (go.id && go.id.trim() === orderId) {
-                                go.status = 'คืนเงิน/คืนสินค้า';
-                                go.returnReason = reasonTitle;
+                        let foundGlobal = false;
+                        globalOrders = globalOrders.map(go => {
+                            if (go.id && String(go.id).trim() === orderId) {
+                                foundGlobal = true;
+                                return { ...go, ...updateObj };
                             }
+                            return go;
                         });
+                        if (!foundGlobal) {
+                            globalOrders.unshift(currentOrders.find(o => String(o.id).trim() === orderId) || { id: orderId, ...updateObj });
+                        }
                         localStorage.setItem('pao_global_orders', JSON.stringify(globalOrders));
                     } catch (e) { }
 
-                    // 4. UI Update
-                    const idx = ordersData.findIndex(o => o.id && o.id.trim() === orderId);
+                    // 4. UI Update on Customer Side (ordersData in memory)
+                    let updatedOrderObj = null;
+                    const idx = ordersData.findIndex(o => o.id && String(o.id).trim() === orderId);
                     if (idx > -1) {
-                        ordersData[idx].status = 'คืนเงิน/คืนสินค้า';
-                        ordersData[idx].returnReason = reasonTitle;
+                        ordersData[idx] = { ...ordersData[idx], ...updateObj };
+                        updatedOrderObj = ordersData[idx];
+                    } else {
+                        updatedOrderObj = { id: orderId, ...updateObj };
+                        ordersData.unshift(updatedOrderObj);
                     }
                     
-                    // Force switch to "Return" tab
-                    document.querySelectorAll('.order-tab').forEach(t => {
-                        if (t.dataset.filter === 'return') t.classList.add('active');
-                        else t.classList.remove('active');
-                    });
+                    // 5. Close modal FIRST so overlay vanishes immediately
+                    window.closeReturnModal();
                     
-                    updateTabCounts(ordersData);
-                    renderOrders(ordersData, 'return');
+                    // 6. Switch active tab to "Return" tab
+                    if (typeof window.switchCustomerTab === 'function') {
+                        window.switchCustomerTab('return');
+                    } else {
+                        renderOrders(ordersData, 'return');
+                    }
                     
-                    // ✅ Notify other tabs (Seller Centre) to refresh immediately
+                    // 7. Notify other tabs (Seller Centre) via BroadcastChannel
                     try {
                         const bc = new BroadcastChannel('pao_order_sync');
-                        bc.postMessage({ type: 'REFRESH_ORDERS', orderId: orderId });
+                        bc.postMessage({ type: 'SELLER_ORDER_UPDATE', updatedOrder: updatedOrderObj });
+                        bc.close();
                     } catch (e) { }
 
-                    closeReturnModal();
-                    
                 } catch (e) {
                     console.error("Return execution failed:", e);
-                    closeReturnModal();
+                    window.closeReturnModal();
                 }
             };
-
-            let currentReturnOrderId = null;
         })();
     </script>
 
@@ -1743,14 +1880,16 @@
     </div>
 
     <!-- Return Reason Modal -->
-    <div class="sc-modal-overlay" id="returnModalOverlay" onclick="closeReturnModal()"></div>
-    <div class="sc-modal" id="returnModal" style="max-width: 500px; padding: 0; overflow: hidden;">
-        <div style="padding: 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; background: #fff; position: sticky; top: 0; z-index: 10;">
-            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;">เลือกเหตุผลการคืนสินค้า</h3>
-            <span onclick="closeReturnModal()" style="cursor: pointer; font-size: 1.5rem; color: #999; line-height: 1;">&times;</span>
+    <div class="sc-modal-overlay" id="returnModalOverlay" onclick="window.closeReturnModal()"></div>
+    <div class="sc-modal" id="returnModal" style="max-width: 500px; padding: 0; overflow: hidden; border-radius: 16px;">
+        <div style="padding: 18px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; background: #fff; position: sticky; top: 0; z-index: 10;">
+            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 600;" id="returnModalHeaderTitle">เลือกเหตุผลการคืนสินค้า</h3>
+            <span onclick="window.closeReturnModal()" style="cursor: pointer; font-size: 1.5rem; color: #999; line-height: 1;">&times;</span>
         </div>
-        <div class="return-modal-list">
-            <div class="return-option" onclick="executeReturnOrder('ได้รับสินค้าที่มีความเสียหาย หรือสภาพไม่ดี')">
+        
+        <!-- Step 1: Reason Selector List -->
+        <div class="return-modal-list" id="returnReasonListStep">
+            <div class="return-option" onclick="window.executeReturnOrder('ได้รับสินค้าที่มีความเสียหาย หรือสภาพไม่ดี')">
                 <div class="return-icon">🩹</div>
                 <div class="return-text">
                     <div class="return-title">ได้รับสินค้าที่มีความเสียหาย หรือสภาพไม่ดี</div>
@@ -1758,7 +1897,7 @@
                 </div>
                 <div class="return-arrow">›</div>
             </div>
-            <div class="return-option" onclick="executeReturnOrder('ได้รับสินค้ามาผิด หรือไม่ใช่สินค้าที่สั่ง')">
+            <div class="return-option" onclick="window.executeReturnOrder('ได้รับสินค้ามาผิด หรือไม่ใช่สินค้าที่สั่ง')">
                 <div class="return-icon">🚫</div>
                 <div class="return-text">
                     <div class="return-title">ได้รับสินค้ามาผิด หรือไม่ใช่สินค้าที่สั่ง</div>
@@ -1766,7 +1905,7 @@
                 </div>
                 <div class="return-arrow">›</div>
             </div>
-            <div class="return-option" onclick="executeReturnOrder('ได้รับสินค้าไม่ครบ หรือยังไม่ได้รับพัสดุ')">
+            <div class="return-option" onclick="window.executeReturnOrder('ได้รับสินค้าไม่ครบ หรือยังไม่ได้รับพัสดุ')">
                 <div class="return-icon">📦</div>
                 <div class="return-text">
                     <div class="return-title">ได้รับสินค้าไม่ครบ หรือยังไม่ได้รับพัสดุ</div>
@@ -1774,12 +1913,23 @@
                 </div>
                 <div class="return-arrow">›</div>
             </div>
-            <div class="return-option" onclick="executeReturnOrder('อื่นๆ')">
+            <div class="return-option" onclick="window.showOtherReasonInput()">
                 <div class="return-icon">⚙️</div>
                 <div class="return-text">
                     <div class="return-title">อื่นๆ</div>
+                    <div class="return-desc">ระบุรายละเอียดเหตุผลอื่นๆ ที่คุณต้องการคืนสินค้า</div>
                 </div>
                 <div class="return-arrow">›</div>
+            </div>
+        </div>
+
+        <!-- Step 2: Custom Reason Text Input (Shown when 'อื่นๆ' is selected) -->
+        <div id="returnOtherInputStep" style="display: none; padding: 20px;">
+            <label style="display: block; font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; color: #333;">กรุณาระบุรายละเอียดเหตุผลการคืนสินค้า:</label>
+            <textarea id="otherReasonText" rows="4" placeholder="พิมพ์รายละเอียดเหตุผลการคืนสินค้าของคุณ..." style="width: 100%; border: 1.5px solid #d9d9d9; border-radius: 10px; padding: 12px; font-size: 0.95rem; outline: none; font-family: inherit; resize: vertical; box-sizing: border-box;"></textarea>
+            <div style="display: flex; gap: 10px; margin-top: 16px;">
+                <button onclick="window.backToReturnReasonList()" style="flex: 1; padding: 10px; border: 1px solid #ccc; background: #f5f5f5; color: #333; border-radius: 8px; font-weight: 600; cursor: pointer;">ย้อนกลับ</button>
+                <button onclick="window.submitOtherReturnReason()" style="flex: 2; padding: 10px; border: none; background: #ee4d2d; color: #fff; border-radius: 8px; font-weight: 600; cursor: pointer;">ยืนยันการขอคืนสินค้า</button>
             </div>
         </div>
     </div>

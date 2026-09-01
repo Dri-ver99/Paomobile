@@ -42,9 +42,9 @@ window.ProductDetail = {
             }
             .product-modal-container {
                 background: #fff;
-                width: 95%;
-                max-width: 880px;
-                max-height: 88vh;
+                width: 92%;
+                max-width: 760px;
+                max-height: 85vh;
                 border-radius: 24px;
                 position: relative;
                 overflow-x: hidden;
@@ -83,16 +83,20 @@ window.ProductDetail = {
                 box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             }
 
-            .pd-layout { display: flex; gap: 0; min-height: 420px; }
+            .pd-layout { display: flex; gap: 16px; min-height: 380px; padding: 16px; }
             .pd-image-side { 
-                flex: 1.15; padding: 24px; display: flex; align-items: center; justify-content: center; 
-                background: linear-gradient(145deg, #fafafa 0%, #f0f0f0 100%); 
-                position: relative; border-right: 1px solid #eee;
-                border-radius: 24px 0 0 24px;
+                flex: 0 0 320px; width: 320px; padding: 16px; display: flex; align-items: center; justify-content: center; 
+                background: #f4f4f6; 
+                position: relative; border: 1px solid rgba(0,0,0,0.05);
+                border-radius: 20px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.02);
             }
-            .pd-main-img { width: 100%; height: 100%; object-fit: contain; border-radius: 16px; transition: all 0.4s ease; }
+            .pd-main-img-container {
+                position: relative; width: 100%; max-width: 285px; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; background: #ffffff; border-radius: 18px; overflow: hidden; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+            }
+            .pd-main-img { width: 100%; height: 100%; max-height: 100%; object-fit: contain; padding: 4px; border-radius: 16px; background: #ffffff; transition: all 0.4s ease; }
             .pd-info-side { 
-                flex: 0.85; padding: 28px 24px 24px; display: flex; flex-direction: column; 
+                flex: 1; padding: 12px 16px 12px 8px; display: flex; flex-direction: column; 
                 justify-content: flex-start; overflow-y: auto;
             }
             

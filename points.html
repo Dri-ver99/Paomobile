@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>พอยท์สะสม - Paomobile</title>
+    <meta name="description" content="สะสมพอยท์ แลกคูปองส่วนลด รับสิทธิพิเศษสำหรับสมาชิก Paomobile" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Thai:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --gold-primary: #D4A32A;
+            --gold-light: #F0C040;
+            --gold-dark: #926B10;
+            --orange: #FF7A28;
+            --accent: #ee4d2d;
+            --dark: #1C1710;
+            --dark-card: #0f172a;
+            --bg: #f5f3ef;
+            --card: #ffffff;
+            --text-main: #1e293b;
+            --text-soft: #64748b;
+            --text-muted: #94a3b8;
+            --border: rgba(0,0,0,0.06);
+            --success: #10b981;
+            --cyan: #0891b2;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== Top Bar ===== */
+        .pt-topbar {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: 56px;
+            background: var(--dark);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 16px;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .pt-topbar-back {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: none; border-radius: 50%;
+            color: #fff; font-size: 1.1rem;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .pt-topbar-back:hover { background: rgba(255,255,255,0.15); }
+        .pt-topbar-title {
+            color: #fff; font-weight: 700; font-size: 1.05rem;
+            letter-spacing: -0.3px;
+        }
+        .pt-topbar-logo {
+            width: 32px; height: 32px; border-radius: 8px; object-fit: contain;
+        }
+
+        /* ===== Hero Cover ===== */
+        .pt-hero {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            margin-top: 56px;
+            overflow: hidden;
+        }
+        .pt-hero img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            filter: brightness(0.7);
+        }
+        .pt-hero::after {
+            content: '';
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: 80px;
+            background: linear-gradient(transparent, var(--bg));
+        }
+
+        /* ===== Profile Card ===== */
+        .pt-profile-card {
+            position: relative;
+            margin: -60px 16px 0;
+            background: var(--card);
+            border-radius: 20px;
+            padding: 24px 20px 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.03);
+            z-index: 10;
+        }
+        .pt-profile-top {
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 20px;
+        }
+        .pt-avatar {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-light));
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1.6rem; font-weight: 800;
+            overflow: hidden;
+            border: 3px solid var(--card);
+            box-shadow: 0 4px 15px rgba(212,163,42,0.25);
+            flex-shrink: 0;
+        }
+        .pt-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .pt-profile-info { flex: 1; min-width: 0; }
+        .pt-profile-name {
+            font-size: 1.15rem; font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .pt-profile-sub {
+            font-size: 0.82rem; color: var(--text-soft);
+            margin-top: 2px;
+        }
+        .pt-profile-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: linear-gradient(135deg, var(--dark), #334155);
+            color: var(--gold-light);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.68rem; font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-top: 6px;
+        }
+
+        /* ===== Points Display ===== */
+        .pt-points-box {
+            background: linear-gradient(135deg, var(--dark) 0%, #1e293b 60%, #334155 100%);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .pt-points-box::before {
+            content: '';
+            position: absolute; top: -30%; right: -15%;
+            width: 180px; height: 180px;
+            background: radial-gradient(circle, rgba(240,192,64,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .pt-points-box::after {
+            content: '';
+            position: absolute; bottom: -20%; left: -10%;
+            width: 120px; height: 120px;
+            background: radial-gradient(circle, rgba(255,122,40,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .pt-points-label {
+            font-size: 0.82rem; color: rgba(255,255,255,0.6);
+            font-weight: 500; margin-bottom: 6px;
+            position: relative; z-index: 1;
+        }
+        .pt-points-row {
+            display: flex; align-items: baseline; gap: 8px;
+            position: relative; z-index: 1;
+        }
+        .pt-points-num {
+            font-size: 2.8rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold-primary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+        .pt-points-unit {
+            font-size: 1rem; color: rgba(255,255,255,0.5);
+            font-weight: 600;
+        }
+        .pt-points-actions {
+            display: flex; gap: 10px; margin-top: 14px;
+            position: relative; z-index: 1;
+        }
+        .pt-btn-history {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.78rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+            font-family: inherit;
+        }
+        .pt-btn-history:hover { background: rgba(255,255,255,0.18); }
+        .pt-btn-history svg { width: 14px; height: 14px; }
+
+        /* ===== Quick Actions Grid ===== */
+        .pt-actions-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 16px 16px 0;
+        }
+        .pt-action-card {
+            background: var(--card);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.25s;
+            text-decoration: none; color: inherit;
+        }
+        .pt-action-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+        .pt-action-icon {
+            width: 40px; height: 40px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .pt-action-icon.gold { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+        .pt-action-icon.blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+        .pt-action-icon.green { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+        .pt-action-icon.pink { background: linear-gradient(135deg, #fce7f3, #fbcfe8); }
+        .pt-action-label {
+            font-size: 0.82rem; font-weight: 600;
+            color: var(--text-main);
+        }
+        .pt-action-sublabel {
+            font-size: 0.7rem; color: var(--text-soft);
+            margin-top: 1px;
+        }
+
+        /* ===== Section Title ===== */
+        .pt-section {
+            margin: 24px 16px 0;
+        }
+        .pt-section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 14px;
+        }
+        .pt-section-title {
+            font-size: 1.05rem; font-weight: 700;
+            color: var(--text-main);
+        }
+        .pt-section-link {
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--gold-primary);
+            text-decoration: none;
+            display: flex; align-items: center; gap: 3px;
+            transition: color 0.2s;
+        }
+        .pt-section-link:hover { color: var(--accent); }
+
+        /* ===== Free Coupon Cards ===== */
+        .pt-coupon-scroll {
+            display: flex; gap: 12px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+        }
+        .pt-coupon-scroll::-webkit-scrollbar { display: none; }
+
+        .pt-coupon-card {
+            flex: 0 0 260px;
+            scroll-snap-align: start;
+            background: var(--card);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        .pt-coupon-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+
+        .pt-coupon-img {
+            width: 100%; height: 130px;
+            object-fit: cover;
+            position: relative;
+        }
+        .pt-coupon-img-wrap {
+            position: relative; overflow: hidden;
+        }
+        .pt-coupon-badge {
+            position: absolute; top: 10px; left: 10px;
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.68rem; font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .pt-coupon-badge.free {
+            background: linear-gradient(135deg, var(--success), #059669);
+        }
+        .pt-coupon-body {
+            padding: 14px 16px 16px;
+        }
+        .pt-coupon-title {
+            font-size: 0.92rem; font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        .pt-coupon-price {
+            font-size: 0.92rem; font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        .pt-coupon-price.free-label {
+            color: var(--success);
+        }
+        .pt-coupon-exp {
+            font-size: 0.7rem; color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        .pt-btn-claim {
+            width: 100%;
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.85rem; font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.25s;
+            position: relative; overflow: hidden;
+        }
+        .pt-btn-claim::after {
+            content: '';
+            position: absolute; top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: none;
+        }
+        .pt-btn-claim:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .pt-btn-claim:hover::after { left: 200%; transition: 0.8s; }
+        .pt-btn-claim:disabled {
+            background: #e2e8f0; color: #94a3b8; cursor: not-allowed;
+            filter: none; transform: none;
+        }
+        .pt-btn-claim.claimed {
+            background: #f0fdf4; color: var(--success);
+            border: 1px solid #bbf7d0;
+        }
+
+        /* ===== Points Exchange Coupons ===== */
+        .pt-exchange-list {
+            display: flex; flex-direction: column;
+            gap: 12px;
+        }
+        .pt-exchange-card {
+            background: var(--card);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+            min-height: 120px;
+        }
+        .pt-exchange-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+
+        .pt-exchange-left {
+            width: 120px; min-width: 120px;
+            position: relative;
+            overflow: hidden;
+        }
+        .pt-exchange-left img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        .pt-exchange-pts-badge {
+            position: absolute; top: 8px; left: 8px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            color: var(--gold-light);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.68rem; font-weight: 700;
+        }
+
+        .pt-exchange-right {
+            flex: 1; padding: 14px 16px;
+            display: flex; flex-direction: column;
+            justify-content: space-between;
+            border-left: 2px dashed #f1f5f9;
+            position: relative;
+        }
+        /* Ticket notches */
+        .pt-exchange-right::before, .pt-exchange-right::after {
+            content: '';
+            position: absolute; left: -7px;
+            width: 12px; height: 12px;
+            background: var(--bg);
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            z-index: 2;
+        }
+        .pt-exchange-right::before { top: -6px; }
+        .pt-exchange-right::after { bottom: -6px; }
+
+        .pt-exchange-title {
+            font-size: 0.9rem; font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px; line-height: 1.3;
+        }
+        .pt-exchange-cost {
+            font-size: 0.8rem; color: var(--text-soft);
+            margin-bottom: 3px;
+        }
+        .pt-exchange-cost strong {
+            color: var(--gold-primary); font-weight: 800;
+        }
+        .pt-exchange-exp {
+            font-size: 0.68rem; color: var(--text-muted);
+        }
+        .pt-btn-exchange {
+            align-self: flex-start;
+            margin-top: 8px;
+            background: linear-gradient(135deg, var(--dark), #334155);
+            color: var(--gold-light);
+            border: none;
+            padding: 7px 16px;
+            border-radius: 8px;
+            font-size: 0.75rem; font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.25s;
+        }
+        .pt-btn-exchange:hover { filter: brightness(1.15); transform: translateY(-1px); }
+        .pt-btn-exchange:disabled {
+            background: #f1f5f9; color: #94a3b8;
+            cursor: not-allowed; filter: none; transform: none;
+        }
+
+        /* ===== Empty State ===== */
+        .pt-empty {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .pt-empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.7; }
+        .pt-empty-text { font-size: 0.9rem; color: var(--text-soft); font-weight: 500; }
+
+        /* ===== History Modal ===== */
+        .pt-history-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            z-index: 200;
+            opacity: 0; visibility: hidden;
+            transition: all 0.3s;
+        }
+        .pt-history-overlay.active { opacity: 1; visibility: visible; }
+
+        .pt-history-sheet {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--card);
+            border-radius: 24px 24px 0 0;
+            max-height: 70vh;
+            z-index: 201;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column;
+        }
+        .pt-history-sheet.active { transform: translateY(0); }
+
+        .pt-history-handle {
+            width: 40px; height: 4px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin: 12px auto 0;
+        }
+        .pt-history-header {
+            padding: 16px 20px 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .pt-history-header h3 {
+            font-size: 1.05rem; font-weight: 700;
+        }
+        .pt-history-close {
+            width: 30px; height: 30px;
+            background: #f1f5f9; border: none; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 0.9rem; color: var(--text-soft);
+            transition: all 0.2s;
+        }
+        .pt-history-close:hover { background: #e2e8f0; }
+        .pt-history-body {
+            padding: 16px 20px;
+            overflow-y: auto; flex: 1;
+        }
+        .pt-history-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f8fafc;
+        }
+        .pt-history-item:last-child { border-bottom: none; }
+        .pt-history-left { }
+        .pt-history-desc {
+            font-size: 0.85rem; font-weight: 600;
+            color: var(--text-main);
+        }
+        .pt-history-date {
+            font-size: 0.72rem; color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .pt-history-pts {
+            font-size: 0.9rem; font-weight: 800;
+        }
+        .pt-history-pts.positive { color: var(--success); }
+        .pt-history-pts.negative { color: var(--accent); }
+
+        /* ===== Login Required ===== */
+        .pt-login-required {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            min-height: 60vh;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .pt-login-icon { font-size: 4rem; margin-bottom: 20px; }
+        .pt-login-title {
+            font-size: 1.3rem; font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .pt-login-desc {
+            font-size: 0.9rem; color: var(--text-soft);
+            margin-bottom: 24px; line-height: 1.6;
+        }
+        .pt-btn-login {
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+            color: #fff;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 14px;
+            font-size: 1rem; font-weight: 700;
+            cursor: pointer; font-family: inherit;
+            transition: all 0.25s;
+            text-decoration: none;
+        }
+        .pt-btn-login:hover { filter: brightness(1.08); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(212,163,42,0.3); }
+
+        /* ===== Bottom Spacer ===== */
+        .pt-bottom-spacer { height: 100px; }
+
+        /* ===== Bottom Nav ===== */
+        .pt-bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+        }
+        .pt-nav-item {
+            flex: 1;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 8px 4px 6px;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.65rem; font-weight: 600;
+            transition: all 0.2s;
+            gap: 2px;
+            position: relative;
+        }
+        .pt-nav-item.active {
+            color: var(--gold-primary);
+        }
+        .pt-nav-item.active::after {
+            content: '';
+            position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+            width: 24px; height: 3px;
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-light));
+            border-radius: 0 0 4px 4px;
+        }
+        .pt-nav-item svg { width: 22px; height: 22px; }
+        .pt-nav-item .nav-star {
+            width: 26px; height: 26px;
+            fill: currentColor;
+        }
+
+        /* ===== Animations ===== */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in {
+            animation: fadeInUp 0.5s ease both;
+        }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+
+        /* ===== Confetti for point redemption ===== */
+        .pt-confetti {
+            position: fixed; inset: 0;
+            pointer-events: none;
+            z-index: 300;
+        }
+
+        /* ===== Desktop max width ===== */
+        @media (min-width: 600px) {
+            .pt-hero { max-width: 600px; margin-left: auto; margin-right: auto; border-radius: 0 0 24px 24px; }
+            .pt-profile-card { max-width: 568px; margin-left: auto; margin-right: auto; }
+            .pt-actions-grid { max-width: 600px; margin-left: auto; margin-right: auto; }
+            .pt-section { max-width: 600px; margin-left: auto; margin-right: auto; }
+            .pt-bottom-nav { max-width: 600px; left: 50%; transform: translateX(-50%); border-radius: 16px 16px 0 0; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Bar -->
+    <div class="pt-topbar">
+        <button class="pt-topbar-back" onclick="history.back()" aria-label="กลับ">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <span class="pt-topbar-title">Pao<span style="color: var(--gold-light)">mobile</span></span>
+        <img src="logo.png" alt="Paomobile" class="pt-topbar-logo">
+    </div>
+
+    <!-- Login Required (hidden when logged in) -->
+    <div id="loginRequired" class="pt-login-required" style="display:none; margin-top:56px;">
+        <div class="pt-login-icon">🔐</div>
+        <div class="pt-login-title">เข้าสู่ระบบเพื่อดูพอยท์</div>
+        <div class="pt-login-desc">สมัครสมาชิกหรือเข้าสู่ระบบเพื่อสะสมพอยท์<br>และรับสิทธิพิเศษมากมายค่ะ</div>
+        <a href="login.html" class="pt-btn-login">เข้าสู่ระบบ / สมัครสมาชิก</a>
+    </div>
+
+    <!-- Main Content (visible when logged in) -->
+    <div id="mainContent" style="display:none;">
+        <!-- Hero Cover -->
+        <div class="pt-hero animate-in">
+            <img src="Pao 1.jpg" alt="Paomobile Store" id="heroImage">
+        </div>
+
+        <!-- Profile Card -->
+        <div class="pt-profile-card animate-in delay-1">
+            <div class="pt-profile-top">
+                <div class="pt-avatar" id="ptAvatar">P</div>
+                <div class="pt-profile-info">
+                    <div class="pt-profile-name" id="ptName">สมาชิก Paomobile</div>
+                    <div class="pt-profile-sub" id="ptEmail">member@paomobile.com</div>
+                    <div class="pt-profile-badge">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        MEMBER
+                    </div>
+                </div>
+            </div>
+
+            <!-- Points Box -->
+            <div class="pt-points-box">
+                <div class="pt-points-label">พอยท์สะสม</div>
+                <div class="pt-points-row">
+                    <div class="pt-points-num" id="ptPointsNum">0</div>
+                    <div class="pt-points-unit">พอยท์</div>
+                </div>
+                <div class="pt-points-actions">
+                    <button class="pt-btn-history" onclick="openHistory()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        ประวัติการใช้งาน
+                    </button>
+                    <button class="pt-btn-history" onclick="location.href='member.html'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        โปรไฟล์
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="pt-actions-grid animate-in delay-2">
+            <a href="member.html" class="pt-action-card">
+                <div class="pt-action-icon gold">🎫</div>
+                <div>
+                    <div class="pt-action-label">คูปองของฉัน</div>
+                    <div class="pt-action-sublabel" id="myCouponCount">0 ใบ</div>
+                </div>
+            </a>
+            <a href="purchases.html" class="pt-action-card">
+                <div class="pt-action-icon blue">📦</div>
+                <div>
+                    <div class="pt-action-label">การซื้อของฉัน</div>
+                    <div class="pt-action-sublabel">ดูประวัติคำสั่งซื้อ</div>
+                </div>
+            </a>
+            <a href="promotions.html" class="pt-action-card">
+                <div class="pt-action-icon pink">🎁</div>
+                <div>
+                    <div class="pt-action-label">โปรโมชั่น</div>
+                    <div class="pt-action-sublabel">สิทธิพิเศษสมาชิก</div>
+                </div>
+            </a>
+            <a href="repair-track.html" class="pt-action-card">
+                <div class="pt-action-icon green">🔧</div>
+                <div>
+                    <div class="pt-action-label">เช็คสถานะซ่อม</div>
+                    <div class="pt-action-sublabel">ติดตามงานซ่อม</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Free Coupons Section -->
+        <div class="pt-section animate-in delay-3" id="freeCouponsSection" style="display:none;">
+            <div class="pt-section-header">
+                <div class="pt-section-title">🎉 คูปองแจกฟรี</div>
+                <a href="promotions.html" class="pt-section-link">ดูทั้งหมด <span>›</span></a>
+            </div>
+            <div class="pt-coupon-scroll" id="freeCouponsList"></div>
+        </div>
+
+        <!-- Points Exchange Section -->
+        <div class="pt-section animate-in delay-4" id="exchangeSection" style="display:none;">
+            <div class="pt-section-header">
+                <div class="pt-section-title">💰 คูปองสะสมแต้ม</div>
+                <a href="#" class="pt-section-link" onclick="return false;">ดูทั้งหมด <span>›</span></a>
+            </div>
+            <div class="pt-exchange-list" id="exchangeList"></div>
+        </div>
+
+        <div class="pt-bottom-spacer"></div>
+    </div>
+
+    <!-- History Bottom Sheet -->
+    <div class="pt-history-overlay" id="historyOverlay" onclick="closeHistory()"></div>
+    <div class="pt-history-sheet" id="historySheet">
+        <div class="pt-history-handle"></div>
+        <div class="pt-history-header">
+            <h3>📊 ประวัติพอยท์</h3>
+            <button class="pt-history-close" onclick="closeHistory()">✕</button>
+        </div>
+        <div class="pt-history-body" id="historyBody">
+            <div class="pt-empty">
+                <div class="pt-empty-icon">📋</div>
+                <div class="pt-empty-text">ยังไม่มีประวัติการใช้งาน</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="pt-bottom-nav">
+        <a href="index.html" class="pt-nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            หน้าแรก
+        </a>
+        <a href="promotions.html" class="pt-nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+            สิทธิพิเศษ
+        </a>
+        <a href="points.html" class="pt-nav-item active">
+            <svg class="nav-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            พอยท์
+        </a>
+        <a href="member.html" class="pt-nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+            คูปองของฉัน
+        </a>
+        <a href="#" class="pt-nav-item" onclick="openHistory(); return false;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+            อื่นๆ
+        </a>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="db.js"></script>
+    <script>
+        // ===== State =====
+        let currentUser = null;
+        let userPoints = 0;
+        let pointsHistory = [];
+
+        // ===== Init =====
+        document.addEventListener('DOMContentLoaded', async () => {
+            const userData = localStorage.getItem('paomobile_user');
+            if (!userData) {
+                document.getElementById('loginRequired').style.display = 'flex';
+                document.getElementById('mainContent').style.display = 'none';
+                return;
+            }
+
+            currentUser = JSON.parse(userData);
+            document.getElementById('loginRequired').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+
+            // Populate profile
+            populateProfile(currentUser);
+
+            // Load points from Supabase
+            await loadPoints();
+
+            // Load coupons
+            await loadFreeCoupons();
+            loadExchangeCoupons();
+
+            // Load my coupon count
+            loadMyCouponCount();
+        });
+
+        function populateProfile(user) {
+            const nameEl = document.getElementById('ptName');
+            const emailEl = document.getElementById('ptEmail');
+            const avatarEl = document.getElementById('ptAvatar');
+
+            if (nameEl) nameEl.textContent = user.name || 'สมาชิก Paomobile';
+            if (emailEl) emailEl.textContent = user.email || '';
+
+            if (avatarEl) {
+                if (user.avatar || user.photoURL) {
+                    avatarEl.innerHTML = `<img src="${user.avatar || user.photoURL}" alt="avatar">`;
+                } else {
+                    avatarEl.textContent = (user.name || 'P').charAt(0).toUpperCase();
+                }
+            }
+        }
+
+        async function loadPoints() {
+            try {
+                if (!window.supabase || !currentUser) return;
+
+                // Try to load points from Supabase
+                const { data, error } = await window.supabase
+                    .from('user_points')
+                    .select('*')
+                    .eq('email', currentUser.email)
+                    .single();
+
+                if (data && !error) {
+                    userPoints = data.points || 0;
+                } else {
+                    // Fallback: calculate points from purchase history
+                    userPoints = calculateLocalPoints();
+                }
+            } catch (e) {
+                console.log('[Points] Using local calculation:', e.message);
+                userPoints = calculateLocalPoints();
+            }
+
+            // Animate points counter
+            animatePoints(userPoints);
+
+            // Load history
+            loadHistory();
+        }
+
+        function calculateLocalPoints() {
+            // Calculate points from claimed vouchers count × 10
+            const email = currentUser?.email;
+            if (!email) return 0;
+            const vouchers = JSON.parse(localStorage.getItem('pao_user_vouchers_' + email) || '[]');
+            return vouchers.length * 10;
+        }
+
+        function animatePoints(target) {
+            const el = document.getElementById('ptPointsNum');
+            if (!el) return;
+            let current = 0;
+            const step = Math.max(1, Math.ceil(target / 40));
+            const timer = setInterval(() => {
+                current += step;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                el.textContent = current.toLocaleString();
+            }, 25);
+        }
+
+        function loadMyCouponCount() {
+            const email = currentUser?.email;
+            if (!email) return;
+            const vouchers = JSON.parse(localStorage.getItem('pao_user_vouchers_' + email) || '[]');
+            const countEl = document.getElementById('myCouponCount');
+            if (countEl) countEl.textContent = vouchers.length + ' ใบ';
+        }
+
+        // ===== Free Coupons =====
+        async function loadFreeCoupons() {
+            try {
+                if (!window.supabase) return;
+                const { data, error } = await window.supabase
+                    .from('vouchers')
+                    .select('*')
+                    .eq('showOnHomepage', true);
+
+                if (error || !data || data.length === 0) return;
+
+                const now = new Date().toISOString().split('T')[0];
+                const active = data.filter(v => v.isPermanent || (v.expiry && v.expiry >= now));
+
+                if (active.length === 0) return;
+
+                const section = document.getElementById('freeCouponsSection');
+                const list = document.getElementById('freeCouponsList');
+                if (!section || !list) return;
+
+                section.style.display = 'block';
+
+                const email = currentUser?.email;
+                const claimed = JSON.parse(localStorage.getItem('pao_user_vouchers_' + email) || '[]');
+                const claimedCodes = claimed.map(v => v.code);
+
+                const shopImages = ['Pao 1.jpg', 'Pao 2.jpg', 'Pao 3.jpg', 'Pao 4.jpg', 'Pao 5.jpg'];
+
+                list.innerHTML = active.map((v, i) => {
+                    const isClaimed = claimedCodes.includes(v.code);
+                    const isShip = v.type === 'ship' || v.type === 'shipping';
+                    const img = shopImages[i % shopImages.length];
+                    const expText = v.isPermanent ? 'ไม่มีวันหมดอายุ' : (v.expiry ? `รับสิทธิ์ได้ถึง ${formatThaiDate(v.expiry)}` : '');
+
+                    return `
+                        <div class="pt-coupon-card">
+                            <div class="pt-coupon-img-wrap">
+                                <img src="${img}" alt="coupon" class="pt-coupon-img">
+                                <div class="pt-coupon-badge free">${isShip ? 'ส่งฟรี' : 'ส่วนลด'}</div>
+                            </div>
+                            <div class="pt-coupon-body">
+                                <div class="pt-coupon-title">${isShip ? 'คูปองส่งฟรี' : 'ส่วนลด ฿' + (v.value||0).toLocaleString()}</div>
+                                <div class="pt-coupon-price free-label">ฟรี</div>
+                                <div class="pt-coupon-exp">${expText}</div>
+                                <button class="pt-btn-claim ${isClaimed ? 'claimed' : ''}" 
+                                    onclick="claimFree('${v.code}', ${v.value||0}, '${v.type}', this)"
+                                    ${isClaimed ? 'disabled' : ''}>
+                                    ${isClaimed ? '✅ เก็บแล้ว' : 'รับคูปอง'}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (e) {
+                console.error('[FreeCoupons]', e);
+            }
+        }
+
+        async function claimFree(code, value, type, btn) {
+            const email = currentUser?.email;
+            if (!email) return;
+
+            const KEY = 'pao_user_vouchers_' + email;
+            let list = JSON.parse(localStorage.getItem(KEY) || '[]');
+            if (list.some(v => v.code === code)) {
+                btn.textContent = '✅ เก็บแล้ว';
+                btn.disabled = true;
+                btn.classList.add('claimed');
+                return;
+            }
+
+            btn.textContent = '🕐';
+            btn.disabled = true;
+
+            list.push({ code, value, type, claimedAt: new Date().toISOString() });
+            localStorage.setItem(KEY, JSON.stringify(list));
+
+            // Add points
+            addPointsLocal(10, 'เก็บคูปอง ' + code);
+
+            setTimeout(() => {
+                btn.textContent = '✅ เก็บแล้ว';
+                btn.classList.add('claimed');
+                loadMyCouponCount();
+            }, 600);
+        }
+
+        // ===== Points Exchange =====
+        async function loadExchangeCoupons() {
+            const section = document.getElementById('exchangeSection');
+            const list = document.getElementById('exchangeList');
+            if (!section || !list) return;
+
+            let tiers = [
+                { title: 'ส่วนลด ฿50', desc: 'ใช้ได้กับทุกบริการซ่อม', pts: 100, img: 'Pao 2.jpg', value: 50, type: 'discount' },
+                { title: 'ส่วนลด ฿100', desc: 'ใช้ได้กับทุกบริการซ่อม', pts: 200, img: 'Pao 3.jpg', value: 100, type: 'discount' },
+                { title: 'คูปองส่งฟรี', desc: 'ส่งฟรีทั่วประเทศ', pts: 150, img: 'Pao 4.jpg', value: 0, type: 'ship' },
+                { title: 'ส่วนลด ฿500', desc: 'สำหรับซ่อมจอ / เปลี่ยนจอ', pts: 500, img: 'Pao 5.jpg', value: 500, type: 'discount' },
+            ];
+
+            const saved = localStorage.getItem('pao_point_rewards');
+            if (saved) {
+                try { tiers = JSON.parse(saved); } catch(e){}
+            }
+
+            if (window.supabase) {
+                try {
+                    const { data } = await window.supabase.from('point_rewards').select('*');
+                    if (data && data.length > 0) tiers = data;
+                } catch(e){}
+            }
+
+            section.style.display = 'block';
+
+            const email = currentUser?.email;
+            const userVouchers = JSON.parse(localStorage.getItem('pao_user_vouchers_' + email) || '[]');
+
+            list.innerHTML = tiers.map(t => {
+                const isInstore = t.redeemMode === 'instore';
+                const canAfford = userPoints >= t.pts;
+                const limit = t.claimLimit !== undefined ? parseInt(t.claimLimit) : 1;
+                const claimedVouchers = userVouchers.filter(v => {
+                    if (t.id && (v.rewardCardId === t.id || v.cardId === t.id)) return true;
+                    if (t.code && v.code === t.code) return true;
+                    if (v.title && t.title && v.title === t.title) return true;
+                    return false;
+                });
+                const claimedCount = claimedVouchers.length;
+                const limitReached = limit > 0 && claimedCount >= limit;
+                const isVoucherUsed = claimedCount > 0 && claimedVouchers.some(v => v.isUsed);
+                let instoreStatusText = isVoucherUsed ? '(🔴 ใช้งานตัดสิทธิ์เรียบร้อยแล้ว)' : '(แลกแล้ว พร้อมใช้งาน)';
+                let instoreColor = isVoucherUsed ? '#ef4444' : '#059669';
+
+                let btnText = '🎫 แลกเลย';
+                let isBtnDisabled = false;
+                let btnOnClick = `exchangePoints('${t.id||''}', ${t.pts}, ${t.value}, '${t.type}', '${t.title}', ${limit}, this)`;
+                let btnStyle = '';
+
+                if (isInstore && claimedCount > 0) {
+                    const existingCode = claimedVouchers[0].code || t.code || 'STORE-PAO';
+                    btnOnClick = `openInstoreQrModal('${t.title}', '${existingCode}')`;
+                    if (isVoucherUsed) {
+                        btnText = '🔴 ใช้งานตัดสิทธิ์แล้ว';
+                        isBtnDisabled = false;
+                        btnStyle = 'background: linear-gradient(135deg, #ef4444, #dc2626) !important; color: #ffffff !important; box-shadow: 0 4px 15px rgba(239,68,68,0.35); font-weight: 800;';
+                    } else {
+                        btnText = '📱 กดใช้งาน (แสดง QR หน้าร้าน)';
+                        isBtnDisabled = false;
+                        btnStyle = 'background: linear-gradient(135deg, #059669, #10b981) !important; color: #ffffff !important; box-shadow: 0 4px 15px rgba(5,150,105,0.35); font-weight: 800;';
+                    }
+                } else if (limitReached) {
+                    btnText = `สิทธิ์เต็มแล้ว (จำกัด ${limit} ครั้ง)`;
+                    isBtnDisabled = true;
+                } else if (!canAfford) {
+                    btnText = 'พอยท์ไม่เพียงพอ';
+                    isBtnDisabled = true;
+                }
+
+                const expDays = t.expiryDays !== undefined ? parseInt(t.expiryDays) : 30;
+                let expiryText = '';
+                if (claimedCount > 0 && claimedVouchers[0]) {
+                    const vExp = claimedVouchers[0].expiry;
+                    const vPerm = claimedVouchers[0].isPermanent || vExp === '-' || expDays === 0;
+                    expiryText = vPerm ? `♾️ ไม่มีวันหมดอายุ` : `⏳ หมดอายุ: ${formatThaiDate(vExp)}`;
+                } else {
+                    expiryText = expDays === 0 ? `♾️ ไม่มีวันหมดอายุ` : `⏳ หมดอายุ: ${expDays} วันหลังแลก`;
+                }
+
+                return `
+                    <div class="pt-exchange-card">
+                        <div class="pt-exchange-left">
+                            <img src="${t.img || 'Pao 1.jpg'}" alt="${t.title}">
+                            <div class="pt-exchange-pts-badge">${t.pts} Pts</div>
+                        </div>
+                        <div class="pt-exchange-right">
+                            <div>
+                                <div class="pt-exchange-title">${t.title}</div>
+                                <div class="pt-exchange-cost">แลก <strong>${t.pts} พอยท์</strong></div>
+                                <div class="pt-exchange-exp">${t.desc || ''}</div>
+                                <div style="font-size:0.68rem; color:${isInstore ? instoreColor : '#f59e0b'}; font-weight:700; margin-top:2px;">
+                                    ${isInstore ? `🏪 วอชเชอร์หน้าร้าน ${claimedCount > 0 ? instoreStatusText : ''}` : (limit > 0 ? `🔒 แลกได้สูงสุด ${limit} ครั้ง/คน (แลกแล้ว ${claimedCount}/${limit})` : `♾️ แลกได้ไม่จำกัด`)}
+                                </div>
+                                <div style="font-size:0.68rem; color:#64748b; font-weight:700; margin-top:2px;">
+                                    ${expiryText}
+                                </div>
+                            </div>
+                            <button class="pt-btn-exchange" 
+                                onclick="${btnOnClick}"
+                                style="${btnStyle}"
+                                ${isBtnDisabled ? 'disabled' : ''}>
+                                ${btnText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function exchangePoints(cardId, pts, value, type, title, limit, btn) {
+            const email = currentUser?.email;
+            const KEY = 'pao_user_vouchers_' + email;
+            let list = JSON.parse(localStorage.getItem(KEY) || '[]');
+
+            const claimedCount = list.filter(v => {
+                if (cardId && (v.rewardCardId === cardId || v.cardId === cardId)) return true;
+                if (v.title && title && v.title === title) return true;
+                return false;
+            }).length;
+            if (limit > 0 && claimedCount >= limit) {
+                alert(`ขออภัย คุณแลกสิทธิ์คูปอง "${title}" ครบตามจำนวนจำกัด (${limit} ครั้ง/คน) แล้วครับ!`);
+                btn.disabled = true;
+                btn.textContent = `สิทธิ์เต็มแล้ว (จำกัด ${limit} ครั้ง)`;
+                return;
+            }
+
+            if (userPoints < pts) {
+                btn.textContent = 'พอยท์ไม่เพียงพอ';
+                return;
+            }
+
+            // Confirmation Popup
+            const confirmMsg = `คุณต้องการใช้ ${pts} พอยท์ เพื่อแลกรับ "${title}" ใช่หรือไม่?`;
+            const ok = await sellerConfirm(confirmMsg, 'info');
+            if (!ok) return;
+
+            // Deduct points
+            userPoints -= pts;
+            document.getElementById('ptPointsNum').textContent = userPoints.toLocaleString();
+
+            // Add coupon to wallet
+            let rewardCardsList = [];
+            try { rewardCardsList = JSON.parse(localStorage.getItem('pao_point_rewards') || '[]'); } catch(e){}
+            const targetCard = rewardCardsList.find(c => c.id === cardId || c.title === title);
+            const code = (targetCard && targetCard.code) ? targetCard.code : ('POINTS' + Date.now().toString(36).toUpperCase());
+            const isInstore = targetCard && targetCard.redeemMode === 'instore';
+
+            const days = targetCard && targetCard.expiryDays !== undefined ? parseInt(targetCard.expiryDays) : 30;
+            let isPermanent = false;
+            let expiryDate = '-';
+            if (days === 0) {
+                isPermanent = true;
+                expiryDate = '-';
+            } else {
+                isPermanent = false;
+                expiryDate = getExpiryDate(days);
+            }
+
+            list.push({
+                code,
+                rewardCardId: cardId,
+                value,
+                type,
+                title,
+                redeemMode: isInstore ? 'instore' : 'online',
+                desc: isInstore ? 'วอชเชอร์แลกรับหน้าร้าน (มี QR)' : 'แลกจากพอยท์สะสม',
+                claimedAt: new Date().toISOString(),
+                isPermanent,
+                expiry: expiryDate
+            });
+            localStorage.setItem(KEY, JSON.stringify(list));
+
+            // Record history
+            addPointsLocal(-pts, 'แลกคูปอง: ' + title);
+
+            // Update UI
+            btn.textContent = '✅ แลกแล้ว!';
+            btn.disabled = true;
+            btn.style.background = '#f0fdf4';
+            btn.style.color = '#10b981';
+            loadMyCouponCount();
+
+            if (isInstore) {
+                setTimeout(() => openInstoreQrModal(title, code), 500);
+            }
+
+            // Refresh exchange buttons
+            setTimeout(() => loadExchangeCoupons(), 1500);
+        }
+
+        // ===== Points Helpers =====
+        function addPointsLocal(amount, desc) {
+            const email = currentUser?.email;
+            if (!email) return;
+
+            const historyKey = 'pao_points_history_' + email;
+            let history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+            history.unshift({
+                amount,
+                desc,
+                date: new Date().toISOString()
+            });
+            // Keep last 50
+            if (history.length > 50) history = history.slice(0, 50);
+            localStorage.setItem(historyKey, JSON.stringify(history));
+
+            if (amount > 0) {
+                userPoints += amount;
+                document.getElementById('ptPointsNum').textContent = userPoints.toLocaleString();
+            }
+
+            // Save total points locally
+            localStorage.setItem('pao_user_points_' + email, userPoints.toString());
+        }
+
+        function loadHistory() {
+            const email = currentUser?.email;
+            if (!email) return;
+
+            // Load saved points
+            const savedPts = localStorage.getItem('pao_user_points_' + email);
+            if (savedPts !== null) {
+                userPoints = parseInt(savedPts) || 0;
+                document.getElementById('ptPointsNum').textContent = userPoints.toLocaleString();
+            }
+
+            const historyKey = 'pao_points_history_' + email;
+            const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+
+            const body = document.getElementById('historyBody');
+            if (!body) return;
+
+            if (history.length === 0) {
+                body.innerHTML = `
+                    <div class="pt-empty">
+                        <div class="pt-empty-icon">📋</div>
+                        <div class="pt-empty-text">ยังไม่มีประวัติการใช้งาน</div>
+                    </div>
+                `;
+                return;
+            }
+
+            body.innerHTML = history.map(h => `
+                <div class="pt-history-item">
+                    <div class="pt-history-left">
+                        <div class="pt-history-desc">${h.desc}</div>
+                        <div class="pt-history-date">${formatThaiDateTime(h.date)}</div>
+                    </div>
+                    <div class="pt-history-pts ${h.amount >= 0 ? 'positive' : 'negative'}">
+                        ${h.amount >= 0 ? '+' : ''}${h.amount} pts
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===== History Modal =====
+        function openHistory() {
+            loadHistory();
+            document.getElementById('historyOverlay').classList.add('active');
+            document.getElementById('historySheet').classList.add('active');
+        }
+
+        function closeHistory() {
+            document.getElementById('historyOverlay').classList.remove('active');
+            document.getElementById('historySheet').classList.remove('active');
+        }
+
+        // ===== Helpers =====
+        function formatThaiDate(dateStr) {
+            if (!dateStr || dateStr === '-') return 'ไม่มีวันหมดอายุ';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function formatThaiDateTime(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) +
+                ' ' + d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // --- In-Store QR Modal Functions ---
+        window.openInstoreQrModal = (title, code) => {
+            const modal = document.getElementById('instoreQrModal');
+            const titleEl = document.getElementById('qrModalTitle');
+            const codeEl = document.getElementById('qrModalCode');
+            const imgEl = document.getElementById('qrModalImg');
+            const statusBox = document.getElementById('qrModalStatusBox');
+
+            if (!modal || !imgEl) return;
+            titleEl.textContent = title;
+            codeEl.textContent = code;
+
+            let isUsed = false;
+            let usedAt = '';
+            const localUser = JSON.parse(localStorage.getItem('paomobile_user'));
+            const email = localUser?.email;
+            if (email) {
+                const list = JSON.parse(localStorage.getItem('pao_user_vouchers_' + email) || '[]');
+                const v = list.find(x => x.code === code || x.rewardCardId === code || x.title === title);
+                if (v && v.isUsed) {
+                    isUsed = true;
+                    usedAt = v.usedAt;
+                }
+            }
+
+            if (statusBox) {
+                if (isUsed) {
+                    statusBox.innerHTML = `
+                        <div style="background:rgba(239,68,68,0.25); border:1.5px solid #ef4444; color:#fca5a5; padding:10px 16px; border-radius:14px; font-weight:900; font-size:1rem; box-shadow:0 0 20px rgba(239,68,68,0.4);">
+                            🔴 ใช้งานตัดสิทธิ์เรียบร้อยแล้ว ${usedAt ? `<br><span style="font-size:0.75rem; color:#fee2e2; font-weight:600;">เมื่อ ${formatThaiDateTime(usedAt)}</span>` : ''}
+                        </div>
+                    `;
+                    imgEl.style.opacity = '0.25';
+                    imgEl.style.filter = 'grayscale(100%)';
+                } else {
+                    statusBox.innerHTML = `
+                        <div style="background:rgba(16,185,129,0.2); border:1.5px solid #10b981; color:#6ee7b7; padding:8px 14px; border-radius:12px; font-weight:800; font-size:0.85rem;">
+                            🟢 สิทธิ์พร้อมใช้งาน (ยื่นหน้าจอนี้ให้พนักงานสแกน)
+                        </div>
+                    `;
+                    imgEl.style.opacity = '1';
+                    imgEl.style.filter = 'none';
+                }
+            }
+
+            const qrData = encodeURIComponent(`PAOMOBILE_VOUCHER:${code}`);
+            imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${qrData}`;
+
+            modal.style.display = 'flex';
+        };
+
+        window.closeInstoreQrModal = () => {
+            const modal = document.getElementById('instoreQrModal');
+            if (modal) modal.style.display = 'none';
+        };
+    </script>
+    <script src="premium-alerts.js"></script>
+
+<!-- In-Store Voucher QR Code Modal -->
+<div id="instoreQrModal" style="position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:99999; display:none; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:linear-gradient(145deg, #1c1710 0%, #0f172a 100%); border:2.5px solid #f59e0b; border-radius:24px; width:92%; max-width:380px; padding:28px 22px; text-align:center; color:#fff; box-shadow:0 25px 60px rgba(0,0,0,0.6); position:relative; overflow:hidden;">
+        <button onclick="closeInstoreQrModal()" style="position:absolute; top:14px; right:14px; background:rgba(255,255,255,0.12); border:none; color:#fff; width:34px; height:34px; border-radius:50%; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+        
+        <div style="font-size:0.75rem; color:#f59e0b; font-weight:800; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:6px;">🏪 วอชเชอร์หน้าร้าน PAOMOBILE</div>
+        <h3 id="qrModalTitle" style="font-size:1.2rem; font-weight:900; color:#fff; margin-bottom:12px;">ส่วนลด ฿50</h3>
+        
+        <!-- Red / Green Status Badge -->
+        <div id="qrModalStatusBox" style="margin-bottom:12px;"></div>
+
+        <!-- QR Code Box -->
+        <div style="background:#ffffff; border-radius:18px; padding:14px; display:inline-block; margin-bottom:14px; box-shadow:0 10px 30px rgba(0,0,0,0.3); border:3px solid #f59e0b;">
+            <img id="qrModalImg" src="" alt="QR Code" style="width:210px; height:210px; display:block;">
+        </div>
+        
+        <div style="font-size:0.75rem; color:rgba(255,255,255,0.7); margin-bottom:4px;">รหัสกำกับวอชเชอร์</div>
+        <div id="qrModalCode" style="font-family:monospace; font-size:1.2rem; font-weight:900; color:#fde68a; letter-spacing:2px; margin-bottom:14px; background:rgba(255,255,255,0.08); padding:8px 14px; border-radius:10px; display:inline-block;">STORE-PAO-9821</div>
+        
+        <p style="font-size:0.78rem; color:rgba(255,255,255,0.8); line-height:1.45; margin-bottom:18px;">
+            📱 ยื่นหน้าจอนี้ให้พนักงานหน้าร้าน <strong>Paomobile</strong> สแกนเพื่อรับสินค้า/ส่วนลดหน้าร้านทันทีค่ะ
+        </p>
+
+        <button onclick="closeInstoreQrModal()" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; padding:12px; width:100%; border-radius:12px; font-weight:800; font-size:0.95rem; cursor:pointer; font-family:inherit; box-shadow:0 4px 15px rgba(245,158,11,0.35);">ปิดหน้าจอ QR</button>
+    </div>
+</div>
+</body>
+</html>

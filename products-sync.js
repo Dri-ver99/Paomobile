@@ -1,27 +1,4 @@
-const MOCK_PRODUCTS_BASELINE = [
-  // New Products
-  { id: "new-iph15-128", name: "iPhone 15 128GB", price: 28900, brand: "Apple", category: "new", img: "", emoji: "📱", badge: "ใหม่", tags: ["iphone", "ไอโฟน", "apple", "แอปเปิล", "มือ1", "มือ 1", "a16"] },
-  { id: "new-iph15pro-256", name: "iPhone 15 Pro 256GB", price: 42900, brand: "Apple", category: "new", img: "", emoji: "📱", badge: "ขายดี", tags: ["iphone", "ไอโฟน", "apple", "แอปเปิล", "มือ1", "มือ 1", "a17", "pro"] },
-  { id: "new-s24-256", name: "Samsung Galaxy S24 256GB", price: 29900, brand: "Samsung", category: "new", img: "", emoji: "📲", badge: "AI", tags: ["samsung", "ซัมซุง", "galaxy", "s24", "มือ1", "มือ 1", "ai"] },
-  { id: "new-xm14-256", name: "Xiaomi 14 256GB", price: 24900, brand: "Xiaomi", category: "new", img: "", emoji: "📲", badge: "Leica", tags: ["xiaomi", "เสียวหมี่", "leica", "มือ1", "มือ 1"] },
-  
-  // Used Products
-  { id: "used-iph13-128", name: "iPhone 13 128GB (มือ 2)", price: 14900, brand: "Apple", category: "used", img: "", emoji: "📱", badge: "สภาพนางฟ้า", tags: ["iphone", "ไอโฟน", "apple", "มือสอง", "มือ2", "มือ 2"] },
-  { id: "used-iph12-64", name: "iPhone 12 64GB (มือ 2)", price: 9900, brand: "Apple", category: "used", img: "", emoji: "📱", badge: "ราคาคุ้ม", tags: ["iphone", "ไอโฟน", "apple", "มือสอง", "มือ2", "มือ 2"] },
-  { id: "used-s23-256", name: "Samsung Galaxy S23 256GB (มือ 2)", price: 16500, brand: "Samsung", category: "used", emoji: "📲", badge: "มือสอง", tags: ["samsung", "ซัมซุง", "galaxy", "s23", "มือสอง", "มือ2", "มือ 2"] },
-  { id: "used-a54-128", name: "Samsung Galaxy A54 128GB (มือ 2)", price: 7900, brand: "Samsung", category: "used", emoji: "📲", badge: "มือสอง", tags: ["samsung", "ซัมซุง", "a54", "มือสอง", "มือ2", "มือ 2"] },
-  { id: "used-reno8pro-256", name: "OPPO Reno 8 Pro 256GB (มือ 2)", price: 8500, brand: "OPPO", category: "used", emoji: "📲", badge: "มือสอง", tags: ["oppo", "ออปโป้", "reno", "มือสอง", "มือ2", "มือ 2"] },
-
-  // Accessory
-  { id: "acc-why-60w", name: "สายชาร์จ Why 60W Type C To C", price: 399, brand: "Why", category: "accessory", img: "Why 60W-1 Type C To C - 1.jpg", emoji: "🔌", badge: "ขายดี", tags: ["สายชาร์จ", "why", "60w", "type c", "ชาร์จเร็ว", "อุปกรณ์เสริม", "accessory"] },
-  { id: "acc-why-20w", name: "ชุดชาร์จ Why 20W Type C To C", price: 599, brand: "Why", category: "accessory", img: "Why 20w-1.jpg", emoji: "🔌", tags: ["ชุดชาร์จ", "why", "20w", "type c", "อุปกรณ์เสริม", "accessory"] },
-  { id: "acc-headphone-gallery", name: "หูฟัง Anidary ANT004", price: 699, brand: "Anidary", category: "accessory", img: "earphone-1.jpg", emoji: "🎧", tags: ["หูฟัง", "anidary", "earphone", "ant004", "อุปกรณ์เสริม", "accessory"] },
-  { id: "acc-ans006-gallery", name: "ชุดชาร์จ Anidary ANS006", price: 599, brand: "Anidary", category: "accessory", img: "ANS006-1.jpg", emoji: "🔌", tags: ["ชุดชาร์จ", "anidary", "ans006", "อุปกรณ์เสริม", "accessory"] },
-  { id: "acc-why-cable-1m", name: "สายชาร์จ Why USB 1.0M", price: 159, brand: "Why", category: "accessory", img: "Why-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "why", "usb", "1m", "micro", "lightning", "อุปกรณ์เสริม", "accessory"] },
-  { id: "acc-anidary-anc001", name: "สายชาร์จ Anidary ANC001 USB to Lightning", price: 299, brand: "Anidary", category: "accessory", img: "USB-I 12W-1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc001", "lightning", "iphone", "อุปกรณ์เสริม", "accessory"] },
-  { id: "acc-anidary-ctoc", name: "สายชาร์จ Anidary ANC007 Type C to C", price: 249, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", tags: ["สายชาร์จ", "anidary", "anc007", "type c", "อุปกรณ์เสริม", "accessory"] },
-  { id: "acc-anidary-ctoc-1baht", name: "สายชาร์จ Anidary ANC007 Type C to C (Promo 1฿)", price: 1, brand: "Anidary", category: "accessory", img: "Anidary Type c To c - 1.jpg", emoji: "🔌", badge: "โปรแรง", tags: ["สายชาร์จ", "anidary", "anc007", "โปรโมชั่น", "ราคาพิเศษ", "อุปกรณ์เสริม", "accessory"] }
-];
+const MOCK_PRODUCTS_BASELINE = [];
 const ITEMS_PER_PAGE = 12;
 
 const ProductSync = {
@@ -37,16 +14,24 @@ const ProductSync = {
 
         if (!this.grid) return;
 
-        // Force clear cache if we switched to a v4.1 catalog structure (reverted)
-        if (!localStorage.getItem('pao_cache_v4_sys_revert')) {
-            localStorage.clear();
-            localStorage.setItem('pao_cache_v4_sys_revert', 'true');
+        // Force clear old mock caches for all categories
+        if (!localStorage.getItem('pao_cache_v8_clean_all_mock')) {
+            localStorage.removeItem('pao_cache_new');
+            localStorage.removeItem('pao_cache_new_time');
+            localStorage.removeItem('pao_cache_used');
+            localStorage.removeItem('pao_cache_used_time');
+            localStorage.removeItem('pao_cache_accessory');
+            localStorage.removeItem('pao_cache_accessory_time');
+            localStorage.removeItem('pao_seller_cache');
+            localStorage.setItem('pao_cache_v8_clean_all_mock', 'true');
         }
 
         this.listen();
         this.initSearch();
         this.attachListeners();
     },
+
+    // filterByDynamicParts is defined below (near line 496) — single definition to avoid conflicts
 
     listen: function() {
         const baselineForCategory = MOCK_PRODUCTS_BASELINE.filter(p => p.category === this.category);
@@ -109,10 +94,10 @@ const ProductSync = {
             let categoryList = [this.category];
             
             // Map synonyms for broader server-side matching
-            if (this.category === 'new') categoryList = ['new', 'มือ 1', 'มือหนึ่ง'];
-            else if (this.category === 'used') categoryList = ['used', 'มือ 2', 'มือสอง'];
+            if (this.category === 'new') categoryList = ['new', 'มือ 1', 'มือหนึ่ง', 'สินค้าใหม่'];
+            else if (this.category === 'used') categoryList = ['used', 'มือ 2', 'มือสอง', 'สินค้ามือสอง'];
             else if (this.category === 'accessory') categoryList = ['accessory', 'อุปกรณ์', 'อุปกรณ์เสริม'];
-            else if (this.category === 'parts') categoryList = ['parts', 'อะไหล่'];
+            else if (this.category === 'parts') categoryList = ['parts', 'อะไหล่', 'อะไหล่มือถือ', 'อะไหล่โทรศัพท์'];
             
             query = query.in('category', categoryList);
         }
@@ -133,10 +118,10 @@ const ProductSync = {
                 const targetCat = (this.category || "").toLowerCase().trim();
                 
                 if (targetCat === 'all') return true;
-                if (targetCat === 'new') return pCat === 'new' || pCat === 'มือ 1' || pCat === 'มือหนึ่ง';
-                if (targetCat === 'used') return pCat === 'used' || pCat === 'มือ 2' || pCat === 'มือสอง';
+                if (targetCat === 'new') return pCat === 'new' || pCat === 'มือ 1' || pCat === 'มือหนึ่ง' || pCat === 'สินค้าใหม่';
+                if (targetCat === 'used') return pCat === 'used' || pCat === 'มือ 2' || pCat === 'มือสอง' || pCat === 'สินค้ามือสอง';
                 if (targetCat === 'accessory') return pCat === 'accessory' || pCat === 'อุปกรณ์' || pCat === 'อุปกรณ์เสริม';
-                if (targetCat === 'parts') return pCat === 'parts' || pCat === 'อะไหล่';
+                if (targetCat === 'parts') return pCat === 'parts' || pCat === 'อะไหล่' || pCat === 'อะไหล่มือถือ' || pCat === 'อะไหล่โทรศัพท์';
                 
                 return pCat === targetCat;
             };
@@ -223,13 +208,65 @@ const ProductSync = {
         }
 
         // Apply Dynamic Category Filter (Real-time persistent)
-        if (this.activeFilter.model) {
-            filtered = filtered.filter(p => p.partModel === this.activeFilter.model);
-            
-            // If sub-type is also selected, filter by it too
-            if (this.activeFilter.type) {
-                filtered = filtered.filter(p => p.partType === this.activeFilter.type);
-            }
+        if (this.activeFilter.model || this.activeFilter.type) {
+            const targetModel = (this.activeFilter.model || '').toLowerCase().trim();
+            const targetType = (this.activeFilter.type || '').toLowerCase().trim();
+
+            filtered = filtered.filter(p => {
+                let matchModel = true;
+                if (targetModel) {
+                    const pModel = ((p.partModel || '') + ' ' + (p.brand || '') + ' ' + (p.name || '') + ' ' + (p.tags || []).join(' ')).toLowerCase().trim();
+                    const tm = targetModel.toLowerCase().trim();
+
+                    if (tm === 'iphone' || tm === 'apple') {
+                        matchModel = pModel.includes('iphone') || pModel.includes('apple') || pModel.includes('ไอโฟน');
+                    } else if (tm === 'ipad') {
+                        matchModel = pModel.includes('ipad') || pModel.includes('ไอแพด');
+                    } else if (tm === 'samsung') {
+                        matchModel = pModel.includes('samsung') || pModel.includes('ซัมซุง') || pModel.includes('galaxy');
+                    } else if (tm === 'oppo') {
+                        matchModel = pModel.includes('oppo') || pModel.includes('ออปโป้');
+                    } else if (tm === 'realme') {
+                        matchModel = pModel.includes('realme') || pModel.includes('เรียลมี');
+                    } else if (tm === 'xiaomi') {
+                        matchModel = pModel.includes('xiaomi') || pModel.includes('เสียวหมี่') || pModel.includes('redmi') || pModel.includes('poco');
+                    } else if (tm === 'vivo') {
+                        matchModel = pModel.includes('vivo') || pModel.includes('วีโว่');
+                    } else if (tm === 'huawei') {
+                        matchModel = pModel.includes('huawei') || pModel.includes('หัวเว่ย');
+                    } else {
+                        matchModel = pModel.includes(tm) || tm.includes((p.brand || '___').toLowerCase());
+                    }
+                }
+
+                let matchType = true;
+                if (targetType) {
+                    const rawPType = (p.partType || '').toLowerCase().trim();
+                    const pType = (rawPType + ' ' + (p.name || '') + ' ' + (p.tags || []).join(' ')).toLowerCase().trim();
+
+                    // Direct match on partType first if available
+                    if (rawPType && (rawPType === targetType || rawPType.includes(targetType) || targetType.includes(rawPType))) {
+                        matchType = true;
+                    } else if (targetType.includes('หน้าจอ') || targetType.includes('จอ') || targetType.includes('lcd') || targetType.includes('oled')) {
+                        matchType = pType.includes('หน้าจอ') || pType.includes('จอ') || pType.includes('lcd') || pType.includes('oled');
+                    } else if (targetType.includes('แบต')) {
+                        matchType = pType.includes('แบต') || pType.includes('battery');
+                    } else if (targetType.includes('สวิตช์') || targetType.includes('volume') || targetType.includes('เปิด/ปิด') || targetType.includes('ปุ่ม')) {
+                        matchType = pType.includes('สวิตช์') || pType.includes('volume') || pType.includes('เปิด') || pType.includes('ปิด') || pType.includes('ปุ่ม') || (pType.includes('แพร') && (pType.includes('สวิต') || pType.includes('vol')));
+                    } else if (targetType.includes('ตูดชาร์จ') || targetType.includes('ชาร์จ')) {
+                        matchType = pType.includes('ชาร์จ') || pType.includes('แพรชาร์จ') || pType.includes('ตูดชาร์จ') || pType.includes('charge');
+                    } else if (targetType.includes('กล้อง')) {
+                        matchType = pType.includes('กล้อง') || pType.includes('camera');
+                    } else if (targetType.includes('แพร')) {
+                        matchType = pType.includes('แพร') || pType.includes('flex');
+                    } else {
+                        const keywords = targetType.replace(/[()\/+]/g, ' ').split(/\s+/).filter(w => w.length > 1);
+                        matchType = keywords.length === 0 || keywords.some(kw => pType.includes(kw));
+                    }
+                }
+
+                return matchModel && matchType;
+            });
         }
 
         // Apply Filter for Global Deletions
@@ -238,14 +275,40 @@ const ProductSync = {
         }
 
         if (filtered.length === 0) {
+            this.grid.innerHTML = '';
             this.grid.style.display = 'none';
             if (this.noResults) {
                 this.noResults.style.display = 'block';
-                // Only show "No results" if we've actually finished our first real load from Firestore
-                // otherwise keep whatever "Loading" message is in the HTML.
-                if (this.hasLoadedOnce) {
-                    this.noResults.innerHTML = `🔍 ไม่พบ${this.category === 'parts' ? 'อะไหล่' : 'สินค้า'}ที่ค้นหา`;
+                const label = this.activeFilter.type || this.activeFilter.model || '';
+                let emptyIcon = '📦';
+                let emptyTitle = 'ยังไม่มีสินค้าในหมวดหมู่นี้';
+                let emptyBtnText = 'ดูสินค้าทั้งหมด';
+
+                if (this.category === 'parts') {
+                    emptyIcon = '🔧';
+                    emptyTitle = label ? `ยังไม่มีอะไหล่ในหมวดหมู่ "${label}"` : 'ยังไม่มีอะไหล่ในหมวดหมู่นี้';
+                    emptyBtnText = 'ดูอะไหล่ทั้งหมด';
+                } else if (this.category === 'new') {
+                    emptyIcon = '📱';
+                    emptyTitle = label ? `ยังไม่มีสินค้ามือ 1 ในหมวดหมู่ "${label}"` : 'ยังไม่มีสินค้ามือ 1 ในขณะนี้';
+                } else if (this.category === 'used') {
+                    emptyIcon = '🔁';
+                    emptyTitle = label ? `ยังไม่มีสินค้ามือ 2 ในหมวดหมู่ "${label}"` : 'ยังไม่มีสินค้ามือ 2 ในขณะนี้';
+                } else if (this.category === 'accessory') {
+                    emptyIcon = '🎧';
+                    emptyTitle = label ? `ยังไม่มีอุปกรณ์เสริมในหมวดหมู่ "${label}"` : 'ยังไม่มีสินค้าอุปกรณ์เสริมในขณะนี้';
+                } else if (label) {
+                    emptyTitle = `ยังไม่มีสินค้าในหมวดหมู่ "${label}"`;
                 }
+
+                this.noResults.innerHTML = `
+                    <div style="text-align:center; padding:50px 20px; width:100%; max-width:600px; margin:0 auto;">
+                        <div style="font-size:3.5rem; margin-bottom:12px;">${emptyIcon}</div>
+                        <h3 style="font-size:1.25rem; color:#18181b; font-weight:700; margin-bottom:8px;">${emptyTitle}</h3>
+                        <p style="color:#71717a; font-size:0.92rem; margin-bottom:20px; line-height:1.6;">ขณะนี้ยังไม่มีสินค้าในระบบ คุณสามารถเลือกดูหมวดหมู่อื่น หรือค้นหาสินค้ารายการอื่นได้ครับ</p>
+                        <button onclick="ProductSync.filterByDynamicParts(null, null)" class="btn btn-primary" style="padding:10px 24px; border-radius:100px; font-weight:600;">${emptyBtnText}</button>
+                    </div>
+                `;
             }
             this.removePagination();
             return;
@@ -407,19 +470,27 @@ const ProductSync = {
             this.searchInput.addEventListener(evt, triggerRender);
         });
 
-        const clearBtn = document.getElementById('heroSearchClear');
-        if (clearBtn) {
-            this.searchInput.addEventListener('input', () => {
-                clearBtn.style.display = this.searchInput.value ? 'block' : 'none';
-            });
-            clearBtn.addEventListener('click', () => { 
+        const clearBtns = document.querySelectorAll('#heroSearchClear, #searchClear, .search-clear');
+        clearBtns.forEach(clearBtn => {
+            const updateClearVisibility = () => {
+                clearBtn.style.display = this.searchInput.value ? 'flex' : 'none';
+            };
+            this.searchInput.addEventListener('input', updateClearVisibility);
+            this.searchInput.addEventListener('keyup', updateClearVisibility);
+            this.searchInput.addEventListener('change', updateClearVisibility);
+            updateClearVisibility();
+
+            clearBtn.addEventListener('click', (e) => { 
+                e.preventDefault();
+                e.stopPropagation();
                 this.searchInput.value = ""; 
                 clearBtn.style.display = 'none'; 
                 this.activeFilter = { model: null, type: null };
                 document.querySelectorAll('.brand-item').forEach(i => i.classList.remove('active'));
-                triggerRender(); 
+                triggerRender();
+                this.searchInput.focus();
             });
-        }
+        });
     },
 
     filterByTag: function(tag) {
@@ -433,16 +504,25 @@ const ProductSync = {
         }
     },
 
-    filterByDynamicParts: function(model, type = null) {
+    filterByDynamicParts: function(model, type) {
+        // Normalize values: empty strings become null
+        model = model || null;
+        type = type || null;
+
+        console.log('[Parts] filterByDynamicParts called:', { model, type });
+
         // Set persistent filter
-        this.activeFilter = { model, type };
+        this.activeFilter = { model: model, type: type };
         
         // Clear search to avoid confusion
         if (this.searchInput) {
             this.searchInput.value = "";
-            const clearBtn = document.getElementById('searchClear');
-            if (clearBtn) clearBtn.style.display = 'none';
         }
+        // Clear both search clear buttons (hero + overlay)
+        const heroSearchClear = document.getElementById('heroSearchClear');
+        if (heroSearchClear) heroSearchClear.style.display = 'none';
+        const searchClear = document.getElementById('searchClear');
+        if (searchClear) searchClear.style.display = 'none';
 
         // Trigger real-time render
         this.currentPage = 1;
@@ -511,3 +591,5 @@ const ProductSync = {
         tryFind(20); // retry up to ~3 sec, then Firestore fallback
     }
 };
+
+window.ProductSync = ProductSync;

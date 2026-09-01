@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
@@ -619,45 +619,97 @@
         try {
             const recognizedText = await runOCR(currentFile);
             const cleanText = recognizedText.toLowerCase().replace(/\s+/g, '');
-            
-            const nameMatch = cleanText.includes('เขมรัฐ') || cleanText.includes('khemarat') || cleanText.includes('นาคภักดี') || cleanText.includes('nakphakdee');
-            
-            const now = new Date();
-            const day = now.getDate().toString().padStart(2, '0');
-            const month = (now.getMonth() + 1).toString().padStart(2, '0');
-            const yearBE = (now.getFullYear() + 543).toString();
-            const yearBEshort = yearBE.slice(-2);
-            const dateMatch = cleanText.includes(day + '/' + month + '/' + yearBE) || cleanText.includes(day + '/' + month + '/' + yearBEshort) || cleanText.includes(day);
+            console.log("[AI-DEBUG Transfer] OCR Result Cleaned:", cleanText);
 
-            if (!nameMatch) {
+            // 1. Recipient Verification (Strict: Must have recipient name or shop name)
+            const hasFirstName = cleanText.includes('เขมรัฐ') || cleanText.includes('khemarat') || cleanText.includes('paomobile') || cleanText.includes('เป้าโมบาย');
+            const hasLastName = cleanText.includes('นาคภักดี') || cleanText.includes('nakphakdee') || cleanText.includes('paomobile') || cleanText.includes('เป้าโมบาย');
+            const hasRecipient = (hasFirstName && hasLastName) || cleanText.includes('เขมรัฐนาคภักดี') || cleanText.includes('paomobileservice');
+
+            // 2. Date/Time Check (Supports 01-31, 1-31, Thai & EN month, BE & AD year)
+            const now = new Date();
+            const dNum = now.getDate();
+            const dayStr = dNum.toString().padStart(2, '0');
+            const dayNoZero = dNum.toString();
+            const monthNum = (now.getMonth() + 1);
+            const monthStr = monthNum.toString().padStart(2, '0');
+            const monthNoZero = monthNum.toString();
+            const yearBE = (now.getFullYear() + 543).toString();
+            const yearAD = now.getFullYear().toString();
+            const yearBEshort = yearBE.slice(-2);
+            const yearADshort = yearAD.slice(-2);
+
+            const thMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+            const enMonths = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+            const currentThMonth = thMonths[now.getMonth()];
+            const currentEnMonth = enMonths[now.getMonth()];
+
+            const dateCandidates = [
+                dayStr + monthStr + yearBE, dayNoZero + monthStr + yearBE,
+                dayStr + monthStr + yearAD, dayNoZero + monthStr + yearAD,
+                dayStr + '/' + monthStr, dayNoZero + '/' + monthNoZero,
+                dayStr + '.' + monthStr, dayNoZero + '.' + monthNoZero,
+                dayStr + currentThMonth, dayNoZero + currentThMonth,
+                dayStr + currentEnMonth, dayNoZero + currentEnMonth
+            ].map(s => s.replace(/\s+/g, '').toLowerCase());
+            
+            const hasYear = cleanText.includes(yearBE) || cleanText.includes(yearAD) || cleanText.includes(yearBEshort) || cleanText.includes(yearADshort);
+            const dateMatch = hasYear && dateCandidates.some(cand => cleanText.includes(cand));
+
+            // 3. Bank & Authenticity (Look for "Success" or "Transfer" keywords)
+            const bankKeywords = [
+                'กสิกร', 'kbank', 'ไทยพาณิชย์', 'scb', 'กรุงไทย', 'ktb', 
+                'กรุงเทพ', 'bbl', 'กรุงศรี', 'bay', 'ออมสิน', 'gsb', 'ทหารไทย', 'ttb',
+                'ธนาคาร', 'bank', 'สำเร็จ', 'success', 'transfer', 'transferred', 'โอนสำเร็จ'
+            ];
+            const hasBankKeyword = bankKeywords.some(k => cleanText.includes(k));
+
+            // --- Multi-Step AI Logic ---
+            if (!hasRecipient) {
                 setStepStatus('ocr', 'error');
-                alert('✕ ไม่ผ่าน: AI ตรวจไม่พบชื่อผู้รับ "เขมรัฐ นาคภักดี" บนสลิป');
+                alert('✕ ตรวจสอบไม่ผ่าน: ไม่พบชื่อผู้รับ "เขมรัฐ นาคภักดี" บนสลิป กรุณาตรวจสอบว่าท่านโอนเงินเข้าบัญชีผู้รับถูกคนค๊าบ');
+                btn.disabled = false;
                 return;
             }
             if (!dateMatch) {
                 setStepStatus('ocr', 'error');
-                alert(`✕ ไม่ผ่าน: วันที่บนสลิปไม่ตรงกับออเดอร์ (${day}/${month}/${yearBE})`);
+                alert(`✕ ตรวจสอบไม่ผ่าน: วันที่บนสลิปไม่ตรงกับปัจจุบัน (${dNum} ${currentThMonth} ${yearBE}) กรุณาใช้สลิปโอนเงินรายการล่าสุดนะค๊าบ`);
+                btn.disabled = false;
                 return;
             }
             setStepStatus('ocr', 'success');
 
+            // 4. Amount Verification (Extra Precise)
             const targetAmountStr = amount.toLocaleString('th-TH', {minimumFractionDigits: 2});
-            const targetAmountSimple = amount.toString();
-            const amountMatch = cleanText.includes(targetAmountStr.replace(',', '')) || cleanText.includes(targetAmountStr.replace('.', '')) || cleanText.includes(targetAmountSimple);
+            const targetAmountNoDec = amount.toString();
+            const targetAmountFormatted = amount.toLocaleString('th-TH');
+            const amountMatch = cleanText.includes(targetAmountStr.replace(/,/g, '')) || 
+                              cleanText.includes(targetAmountStr.replace(/\./g, '')) || 
+                              cleanText.includes(targetAmountFormatted.replace(/,/g, '')) ||
+                              cleanText.includes(targetAmountNoDec);
 
-            if (amountMatch) {
-                setStepStatus('amount', 'success');
-            } else {
+            if (!amountMatch) {
                 setStepStatus('amount', 'error');
-                alert(`✕ ไม่ผ่าน: ยอดเงินบนสลิปไม่ตรงกับยอด ฿${amount.toLocaleString()} กรุณาโอนให้ตรงตามยอดระบุ`);
+                alert(`✕ ตรวจสอบไม่ผ่าน: ยอดเงินในสลิปไม่ตรงกับยอดคำสั่งซื้อ (ยอดออเดอร์คือ ฿${amount.toLocaleString()}) กรุณาโอนให้ตรงตามจำนวนค๊าบ`);
+                btn.disabled = false;
                 return;
             }
+            setStepStatus('amount', 'success');
 
+            if (!hasBankKeyword) {
+                setStepStatus('bank', 'error');
+                alert('✕ ตรวจสอบไม่ผ่าน: ไม่พบสัญลักษณ์ธนาคารหรือสถานะการโอนเงินสำเร็จบนสลิป กรุณาอัปโหลดภาพสลิปใบจริงนะค๊าบ');
+                btn.disabled = false;
+                return;
+            }
             setStepStatus('bank', 'success');
+
+            // Final Confirmation
             await confirmPayment();
         } catch (e) {
-            console.error("OCR Error", e);
-            alert('✕ ระะบบ AI ขัดข้องชั่วคราว กรุณาติดต่อแอดมิน');
+            console.error("AI Error", e);
+            alert('✕ มีบางอย่างผิดพลาด: ระบบ AI ไม่สามารถประมวลผลได้ชั่วคราว กรุณาติดต่อแอดมินทาง LINE ค๊าบ');
+            btn.disabled = false;
         }
     }
 
@@ -733,19 +785,25 @@
               
               setTimeout(() => { window.location.href = 'purchases.html?tab=ship'; }, 8000);
 
+              const orderId = targetOrderId || ref;
+              let paymentSlipUrl = '';
+              const previewImg = document.getElementById('slipPreview');
+              if (previewImg && previewImg.src && previewImg.src.startsWith('data:')) {
+                  paymentSlipUrl = previewImg.src;
+              }
+
+              if (window.supabaseClient) {
+                  await window.supabaseClient.from('orders').update({
+                      status: 'ที่ต้องจัดส่ง',
+                      paymentMethod: 'โอนทางธนาคาร (AI-Verified)',
+                      paymentSlip: paymentSlipUrl || ""
+                  }).eq('id', orderId).catch(err => console.error("Supabase payment update error:", err));
+              }
+
               if (typeof firebase !== 'undefined') {
                   const db = firebase.firestore();
-                  const orderId = targetOrderId || ref;
-                  const currentUser = firebase.auth().currentUser;
-                  if (!currentUser) await new Promise(r => setTimeout(r, 2000));
                   
                   try {
-                      let paymentSlipUrl = '';
-                      const previewImg = document.getElementById('slipPreview');
-                      if (previewImg && previewImg.src && previewImg.src.startsWith('data:')) {
-                          paymentSlipUrl = previewImg.src;
-                      }
-
                       await db.collection('orders').doc(orderId).update({
                           status: 'ที่ต้องจัดส่ง',
                           paymentDate: firebase.firestore.FieldValue.serverTimestamp(),
