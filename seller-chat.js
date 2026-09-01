@@ -446,7 +446,7 @@
                         try { cData = JSON.parse(cData); } catch(e) {}
                     }
                     html += `
-                        <div class="msg-row seller" style="display:flex; align-items:flex-end; justify-content:flex-end; margin-bottom:8px;">
+                        <div class="msg-row seller" style="display:flex; width:100%; align-items:flex-end; justify-content:flex-end; margin-bottom:8px;">
                             ${sellerMetaHtml}
                             <div class="chat-card" style="background:#fff; border-radius:16px; overflow:hidden; border:1px solid #eef2f6; cursor:pointer; box-shadow:0 4px 15px rgba(0,0,0,0.12);" onclick="handleChatCardClick('${cData.productId || ''}', '${cData.category || ''}', '${cData.link || ''}')">
                                 <img src="${cData.image || ''}" class="chat-card-img" style="border-radius:16px 16px 0 0;" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
@@ -460,7 +460,7 @@
                     `;
                 } else if (msg.type === 'image') {
                     html += `
-                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
+                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; width:100%; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
                             ${isSeller ? sellerMetaHtml : ''}
                             <div class="msg-bubble sticker" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important;">
                                 <img src="${msg.fileUrl}" class="sticker-img" style="border-radius:14px; max-width:200px; max-height:200px; object-fit:cover; box-shadow:0 4px 12px rgba(0,0,0,0.15);" onclick="openImageLarge('${msg.fileUrl}')" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
@@ -470,7 +470,7 @@
                     `;
                 } else if (msg.type === 'file') {
                     html += `
-                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
+                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; width:100%; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
                             ${isSeller ? sellerMetaHtml : ''}
                             <div class="msg-bubble" style="padding:12px 16px;">
                                 <div style="display:flex; align-items:center; gap:10px;">
@@ -486,7 +486,7 @@
                     `;
                 } else if (msg.type === 'sticker') {
                     html += `
-                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
+                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; width:100%; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
                             ${isSeller ? sellerMetaHtml : ''}
                             <div class="msg-bubble sticker" style="background:transparent !important; border:none !important; box-shadow:none !important; padding:0 !important;">
                                 <img src="${msg.fileUrl}" class="sticker-img" style="width:130px; height:auto;" onclick="openImageLarge('${msg.fileUrl}')" onload="var c=document.getElementById('chatMessages');if(c)c.scrollTop=c.scrollHeight;">
@@ -503,7 +503,7 @@
                         : '';
                     
                     html += `
-                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
+                        <div class="msg-row ${isSeller ? 'seller' : 'customer'}" style="display:flex; width:100%; align-items:flex-end; ${isSeller ? 'justify-content:flex-end;' : 'justify-content:flex-start;'} margin-bottom:8px;">
                             ${isSeller ? sellerMetaHtml : ''}
                             <div class="msg-bubble" style="${bubbleStyle}">
                                 ${textVal}

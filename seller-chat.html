@@ -136,24 +136,31 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #bfbfbf; }
-        
-        .system-banner {
-            align-self: center; background: #f1f5f9; 
-            padding: 4px 16px; border-radius: 100px;
-            font-size: 0.72rem; color: #94a3b8; margin: 16px 0;
-            font-weight: 600; border: 1px solid #e2e8f0;
-        }
 
-        .msg-row { display: flex; max-width: 80%; margin: 4px 0; align-items: flex-end; gap: 6px; }
-        .user.msg-row, .customer.msg-row, .msg-row.user, .msg-row.customer { align-self: flex-start; justify-content: flex-start; }
-        .seller.msg-row, .msg-row.seller { align-self: flex-end; justify-content: flex-end; }
+        .msg-row {
+            display: flex;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 4px 0;
+            align-items: flex-end;
+            gap: 6px;
+            box-sizing: border-box;
+        }
+        .user.msg-row, .customer.msg-row, .msg-row.user, .msg-row.customer {
+            justify-content: flex-start !important;
+            width: 100% !important;
+        }
+        .seller.msg-row, .msg-row.seller {
+            justify-content: flex-end !important;
+            width: 100% !important;
+        }
         
         .msg-bubble {
             padding: 10px 14px; border-radius: 18px;
             font-size: 0.95rem; line-height: 1.45;
             position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             word-wrap: break-word;
+            max-width: 75%;
         }
         .user .msg-bubble, .customer .msg-bubble { 
             background: #f1f5f9 !important; color: #1e293b !important; 
@@ -169,6 +176,19 @@
         .msg-meta { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 0.7rem; color: #94a3b8; font-weight: 500; }
         .seller .msg-meta { justify-content: flex-end; color: #94a3b8; }
         .read-tick { color: #2ecc71; font-weight: 800; }
+        
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #bfbfbf; }
+        
+        .system-banner {
+            align-self: center; background: #f1f5f9; 
+            padding: 4px 16px; border-radius: 100px;
+            font-size: 0.72rem; color: #94a3b8; margin: 16px 0;
+            font-weight: 600; border: 1px solid #e2e8f0;
+        }
 
         .msg-row.sticker .msg-bubble, .msg-row.image .msg-bubble { 
             background: transparent !important; 
