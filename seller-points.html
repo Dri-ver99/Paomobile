@@ -642,6 +642,7 @@
                     e.preventDefault();
                     window.toggleSellerMobileMenu(true);
                 };
+            }
             const tabsContainer = document.querySelector('.page-tabs');
             if (tabsContainer) {
                 tabsContainer.addEventListener('wheel', (e) => {
@@ -1117,15 +1118,39 @@
         async function loadCustomers() {
             try {
                 let rawUsers = [];
+
+                // 1. Instant load from local customers cache (from seller-customers.html)
+                const cachedCust = localStorage.getItem('pao_customers_cache');
+                if (cachedCust) {
+                    try {
+                        const parsed = JSON.parse(cachedCust);
+                        if (Array.isArray(parsed)) rawUsers.push(...parsed);
+                    } catch(e){}
+                }
+
+                // 2. Enrich from global orders cache (past buyers)
+                try {
+                    const globalOrders = JSON.parse(localStorage.getItem('pao_global_orders') || '[]');
+                    globalOrders.forEach(order => {
+                        if (order && order.customerEmail) {
+                            rawUsers.push({
+                                email: order.customerEmail,
+                                name: order.customerName || order.customerProfileName || order.customerEmail.split('@')[0],
+                                phone: order.customerPhone || '',
+                                avatar: ''
+                            });
+                        }
+                    });
+                } catch(e){}
                 
-                // 1. Fetch from Supabase `users` table
+                // 3. Fetch from Supabase `users` table
                 if (window.supabase) {
                     try {
                         const { data } = await window.supabase.from('users').select('*');
                         if (data && data.length > 0) rawUsers.push(...data);
                     } catch(e){}
 
-                    // 2. Fetch from Supabase `user_points` table
+                    // Fetch from Supabase `user_points` table
                     try {
                         const { data: ptsData } = await window.supabase.from('user_points').select('*');
                         if (ptsData && ptsData.length > 0) {
@@ -1135,21 +1160,31 @@
                         }
                     } catch(e){}
                 }
+
+                // 4. Fetch from window.db (Firestore shim if initialized)
+                if (window.db && window.db.collection) {
+                    try {
+                        const snap = await window.db.collection('users').get();
+                        if (snap && snap.docs) {
+                            snap.docs.forEach(doc => rawUsers.push({ id: doc.id, ...doc.data() }));
+                        }
+                    } catch(e){}
+                }
                 
-                // 3. Merge with localStorage user
+                // 5. Merge with localStorage user
                 const localUser = JSON.parse(localStorage.getItem('paomobile_user'));
                 if (localUser && localUser.email) {
                     rawUsers.push(localUser);
                 }
 
-                // 4. Sample fallback if empty
+                // 6. Sample fallback if empty
                 if (rawUsers.length === 0) {
                     rawUsers = [
                         { name: 'คุณ ชาธายาดา', email: 'sattawat2560@gmail.com', phone: '0812345678', avatar: '' }
                     ];
                 }
 
-                // 5. Deduplicate by lowercased email
+                // Deduplicate by lowercased email
                 const userMap = new Map();
                 rawUsers.forEach(u => {
                     if (!u || !u.email) return;
@@ -1168,7 +1203,6 @@
                             points: currentPts
                         });
                     } else {
-                        // Merge fields if existing record is missing avatar/name/phone or has lower points
                         const existing = userMap.get(emailKey);
                         if (!existing.avatar && (u.avatar || u.photoURL)) existing.avatar = u.avatar || u.photoURL;
                         if ((!existing.name || existing.name === emailKey.split('@')[0]) && u.name) existing.name = u.name;
@@ -1182,6 +1216,68 @@
             } catch (e) {
                 console.error('[SellerPoints] loadCustomers error:', e);
             }
+        }
+
+        async function addNewCustomerModal() {
+            let name = '';
+            let email = '';
+            let phone = '';
+            let pts = 0;
+
+            if (typeof sellerPrompt === 'function') {
+                name = await sellerPrompt('กรอกชื่อลูกค้า:', 'สมชาย ใจดี');
+                if (!name) return;
+                email = await sellerPrompt('กรอกอีเมลลูกค้า:', 'customer@example.com');
+                if (!email) return;
+                phone = await sellerPrompt('กรอกเบอร์โทรศัพท์ (ถ้ามี):', '0812345678') || '';
+                const ptsStr = await sellerPrompt('ระบุพอยท์เริ่มต้น:', '100');
+                pts = parseInt(ptsStr) || 0;
+            } else {
+                name = prompt('กรอกชื่อลูกค้า:');
+                if (!name) return;
+                email = prompt('กรอกอีเมลลูกค้า:');
+                if (!email) return;
+                phone = prompt('กรอกเบอร์โทรศัพท์ (ถ้ามี):') || '';
+                const ptsStr = prompt('ระบุพอยท์เริ่มต้น:');
+                pts = parseInt(ptsStr) || 0;
+            }
+
+            const emailKey = email.trim().toLowerCase();
+            const existing = allCustomers.find(c => c.email.toLowerCase() === emailKey);
+            if (existing) {
+                showSellerToast(`ลูกค้าอีเมล ${email} มีอยู่ในระบบแล้ว`, '⚠️ มีข้อมูลแล้ว');
+                return;
+            }
+
+            const newCust = {
+                id: 'usr_' + Date.now(),
+                name: name.trim(),
+                email: email.trim(),
+                phone: phone.trim(),
+                avatar: '',
+                points: pts
+            };
+
+            allCustomers.unshift(newCust);
+            localStorage.setItem('pao_user_points_' + newCust.email, pts.toString());
+            
+            let cachedCust = [];
+            try { cachedCust = JSON.parse(localStorage.getItem('pao_customers_cache') || '[]'); } catch(e){}
+            cachedCust.unshift(newCust);
+            localStorage.setItem('pao_customers_cache', JSON.stringify(cachedCust));
+
+            if (window.supabase) {
+                window.supabase.from('users').upsert({
+                    email: newCust.email,
+                    name: newCust.name,
+                    phone: newCust.phone,
+                    points: pts,
+                    created_at: new Date().toISOString()
+                }).then();
+            }
+
+            renderCustomers(allCustomers);
+            showSellerToast(`เพิ่มลูกค้า ${newCust.name} เรียบร้อยแล้ว (พอยท์: ${pts} Pts)`, '🎉 เพิ่มลูกค้าสำเร็จ');
         }
 
         function renderCustomers(list) {
@@ -1484,19 +1580,6 @@
             document.getElementById('formCardTitle').textContent = '✨ เพิ่มการ์ดแลกพอยท์ใหม่';
             document.getElementById('btnSaveCard').textContent = '💾 บันทึกการ์ดแลกพอยท์';
             const btnCancel = document.getElementById('btnCancelEditCard');
-            if (btnCancel) btnCancel.style.display = 'inline-block';
-            document.getElementById('cardForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        function resetCardForm() {
-            document.getElementById('cardForm').reset();
-            document.getElementById('cardEditId').value = '';
-            document.getElementById('cardRedeemMode').value = 'online';
-            document.getElementById('cardCode').value = '';
-            document.getElementById('cardClaimLimit').value = 1;
-            document.getElementById('formCardTitle').textContent = '✨ เพิ่มการ์ดแลกพอยท์ใหม่';
-            document.getElementById('btnSaveCard').textContent = '💾 บันทึกการ์ดแลกพอยท์';
-            const btnCancel = document.getElementById('btnCancelEditCard');
             if (btnCancel) btnCancel.style.display = 'none';
             currentCardImgUrl = 'Pao 1.jpg';
             document.getElementById('cardImgPreview').src = 'Pao 1.jpg';
@@ -1516,6 +1599,7 @@
             renderRewardCards();
             showSellerToast('ลบการ์ดแลกพอยท์ออกจากระบบเรียบร้อยแล้ว', '🗑️ ลบการ์ดสำเร็จ');
         }
+    </script>
     <script src="seller-presence.js"></script>
 </body>
 </html>
