@@ -275,13 +275,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 Hour
             const qrId = crypto.randomUUID();
-            await window.supabaseClient.from('voucher_qrs').insert({
-                id: qrId,
-                voucherCode: code,
-                expiresAt: expiresAt.toISOString(),
-                usedBy: null,
-                createdAt: new Date().toISOString()
-            });
+            if (window.supabaseClient) {
+                try {
+                    await window.supabaseClient.from('voucher_qrs').insert({
+                        id: qrId,
+                        voucherCode: code,
+                        expiresAt: expiresAt.toISOString(),
+                        usedBy: null,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch(e){}
+            }
+
+            try {
+                let localQrs = JSON.parse(localStorage.getItem('pao_voucher_qrs') || '{}');
+                localQrs[qrId] = {
+                    id: qrId,
+                    voucherCode: code,
+                    expiresAt: expiresAt.toISOString(),
+                    usedBy: null,
+                    createdAt: new Date().toISOString()
+                };
+                localStorage.setItem('pao_voucher_qrs', JSON.stringify(localQrs));
+            } catch(e){}
 
             // Construct Link
             const baseUrl = window.location.href.split('seller-centre.html')[0];

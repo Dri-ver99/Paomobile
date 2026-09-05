@@ -494,14 +494,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const qrId = crypto.randomUUID();
             const supabase = window.supabaseClient;
             if (supabase) {
-                await supabase.from('voucher_qrs').insert({
+                try {
+                    await supabase.from('voucher_qrs').insert({
+                        id: qrId,
+                        voucherCode: activeQRVoucherCode,
+                        expiresAt: expiresAt.toISOString(),
+                        usedBy: null,
+                        createdAt: new Date().toISOString()
+                    });
+                } catch(e){}
+            }
+
+            try {
+                let localQrs = JSON.parse(localStorage.getItem('pao_voucher_qrs') || '{}');
+                localQrs[qrId] = {
                     id: qrId,
                     voucherCode: activeQRVoucherCode,
                     expiresAt: expiresAt.toISOString(),
                     usedBy: null,
                     createdAt: new Date().toISOString()
-                });
-            }
+                };
+                localStorage.setItem('pao_voucher_qrs', JSON.stringify(localQrs));
+            } catch(e){}
 
             // Construct Link
             const settingsDomain = document.getElementById('setting-base-url').value.trim();

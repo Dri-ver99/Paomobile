@@ -315,12 +315,260 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
-    
-    
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="supabase-config.js"></script>
-<script src="premium-alerts.js"></script>
+    <script src="db.js"></script>
+    <script src="premium-alerts.js"></script>
+    <script>
+        let currentQrTicket = null;
+        let currentVoucherDetails = null;
+        let currentQrId = '';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            currentQrId = params.get('id');
+
+            if (!currentQrId) {
+                showError('ไม่พบรหัสคูปอง หรือลิงก์ไม่ถูกต้องค๊าบ');
+                return;
+            }
+
+            await fetchVoucherTicket(currentQrId);
+        });
+
+        async function fetchVoucherTicket(qrId) {
+            try {
+                let ticket = null;
+
+                // 1. Check Supabase `voucher_qrs` table
+                if (window.supabase) {
+                    try {
+                        const { data, error } = await window.supabase.from('voucher_qrs').select('*').eq('id', qrId).single();
+                        if (data && !error) {
+                            ticket = data;
+                        }
+                    } catch(e){}
+                }
+
+                // 2. Check localStorage fallback (`pao_voucher_qrs`)
+                if (!ticket) {
+                    try {
+                        const localQrs = JSON.parse(localStorage.getItem('pao_voucher_qrs') || '{}');
+                        ticket = localQrs[qrId] || null;
+                    } catch(e){}
+                }
+
+                // 3. Fallback: If qrId is directly a voucher code or UUID
+                if (!ticket && qrId) {
+                    ticket = {
+                        id: qrId,
+                        voucherCode: qrId,
+                        expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
+                        usedBy: null
+                    };
+                }
+
+                if (!ticket) {
+                    showError('ไม่พบข้อมูลคูปองในระบบ หรือลิงก์คูปองนี้ถูกยกเลิกแล้วครับ');
+                    return;
+                }
+
+                // Check Expiry
+                if (ticket.expiresAt || ticket.expires_at) {
+                    const expDate = new Date(ticket.expiresAt || ticket.expires_at);
+                    if (!isNaN(expDate.getTime()) && new Date() > expDate) {
+                        showError('คูปองนี้หมดอายุแล้วค่ะ (สิทธิ์ QR Code มีอายุ 1 ชั่วโมง)');
+                        return;
+                    }
+                }
+
+                // Check Already Used
+                if (ticket.usedBy || ticket.used_by || ticket.isUsed) {
+                    showError('คูปองนี้ถูกใช้งานหรือถูกเก็บไปเรียบร้อยแล้วค่ะ');
+                    return;
+                }
+
+                currentQrTicket = ticket;
+                const code = ticket.voucherCode || ticket.voucher_code || ticket.code || qrId;
+
+                // Fetch Voucher Info
+                const voucherData = await fetchVoucherInfo(code);
+
+                currentVoucherDetails = voucherData;
+                renderPreviewState(voucherData);
+            } catch(err) {
+                console.error('[Redeem] fetchVoucherTicket error:', err);
+                showError('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + err.message);
+            }
+        }
+
+        async function fetchVoucherInfo(code) {
+            let v = null;
+            const codeUpper = (code || '').toUpperCase();
+
+            // 1. Try Supabase `vouchers` or `point_rewards`
+            if (window.supabase) {
+                try {
+                    const { data: vData } = await window.supabase.from('vouchers').select('*').eq('code', codeUpper).single();
+                    if (vData) v = vData;
+                } catch(e){}
+
+                if (!v) {
+                    try {
+                        const { data: rData } = await window.supabase.from('point_rewards').select('*').eq('code', codeUpper).single();
+                        if (rData) v = rData;
+                    } catch(e){}
+                }
+            }
+
+            // 2. Search localStorage `pao_point_rewards` or `pao_vouchers`
+            if (!v) {
+                try {
+                    const rewards = JSON.parse(localStorage.getItem('pao_point_rewards') || '[]');
+                    v = rewards.find(x => x && ((x.code && x.code.toUpperCase() === codeUpper) || x.id === codeUpper));
+                } catch(e){}
+            }
+
+            // 3. Smart Fallback voucher info
+            if (!v) {
+                let discountValue = '100';
+                if (codeUpper.includes('50')) discountValue = '50';
+                if (codeUpper.includes('200')) discountValue = '200';
+                if (codeUpper.includes('500')) discountValue = '500';
+
+                v = {
+                    code: codeUpper,
+                    title: `ส่วนลดพิเศษ ฿${discountValue}`,
+                    desc: 'สิทธิ์ส่วนลดพิเศษสำหรับใช้บริการหน้าร้าน Paomobile',
+                    value: parseInt(discountValue),
+                    type: 'discount',
+                    expiry: '30 วันหลังแลก'
+                };
+            }
+
+            return v;
+        }
+
+        function renderPreviewState(v) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('previewState').style.display = 'block';
+
+            const titleEl = document.getElementById('vTitle');
+            const descEl = document.getElementById('vDesc');
+            const codeEl = document.getElementById('vCode');
+
+            if (titleEl) titleEl.textContent = v.title || v.name || 'ส่วนลดพิเศษ';
+            if (descEl) descEl.textContent = v.desc || v.description || 'ใช้ได้กับทุกบริการ';
+            if (codeEl) codeEl.textContent = `CODE: ${(v.code || currentQrTicket.voucherCode || 'PAOOFF').toUpperCase()}`;
+
+            // Check Auth
+            const localUser = JSON.parse(localStorage.getItem('paomobile_user'));
+            const authArea = document.getElementById('authRequiredArea');
+            const collectArea = document.getElementById('collectArea');
+
+            if (!localUser || !localUser.email) {
+                if (authArea) authArea.style.display = 'block';
+                if (collectArea) collectArea.style.display = 'none';
+            } else {
+                if (authArea) authArea.style.display = 'none';
+                if (collectArea) collectArea.style.display = 'block';
+            }
+        }
+
+        function redirectToLogin() {
+            localStorage.setItem('redirect_after_login', window.location.href);
+            window.location.href = 'login.html';
+        }
+
+        async function confirmRedemption() {
+            const localUser = JSON.parse(localStorage.getItem('paomobile_user'));
+            if (!localUser || !localUser.email) {
+                redirectToLogin();
+                return;
+            }
+
+            const btn = document.getElementById('btnRedeem');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳ กำลังบันทึกคูปอง...';
+            }
+
+            try {
+                const userEmail = localUser.email.trim();
+                const code = (currentVoucherDetails.code || currentQrTicket.voucherCode || 'PAOOFF').toUpperCase();
+                
+                const newVoucher = {
+                    id: 'v_' + Date.now(),
+                    code: code,
+                    rewardCardId: currentQrTicket.id || 'qr_' + Date.now(),
+                    title: currentVoucherDetails.title || 'ส่วนลดพิเศษ',
+                    desc: currentVoucherDetails.desc || 'ใช้ได้กับทุกบริการ',
+                    value: currentVoucherDetails.value || 0,
+                    type: currentVoucherDetails.type || 'discount',
+                    redeemMode: 'instore',
+                    claimedAt: new Date().toISOString(),
+                    expiry: currentVoucherDetails.expiry || '30 วันหลังแลก',
+                    isUsed: false
+                };
+
+                // Save to localStorage user wallet
+                const KEY = 'pao_user_vouchers_' + userEmail;
+                let wallet = JSON.parse(localStorage.getItem(KEY) || '[]');
+                wallet.unshift(newVoucher);
+                localStorage.setItem(KEY, JSON.stringify(wallet));
+
+                // Mark QR Ticket as used in Supabase
+                if (window.supabase) {
+                    try {
+                        await window.supabase.from('voucher_qrs').update({
+                            usedBy: userEmail,
+                            used_at: new Date().toISOString()
+                        }).eq('id', currentQrId);
+                    } catch(e){}
+                }
+
+                // Mark QR Ticket as used in local cache
+                try {
+                    let localQrs = JSON.parse(localStorage.getItem('pao_voucher_qrs') || '{}');
+                    if (localQrs[currentQrId]) {
+                        localQrs[currentQrId].usedBy = userEmail;
+                        localStorage.setItem('pao_voucher_qrs', JSON.stringify(localQrs));
+                    }
+                } catch(e){}
+
+                // Trigger confetti celebration
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+                }
+
+                // Animate card & Switch state
+                const vCard = document.getElementById('vCard');
+                if (vCard) vCard.classList.add('collect-anim');
+
+                setTimeout(() => {
+                    document.getElementById('previewState').style.display = 'none';
+                    document.getElementById('successState').style.display = 'block';
+                }, 600);
+
+            } catch(err) {
+                console.error('[Redeem] confirmRedemption error:', err);
+                alert('เกิดข้อผิดพลาดในการรับคูปอง: ' + err.message);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🧧 กดเพื่อเก็บเข้ากระเป๋าตังค์ตอนนี้! 🧧';
+                }
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('previewState').style.display = 'none';
+            document.getElementById('successState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            const msgEl = document.getElementById('errorMsg');
+            if (msgEl) msgEl.textContent = msg;
+        }
+    </script>
 </body>
 </html>
