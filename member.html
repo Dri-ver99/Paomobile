@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -640,12 +640,12 @@
         </div>
     </aside>
 
-    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-overlay" id="cartOverlay" onclick="CartUI.close()"></div>
     <aside class="cart-sidebar" id="cartSidebar">
         <div class="cart-sidebar-header">
             <h3>🛒 ตะกร้าสินค้า</h3>
             <div class="cart-header-meta">จำนวน: <strong id="cartCount">0 ชิ้น</strong></div><button
-                class="cart-close-btn" id="cartCloseBtn">✕</button>
+                class="cart-close-btn" id="cartCloseBtn" onclick="CartUI.close()">✕</button>
         </div>
         <div class="cart-item-list" id="cartItemList">
             <div class="cart-empty"><span>🛒</span>

@@ -269,10 +269,39 @@ const ProductSync = {
         // Apply Dynamic Category Filter (Real-time persistent)
         if (this.activeFilter.model) {
             filtered = filtered.filter(p => p.partModel === this.activeFilter.model);
-            
-            // If sub-type is also selected, filter by it too
-            if (this.activeFilter.type) {
-                filtered = filtered.filter(p => p.partType === this.activeFilter.type);
+        }
+        if (this.activeFilter.type) {
+            const selType = String(this.activeFilter.type).toLowerCase();
+            const isOledFilter = selType.includes('oled');
+            const isOriginalFilter = selType.includes('แท้') || selType.includes('งานแท้');
+
+            if (isOledFilter) {
+                filtered = filtered.filter(p => {
+                    const pName = (p.name || '').toLowerCase();
+                    const pType = (p.partType || '').toLowerCase();
+                    const hasOledInName = pName.includes('oled') || pType.includes('oled');
+                    const hasOledInVars = (p.variations && Array.isArray(p.variations)) 
+                        ? p.variations.some(v => (v.name || '').toLowerCase().includes('oled'))
+                        : false;
+                    return hasOledInName || hasOledInVars;
+                });
+            } else if (isOriginalFilter) {
+                filtered = filtered.filter(p => {
+                    const pName = (p.name || '').toLowerCase();
+                    const pType = (p.partType || '').toLowerCase();
+                    const isOled = pName.includes('oled') || (pType.includes('oled') && !pName.includes('งานแท้') && !pName.includes('(แท้)'));
+                    if (isOled) return false; // Strictly exclude OLED screens!
+                    
+                    const isScreen = pName.includes('หน้าจอ') || pType.includes('หน้าจอ') || pType.includes('lcd');
+                    return isScreen;
+                });
+            } else {
+                filtered = filtered.filter(p => {
+                    const pType = (p.partType || '').toLowerCase();
+                    const pName = (p.name || '').toLowerCase();
+                    const target = String(this.activeFilter.type).toLowerCase();
+                    return pType === target || pName.includes(target);
+                });
             }
         }
 
