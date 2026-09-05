@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8" />
@@ -157,6 +157,7 @@
                                 href="used-products.html">🔁 สินค้ามือ 2</a><a href="parts.html">🔧 อะไหล่มือถือ</a><a
                                 href="accessory.html">🎧 Accessory</a><a href="https://s.shopee.co.th/qejQcQeWI"
                                 target="_blank">🛒 Shopee</a></div>
+
                     </div><a href="https://line.me/R/ti/p/@pao789" target="_blank"
                         class="btn btn-primary mobile-cta"><svg viewBox="0 0 24 24" width="20" height="20"
                             stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"
@@ -176,12 +177,12 @@
         </div>
     </aside>
 
-    <div class="cart-overlay" id="cartOverlay"></div>
+    <div class="cart-overlay" id="cartOverlay" onclick="CartUI.close()"></div>
     <aside class="cart-sidebar" id="cartSidebar">
         <div class="cart-sidebar-header">
             <h3>🛒 ตะกร้าสินค้า</h3>
             <div class="cart-header-meta">จำนวน: <strong id="cartCount">0 ชิ้น</strong></div>
-            <button class="cart-close-btn" id="cartCloseBtn">✕</button>
+            <button class="cart-close-btn" id="cartCloseBtn" onclick="CartUI.close()">✕</button>
         </div>
         <div class="cart-item-list" id="cartItemList">
             <div class="cart-empty"><span>🛒</span><p>ตะกร้าว่างเปล่า</p></div>

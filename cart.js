@@ -129,13 +129,6 @@
             await pushToFirestore();
         },
         async remove(id) {
-            const cart = getLocalCart();
-            const item = cart.find(i => i.id === id);
-            if (item && document.getElementById('deleteConfirmModal')) {
-                CartUI.close(); // Close sidebar so modal is visible
-                CartUI.showDeleteConfirm(item.name, () => CartAPI._doRemove(id));
-                return;
-            }
             await CartAPI._doRemove(id);
         },
         async _doRemove(id) {
@@ -160,11 +153,6 @@
             if (idx < 0) return;
 
             if (qty <= 0) {
-                if (document.getElementById('deleteConfirmModal')) {
-                    CartUI.close(); // Close sidebar so modal is visible
-                    CartUI.showDeleteConfirm(cart[idx].name, () => CartAPI._doRemove(id));
-                    return;
-                }
                 await CartAPI._doRemove(id);
                 return;
             }
@@ -233,6 +221,10 @@
             document.getElementById('cartSidebar')?.classList.add('open'); 
             document.getElementById('cartOverlay')?.classList.add('open'); 
             CartUI.renderSidebar(); 
+            const closeBtn = document.getElementById('cartCloseBtn') || document.querySelector('.cart-close-btn');
+            if (closeBtn) closeBtn.onclick = (e) => { e?.stopPropagation(); CartUI.close(); };
+            const overlay = document.getElementById('cartOverlay');
+            if (overlay) overlay.onclick = (e) => { e?.stopPropagation(); CartUI.close(); };
         },
         close() { 
             document.getElementById('cartSidebar')?.classList.remove('open'); 
@@ -429,13 +421,46 @@
         if (window.CartUI) {
             CartUI.update();
         }
+
+        // Bind explicit click handlers to close buttons & overlay
+        document.querySelectorAll('#cartCloseBtn, .cart-close-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.CartUI) CartUI.close();
+            };
+        });
+
+        const overlay = document.getElementById('cartOverlay');
+        if (overlay) {
+            overlay.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.CartUI) CartUI.close();
+            };
+        }
     }
 
-    // Global click listener for cart toggle & closing when clicking outside
+    // Global click listener for cart toggle & closing when clicking close btn or outside
     document.addEventListener('click', (e) => {
+        const closeBtn = e.target.closest('#cartCloseBtn, .cart-close-btn');
+        if (closeBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (window.CartUI) {
+                CartUI.close();
+            }
+            return;
+        }
+
         const cartBtn = e.target.closest('#cartBtn, .cart-icon-btn, [aria-label="ตะกร้าสินค้า"]');
         const cartSidebar = document.getElementById('cartSidebar');
-        const isInsideSidebar = cartSidebar && cartSidebar.contains(e.target);
+        const path = e.composedPath ? e.composedPath() : [];
+        const isInsideSidebar = cartSidebar && (
+            cartSidebar.contains(e.target) || 
+            !document.documentElement.contains(e.target) || 
+            path.includes(cartSidebar)
+        );
 
         if (cartBtn) {
             e.preventDefault();
@@ -502,7 +527,7 @@
                     transform: translateX(0) !important;
                 }
                 .cart-sidebar-header {
-                    padding: 70px 24px 20px !important;
+                    padding: 110px 24px 20px !important;
                     border-bottom: 1.5px solid rgba(0,0,0,0.05) !important;
                 }
                 .cart-sidebar-header h3 {
@@ -511,22 +536,22 @@
                 }
                 #cartCloseBtn, .cart-close-btn {
                     position: fixed !important;
-                    top: 15px !important;
-                    right: 15px !important;
+                    top: 32px !important;
+                    right: 20px !important;
                     width: 44px !important;
                     height: 44px !important;
-                    background: rgba(255, 255, 255, 0.9) !important;
+                    background: rgba(255, 255, 255, 0.95) !important;
                     color: #333333 !important;
                     border-radius: 50% !important;
                     display: flex !important;
                     align-items: center !important;
                     justify-content: center !important;
                     font-size: 1.2rem !important;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+                    box-shadow: 0 4px 14px rgba(0,0,0,0.12) !important;
                     backdrop-filter: blur(10px) !important;
                     -webkit-backdrop-filter: blur(10px) !important;
                     z-index: 100000 !important;
-                    border: 1px solid rgba(0,0,0,0.08) !important;
+                    border: 1.5px solid rgba(0,0,0,0.08) !important;
                     cursor: pointer !important;
                     transition: all 0.2s ease !important;
                 }
