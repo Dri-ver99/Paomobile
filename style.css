@@ -49,6 +49,7 @@
 html {
     scroll-behavior: smooth;
     font-size: 16px;
+    background: var(--bg);
 }
 
 body {
@@ -59,6 +60,7 @@ body {
     background: var(--bg);
     line-height: 1.65;
     overflow-x: hidden;
+    min-height: 100vh;
     -webkit-font-smoothing: antialiased;
 }
 
@@ -4301,15 +4303,71 @@ body.menu-open .navbar .nav-links {
 }
 .cta { padding-bottom: 20px !important; }
 
-/* Hide common free hosting injected banners at the bottom */
+/* =====================================================
+   FIX: Hide #chatOverlay (.img-overlay) white bar
+   — seller-chat.js CSS not loaded on index.html,
+     so the div renders as display:block with no height,
+     creating a thin white strip at the bottom.
+   ===================================================== */
+#chatOverlay,
+.img-overlay {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Only show when actively open (JS adds .active class) */
+#chatOverlay.active,
+.img-overlay.active {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    height: 100% !important;
+    overflow: visible !important;
+}
+
+
+/* =====================================================
+   HIDE ALL INJECTED HOSTING / AD BANNERS AT BOTTOM
+   ===================================================== */
+
+/* Common hosting-injected bottom bars */
 div[style*="z-index: 9999999"],
 div[style*="z-index:9999999"],
 div[style*="z-index: 2147483647"],
+div[style*="z-index:2147483647"],
+div[style*="position: fixed"][style*="bottom: 0"],
+div[style*="position:fixed"][style*="bottom:0"],
+div[style*="position: fixed"][style*="bottom:0"],
+div[style*="position:fixed"][style*="bottom: 0"],
+
+/* 000webhost / Hostinger free plan banners */
 div.disclaimer,
+#disclaimer,
+.disclaimer-bar,
+.free-hosting-banner,
 img[alt="www.000webhost.com"],
-a[href*="000webhost"] {
+a[href*="000webhost"],
+a[href*="hostinger"],
+div[id*="banner"],
+div[class*="hosting-bar"],
+div[class*="free-bar"],
+
+/* Bottom iframe injections */
+iframe[style*="bottom: 0"],
+iframe[style*="bottom:0"],
+iframe[id*="banner"],
+iframe[src*="000webhost"],
+iframe[src*="hostinger"],
+
+/* Generic fixed bottom overlay bar */
+body > div[style*="bottom"]:not(#mobileMenu):not(.floating-chat-container):not(#cartDrawer):not(.chat-window):not([class*="pao"]):not([class*="btn"]):not([class*="nav"]):not([class*="footer"]):not([class*="cta"]):not([class*="modal"]):not([class*="overlay"]):not([class*="popup"]):not([class*="toast"]) {
     display: none !important;
-}
+} 
 html, body {
     overscroll-behavior-y: none;
 }
