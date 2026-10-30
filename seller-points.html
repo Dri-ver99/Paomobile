@@ -1208,8 +1208,12 @@
                     if (!u || !u.email) return;
                     const emailKey = u.email.trim().toLowerCase();
                     
+                    // Priority: Supabase points (u.points from user_points table) > localStorage > user object > 0
                     const savedPts = localStorage.getItem('pao_user_points_' + u.email) || localStorage.getItem('pao_user_points_' + emailKey);
-                    const currentPts = savedPts !== null ? parseInt(savedPts) : (u.points || 0);
+                    const lsPts = savedPts !== null ? parseInt(savedPts) : null;
+                    // ใช้ค่าสูงสุดระหว่าง Supabase กับ localStorage เพื่อป้องกันข้อมูลหาย
+                    const sbPts = u.points != null ? parseInt(u.points) : null;
+                    const currentPts = Math.max(lsPts ?? 0, sbPts ?? 0);
 
                     if (!userMap.has(emailKey)) {
                         userMap.set(emailKey, {
@@ -1392,9 +1396,27 @@
                 hist.unshift({ amount: diff, desc: desc, date: new Date().toISOString() });
                 localStorage.setItem(hk, JSON.stringify(hist));
 
-                // Upsert to Supabase user_points
+                // Upsert to Supabase user_points (email as unique key)
                 if (window.supabase) {
-                    window.supabase.from('user_points').upsert({ email: email, points: newPts, updatedAt: new Date().toISOString() }).then();
+                    window.supabase
+                        .from('user_points')
+                        .upsert(
+                            { email: email, points: newPts, updatedAt: new Date().toISOString() },
+                            { onConflict: 'email' }
+                        )
+                        .then(({ error }) => {
+                            if (error) console.warn('[Points] Supabase upsert error:', error.message);
+                            else console.log('[Points] Synced points for', email, '->', newPts);
+                        });
+
+                    // Also update in users table if exists
+                    window.supabase
+                        .from('users')
+                        .update({ points: newPts })
+                        .eq('email', email)
+                        .then(({ error }) => {
+                            if (error) console.warn('[Points] users table update error:', error.message);
+                        });
                 }
 
                 renderCustomers(allCustomers);
