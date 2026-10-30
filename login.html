@@ -1972,10 +1972,50 @@
 
                 try {
                     const { data: authData, error: authErr } = await supabase.auth.signUp({ email: email, password: password });
-                    if (authErr) throw authErr;
-                    const cred = { user: authData.user };
-                    if (cred.user) cred.user.uid = cred.user.id;
-                    console.log("[Auth] Firebase User Created:", cred.user.uid);
+
+                    // ตรวจสอบว่า error เกิดจากการส่ง email ล้มเหลว (ไม่ใช่ error จริงของ account)
+                    const isEmailSendError = authErr && authErr.message && (
+                        authErr.message.toLowerCase().includes('sending confirmation email') ||
+                        authErr.message.toLowerCase().includes('error sending') ||
+                        authErr.message.toLowerCase().includes('unable to send')
+                    );
+
+                    if (authErr && !isEmailSendError) {
+                        // Error จริงๆ ที่ไม่ใช่เรื่อง email → throw ออกไป
+                        throw authErr;
+                    }
+
+                    if (authErr && isEmailSendError) {
+                        // Supabase ส่ง email ไม่ได้ — account อาจถูกสร้างแล้ว แต่ return user: null
+                        console.warn("[Auth] Email send error detected:", authErr.message);
+                        const name = email.split('@')[0];
+
+                        // ลอง resend ใหม่ (background) เผื่อ Supabase สร้าง user ไว้แล้วในฝั่ง server
+                        supabase.auth.resend({
+                            type: 'signup',
+                            email: email,
+                            options: { emailRedirectTo: window.location.origin + '/login.html' }
+                        }).then(({ error: resendErr }) => {
+                            if (resendErr) console.warn("[Auth] Resend also failed:", resendErr.message);
+                            else console.log("[Auth] Resend verification email succeeded.");
+                        });
+
+                        if (window.auth) {
+                            window.auth._currentUser = { email: email, uid: '', emailVerified: false };
+                        }
+
+                        // แสดงหน้า Verification ให้กด "ส่งอีกครั้ง" ได้
+                        window.transitionToVerification(name, email);
+                        return; // ออกจาก try block โดยไม่ throw
+                    }
+
+                    const cred = { user: authData?.user };
+                    if (!cred.user) {
+                        throw authErr || new Error("ไม่สามารถสร้างบัญชีได้ กรุณาลองใหม่อีกครั้ง");
+                    }
+
+                    cred.user.uid = cred.user.id;
+                    console.log("[Auth] User Created:", cred.user.uid);
 
                     const name = email.split('@')[0];
 
@@ -1991,15 +2031,6 @@
                         createdAt: new Date()
                     }).then(() => console.log("[Auth] Firestore persistence complete."));
 
-                    // Send Verification Email immediately
-                    const { error: resendErr } = await supabase.auth.resend({
-                        type: 'signup',
-                        email: email,
-                        options: { emailRedirectTo: window.location.origin + '/login.html' }
-                    });
-                    if (resendErr) console.warn("Auto verification resend failed:", resendErr);
-                    console.log("[Auth] Verification email sent automatically.");
-
                     if (window.auth) {
                         window.auth._currentUser = { email: email, uid: cred.user.uid, emailVerified: false };
                     }
@@ -2012,8 +2043,8 @@
                     isRegistering = false;
                     isNavigating = false;
                     hideLoading(true, "Registration error alert");
-                    if (error.code === 'auth/email-already-in-use') {
-                        alert("อีเมลหรือเบอร์โทรนี้ถูกใช้งานไปแล้วครับ");
+                    if (error.code === 'auth/email-already-in-use' || (error.message && error.message.includes('already registered'))) {
+                        alert("อีเมลนี้ถูกใช้งานไปแล้วครับ กรุณาเข้าสู่ระบบหรือใช้อีเมลอื่น");
                     } else {
                         alert("การลงทะเบียนผิดพลาด: " + error.message);
                     }
