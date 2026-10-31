@@ -2,6 +2,15 @@
 <html lang="th">
 
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-477442371"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-477442371');
+</script>
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -846,18 +855,101 @@
         }
 
         // --- Points ---
+        let _pointsRealtimeChannel = null;
+
         function loadUserPoints() {
             const email = userData?.email;
             if (!email) return;
+
+            // แสดงค่าจาก localStorage ก่อน (ป้องกันหน้าจอว่าง)
             const saved = localStorage.getItem('pao_user_points_' + email);
             if (saved !== null) {
                 userPoints = parseInt(saved) || 0;
-            } else {
-                const vouchers = JSON.parse(localStorage.getItem('pao_user_vouchers_' + email) || '[]');
-                userPoints = vouchers.length * 10;
-                localStorage.setItem('pao_user_points_' + email, userPoints.toString());
+                animateCounter('ptsDisplay', userPoints);
             }
-            animateCounter('ptsDisplay', userPoints);
+
+            if (window.supabase) {
+                // ดึงค่าปัจจุบันจาก Supabase ครั้งแรก
+                window.supabase
+                    .from('user_points')
+                    .select('points')
+                    .eq('email', email)
+                    .maybeSingle()
+                    .then(({ data, error }) => {
+                        if (error) { console.warn('[Points] Supabase load error:', error.message); return; }
+                        if (data && data.points != null) {
+                            const sbPts = parseInt(data.points) || 0;
+                            userPoints = sbPts;
+                            localStorage.setItem('pao_user_points_' + email, sbPts.toString());
+                            animateCounter('ptsDisplay', userPoints);
+                            const exchEl = document.getElementById('exchPtsDisplay');
+                            if (exchEl) exchEl.textContent = userPoints.toLocaleString();
+                            console.log('[Points] Synced from Supabase:', sbPts, 'pts');
+                        } else if (saved === null) {
+                            // ไม่มีทั้ง Supabase และ localStorage — คำนวณจาก vouchers
+                            const vouchers = JSON.parse(localStorage.getItem('pao_user_vouchers_' + email) || '[]');
+                            userPoints = vouchers.length * 10;
+                            localStorage.setItem('pao_user_points_' + email, userPoints.toString());
+                            animateCounter('ptsDisplay', userPoints);
+                        }
+                    });
+
+                // ✅ Real-time listener — อัปเดตพอยท์ทันทีเมื่อ Seller เปลี่ยน (ทุกอุปกรณ์)
+                if (_pointsRealtimeChannel) {
+                    window.supabase.removeChannel(_pointsRealtimeChannel);
+                }
+                const channelName = 'member-pts-' + email.replace(/[@.]/g, '_');
+                _pointsRealtimeChannel = window.supabase
+                    .channel(channelName)
+                    .on('postgres_changes', {
+                        event: '*',
+                        schema: 'public',
+                        table: 'user_points',
+                        filter: `email=eq.${email}`
+                    }, payload => {
+                        const newPts = parseInt((payload.new && payload.new.points != null) ? payload.new.points : userPoints);
+                        console.log('[Points] 🔴 Real-time update! New points:', newPts);
+                        if (newPts === userPoints) return; // ไม่เปลี่ยน ไม่ต้องทำอะไร
+                        userPoints = newPts;
+                        localStorage.setItem('pao_user_points_' + email, newPts.toString());
+                        animateCounter('ptsDisplay', newPts);
+                        const exchEl = document.getElementById('exchPtsDisplay');
+                        if (exchEl) exchEl.textContent = newPts.toLocaleString();
+                        // แจ้งเตือนลูกค้าว่าพอยท์เปลี่ยนแล้ว
+                        showPointsUpdateToast(newPts);
+                    })
+                    .subscribe(status => {
+                        console.log('[Points] Realtime channel status:', status);
+                    });
+            }
+        }
+
+        function showPointsUpdateToast(newPts) {
+            let toast = document.getElementById('pts-update-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'pts-update-toast';
+                toast.style.cssText = [
+                    'position:fixed', 'bottom:80px', 'left:50%', 'transform:translateX(-50%)',
+                    'background:linear-gradient(135deg,#1e293b,#0f172a)',
+                    'color:#fff', 'padding:14px 24px', 'border-radius:16px',
+                    "font-family:'Outfit','Noto Sans Thai',sans-serif",
+                    'font-size:0.9rem', 'font-weight:700',
+                    'box-shadow:0 8px 32px rgba(0,0,0,0.4)',
+                    'border:1.5px solid rgba(240,192,64,0.5)',
+                    'z-index:99999', 'display:none', 'text-align:center',
+                    'white-space:nowrap', 'transition:opacity 0.5s'
+                ].join(';');
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = '⭐ พอยท์ของคุณอัปเดตแล้ว! <span style="color:#F0C040;font-size:1.1rem;">' + newPts.toLocaleString() + ' Pts</span>';
+            toast.style.display = 'block';
+            toast.style.opacity = '1';
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(function() {
+                toast.style.opacity = '0';
+                setTimeout(function() { toast.style.display = 'none'; }, 500);
+            }, 3500);
         }
 
         function animateCounter(elId, target) {
@@ -1155,6 +1247,27 @@
         document.addEventListener('DOMContentLoaded', () => {
             populateUI(userData);
             loadUserPoints();
+
+            // 🔄 Polling fallback — ดึงพอยท์ทุก 15 วินาที (กรณี Realtime ยังไม่ได้เปิดใน Supabase)
+            setInterval(function() {
+                const em = userData && userData.email;
+                if (!em || !window.supabase) return;
+                window.supabase.from('user_points').select('points').eq('email', em).maybeSingle()
+                    .then(function(res) {
+                        if (res.data && res.data.points != null) {
+                            const p = parseInt(res.data.points) || 0;
+                            if (p !== userPoints) {
+                                console.log('[Points] Polling detected change:', p, 'pts');
+                                userPoints = p;
+                                localStorage.setItem('pao_user_points_' + em, p.toString());
+                                animateCounter('ptsDisplay', p);
+                                var exchEl = document.getElementById('exchPtsDisplay');
+                                if (exchEl) exchEl.textContent = p.toLocaleString();
+                                showPointsUpdateToast(p);
+                            }
+                        }
+                    }).catch(function(){});
+            }, 15000);
 
             const pForm = document.getElementById('profileForm');
             if (pForm) {
