@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
 <!-- Google tag (gtag.js) -->
@@ -138,6 +138,184 @@
             cursor: pointer;
             font-size: 0.7rem;
             flex-shrink: 0;
+        }
+
+        /* ── Website QR Card ── */
+        .web-qr-card {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f2044 100%);
+            border-radius: 20px;
+            padding: 28px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+        .web-qr-card::before {
+            content: '';
+            position: absolute;
+            top: -60px; right: -60px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(45,156,219,0.25) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .web-qr-card::after {
+            content: '';
+            position: absolute;
+            bottom: -40px; left: -40px;
+            width: 160px; height: 160px;
+            background: radial-gradient(circle, rgba(238,77,45,0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .web-qr-inner {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            position: relative;
+            z-index: 1;
+        }
+        .web-qr-box {
+            flex-shrink: 0;
+            background: #fff;
+            padding: 10px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            position: relative;
+        }
+        .web-qr-box img {
+            width: 140px;
+            height: 140px;
+            display: block;
+            border-radius: 8px;
+        }
+        .web-qr-badge {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #2D9CDB, #1a6fa8);
+            color: #fff;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+        }
+        .web-qr-info {
+            flex: 1;
+        }
+        .web-qr-info h3 {
+            margin: 0 0 6px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .web-qr-info p {
+            margin: 0 0 16px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.5;
+        }
+        .web-qr-url {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.78rem;
+            color: #93c5fd;
+            font-family: monospace;
+            letter-spacing: 0.3px;
+            margin-bottom: 14px;
+            word-break: break-all;
+        }
+        .web-qr-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-web-qr {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            font-family: 'Outfit', 'Noto Sans Thai', sans-serif;
+        }
+        .btn-web-qr:hover { transform: translateY(-1px); }
+        .btn-qr-expand {
+            background: linear-gradient(135deg, #2D9CDB, #1a6fa8);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(45,156,219,0.4);
+        }
+        .btn-qr-download {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+        }
+        .btn-qr-copy {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+        }
+        .web-qr-pulse {
+            display: inline-block;
+            width: 8px; height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse-green 1.5s infinite;
+        }
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.4); }
+        }
+        /* QR Fullscreen Modal */
+        #webQrModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+        #webQrModal.show {
+            display: flex;
+        }
+        .web-qr-modal-box {
+            background: #fff;
+            border-radius: 24px;
+            padding: 36px;
+            text-align: center;
+            max-width: 380px;
+            width: 90%;
+            position: relative;
+            animation: modalPop 0.3s ease-out;
+        }
+        .web-qr-modal-box img {
+            width: 260px;
+            height: 260px;
+            border: 6px solid #f1f5f9;
+            border-radius: 16px;
+            margin: 16px auto;
+            display: block;
+        }
+        .web-qr-modal-close {
+            position: absolute;
+            top: 16px; right: 20px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #94a3b8;
+            line-height: 1;
+        }
+        @media (max-width: 600px) {
+            .web-qr-inner { flex-direction: column; text-align: center; }
+            .web-qr-actions { justify-content: center; }
         }
     </style>
 </head>
@@ -295,7 +473,130 @@
                 </div>
             </div>
 
-            <!-- Quick QR Ticket Card -->
+            <!-- Website QR Code Card -->
+            <div class="card" style="padding: 0; overflow: hidden; border: none; box-shadow: none; background: transparent;">
+                <div class="web-qr-card">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:18px; position:relative; z-index:1;">
+                        <span class="web-qr-pulse"></span>
+                        <span style="font-size:0.75rem; font-weight:700; color:rgba(255,255,255,0.7); letter-spacing:1px; text-transform:uppercase;">QR สแกนเข้าเว็บ</span>
+                    </div>
+                    <div class="web-qr-inner">
+                        <div class="web-qr-box">
+                            <img id="siteQrImg"
+                                src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https%3A%2F%2Fpaomobile.vercel.app%2F&format=png&ecc=H&color=0f172a&bgcolor=ffffff"
+                                alt="QR Code เข้าเว็บ Paomobile">
+                            <span class="web-qr-badge">🔗 SCAN ME</span>
+                        </div>
+                        <div class="web-qr-info">
+                            <h3>📱 สแกนเข้าร้านเราเลย!</h3>
+                            <p>ให้ลูกค้าสแกน QR นี้เพื่อเข้าสู่เว็บไซต์ร้านพาวโมบายล์โดยตรง ไม่ต้องพิมพ์ URL</p>
+                            <div class="web-qr-url">https://paomobile.vercel.app/</div>
+                            <div class="web-qr-actions">
+                                <button class="btn-web-qr btn-qr-expand" onclick="openWebQrModal()">
+                                    🔍 ขยาย QR
+                                </button>
+                                <button class="btn-web-qr btn-qr-download" onclick="downloadWebQr()">
+                                    ⬇️ ดาวน์โหลด
+                                </button>
+                                <button class="btn-web-qr btn-qr-copy" onclick="copyWebUrl()" id="copyWebUrlBtn">
+                                    📋 คัดลอกลิงก์
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review QR Code Card (6 Branches) -->
+            <div class="card">
+                <div class="card-title" style="margin-bottom:6px;">
+                    ⭐ QR สแกนรีวิว Google — ทั้ง 6 สาขา
+                </div>
+                <p style="font-size:0.78rem; color:#94a3b8; margin:0 0 18px;">ให้ลูกค้าสแกน QR เพื่อรีวิวร้านบน Google Maps โดยตรงคับ</p>
+
+                <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px;">
+
+                    <!-- Branch 1 -->
+                    <div onclick="openReviewQr(1)" style="background:linear-gradient(135deg,#0f172a,#1e3a5f); border-radius:16px; padding:16px; text-align:center; cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; position:relative; overflow:hidden;"
+                         onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(15,23,42,0.4)'"
+                         onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <div style="position:absolute;top:8px;left:10px;background:rgba(255,255,255,0.12);color:#fff;font-size:0.65rem;font-weight:800;padding:2px 8px;border-radius:20px;">สาขา 1</div>
+                        <div style="background:#fff;border-radius:10px;padding:8px;display:inline-block;margin:18px 0 10px;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https%3A%2F%2Fmaps.app.goo.gl%2FYKDBRrmqHDhhEFpm8&format=png&ecc=H&color=0f172a&bgcolor=ffffff"
+                                 alt="QR สาขา 1" style="width:110px;height:110px;display:block;border-radius:6px;">
+                        </div>
+                        <div style="color:#fff;font-weight:700;font-size:0.75rem;line-height:1.3;">ตึกคอม<br>พัทยาใต้</div>
+                        <div style="margin-top:8px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);color:#fde047;font-size:0.65rem;font-weight:700;padding:4px 0;border-radius:8px;">⭐ กดเพื่อขยาย</div>
+                    </div>
+
+                    <!-- Branch 2 -->
+                    <div onclick="openReviewQr(2)" style="background:linear-gradient(135deg,#1a1a2e,#16213e); border-radius:16px; padding:16px; text-align:center; cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; position:relative; overflow:hidden;"
+                         onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(26,26,46,0.35)'"
+                         onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <div style="position:absolute;top:8px;left:10px;background:rgba(255,255,255,0.12);color:#fff;font-size:0.65rem;font-weight:800;padding:2px 8px;border-radius:20px;">สาขา 2</div>
+                        <div style="background:#fff;border-radius:10px;padding:8px;display:inline-block;margin:18px 0 10px;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https%3A%2F%2Fmaps.app.goo.gl%2FpPbg7LAhoDnpZVkH8&format=png&ecc=H&color=1a1a2e&bgcolor=ffffff"
+                                 alt="QR สาขา 2" style="width:110px;height:110px;display:block;border-radius:6px;">
+                        </div>
+                        <div style="color:#fff;font-weight:700;font-size:0.75rem;line-height:1.3;">นาเกลือ<br>พัทยา</div>
+                        <div style="margin-top:8px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);color:#fde047;font-size:0.65rem;font-weight:700;padding:4px 0;border-radius:8px;">⭐ กดเพื่อขยาย</div>
+                    </div>
+
+                    <!-- Branch 3 -->
+                    <div onclick="openReviewQr(3)" style="background:linear-gradient(135deg,#1c0a3a,#2d1b69); border-radius:16px; padding:16px; text-align:center; cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; position:relative; overflow:hidden;"
+                         onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(28,10,58,0.35)'"
+                         onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <div style="position:absolute;top:8px;left:10px;background:rgba(255,255,255,0.12);color:#fff;font-size:0.65rem;font-weight:800;padding:2px 8px;border-radius:20px;">สาขา 3</div>
+                        <div style="background:#fff;border-radius:10px;padding:8px;display:inline-block;margin:18px 0 10px;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https%3A%2F%2Fmaps.app.goo.gl%2FXjVZdwGuB57sfFgF9&format=png&ecc=H&color=2d1b69&bgcolor=ffffff"
+                                 alt="QR สาขา 3" style="width:110px;height:110px;display:block;border-radius:6px;">
+                        </div>
+                        <div style="color:#fff;font-weight:700;font-size:0.75rem;line-height:1.3;">ซอยสยาม<br>พาวโมบายล์</div>
+                        <div style="margin-top:8px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);color:#fde047;font-size:0.65rem;font-weight:700;padding:4px 0;border-radius:8px;">⭐ กดเพื่อขยาย</div>
+                    </div>
+
+                    <!-- Branch 4 -->
+                    <div onclick="openReviewQr(4)" style="background:linear-gradient(135deg,#1a0f00,#3d1f00); border-radius:16px; padding:16px; text-align:center; cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; position:relative; overflow:hidden;"
+                         onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(61,31,0,0.35)'"
+                         onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <div style="position:absolute;top:8px;left:10px;background:rgba(255,255,255,0.12);color:#fff;font-size:0.65rem;font-weight:800;padding:2px 8px;border-radius:20px;">สาขา 4</div>
+                        <div style="background:#fff;border-radius:10px;padding:8px;display:inline-block;margin:18px 0 10px;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https%3A%2F%2Fmaps.app.goo.gl%2FBvnJtELfyYA8vorr6&format=png&ecc=H&color=3d1f00&bgcolor=ffffff"
+                                 alt="QR สาขา 4" style="width:110px;height:110px;display:block;border-radius:6px;">
+                        </div>
+                        <div style="color:#fff;font-weight:700;font-size:0.75rem;line-height:1.3;">ซอยประปา<br>พาวโมบายล์</div>
+                        <div style="margin-top:8px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);color:#fde047;font-size:0.65rem;font-weight:700;padding:4px 0;border-radius:8px;">⭐ กดเพื่อขยาย</div>
+                    </div>
+
+                    <!-- Branch 5 -->
+                    <div onclick="openReviewQr(5)" style="background:linear-gradient(135deg,#001a0a,#003d1a); border-radius:16px; padding:16px; text-align:center; cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; position:relative; overflow:hidden;"
+                         onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(0,61,26,0.35)'"
+                         onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <div style="position:absolute;top:8px;left:10px;background:rgba(255,255,255,0.12);color:#fff;font-size:0.65rem;font-weight:800;padding:2px 8px;border-radius:20px;">สาขา 5</div>
+                        <div style="background:#fff;border-radius:10px;padding:8px;display:inline-block;margin:18px 0 10px;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https%3A%2F%2Fmaps.app.goo.gl%2F3hzi7cBpbWjL34Yw9&format=png&ecc=H&color=003d1a&bgcolor=ffffff"
+                                 alt="QR สาขา 5" style="width:110px;height:110px;display:block;border-radius:6px;">
+                        </div>
+                        <div style="color:#fff;font-weight:700;font-size:0.75rem;line-height:1.3;">แหลมฉบัง<br>พาวโมบายล์</div>
+                        <div style="margin-top:8px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);color:#fde047;font-size:0.65rem;font-weight:700;padding:4px 0;border-radius:8px;">⭐ กดเพื่อขยาย</div>
+                    </div>
+
+                    <!-- Branch 6 -->
+                    <div onclick="openReviewQr(6)" style="background:linear-gradient(135deg,#1a001a,#3d003d); border-radius:16px; padding:16px; text-align:center; cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; position:relative; overflow:hidden;"
+                         onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(61,0,61,0.35)'"
+                         onmouseout="this.style.transform='';this.style.boxShadow=''">
+                        <div style="position:absolute;top:8px;left:10px;background:rgba(255,255,255,0.12);color:#fff;font-size:0.65rem;font-weight:800;padding:2px 8px;border-radius:20px;">สาขา 6</div>
+                        <div style="background:#fff;border-radius:10px;padding:8px;display:inline-block;margin:18px 0 10px;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=https%3A%2F%2Fmaps.app.goo.gl%2F3QCR5NgfLoQJy3Xf7&format=png&ecc=H&color=3d003d&bgcolor=ffffff"
+                                 alt="QR สาขา 6" style="width:110px;height:110px;display:block;border-radius:6px;">
+                        </div>
+                        <div style="color:#fff;font-weight:700;font-size:0.75rem;line-height:1.3;">พรประภานิมิตร<br>พาวโมบายล์</div>
+                        <div style="margin-top:8px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);color:#fde047;font-size:0.65rem;font-weight:700;padding:4px 0;border-radius:8px;">⭐ กดเพื่อขยาย</div>
+                    </div>
+
+                </div><!-- end grid -->
+            </div>
+
             <div class="card">
                 <div class="card-title">🎫 ตั๋วรับคูปองเร่งด่วน <a href="seller-vouchers.html" class="card-link">จัดการทั้งหมด ></a></div>
                   <a href="seller-repairs.html" class="menu-item"><span class="menu-icon">🔧</span> เช็คสถานะซ่อม</a>
@@ -336,6 +637,100 @@
             </div>
         </div>
     </main>
+
+    <!-- Website QR Fullscreen Modal -->
+    <div id="webQrModal"
+        onclick="if(event.target===this)closeWebQrModal()"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+        <div style="background:#fff; border-radius:24px; padding:36px 32px 28px; text-align:center; max-width:380px; width:90%; position:relative; animation:modalPop 0.3s ease-out; box-shadow:0 30px 80px rgba(0,0,0,0.5);">
+            <span onclick="closeWebQrModal()" style="position:absolute; top:16px; right:20px; font-size:1.4rem; cursor:pointer; color:#94a3b8; line-height:1;">✕</span>
+            <div style="font-size:2rem; margin-bottom:4px;">📱</div>
+            <h3 style="margin:0 0 4px; color:#0f172a; font-size:1.15rem; font-family:'Outfit','Noto Sans Thai',sans-serif;">สแกนเพื่อเข้าเว็บพาวโมบายล์</h3>
+            <p style="font-size:0.8rem; color:#64748b; margin:4px 0 16px; font-family:'Outfit','Noto Sans Thai',sans-serif;">เปิดกล้องแล้วสแกน QR ด้านล่าง</p>
+            <div style="background:#f8fafc; border:2px solid #e2e8f0; border-radius:16px; padding:12px; display:inline-block; margin-bottom:16px;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=https%3A%2F%2Fpaomobile.vercel.app%2F&format=png&ecc=H&color=0f172a&bgcolor=ffffff"
+                    alt="QR Code Paomobile"
+                    style="width:240px; height:240px; display:block; border-radius:8px;">
+            </div>
+            <div style="background:#f1f5f9; border-radius:10px; padding:10px 14px; font-size:0.8rem; color:#2D9CDB; font-family:monospace; margin-bottom:18px; word-break:break-all;">
+                https://paomobile.vercel.app/
+            </div>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button onclick="downloadWebQr()"
+                    style="flex:1; background:linear-gradient(135deg,#0f172a,#1e293b); color:#fff; border:none; padding:12px; border-radius:12px; font-size:0.85rem; font-weight:700; cursor:pointer; font-family:'Outfit','Noto Sans Thai',sans-serif;">
+                    ⬇️ ดาวน์โหลด PNG
+                </button>
+                <button onclick="copyWebUrl()"
+                    style="flex:1; background:#f1f5f9; color:#334155; border:1.5px solid #e2e8f0; padding:12px; border-radius:12px; font-size:0.85rem; font-weight:700; cursor:pointer; font-family:'Outfit','Noto Sans Thai',sans-serif;">
+                    📋 คัดลอกลิงก์
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review QR Fullscreen Modal -->
+    <div id="reviewQrModal"
+        onclick="if(event.target===this)closeReviewQr()"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(12px);">
+        <div style="background:#fff; border-radius:24px; padding:32px 28px 24px; text-align:center; max-width:380px; width:92%; position:relative; animation:modalPop 0.3s ease-out; box-shadow:0 30px 80px rgba(0,0,0,0.6);">
+            <span onclick="closeReviewQr()" style="position:absolute; top:16px; right:20px; font-size:1.4rem; cursor:pointer; color:#94a3b8; line-height:1;">✕</span>
+            <div style="display:inline-block; background:linear-gradient(135deg,#f59e0b,#fbbf24); color:#fff; font-size:0.7rem; font-weight:800; padding:4px 14px; border-radius:20px; letter-spacing:1px; margin-bottom:10px;">⭐ GOOGLE REVIEW QR</div>
+            <h3 id="reviewQrBranchName" style="margin:0 0 2px; color:#0f172a; font-size:1.1rem; font-family:'Outfit','Noto Sans Thai',sans-serif;">สาขา 1</h3>
+            <p style="font-size:0.78rem; color:#64748b; margin:4px 0 14px; font-family:'Outfit','Noto Sans Thai',sans-serif;">สแกน QR เพื่อรีวิวร้านบน Google Maps</p>
+            <div style="background:#f8fafc; border:2px solid #fde68a; border-radius:16px; padding:12px; display:inline-block; margin-bottom:14px;">
+                <img id="reviewQrImg" src="" alt="Review QR" style="width:240px; height:240px; display:block; border-radius:8px;">
+            </div>
+            <a id="reviewQrLink" href="#" target="_blank" rel="noopener"
+                style="display:block; background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:10px; padding:10px 14px; font-size:0.78rem; color:#16a34a; font-weight:600; margin-bottom:16px; text-decoration:none; word-break:break-all; font-family:'Outfit','Noto Sans Thai',sans-serif; transition:background 0.2s;"
+                onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
+                🗺️ เปิด Google Maps โดยตรง
+            </a>
+            <div style="display:flex; gap:10px;">
+                <button onclick="downloadReviewQr()" style="flex:1; background:linear-gradient(135deg,#0f172a,#1e293b); color:#fff; border:none; padding:12px; border-radius:12px; font-size:0.82rem; font-weight:700; cursor:pointer; font-family:'Outfit','Noto Sans Thai',sans-serif;">⬇️ ดาวน์โหลด PNG</button>
+                <button onclick="closeReviewQr()" style="flex:1; background:#f1f5f9; color:#334155; border:1.5px solid #e2e8f0; padding:12px; border-radius:12px; font-size:0.82rem; font-weight:700; cursor:pointer; font-family:'Outfit','Noto Sans Thai',sans-serif;">✕ ปิด</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ── Review QR Functions ── */
+        const REVIEW_BRANCHES = {
+            1: { name: 'สาขา 1 — ตึกคอมพัทยาใต้',    url: 'https://maps.app.goo.gl/YKDBRrmqHDhhEFpm8' },
+            2: { name: 'สาขา 2 — นาเกลือ',            url: 'https://maps.app.goo.gl/pPbg7LAhoDnpZVkH8' },
+            3: { name: 'สาขา 3 — ซอยสยาม',            url: 'https://maps.app.goo.gl/XjVZdwGuB57sfFgF9' },
+            4: { name: 'สาขา 4 — ซอยประปา',           url: 'https://maps.app.goo.gl/BvnJtELfyYA8vorr6' },
+            5: { name: 'สาขา 5 — แหลมฉบัง',           url: 'https://maps.app.goo.gl/3hzi7cBpbWjL34Yw9' },
+            6: { name: 'สาขา 6 — พรประภานิมิตร',      url: 'https://maps.app.goo.gl/3QCR5NgfLoQJy3Xf7' }
+        };
+        let _currentReviewBranch = 1;
+
+        function openReviewQr(n) {
+            const branch = REVIEW_BRANCHES[n];
+            if (!branch) return;
+            _currentReviewBranch = n;
+            const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=' + encodeURIComponent(branch.url) + '&format=png&ecc=H&color=0f172a&bgcolor=ffffff';
+            document.getElementById('reviewQrBranchName').textContent = branch.name;
+            document.getElementById('reviewQrImg').src = qrUrl;
+            document.getElementById('reviewQrLink').href = branch.url;
+            const modal = document.getElementById('reviewQrModal');
+            if (modal) { modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+        }
+        function closeReviewQr() {
+            const modal = document.getElementById('reviewQrModal');
+            if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
+        }
+        function downloadReviewQr() {
+            const branch = REVIEW_BRANCHES[_currentReviewBranch];
+            if (!branch) return;
+            const url = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' + encodeURIComponent(branch.url) + '&format=png&ecc=H&color=0f172a&bgcolor=ffffff';
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'paomobile-review-qr-branch' + _currentReviewBranch + '.png';
+            a.target = '_blank';
+            a.click();
+        }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeReviewQr(); closeWebQrModal(); } });
+    </script>
 
     <!-- Promotion Editor Modal -->
     <div id="promoEditorModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:3500; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
@@ -571,6 +966,57 @@
                 };
             }
         });
+    </script>
+    <script>
+        /* ── Website QR Code Functions ── */
+        function openWebQrModal() {
+            const modal = document.getElementById('webQrModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        function closeWebQrModal() {
+            const modal = document.getElementById('webQrModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        }
+        function downloadWebQr() {
+            const url = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https%3A%2F%2Fpaomobile.vercel.app%2F&format=png&ecc=H&color=0f172a&bgcolor=ffffff';
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'paomobile-qrcode.png';
+            a.target = '_blank';
+            a.click();
+        }
+        function copyWebUrl() {
+            const siteUrl = 'https://paomobile.vercel.app/';
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(siteUrl).then(() => showCopySuccess());
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = siteUrl;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showCopySuccess();
+            }
+        }
+        function showCopySuccess() {
+            const btn = document.getElementById('copyWebUrlBtn');
+            if (btn) {
+                const orig = btn.innerHTML;
+                btn.innerHTML = '✅ คัดลอกแล้ว!';
+                btn.style.background = 'rgba(74,222,128,0.2)';
+                setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 2000);
+            }
+            if (window.sellerAlert) window.sellerAlert('คัดลอกลิงก์เรียบร้อยแล้ว! ✅', 'success');
+        }
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeWebQrModal(); });
     </script>
     <script src="seller-centre.js?v=1.2.10"></script>
 <div class="site-search-overlay" id="searchOverlay"><button class="search-close-btn" id="searchClose"
