@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -974,9 +974,27 @@
             hist.unshift({ amount, desc, date: new Date().toISOString() });
             if (hist.length > 50) hist = hist.slice(0, 50);
             localStorage.setItem(hk, JSON.stringify(hist));
-            document.getElementById('ptsDisplay').textContent = userPoints.toLocaleString();
+            const ptsEl = document.getElementById('ptsDisplay');
+            if (ptsEl) ptsEl.textContent = userPoints.toLocaleString();
             const exchEl = document.getElementById('exchPtsDisplay');
             if (exchEl) exchEl.textContent = userPoints.toLocaleString();
+
+            // Sync to Supabase user_points table
+            if (window.supabase) {
+                window.supabase
+                    .from('user_points')
+                    .upsert(
+                        { email: email.toLowerCase().trim(), points: userPoints, updatedAt: new Date().toISOString() },
+                        { onConflict: 'email' }
+                    )
+                    .catch(() => {});
+            }
+
+            // Sync to nav dropdown and badges immediately
+            if (window.AuthAPI && window.AuthAPI.refreshNav) {
+                window.AuthAPI.refreshNav();
+            }
+            window.dispatchEvent(new CustomEvent('paomobile:user-data-changed'));
         }
 
         // --- Points Exchange ---
@@ -1144,6 +1162,8 @@
                 expiry: expiryDate 
             });
             localStorage.setItem(KEY, JSON.stringify(list));
+            if (window.AuthAPI && window.AuthAPI.refreshNav) window.AuthAPI.refreshNav();
+            window.dispatchEvent(new CustomEvent('paomobile:user-data-changed'));
 
             if (isInstore) {
                 showToast('🎉 แลกวอชเชอร์หน้าร้าน ' + title + ' สำเร็จ! ยื่น QR หน้าร้านเพื่อรับสิทธิ์ได้เลยครับ', 'success');

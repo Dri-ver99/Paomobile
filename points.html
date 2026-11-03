@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -1207,6 +1207,8 @@
 
             // Save total points locally
             localStorage.setItem('pao_user_points_' + email, userPoints.toString());
+            if (window.AuthAPI && window.AuthAPI.refreshNav) window.AuthAPI.refreshNav();
+            window.dispatchEvent(new CustomEvent('paomobile:user-data-changed'));
         }
 
         function loadHistory() {
