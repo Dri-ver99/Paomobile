@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -1245,6 +1245,19 @@
                 btn.innerHTML = '🕒'; btn.style.pointerEvents = 'none';
                 myVouchers.push({ code, value, type, claimedAt: new Date().toISOString() });
                 localStorage.setItem(storageKey, JSON.stringify(myVouchers));
+
+                // Add 10 points for collecting coupon and sync to Supabase
+                const cleanEmail = (user.email || '').toLowerCase().trim();
+                let curPts = parseInt(localStorage.getItem('pao_user_points_' + cleanEmail) || '0') + 10;
+                localStorage.setItem('pao_user_points_' + cleanEmail, curPts.toString());
+                if (window.supabase) {
+                    window.supabase.from('user_points').upsert(
+                        { email: cleanEmail, points: curPts, updatedAt: new Date().toISOString() },
+                        { onConflict: 'email' }
+                    ).catch(()=>{});
+                }
+                if (window.AuthAPI && window.AuthAPI.refreshNav) window.AuthAPI.refreshNav();
+                window.dispatchEvent(new CustomEvent('paomobile:user-data-changed'));
 
                 // Show Success Toast
                 showClaimSuccess(code, value, type);
