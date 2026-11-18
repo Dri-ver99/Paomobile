@@ -22,6 +22,19 @@ window.addEventListener('scroll', () => {
 navbar.classList.toggle('scrolled', window.scrollY > 40);
 }, { passive: true });
 
+// --- Google Ads (gtag) MSK-Call Click Conversion Tracking ---
+document.addEventListener('click', function(e) {
+    const callLink = e.target.closest('a[href^="tel:"]');
+    if (callLink && typeof gtag === 'function') {
+        gtag('event', 'conversion', {
+            'send_to': 'AW-477442371/Zo3xCOnus6wdEMPi1OMB',
+            'value': 1.0,
+            'currency': 'THB'
+        });
+        console.log('[Google Ads] MSK-Call Click conversion tracked for:', callLink.getAttribute('href'));
+    }
+}, { passive: true });
+
 // --- Global Performance & Image Optimizer (v1.1) ---
 (function() {
     const optimizeImages = () => {
